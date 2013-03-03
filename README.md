@@ -6,4 +6,5 @@ Contains the update Source code of CraftBukkit implementations, with several fol
 All source code belongs to the respectable authors of CraftBukkit and Bukkit.
 
 https://github.com/Bukkit/CraftBukkit
+
 https://github.com/Bukkit/Bukkit
