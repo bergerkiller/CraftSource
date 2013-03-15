@@ -1,52 +1,54 @@
 package org.bukkit.craftbukkit;
 
 import java.io.File;
-import java.util.Iterator;
-import java.util.Set;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
+import java.util.Set;
 import java.util.UUID;
-import org.apache.commons.lang.Validate;
-
-import org.bukkit.craftbukkit.entity.*;
-import org.bukkit.craftbukkit.metadata.BlockMetadataStore;
-import org.bukkit.entity.*;
-import org.bukkit.entity.Entity;
 
 import net.minecraft.server.*;
 
-import org.bukkit.entity.Arrow;
-import org.bukkit.Effect;
-import org.bukkit.event.entity.CreatureSpawnEvent.SpawnReason;
-import org.bukkit.event.weather.WeatherChangeEvent;
-import org.bukkit.event.weather.ThunderChangeEvent;
-import org.bukkit.event.world.SpawnChangeEvent;
-import org.bukkit.block.Block;
-import org.bukkit.block.BlockFace;
-import org.bukkit.entity.Boat;
-import org.bukkit.Chunk;
-import org.bukkit.inventory.ItemStack;
-import org.bukkit.metadata.MetadataValue;
-import org.bukkit.plugin.Plugin;
-import org.bukkit.util.Vector;
+import org.apache.commons.lang.Validate;
 import org.bukkit.BlockChangeDelegate;
 import org.bukkit.Bukkit;
-import org.bukkit.generator.ChunkGenerator;
+import org.bukkit.Chunk;
 import org.bukkit.ChunkSnapshot;
+import org.bukkit.Difficulty;
+import org.bukkit.Effect;
 import org.bukkit.Location;
+import org.bukkit.Sound;
 import org.bukkit.TreeType;
 import org.bukkit.World;
 import org.bukkit.block.Biome;
-import org.bukkit.generator.BlockPopulator;
-import org.bukkit.Difficulty;
-import org.bukkit.Sound;
+import org.bukkit.block.Block;
+import org.bukkit.block.BlockFace;
 import org.bukkit.craftbukkit.block.CraftBlock;
+import org.bukkit.craftbukkit.entity.*;
 import org.bukkit.craftbukkit.inventory.CraftItemStack;
-import org.bukkit.plugin.messaging.StandardMessenger;
+import org.bukkit.craftbukkit.metadata.BlockMetadataStore;
 import org.bukkit.craftbukkit.util.LongHash;
+import org.bukkit.entity.*;
+import org.bukkit.entity.Entity;
+import org.bukkit.entity.minecart.ExplosiveMinecart;
+import org.bukkit.entity.minecart.HopperMinecart;
+import org.bukkit.entity.minecart.PoweredMinecart;
+import org.bukkit.entity.minecart.SpawnerMinecart;
+import org.bukkit.entity.minecart.StorageMinecart;
+import org.bukkit.event.entity.CreatureSpawnEvent.SpawnReason;
+import org.bukkit.event.weather.ThunderChangeEvent;
+import org.bukkit.event.weather.WeatherChangeEvent;
+import org.bukkit.event.world.SpawnChangeEvent;
+import org.bukkit.generator.BlockPopulator;
+import org.bukkit.generator.ChunkGenerator;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.metadata.MetadataValue;
+import org.bukkit.plugin.Plugin;
+import org.bukkit.plugin.messaging.StandardMessenger;
+import org.bukkit.util.Vector;
 
 public class CraftWorld implements World {
     public static final int CUSTOM_DIMENSION_OFFSET = 10;
@@ -252,7 +254,6 @@ public class CraftWorld implements World {
         return chunk != null;
     }
 
-    @SuppressWarnings("unchecked")
     private void chunkLoadPostProcess(net.minecraft.server.Chunk chunk, int x, int z) {
         if (chunk != null) {
             world.chunkProviderServer.chunks.put(LongHash.toLong(x, z), chunk);
@@ -861,11 +862,17 @@ public class CraftWorld implements World {
             }
         } else if (Minecart.class.isAssignableFrom(clazz)) {
             if (PoweredMinecart.class.isAssignableFrom(clazz)) {
-                entity = new EntityMinecart(world, x, y, z, CraftMinecart.Type.PoweredMinecart.getId());
+                entity = new EntityMinecartFurnace(world, x, y, z);
             } else if (StorageMinecart.class.isAssignableFrom(clazz)) {
-                entity = new EntityMinecart(world, x, y, z, CraftMinecart.Type.StorageMinecart.getId());
-            } else {
-                entity = new EntityMinecart(world, x, y, z, CraftMinecart.Type.Minecart.getId());
+                entity = new EntityMinecartChest(world, x, y, z);
+            } else if (ExplosiveMinecart.class.isAssignableFrom(clazz)) {
+                entity = new EntityMinecartTNT(world, x, y, z);
+            } else if (HopperMinecart.class.isAssignableFrom(clazz)) {
+                entity = new EntityMinecartHopper(world, x, y, z);
+            } else if (SpawnerMinecart.class.isAssignableFrom(clazz)) {
+                entity = new EntityMinecartMobSpawner(world, x, y, z);
+            } else { // Default to rideable minecart for pre-rideable compatibility
+                entity = new EntityMinecartRideable(world, x, y, z);
             }
         } else if (EnderSignal.class.isAssignableFrom(clazz)) {
             entity = new EntityEnderSignal(world, x, y, z);
@@ -989,7 +996,7 @@ public class CraftWorld implements World {
                 entity = null;
             }
         } else if (TNTPrimed.class.isAssignableFrom(clazz)) {
-            entity = new EntityTNTPrimed(world, x, y, z);
+            entity = new EntityTNTPrimed(world, x, y, z, null);
         } else if (ExperienceOrb.class.isAssignableFrom(clazz)) {
             entity = new EntityExperienceOrb(world, x, y, z, 0);
         } else if (Weather.class.isAssignableFrom(clazz)) {
@@ -1102,7 +1109,7 @@ public class CraftWorld implements World {
         block.setType(org.bukkit.Material.AIR);
         // not sure what this does, seems to have something to do with the 'base' material of a block.
         // For example, WOODEN_STAIRS does something with WOOD in this method
-        net.minecraft.server.Block.byId[blockId].wasExploded(this.world, blockX, blockY, blockZ);
+        net.minecraft.server.Block.byId[blockId].wasExploded(this.world, blockX, blockY, blockZ, null);
     }
 
     public void sendPluginMessage(Plugin source, String channel, byte[] message) {

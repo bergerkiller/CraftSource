@@ -22,7 +22,7 @@ public class EntityEnderCrystal extends Entity {
         this.datawatcher.a(8, Integer.valueOf(this.b));
     }
 
-    public void j_() {
+    public void l_() {
         this.lastX = this.locX;
         this.lastY = this.locY;
         this.lastZ = this.locZ;
@@ -33,7 +33,11 @@ public class EntityEnderCrystal extends Entity {
         int k = MathHelper.floor(this.locZ);
 
         if (this.world.getTypeId(i, j, k) != Block.FIRE.id) {
-            this.world.setTypeId(i, j, k, Block.FIRE.id);
+            // CraftBukkit start
+            if (!org.bukkit.craftbukkit.event.CraftEventFactory.callBlockIgniteEvent(this.world, i, j, k, this).isCancelled()) {
+                this.world.setTypeIdUpdate(i, j, k, Block.FIRE.id);
+            }
+            // CraftBukkit end
         }
     }
 
@@ -41,7 +45,7 @@ public class EntityEnderCrystal extends Entity {
 
     protected void a(NBTTagCompound nbttagcompound) {}
 
-    public boolean L() {
+    public boolean K() {
         return true;
     }
 

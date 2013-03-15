@@ -1,7 +1,7 @@
 package net.minecraft.server;
 
 // CraftBukkit start
-import org.bukkit.event.block.BlockIgniteEvent;
+import org.bukkit.craftbukkit.event.CraftEventFactory;
 import org.bukkit.event.entity.EntityCombustByEntityEvent;
 // CraftBukkit end
 
@@ -67,12 +67,8 @@ public class EntitySmallFireball extends EntityFireball {
 
                 if (this.world.isEmpty(i, j, k)) {
                     // CraftBukkit start
-                    org.bukkit.block.Block block = world.getWorld().getBlockAt(i, j, k);
-                    BlockIgniteEvent event = new BlockIgniteEvent(block, BlockIgniteEvent.IgniteCause.FIREBALL, null);
-                    world.getServer().getPluginManager().callEvent(event);
-
-                    if (!event.isCancelled()) {
-                        this.world.setTypeId(i, j, k, Block.FIRE.id);
+                    if (!CraftEventFactory.callBlockIgniteEvent(world, i, j, k, this).isCancelled()) {
+                        this.world.setTypeIdUpdate(i, j, k, Block.FIRE.id);
                     }
                     // CraftBukkit end
                 }
@@ -82,7 +78,7 @@ public class EntitySmallFireball extends EntityFireball {
         }
     }
 
-    public boolean L() {
+    public boolean K() {
         return false;
     }
 
