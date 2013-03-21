@@ -40,10 +40,12 @@ public final class ItemStack {
         this.f = null;
         this.id = i;
         this.count = j;
-        this.setData(k); // CraftBukkit
-        if (this.damage < 0) {
-            this.damage = 0;
-        }
+        // CraftBukkit start - pass to setData to do filtering
+        this.setData(k);
+        //if (this.damage < 0) {
+        //    this.damage = 0;
+        //}
+        // CraftBukkit end
     }
 
     public static ItemStack createStack(NBTTagCompound nbttagcompound) {
@@ -156,7 +158,7 @@ public final class ItemStack {
             return;
         }
 
-        if (!(this.usesData() || Item.byId[this.id].o() || this.id > 256)) { // Should be canBeDepleted
+        if (!(this.usesData() || Item.byId[this.id].o() || this.id > 255)) { // Should be usesDurability
             i = 0;
         }
 
@@ -167,7 +169,7 @@ public final class ItemStack {
         // CraftBukkit end
 
         this.damage = i;
-        if (this.damage < 0) {
+        if (this.damage < -1) { // CraftBukkit - don't filter -1, we use it
             this.damage = 0;
         }
     }

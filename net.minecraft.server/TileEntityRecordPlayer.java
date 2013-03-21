@@ -28,6 +28,12 @@ public class TileEntityRecordPlayer extends TileEntity {
     }
 
     public void setRecord(ItemStack itemstack) {
+        // CraftBukkit start - There can only be one
+        if (itemstack != null) {
+            itemstack.count = 1;
+        }
+        // CraftBukkit end
+
         this.record = itemstack;
         this.update();
     }
