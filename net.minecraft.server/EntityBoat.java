@@ -4,6 +4,7 @@ import java.util.List;
 
 // CraftBukkit start
 import org.bukkit.Location;
+import org.bukkit.craftbukkit.event.CraftEventFactory;
 import org.bukkit.entity.Vehicle;
 import org.bukkit.event.vehicle.VehicleDamageEvent;
 import org.bukkit.event.vehicle.VehicleDestroyEvent;
@@ -251,7 +252,7 @@ public class EntityBoat extends Entity {
                 this.motX += this.passenger.motX * this.b;
                 this.motZ += this.passenger.motZ * this.b;
             }
-            // CraftBukkit start - block not in vanilla
+            // CraftBukkit start - Support unoccupied deceleration
             else if (unoccupiedDeceleration >= 0) {
                 this.motX *= unoccupiedDeceleration;
                 this.motZ *= unoccupiedDeceleration;
@@ -293,7 +294,7 @@ public class EntityBoat extends Entity {
 
             this.move(this.motX, this.motY, this.motZ);
             if (this.positionChanged && d3 > 0.2D) {
-                if (!this.world.isStatic) {
+                if (!this.world.isStatic && !this.dead) {
                     // CraftBukkit start
                     Vehicle vehicle = (Vehicle) this.getBukkitEntity();
                     VehicleDestroyEvent destroyEvent = new VehicleDestroyEvent(vehicle, null);
@@ -379,8 +380,20 @@ public class EntityBoat extends Entity {
                         int i2 = this.world.getTypeId(i1, l1, j1);
 
                         if (i2 == Block.SNOW.id) {
+                            // CraftBukkit start
+                            if (CraftEventFactory.callEntityChangeBlockEvent(this, i1, l1, j1, 0, 0).isCancelled()) {
+                                continue;
+                            }
+                            // CraftBukkit end
+
                             this.world.setAir(i1, l1, j1);
                         } else if (i2 == Block.WATER_LILY.id) {
+                            // CraftBukkit start
+                            if (CraftEventFactory.callEntityChangeBlockEvent(this, i1, l1, j1, 0, 0).isCancelled()) {
+                                continue;
+                            }
+                            // CraftBukkit end
+
                             this.world.setAir(i1, l1, j1, true);
                         }
                     }

@@ -4,7 +4,7 @@ import org.bukkit.event.entity.EntityDamageEvent; // CraftBukkit
 
 public class FoodMetaData {
 
-    // CraftBukkit start - all made public
+    // CraftBukkit start - All made public
     public int foodLevel = 20;
     public float saturationLevel = 5.0F;
     public float exhaustionLevel;
@@ -44,7 +44,7 @@ public class FoodMetaData {
             }
         }
 
-        if (this.foodLevel >= 18 && entityhuman.cm()) {
+        if (this.foodLevel >= 18 && entityhuman.co()) {
             ++this.foodTickTimer;
             if (this.foodTickTimer >= 80) {
                 // CraftBukkit - added RegainReason
@@ -55,15 +55,7 @@ public class FoodMetaData {
             ++this.foodTickTimer;
             if (this.foodTickTimer >= 80) {
                 if (entityhuman.getHealth() > 10 || i >= 3 || entityhuman.getHealth() > 1 && i >= 2) {
-                    // CraftBukkit start
-                    EntityDamageEvent event = new EntityDamageEvent(entityhuman.getBukkitEntity(), EntityDamageEvent.DamageCause.STARVATION, 1);
-                    entityhuman.world.getServer().getPluginManager().callEvent(event);
-
-                    if (!event.isCancelled()) {
-                        event.getEntity().setLastDamageCause(event);
-                        entityhuman.damageEntity(DamageSource.STARVE, event.getDamage());
-                    }
-                    // CraftBukkit end
+                    entityhuman.damageEntity(DamageSource.STARVE, 1);
                 }
 
                 this.foodTickTimer = 0;

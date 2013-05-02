@@ -46,7 +46,7 @@ public class EntityTrackerEntry {
         this.zLoc = MathHelper.floor(entity.locZ * 32.0D);
         this.yRot = MathHelper.d(entity.yaw * 256.0F / 360.0F);
         this.xRot = MathHelper.d(entity.pitch * 256.0F / 360.0F);
-        this.i = MathHelper.d(entity.ao() * 256.0F / 360.0F);
+        this.i = MathHelper.d(entity.getHeadRotation() * 256.0F / 360.0F);
     }
 
     public boolean equals(Object object) {
@@ -68,18 +68,18 @@ public class EntityTrackerEntry {
             this.scanPlayers(list);
         }
 
-        if (this.v != this.tracker.vehicle || this.tracker.vehicle != null && this.m % 60 == 0) {
+        if (this.v != this.tracker.vehicle /* || this.tracker.vehicle != null && this.m % 60 == 0 */) { // CraftBukkit - Revert to 1.4 logic, this packet is a toggle
             this.v = this.tracker.vehicle;
             this.broadcast(new Packet39AttachEntity(this.tracker, this.tracker.vehicle));
         }
 
-        if (this.tracker instanceof EntityItemFrame && this.m % 10 == 0) {
+        if (this.tracker instanceof EntityItemFrame /*&& this.m % 10 == 0*/) { // CraftBukkit - Moved below, should always enter this block
             EntityItemFrame i4 = (EntityItemFrame) this.tracker;
             ItemStack i5 = i4.i();
 
-            if (i5 != null && i5.getItem() instanceof ItemWorldMap) {
+            if (this.m % 10 == 0 && i5 != null && i5.getItem() instanceof ItemWorldMap) { // CraftBukkit - Moved this.m % 10 logic here so item frames do not enter the other blocks
                 WorldMap i7 = Item.MAP.getSavedMap(i5, this.tracker.world);
-                Iterator j0 = list.iterator();
+                Iterator j0 = this.trackedPlayers.iterator(); // CraftBukkit
 
                 while (j0.hasNext()) {
                     EntityHuman j1 = (EntityHuman) j0.next();
@@ -119,7 +119,7 @@ public class EntityTrackerEntry {
                 boolean flag = Math.abs(j1) >= 4 || Math.abs(k1) >= 4 || Math.abs(l1) >= 4 || this.m % 60 == 0;
                 boolean flag1 = Math.abs(l - this.yRot) >= 4 || Math.abs(i1 - this.xRot) >= 4;
 
-                // CraftBukkit start - code moved from below
+                // CraftBukkit start - Code moved from below
                 if (flag) {
                     this.xLoc = i;
                     this.yLoc = j;
@@ -132,7 +132,7 @@ public class EntityTrackerEntry {
                 }
                 // CraftBukkit end
 
-                if (this.m > 0) {
+                if (this.m > 0 || this.tracker instanceof EntityArrow) {
                     if (j1 >= -128 && j1 < 128 && k1 >= -128 && k1 < 128 && l1 >= -128 && l1 < 128 && this.u <= 400 && !this.w) {
                         if (flag && flag1) {
                             object = new Packet33RelEntityMoveLook(this.tracker.id, (byte) j1, (byte) k1, (byte) l1, (byte) l, (byte) i1);
@@ -143,7 +143,7 @@ public class EntityTrackerEntry {
                         }
                     } else {
                         this.u = 0;
-                        // CraftBukkit start - refresh list of who can see a player before sending teleport packet
+                        // CraftBukkit start - Refresh list of who can see a player before sending teleport packet
                         if (this.tracker instanceof EntityPlayer) {
                             this.scanPlayers(new java.util.ArrayList(this.trackedPlayers));
                         }
@@ -177,7 +177,7 @@ public class EntityTrackerEntry {
                     this.broadcastIncludingSelf(new Packet40EntityMetadata(this.tracker.id, datawatcher1, false));
                 }
 
-                /* CraftBukkit start - code moved up
+                /* CraftBukkit start - Code moved up
                 if (flag) {
                     this.xLoc = i;
                     this.yLoc = j;
@@ -214,7 +214,7 @@ public class EntityTrackerEntry {
                 this.w = true;
             }
 
-            i = MathHelper.d(this.tracker.ao() * 256.0F / 360.0F);
+            i = MathHelper.d(this.tracker.getHeadRotation() * 256.0F / 360.0F);
             if (Math.abs(i - this.i) >= 4) {
                 this.broadcast(new Packet35EntityHeadRotation(this.tracker.id, (byte) i));
                 this.i = i;
@@ -225,7 +225,7 @@ public class EntityTrackerEntry {
 
         ++this.m;
         if (this.tracker.velocityChanged) {
-            // CraftBukkit start - create PlayerVelocity event
+            // CraftBukkit start - Create PlayerVelocity event
             boolean cancelled = false;
 
             if (this.tracker instanceof EntityPlayer) {
@@ -318,9 +318,13 @@ public class EntityTrackerEntry {
                         entityplayer.playerConnection.sendPacket(new Packet28EntityVelocity(this.tracker.id, this.tracker.motX, this.tracker.motY, this.tracker.motZ));
                     }
 
-                    if (this.tracker.vehicle != null) {
+                    // CraftBukkit start
+                    if (this.tracker.vehicle != null && this.tracker.id > this.tracker.vehicle.id) {
                         entityplayer.playerConnection.sendPacket(new Packet39AttachEntity(this.tracker, this.tracker.vehicle));
+                    } else if (this.tracker.passenger != null && this.tracker.id > this.tracker.passenger.id) {
+                        entityplayer.playerConnection.sendPacket(new Packet39AttachEntity(this.tracker.passenger, this.tracker));
                     }
+                    // CraftBukkit end
 
                     if (this.tracker instanceof EntityLiving) {
                         for (int i = 0; i < 5; ++i) {
@@ -341,7 +345,7 @@ public class EntityTrackerEntry {
                     }
 
                     // CraftBukkit start - Fix for nonsensical head yaw
-                    this.i = MathHelper.d(this.tracker.ao() * 256.0F / 360.0F); // tracker.ao() should be getHeadRotation
+                    this.i = MathHelper.d(this.tracker.getHeadRotation() * 256.0F / 360.0F); // tracker.ao() should be getHeadRotation
                     this.broadcast(new Packet35EntityHeadRotation(this.tracker.id, (byte) i));
                     // CraftBukkit end
 
@@ -375,7 +379,7 @@ public class EntityTrackerEntry {
 
     private Packet b() {
         if (this.tracker.dead) {
-            // CraftBukkit start - remove useless error spam, just return
+            // CraftBukkit start - Remove useless error spam, just return
             // this.tracker.world.getLogger().warning("Fetching addPacket for removed entity");
             return null;
             // CraftBukkit end
@@ -464,7 +468,7 @@ public class EntityTrackerEntry {
                 }
             }
         } else {
-            this.i = MathHelper.d(this.tracker.ao() * 256.0F / 360.0F);
+            this.i = MathHelper.d(this.tracker.getHeadRotation() * 256.0F / 360.0F);
             return new Packet24MobSpawn((EntityLiving) this.tracker);
         }
     }

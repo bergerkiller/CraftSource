@@ -93,7 +93,7 @@ public class EntityFishingHook extends Entity {
             this.b(this.yaw, this.pitch);
         } else {
             if (!this.world.isStatic) {
-                ItemStack itemstack = this.owner.cb();
+                ItemStack itemstack = this.owner.cd();
 
                 if (this.owner.dead || !this.owner.isAlive() || itemstack == null || itemstack.getItem() != Item.FISHING_ROD || this.e(this.owner) > 1024.0D) {
                     this.die();
@@ -178,6 +178,7 @@ public class EntityFishingHook extends Entity {
             }
 
             if (movingobjectposition != null) {
+                org.bukkit.craftbukkit.event.CraftEventFactory.callProjectileHitEvent(this); // Craftbukkit - Call event
                 if (movingobjectposition.entity != null) {
                     if (movingobjectposition.entity.damageEntity(DamageSource.projectile(this, this.owner), 0)) {
                         this.hooked = movingobjectposition.entity;
@@ -234,13 +235,7 @@ public class EntityFishingHook extends Entity {
                     if (this.au > 0) {
                         --this.au;
                     } else {
-                        short short1 = 500;
-
-                        if (this.world.F(MathHelper.floor(this.locX), MathHelper.floor(this.locY) + 1, MathHelper.floor(this.locZ))) {
-                            short1 = 300;
-                        }
-
-                        if (this.random.nextInt(short1) == 0) {
+                        if (random.nextDouble() < ((org.bukkit.entity.Fish) this.getBukkitEntity()).getBiteChance()) { // CraftBukkit - moved logic to CraftFish
                             this.au = this.random.nextInt(30) + 10;
                             this.motY -= 0.20000000298023224D;
                             this.makeSound("random.splash", 0.25F, 1.0F + (this.random.nextFloat() - this.random.nextFloat()) * 0.4F);

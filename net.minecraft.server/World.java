@@ -30,7 +30,7 @@ public abstract class World implements IBlockAccess {
     public boolean d = false;
     public List entityList = new ArrayList();
     protected List f = new ArrayList();
-    public List tileEntityList = new ArrayList();
+    public Set tileEntityList = new HashSet(); // CraftBukkit - ArrayList -> HashSet
     private List a = new ArrayList();
     private List b = new ArrayList();
     public List players = new ArrayList();
@@ -44,7 +44,6 @@ public abstract class World implements IBlockAccess {
     protected float o;
     protected float p;
     public int q = 0;
-    // public boolean suppressPhysics = false; // CraftBukkit (removed in vanilla)
     public boolean callingPlaceEvent = false; // CraftBukkit
     public int difficulty;
     public Random random = new Random();
@@ -60,7 +59,7 @@ public abstract class World implements IBlockAccess {
     public final MethodProfiler methodProfiler;
     private final Vec3DPool J = new Vec3DPool(300, 2000);
     private final Calendar K = Calendar.getInstance();
-    protected Scoreboard scoreboard = new Scoreboard();
+    public Scoreboard scoreboard = new Scoreboard(); // CraftBukkit - protected -> public
     private final IConsoleLogManager logAgent;
     private UnsafeList M = new UnsafeList(); // CraftBukkit - ArrayList -> UnsafeList
     private boolean N;
@@ -169,7 +168,7 @@ public abstract class World implements IBlockAccess {
             this.villages.a(this);
         }
 
-        this.y();
+        this.z();
         this.a();
 
         this.getServer().addWorld(this.world); // CraftBukkit
@@ -676,7 +675,7 @@ public abstract class World implements IBlockAccess {
         return this.worldProvider.g[this.getLightLevel(i, j, k)];
     }
 
-    public boolean u() {
+    public boolean v() {
         return this.j < 4;
     }
 
@@ -892,7 +891,7 @@ public abstract class World implements IBlockAccess {
         return true;
     }
 
-    // CraftBukkit start - used for entities other than creatures
+    // CraftBukkit start - Used for entities other than creatures
     public boolean addEntity(Entity entity) {
         return this.addEntity(entity, SpawnReason.DEFAULT); // Set reason as DEFAULT
     }
@@ -1099,7 +1098,7 @@ public abstract class World implements IBlockAccess {
         return this.worldProvider.a(this.worldData.getDayTime(), f);
     }
 
-    public int v() {
+    public int w() {
         return this.worldProvider.a(this.worldData.getDayTime());
     }
 
@@ -1147,7 +1146,7 @@ public abstract class World implements IBlockAccess {
 
         for (i = 0; i < this.i.size(); ++i) {
             entity = (Entity) this.i.get(i);
-            // CraftBukkit start - fixed an NPE, don't process entities in chunks queued for unload
+            // CraftBukkit start - Fixed an NPE, don't process entities in chunks queued for unload
             if (entity == null) {
                 continue;
             }
@@ -1203,7 +1202,7 @@ public abstract class World implements IBlockAccess {
         for (i = 0; i < this.entityList.size(); ++i) {
             entity = (Entity) this.entityList.get(i);
 
-            // CraftBukkit start - don't tick entities in chunks queued for unload
+            // CraftBukkit start - Don't tick entities in chunks queued for unload
             ChunkProviderServer chunkProviderServer = ((WorldServer) this).chunkProviderServer;
             if (chunkProviderServer.unloadQueue.contains(MathHelper.floor(entity.locX) >> 4, MathHelper.floor(entity.locZ) >> 4)) {
                 continue;
@@ -1253,7 +1252,7 @@ public abstract class World implements IBlockAccess {
 
         while (iterator.hasNext()) {
             TileEntity tileentity = (TileEntity) iterator.next();
-            // CraftBukkit start - don't tick entities in chunks queued for unload
+            // CraftBukkit start - Don't tick entities in chunks queued for unload
             ChunkProviderServer chunkProviderServer = ((WorldServer) this).chunkProviderServer;
             if (chunkProviderServer.unloadQueue.contains(tileentity.x >> 4, tileentity.z >> 4)) {
                 continue;
@@ -1295,7 +1294,7 @@ public abstract class World implements IBlockAccess {
                 TileEntity tileentity1 = (TileEntity) this.a.get(l);
 
                 if (!tileentity1.r()) {
-                    /* CraftBukkit start - order matters, moved down
+                    /* CraftBukkit start - Order matters, moved down
                     if (!this.tileEntityList.contains(tileentity1)) {
                         this.tileEntityList.add(tileentity1);
                     }
@@ -1306,7 +1305,7 @@ public abstract class World implements IBlockAccess {
 
                         if (chunk1 != null) {
                             chunk1.a(tileentity1.x & 15, tileentity1.y, tileentity1.z & 15, tileentity1);
-                            // CraftBukkit start - moved down from above
+                            // CraftBukkit start - Moved down from above
                             if (!this.tileEntityList.contains(tileentity1)) {
                                 this.tileEntityList.add(tileentity1);
                             }
@@ -1837,7 +1836,7 @@ public abstract class World implements IBlockAccess {
         }
     }
 
-    public void y() {
+    public void z() {
         int i = this.a(1.0F);
 
         if (i != this.j) {
@@ -1851,7 +1850,7 @@ public abstract class World implements IBlockAccess {
     }
 
     public void doTick() {
-        this.n();
+        this.o();
     }
 
     private void a() {
@@ -1863,7 +1862,7 @@ public abstract class World implements IBlockAccess {
         }
     }
 
-    protected void n() {
+    protected void o() {
         if (!this.worldProvider.f) {
             int i = this.worldData.getThunderDuration();
 
@@ -1942,11 +1941,11 @@ public abstract class World implements IBlockAccess {
         }
     }
 
-    public void z() {
+    public void A() {
         this.worldData.setWeatherDuration(1);
     }
 
-    protected void A() {
+    protected void B() {
         // this.chunkTickList.clear(); // CraftBukkit - removed
         this.methodProfiler.a("buildList");
 
@@ -1963,7 +1962,7 @@ public abstract class World implements IBlockAccess {
 
             for (int l = -b0; l <= b0; ++l) {
                 for (int i1 = -b0; i1 <= b0; ++i1) {
-                    // CraftBukkit start - don't tick chunks queued for unload
+                    // CraftBukkit start - Don't tick chunks queued for unload
                     ChunkProviderServer chunkProviderServer = ((WorldServer) entityhuman.world).chunkProviderServer;
                     if (chunkProviderServer.unloadQueue.contains(l + j, i1 + k)) {
                         continue;
@@ -2021,7 +2020,7 @@ public abstract class World implements IBlockAccess {
     }
 
     protected void g() {
-        this.A();
+        this.B();
     }
 
     public boolean x(int i, int j, int k) {
@@ -2338,7 +2337,7 @@ public abstract class World implements IBlockAccess {
         for (int j = 0; j < this.entityList.size(); ++j) {
             Entity entity = (Entity) this.entityList.get(j);
 
-            if (oclass.isAssignableFrom(entity.getClass())) {
+            if ((!(entity instanceof EntityLiving) || !((EntityLiving) entity).bU()) && oclass.isAssignableFrom(entity.getClass())) {
                 ++i;
             }
         }
@@ -2517,7 +2516,7 @@ public abstract class World implements IBlockAccess {
 
         for (int i = 0; i < this.players.size(); ++i) {
             EntityHuman entityhuman1 = (EntityHuman) this.players.get(i);
-            // CraftBukkit start - fixed an NPE
+            // CraftBukkit start - Fixed an NPE
             if (entityhuman1 == null || entityhuman1.dead) {
                 continue;
             }
@@ -2543,7 +2542,7 @@ public abstract class World implements IBlockAccess {
 
         for (int i = 0; i < this.players.size(); ++i) {
             EntityHuman entityhuman1 = (EntityHuman) this.players.get(i);
-            // CraftBukkit start - fixed an NPE
+            // CraftBukkit start - Fixed an NPE
             if (entityhuman1 == null || entityhuman1.dead) {
                 continue;
             }
@@ -2558,7 +2557,7 @@ public abstract class World implements IBlockAccess {
                 }
 
                 if (entityhuman1.isInvisible()) {
-                    float f = entityhuman1.ca();
+                    float f = entityhuman1.cc();
 
                     if (f < 0.1F) {
                         f = 0.1F;
@@ -2587,7 +2586,7 @@ public abstract class World implements IBlockAccess {
         return null;
     }
 
-    public void E() throws ExceptionWorldConflict { // CraftBukkit - added throws
+    public void F() throws ExceptionWorldConflict { // CraftBukkit - added throws
         this.dataManager.checkSession();
     }
 
@@ -2617,7 +2616,7 @@ public abstract class World implements IBlockAccess {
 
     public void broadcastEntityEffect(Entity entity, byte b0) {}
 
-    public IChunkProvider J() {
+    public IChunkProvider K() {
         return this.chunkProvider;
     }
 
@@ -2659,16 +2658,16 @@ public abstract class World implements IBlockAccess {
         return this.m + (this.n - this.m) * f;
     }
 
-    public boolean N() {
+    public boolean O() {
         return (double) this.h(1.0F) > 0.9D;
     }
 
-    public boolean O() {
+    public boolean P() {
         return (double) this.i(1.0F) > 0.2D;
     }
 
     public boolean F(int i, int j, int k) {
-        if (!this.O()) {
+        if (!this.P()) {
             return false;
         } else if (!this.l(i, j, k)) {
             return false;
@@ -2730,7 +2729,7 @@ public abstract class World implements IBlockAccess {
         return 256;
     }
 
-    public int Q() {
+    public int R() {
         return this.worldProvider.f ? 128 : 256;
     }
 
@@ -2746,7 +2745,7 @@ public abstract class World implements IBlockAccess {
     }
 
     public ChunkPosition b(String s, int i, int j, int k) {
-        return this.J().findNearestMapFeature(this, s, i, j, k);
+        return this.K().findNearestMapFeature(this, s, i, j, k);
     }
 
     public CrashReportSystemDetails a(CrashReport crashreport) {
@@ -2777,7 +2776,7 @@ public abstract class World implements IBlockAccess {
         return this.J;
     }
 
-    public Calendar U() {
+    public Calendar V() {
         if (this.getTime() % 600L == 0L) {
             this.K.setTimeInMillis(System.currentTimeMillis());
         }

@@ -88,6 +88,10 @@ public class WorldServer extends World implements org.bukkit.BlockChangeDelegate
             if (!(result instanceof TileEntityFurnace)) {
                 result = fixTileEntity(i, j, k, type, result);
             }
+        } else if (type == Block.DROPPER.id) {
+            if (!(result instanceof TileEntityDropper)) {
+                result = fixTileEntity(i, j, k, type, result);
+            }
         } else if (type == Block.DISPENSER.id) {
             if (!(result instanceof TileEntityDispenser)) {
                 result = fixTileEntity(i, j, k, type, result);
@@ -112,6 +116,18 @@ public class WorldServer extends World implements org.bukkit.BlockChangeDelegate
             if (!(result instanceof TileEntityEnderChest)) {
                 result = fixTileEntity(i, j, k, type, result);
             }
+        } else if (type == Block.BREWING_STAND.id) {
+            if (!(result instanceof TileEntityBrewingStand)) {
+                result = fixTileEntity(i, j, k, type, result);
+            }
+        } else if (type == Block.BEACON.id) {
+            if (!(result instanceof TileEntityBeacon)) {
+                result = fixTileEntity(i, j, k, type, result);
+            }
+        } else if (type == Block.HOPPER.id) {
+            if (!(result instanceof TileEntityHopper)) {
+                result = fixTileEntity(i, j, k, type, result);
+            }
         }
 
         return result;
@@ -123,6 +139,7 @@ public class WorldServer extends World implements org.bukkit.BlockChangeDelegate
 
         if (Block.byId[type] instanceof BlockContainer) {
             TileEntity replacement = ((BlockContainer) Block.byId[type]).b(this);
+            replacement.world = this;
             this.setTileEntity(x, y, z, replacement);
             return replacement;
         } else {
@@ -191,13 +208,13 @@ public class WorldServer extends World implements org.bukkit.BlockChangeDelegate
         this.methodProfiler.c("portalForcer");
         this.P.a(this.getTime());
         this.methodProfiler.b();
-        this.Y();
+        this.Z();
 
         this.getWorld().processChunkGC(); // CraftBukkit
     }
 
     public BiomeMeta a(EnumCreatureType enumcreaturetype, int i, int j, int k) {
-        List list = this.J().getMobsFor(enumcreaturetype, i, j, k);
+        List list = this.K().getMobsFor(enumcreaturetype, i, j, k);
 
         return list != null && !list.isEmpty() ? (BiomeMeta) WeightedRandom.a(this.random, (Collection) list) : null;
     }
@@ -228,10 +245,10 @@ public class WorldServer extends World implements org.bukkit.BlockChangeDelegate
             }
         }
 
-        this.X();
+        this.Y();
     }
 
-    private void X() {
+    private void Y() {
         // CraftBukkit start
         WeatherChangeEvent weather = new WeatherChangeEvent(this.getWorld(), false);
         this.getServer().getPluginManager().callEvent(weather);
@@ -304,7 +321,7 @@ public class WorldServer extends World implements org.bukkit.BlockChangeDelegate
             int k1;
             int l1;
 
-            if (this.random.nextInt(100000) == 0 && this.O() && this.N()) {
+            if (this.random.nextInt(100000) == 0 && this.P() && this.O()) {
                 this.k = this.k * 3 + 1013904223;
                 i1 = this.k >> 2;
                 j1 = k + (i1 & 15);
@@ -337,7 +354,7 @@ public class WorldServer extends World implements org.bukkit.BlockChangeDelegate
                     // CraftBukkit end
                 }
 
-                if (this.O() && this.z(j1 + k, l1, k1 + l)) {
+                if (this.P() && this.z(j1 + k, l1, k1 + l)) {
                     // CraftBukkit start
                     BlockState blockState = this.getWorld().getBlockAt(j1 + k, l1, k1 + l).getState();
                     blockState.setTypeId(Block.SNOW.id);
@@ -350,7 +367,7 @@ public class WorldServer extends World implements org.bukkit.BlockChangeDelegate
                     // CraftBukkit end
                 }
 
-                if (this.O()) {
+                if (this.P()) {
                     BiomeBase biomebase = this.getBiome(j1 + k, k1 + l);
 
                     if (biomebase.d()) {
@@ -370,21 +387,21 @@ public class WorldServer extends World implements org.bukkit.BlockChangeDelegate
             for (k1 = 0; k1 < j1; ++k1) {
                 ChunkSection chunksection = achunksection[k1];
 
-                if (chunksection != null && chunksection.b()) {
+                if (chunksection != null && chunksection.shouldTick()) {
                     for (int j2 = 0; j2 < 3; ++j2) {
                         this.k = this.k * 3 + 1013904223;
                         i2 = this.k >> 2;
                         int k2 = i2 & 15;
                         int l2 = i2 >> 8 & 15;
                         int i3 = i2 >> 16 & 15;
-                        int j3 = chunksection.a(k2, i3, l2);
+                        int j3 = chunksection.getTypeId(k2, i3, l2);
 
                         ++j;
                         Block block = Block.byId[j3];
 
                         if (block != null && block.isTicking()) {
                             ++i;
-                            block.a(this, k2 + k, i3 + chunksection.d(), l2 + l, this.random);
+                            block.a(this, k2 + k, i3 + chunksection.getYPosition(), l2 + l, this.random);
                         }
                     }
                 }
@@ -474,7 +491,7 @@ public class WorldServer extends World implements org.bukkit.BlockChangeDelegate
             throw new IllegalStateException("TickNextTick list out of synch");
         } else {
             if (i > 1000) {
-                // CraftBukkit start - if the server has too much to process over time, try to alleviate that
+                // CraftBukkit start - If the server has too much to process over time, try to alleviate that
                 if (i > 20 * 1000) {
                     i = i / 20;
                 } else {
@@ -555,7 +572,7 @@ public class WorldServer extends World implements org.bukkit.BlockChangeDelegate
                 iterator = this.M.iterator();
             } else {
                 iterator = this.T.iterator();
-                /* CraftBukkit start - comment out debug spam
+                /* CraftBukkit start - Comment out debug spam
                 if (!this.T.isEmpty()) {
                     System.out.println(this.T.size());
                 }
@@ -626,17 +643,24 @@ public class WorldServer extends World implements org.bukkit.BlockChangeDelegate
 
     public List getTileEntities(int i, int j, int k, int l, int i1, int j1) {
         ArrayList arraylist = new ArrayList();
-        // CraftBukkit start - use iterator
-        Iterator iterator = this.tileEntityList.iterator();
 
-        while (iterator.hasNext()) {
-            TileEntity tileentity = (TileEntity) iterator.next();
-            // CraftBukkit end
+        // CraftBukkit start - Get tile entities from chunks instead of world
+        for (int chunkX = (i >> 4); chunkX <= ((l - 1) >> 4); chunkX++) {
+            for (int chunkZ = (k >> 4); chunkZ <= ((j1 - 1) >> 4); chunkZ++) {
+                Chunk chunk = getChunkAt(chunkX, chunkZ);
+                if (chunk == null) {
+                    continue;
+                }
 
-            if (tileentity.x >= i && tileentity.y >= j && tileentity.z >= k && tileentity.x < l && tileentity.y < i1 && tileentity.z < j1) {
-                arraylist.add(tileentity);
+                for (Object te : chunk.tileEntities.values()) {
+                    TileEntity tileentity = (TileEntity) te;
+                    if ((tileentity.x >= i) && (tileentity.y >= j) && (tileentity.z >= k) && (tileentity.x < l) && (tileentity.y < i1) && (tileentity.z < j1)) {
+                        arraylist.add(tileentity);
+                    }
+                }
             }
         }
+        // CraftBukkit end
 
         return arraylist;
     }
@@ -751,8 +775,14 @@ public class WorldServer extends World implements org.bukkit.BlockChangeDelegate
         }
     }
 
+    public void flushSave() {
+        if (this.chunkProvider.canSave()) {
+            this.chunkProvider.b();
+        }
+    }
+
     protected void a() throws ExceptionWorldConflict { // CraftBukkit - added throws
-        this.E();
+        this.F();
         this.dataManager.saveWorldData(this.worldData, this.server.getPlayerList().q());
         this.worldMaps.a();
     }
@@ -859,7 +889,7 @@ public class WorldServer extends World implements org.bukkit.BlockChangeDelegate
 
     }
 
-    private void Y() {
+    private void Z() {
         while (!this.Q[this.R].isEmpty()) {
             int i = this.R;
 
@@ -889,12 +919,12 @@ public class WorldServer extends World implements org.bukkit.BlockChangeDelegate
         this.dataManager.a();
     }
 
-    protected void n() {
-        boolean flag = this.O();
+    protected void o() {
+        boolean flag = this.P();
 
-        super.n();
-        if (flag != this.O()) {
-            // CraftBukkit start - only sending weather packets to those affected
+        super.o();
+        if (flag != this.P()) {
+            // CraftBukkit start - Only send weather packets to those affected
             for (int i = 0; i < this.players.size(); ++i) {
                 if (((EntityPlayer) this.players.get(i)).world == this) {
                     ((EntityPlayer) this.players.get(i)).setPlayerWeather((!flag ? WeatherType.DOWNFALL : WeatherType.CLEAR), false);
@@ -916,7 +946,7 @@ public class WorldServer extends World implements org.bukkit.BlockChangeDelegate
         return this.manager;
     }
 
-    public PortalTravelAgent s() {
+    public PortalTravelAgent t() {
         return this.P;
     }
 

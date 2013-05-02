@@ -260,7 +260,7 @@ public class CraftingManager {
             }
         }
 
-        if (i == 2 && itemstack.id == itemstack1.id && itemstack.count == 1 && itemstack1.count == 1 && Item.byId[itemstack.id].o()) {
+        if (i == 2 && itemstack.id == itemstack1.id && itemstack.count == 1 && itemstack1.count == 1 && Item.byId[itemstack.id].usesDurability()) {
             Item item = Item.byId[itemstack.id];
             int k = item.getMaxDurability() - itemstack.j();
             int l = item.getMaxDurability() - itemstack1.j();
@@ -271,7 +271,7 @@ public class CraftingManager {
                 j1 = 0;
             }
 
-            // CraftBukkit start - construct a dummy repair recipe
+            // CraftBukkit start - Construct a dummy repair recipe
             ItemStack result = new ItemStack(itemstack.id, 1, j1);
             List<ItemStack> ingredients = new ArrayList<ItemStack>();
             ingredients.add(itemstack.cloneItemStack());

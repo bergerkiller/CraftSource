@@ -8,14 +8,12 @@ import org.bukkit.craftbukkit.inventory.CraftInventory;
 import org.bukkit.inventory.Inventory;
 
 public class CraftHopper extends CraftBlockState implements Hopper {
-    private final CraftWorld world;
     private final TileEntityHopper hopper;
 
     public CraftHopper(final Block block) {
         super(block);
 
-        world = (CraftWorld) block.getWorld();
-        hopper = (TileEntityHopper) world.getTileEntityAt(getX(), getY(), getZ());
+        hopper = (TileEntityHopper) ((CraftWorld) block.getWorld()).getTileEntityAt(getX(), getY(), getZ());
     }
 
     public Inventory getInventory() {
@@ -23,8 +21,8 @@ public class CraftHopper extends CraftBlockState implements Hopper {
     }
 
     @Override
-    public boolean update(boolean force) {
-        boolean result = super.update(force);
+    public boolean update(boolean force, boolean applyPhysics) {
+        boolean result = super.update(force, applyPhysics);
 
         if (result) {
             hopper.update();

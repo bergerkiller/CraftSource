@@ -8,14 +8,12 @@ import org.bukkit.craftbukkit.inventory.CraftInventoryBrewer;
 import org.bukkit.inventory.BrewerInventory;
 
 public class CraftBrewingStand extends CraftBlockState implements BrewingStand {
-    private final CraftWorld world;
     private final TileEntityBrewingStand brewingStand;
 
     public CraftBrewingStand(Block block) {
         super(block);
 
-        world = (CraftWorld) block.getWorld();
-        brewingStand = (TileEntityBrewingStand) world.getTileEntityAt(getX(), getY(), getZ());
+        brewingStand = (TileEntityBrewingStand) ((CraftWorld) block.getWorld()).getTileEntityAt(getX(), getY(), getZ());
     }
 
     public BrewerInventory getInventory() {
@@ -23,8 +21,8 @@ public class CraftBrewingStand extends CraftBlockState implements BrewingStand {
     }
 
     @Override
-    public boolean update(boolean force) {
-        boolean result = super.update(force);
+    public boolean update(boolean force, boolean applyPhysics) {
+        boolean result = super.update(force, applyPhysics);
 
         if (result) {
             brewingStand.update();

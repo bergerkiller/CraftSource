@@ -12,7 +12,7 @@ import org.bukkit.entity.LivingEntity;
 
 public class EntityPotion extends EntityProjectile {
 
-    private ItemStack c;
+    public ItemStack c; // CraftBukkit private --> public
 
     public EntityPotion(World world) {
         super(world);
@@ -64,7 +64,7 @@ public class EntityPotion extends EntityProjectile {
         if (!this.world.isStatic) {
             List list = Item.POTION.g(this.c);
 
-            if (list != null && !list.isEmpty()) {
+            if (true || list != null && !list.isEmpty()) { // CraftBukkit - Call event even if no effects to apply
                 AxisAlignedBB axisalignedbb = this.boundingBox.grow(4.0D, 2.0D, 4.0D);
                 List list1 = this.world.a(EntityLiving.class, axisalignedbb);
 
@@ -91,7 +91,7 @@ public class EntityPotion extends EntityProjectile {
                     }
 
                     org.bukkit.event.entity.PotionSplashEvent event = org.bukkit.craftbukkit.event.CraftEventFactory.callPotionSplashEvent(this, affected);
-                    if (!event.isCancelled()) {
+                    if (!event.isCancelled() && list != null && !list.isEmpty()) { // do not process effects if there are no effects to process
                         for (LivingEntity victim : event.getAffectedEntities()) {
                             if (!(victim instanceof CraftLivingEntity)) {
                                 continue;
@@ -107,7 +107,7 @@ public class EntityPotion extends EntityProjectile {
                                 MobEffect mobeffect = (MobEffect) iterator1.next();
                                 int i = mobeffect.getEffectId();
 
-                                // CraftBukkit start - abide by PVP settings - for players only!
+                                // CraftBukkit start - Abide by PVP settings - for players only!
                                 if (!this.world.pvpMode && this.getShooter() instanceof EntityPlayer && entityliving instanceof EntityPlayer && entityliving != this.getShooter()) {
                                     // Block SLOWER_MOVEMENT, SLOWER_DIG, HARM, BLINDNESS, HUNGER, WEAKNESS and POISON potions
                                     if (i == 2 || i == 4 || i == 7 || i == 15 || i == 17 || i == 18 || i == 19) continue;
@@ -115,7 +115,7 @@ public class EntityPotion extends EntityProjectile {
                                 // CraftBukkit end
 
                                 if (MobEffectList.byId[i].isInstant()) {
-                                    // CraftBukkit - added 'this'
+                                    // CraftBukkit - Added 'this'
                                     MobEffectList.byId[i].applyInstantEffect(this.getShooter(), entityliving, mobeffect.getAmplifier(), d1, this);
                                 } else {
                                     int j = (int) (d1 * (double) mobeffect.getDuration() + 0.5D);

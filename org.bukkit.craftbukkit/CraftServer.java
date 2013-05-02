@@ -32,8 +32,6 @@ import net.minecraft.server.EnumGamemode;
 import net.minecraft.server.ExceptionWorldConflict;
 import net.minecraft.server.PlayerList;
 import net.minecraft.server.RecipesFurnace;
-import net.minecraft.server.IProgressUpdate;
-import net.minecraft.server.IWorldAccess;
 import net.minecraft.server.Item;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.MobEffectList;
@@ -82,6 +80,7 @@ import org.bukkit.craftbukkit.metadata.PlayerMetadataStore;
 import org.bukkit.craftbukkit.metadata.WorldMetadataStore;
 import org.bukkit.craftbukkit.potion.CraftPotionBrewer;
 import org.bukkit.craftbukkit.scheduler.CraftScheduler;
+import org.bukkit.craftbukkit.scoreboard.CraftScoreboardManager;
 import org.bukkit.craftbukkit.updater.AutoUpdater;
 import org.bukkit.craftbukkit.updater.BukkitDLUpdaterService;
 import org.bukkit.craftbukkit.util.DatFileFilter;
@@ -162,6 +161,7 @@ public final class CraftServer implements Server {
     private File container;
     private WarningState warningState = WarningState.DEFAULT;
     private final BooleanWrapper online = new BooleanWrapper();
+    public CraftScoreboardManager scoreboardManager;
 
     private final class BooleanWrapper {
         private boolean value = true;
@@ -721,9 +721,10 @@ public final class CraftServer implements Server {
         }
 
         internal.worldMaps = console.worlds.get(0).worldMaps;
+        internal.scoreboard = getScoreboardManager().getMainScoreboard().getHandle();
 
-        internal.tracker = new EntityTracker(internal); // CraftBukkit
-        internal.addIWorldAccess((IWorldAccess) new WorldManager(console, internal));
+        internal.tracker = new EntityTracker(internal);
+        internal.addIWorldAccess(new WorldManager(console, internal));
         internal.difficulty = 1;
         internal.setSpawnFlags(true, true);
         console.worlds.add(internal);
@@ -795,7 +796,7 @@ public final class CraftServer implements Server {
 
         if (save) {
             try {
-                handle.save(true, (IProgressUpdate) null);
+                handle.save(true, null);
                 handle.saveLevel();
                 WorldSaveEvent event = new WorldSaveEvent(handle.getWorld());
                 getPluginManager().callEvent(event);
@@ -936,12 +937,12 @@ public final class CraftServer implements Server {
 
         if (section != null) {
             for (String key : section.getKeys(false)) {
-                List<String> commands = null;
+                List<String> commands;
 
                 if (section.isList(key)) {
                     commands = section.getStringList(key);
                 } else {
-                    commands = ImmutableList.<String>of(section.getString(key));
+                    commands = ImmutableList.of(section.getString(key));
                 }
 
                 result.put(key, commands.toArray(new String[commands.size()]));
@@ -1007,9 +1008,12 @@ public final class CraftServer implements Server {
                     if (plugin == null) {
                         getLogger().severe("Could not set generator for default world '" + world + "': Plugin '" + split[0] + "' does not exist");
                     } else if (!plugin.isEnabled()) {
-                        getLogger().severe("Could not set generator for default world '" + world + "': Plugin '" + split[0] + "' is not enabled yet (is it load:STARTUP?)");
+                        getLogger().severe("Could not set generator for default world '" + world + "': Plugin '" + plugin.getDescription().getFullName() + "' is not enabled yet (is it load:STARTUP?)");
                     } else {
                         result = plugin.getDefaultWorldGenerator(world, id);
+                        if (result == null) {
+                            getLogger().severe("Could not set generator for default world '" + world + "': Plugin '" + plugin.getDescription().getFullName() + "' lacks a default world generator");
+                        }
                     }
                 }
             }
@@ -1247,9 +1251,9 @@ public final class CraftServer implements Server {
 
     public void onPlayerJoin(Player player) {
         if ((updater.isEnabled()) && (updater.getCurrent() != null) && (player.hasPermission(Server.BROADCAST_CHANNEL_ADMINISTRATIVE))) {
-            if ((updater.getCurrent().isBroken()) && (updater.getOnBroken().contains(updater.WARN_OPERATORS))) {
+            if ((updater.getCurrent().isBroken()) && (updater.getOnBroken().contains(AutoUpdater.WARN_OPERATORS))) {
                 player.sendMessage(ChatColor.DARK_RED + "The version of CraftBukkit that this server is running is known to be broken. Please consider updating to the latest version at dl.bukkit.org.");
-            } else if ((updater.isUpdateAvailable()) && (updater.getOnUpdate().contains(updater.WARN_OPERATORS))) {
+            } else if ((updater.isUpdateAvailable()) && (updater.getOnUpdate().contains(AutoUpdater.WARN_OPERATORS))) {
                 player.sendMessage(ChatColor.DARK_PURPLE + "The version of CraftBukkit that this server is running is out of date. Please consider updating to the latest version at dl.bukkit.org.");
             }
         }
@@ -1357,5 +1361,9 @@ public final class CraftServer implements Server {
 
     public CraftItemFactory getItemFactory() {
         return CraftItemFactory.instance();
+    }
+
+    public CraftScoreboardManager getScoreboardManager() {
+        return scoreboardManager;
     }
 }

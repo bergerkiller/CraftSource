@@ -72,8 +72,8 @@ public class PendingConnection extends Connection {
         } else {
             PublicKey publickey = this.server.F().getPublic();
 
-            if (packet2handshake.d() != 60) {
-                if (packet2handshake.d() > 60) {
+            if (packet2handshake.d() != 61) {
+                if (packet2handshake.d() > 61) {
                     this.disconnect("Outdated server!");
                 } else {
                     this.disconnect("Outdated client!");
@@ -147,8 +147,8 @@ public class PendingConnection extends Connection {
             org.bukkit.event.server.ServerListPingEvent pingEvent = org.bukkit.craftbukkit.event.CraftEventFactory.callServerListPingEvent(this.server.server, getSocket().getInetAddress(), this.server.getMotd(), playerlist.getPlayerCount(), playerlist.getMaxPlayers());
 
             if (packet254getinfo.a == 1) {
-                // CraftBukkit start - fix decompile issues, don't create a list from an array
-                Object[] list = new Object[] { 1, 60, this.server.getVersion(), pingEvent.getMotd(), playerlist.getPlayerCount(), pingEvent.getMaxPlayers() };
+                // CraftBukkit start - Fix decompile issues, don't create a list from an array
+                Object[] list = new Object[] { 1, 61, this.server.getVersion(), pingEvent.getMotd(), playerlist.getPlayerCount(), pingEvent.getMaxPlayers() };
 
                 for (Object object : list) {
                     if (s == null) {

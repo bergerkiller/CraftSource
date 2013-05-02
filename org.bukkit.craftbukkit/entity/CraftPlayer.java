@@ -24,7 +24,6 @@ import org.bukkit.*;
 import org.bukkit.Achievement;
 import org.bukkit.Material;
 import org.bukkit.Statistic;
-import org.bukkit.WeatherType;
 import org.bukkit.World;
 import org.bukkit.configuration.serialization.DelegateDeserialization;
 import org.bukkit.conversations.Conversation;
@@ -38,6 +37,7 @@ import org.bukkit.craftbukkit.CraftSound;
 import org.bukkit.craftbukkit.CraftWorld;
 import org.bukkit.craftbukkit.map.CraftMapView;
 import org.bukkit.craftbukkit.map.RenderData;
+import org.bukkit.craftbukkit.scoreboard.CraftScoreboard;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 import org.bukkit.event.player.PlayerGameModeChangeEvent;
@@ -50,6 +50,7 @@ import org.bukkit.metadata.MetadataValue;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.messaging.Messenger;
 import org.bukkit.plugin.messaging.StandardMessenger;
+import org.bukkit.scoreboard.Scoreboard;
 
 @DelegateDeserialization(CraftOfflinePlayer.class)
 public class CraftPlayer extends CraftHumanEntity implements Player {
@@ -366,7 +367,7 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
         // To = Players new Location if Teleport is Successful
         Location to = location;
         // Create & Call the Teleport Event.
-        PlayerTeleportEvent event = new PlayerTeleportEvent((Player) this, from, to, cause);
+        PlayerTeleportEvent event = new PlayerTeleportEvent(this, from, to, cause);
         server.getPluginManager().callEvent(event);
 
         // Return False to inform the Plugin that the Teleport was unsuccessful/cancelled.
@@ -420,6 +421,7 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
         server.getHandle().playerFileData.save(getHandle());
     }
 
+    @Deprecated
     public void updateInventory() {
         getHandle().updateInventory(getHandle().activeContainer);
     }
@@ -973,5 +975,22 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
     public void resetMaxHealth() {
         super.resetMaxHealth();
         getHandle().triggerHealthUpdate();
+    }
+
+    public CraftScoreboard getScoreboard() {
+        return this.server.getScoreboardManager().getPlayerBoard(this);
+    }
+
+    public void setScoreboard(Scoreboard scoreboard) {
+        Validate.notNull(scoreboard, "Scoreboard cannot be null");
+        PlayerConnection playerConnection = getHandle().playerConnection;
+        if (playerConnection == null) {
+            throw new IllegalStateException("Cannot set scoreboard yet");
+        }
+        if (playerConnection.disconnected) {
+            throw new IllegalStateException("Cannot set scoreboard for invalid CraftPlayer");
+        }
+
+        this.server.getScoreboardManager().setPlayerBoard(this, scoreboard);
     }
 }

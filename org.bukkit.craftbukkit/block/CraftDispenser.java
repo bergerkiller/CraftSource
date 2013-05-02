@@ -28,21 +28,19 @@ public class CraftDispenser extends CraftBlockState implements Dispenser {
     public boolean dispense() {
         Block block = getBlock();
 
-        synchronized (block) {
-            if (block.getType() == Material.DISPENSER) {
-                BlockDispenser dispense = (BlockDispenser) net.minecraft.server.Block.DISPENSER;
+        if (block.getType() == Material.DISPENSER) {
+            BlockDispenser dispense = (BlockDispenser) net.minecraft.server.Block.DISPENSER;
 
-                dispense.dispense(world.getHandle(), getX(), getY(), getZ());
-                return true;
-            } else {
-                return false;
-            }
+            dispense.dispense(world.getHandle(), getX(), getY(), getZ());
+            return true;
+        } else {
+            return false;
         }
     }
 
     @Override
-    public boolean update(boolean force) {
-        boolean result = super.update(force);
+    public boolean update(boolean force, boolean applyPhysics) {
+        boolean result = super.update(force, applyPhysics);
 
         if (result) {
             dispenser.update();

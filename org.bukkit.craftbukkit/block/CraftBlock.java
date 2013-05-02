@@ -249,6 +249,8 @@ public class CraftBlock implements Block {
             return new CraftFurnace(this);
         case DISPENSER:
             return new CraftDispenser(this);
+        case DROPPER:
+            return new CraftDropper(this);
         case HOPPER:
             return new CraftHopper(this);
         case MOB_SPAWNER:
@@ -263,6 +265,8 @@ public class CraftBlock implements Block {
             return new CraftSkull(this);
         case COMMAND:
             return new CraftCommandBlock(this);
+        case BEACON:
+            return new CraftBeacon(this);
         default:
             return new CraftBlockState(this);
         }
@@ -338,7 +342,7 @@ public class CraftBlock implements Block {
 
     public int getBlockPower(BlockFace face) {
         int power = 0;
-        BlockRedstoneWire wire = (BlockRedstoneWire) net.minecraft.server.Block.REDSTONE_WIRE;
+        BlockRedstoneWire wire = net.minecraft.server.Block.REDSTONE_WIRE;
         net.minecraft.server.World world = chunk.getHandle().world;
         if ((face == BlockFace.DOWN || face == BlockFace.SELF) && world.isBlockFacePowered(x, y - 1, z, 0)) power = wire.getPower(world, x, y - 1, z, power);
         if ((face == BlockFace.UP || face == BlockFace.SELF) && world.isBlockFacePowered(x, y + 1, z, 1)) power = wire.getPower(world, x, y + 1, z, power);

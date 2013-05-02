@@ -13,23 +13,22 @@ import java.util.Set;
 import java.util.Map.Entry;
 
 // CraftBukkit start
-import org.bukkit.Location;
-import org.bukkit.TravelAgent;
-import org.bukkit.WeatherType;
 import org.bukkit.craftbukkit.CraftServer;
 import org.bukkit.craftbukkit.CraftWorld;
 import org.bukkit.craftbukkit.chunkio.ChunkIOExecutor;
-import org.bukkit.craftbukkit.entity.CraftPlayer;
+
+import org.bukkit.Bukkit;
+import org.bukkit.Location;
+import org.bukkit.TravelAgent;
 import org.bukkit.entity.Player;
 import org.bukkit.event.player.PlayerChangedWorldEvent;
 import org.bukkit.event.player.PlayerPortalEvent;
-import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerLoginEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.event.player.PlayerTeleportEvent.TeleportCause;
 import org.bukkit.util.Vector;
-import org.bukkit.Bukkit;
 // CraftBukkit end
 
 public abstract class PlayerList {
@@ -127,7 +126,7 @@ public abstract class PlayerList {
         }
     }
 
-    protected void a(ScoreboardServer scoreboardserver, EntityPlayer entityplayer) {
+    public void a(ScoreboardServer scoreboardserver, EntityPlayer entityplayer) { // CraftBukkit - protected -> public
         HashSet hashset = new HashSet();
         Iterator iterator = scoreboardserver.getTeams().iterator();
 
@@ -214,7 +213,7 @@ public abstract class PlayerList {
         ChunkIOExecutor.adjustPoolSize(this.getPlayerCount());
         // CraftBukkit end
 
-        // CraftBukkit start - only add if the player wasn't moved in the event
+        // CraftBukkit start - Only add if the player wasn't moved in the event
         if (entityplayer.world == worldserver && !worldserver.players.contains(entityplayer)) {
             worldserver.addEntity(entityplayer);
             this.a(entityplayer, (WorldServer) null);
@@ -250,7 +249,7 @@ public abstract class PlayerList {
     public String disconnect(EntityPlayer entityplayer) { // CraftBukkit - return string
         if (entityplayer.playerConnection.disconnected) return null; // CraftBukkit - exploitsies fix
 
-        // CraftBukkit start - quitting must be before we do final save of data, in case plugins need to modify it
+        // CraftBukkit start - Quitting must be before we do final save of data, in case plugins need to modify it
         PlayerQuitEvent playerQuitEvent = new PlayerQuitEvent(this.cserver.getPlayer(entityplayer), "\u00A7e" + entityplayer.name + " left the game.");
         this.cserver.getPluginManager().callEvent(playerQuitEvent);
         entityplayer.getBukkitEntity().disconnect(playerQuitEvent.getQuitMessage());
@@ -278,6 +277,8 @@ public abstract class PlayerList {
                 entityplayer1.playerConnection.sendPacket(packet);
             }
         }
+        // This removes the scoreboard (and player reference) for the specific player in the manager
+        this.cserver.getScoreboardManager().removePlayer(entityplayer.getBukkitEntity());
 
         return playerQuitEvent.getQuitMessage();
         // CraftBukkit end
@@ -450,7 +451,7 @@ public abstract class PlayerList {
         worldserver.getPlayerChunkMap().addPlayer(entityplayer1);
         worldserver.addEntity(entityplayer1);
         this.players.add(entityplayer1);
-        // CraftBukkit start - added from changeDimension
+        // CraftBukkit start - Added from changeDimension
         this.updateClient(entityplayer1); // CraftBukkit
         entityplayer1.updateAbilities();
         Iterator iterator = entityplayer1.getEffects().iterator();
@@ -464,7 +465,7 @@ public abstract class PlayerList {
         // CraftBukkit end
         entityplayer1.setHealth(entityplayer1.getHealth());
 
-        // CraftBukkit start - don't fire on respawn
+        // CraftBukkit start - Don't fire on respawn
         if (fromWorld != location.getWorld()) {
             PlayerChangedWorldEvent event = new PlayerChangedWorldEvent((Player) entityplayer1.getBukkitEntity(), fromWorld);
             Bukkit.getServer().getPluginManager().callEvent(event);
@@ -492,7 +493,7 @@ public abstract class PlayerList {
         if (exitWorld != null) {
             if ((cause == TeleportCause.END_PORTAL) && (i == 0)) {
                 // THE_END -> NORMAL; use bed if available, otherwise default spawn
-                exit = ((CraftPlayer) entityplayer.getBukkitEntity()).getBedSpawnLocation();
+                exit = ((org.bukkit.craftbukkit.entity.CraftPlayer) entityplayer.getBukkitEntity()).getBedSpawnLocation();
                 if (exit == null || ((CraftWorld) exit.getWorld()).getHandle().dimension != 0) {
                     exit = exitWorld.getWorld().getSpawnLocation();
                 }
@@ -503,7 +504,7 @@ public abstract class PlayerList {
             }
         }
 
-        TravelAgent agent = exit != null ? (TravelAgent) ((CraftWorld) exit.getWorld()).getHandle().s() : org.bukkit.craftbukkit.CraftTravelAgent.DEFAULT; // return arbitrary TA to compensate for implementation dependent plugins
+        TravelAgent agent = exit != null ? (TravelAgent) ((CraftWorld) exit.getWorld()).getHandle().t() : org.bukkit.craftbukkit.CraftTravelAgent.DEFAULT; // return arbitrary TA to compensate for implementation dependent plugins
         PlayerPortalEvent event = new PlayerPortalEvent(entityplayer.getBukkitEntity(), enter, exit, agent, cause);
         event.useTravelAgent(useTravelAgent);
         Bukkit.getServer().getPluginManager().callEvent(event);
@@ -520,7 +521,7 @@ public abstract class PlayerList {
         Vector velocity = entityplayer.getBukkitEntity().getVelocity();
         boolean before = exitWorld.chunkProviderServer.forceChunkLoad;
         exitWorld.chunkProviderServer.forceChunkLoad = true;
-        exitWorld.s().adjustExit(entityplayer, exit, velocity);
+        exitWorld.t().adjustExit(entityplayer, exit, velocity); // Should be getTravelAgent
         exitWorld.chunkProviderServer.forceChunkLoad = before;
 
         this.moveToWorld(entityplayer, exitWorld.dimension, true, exit, false); // Vanilla doesn't check for suffocation when handling portals, so neither should we
@@ -531,12 +532,12 @@ public abstract class PlayerList {
     }
 
     public void a(Entity entity, int i, WorldServer worldserver, WorldServer worldserver1) {
-        // CraftBukkit start - split into modular functions
+        // CraftBukkit start - Split into modular functions
         Location exit = this.calculateTarget(entity.getBukkitEntity().getLocation(), worldserver1);
         this.repositionEntity(entity, exit, true);
     }
 
-    // copy of original a(Entity, int, WorldServer, WorldServer) method with only location calculation logic
+    // Copy of original a(Entity, int, WorldServer, WorldServer) method with only location calculation logic
     public Location calculateTarget(Location enter, World target) {
         WorldServer worldserver = ((CraftWorld) enter.getWorld()).getHandle();
         WorldServer worldserver1 = ((CraftWorld) target.getWorld()).getHandle();
@@ -608,7 +609,7 @@ public abstract class PlayerList {
                 worldserver1.addEntity(entity);
                 entity.setPositionRotation(d0, entity.locY, d1, entity.yaw, entity.pitch);
                 worldserver1.entityJoinedWorld(entity, false);
-                worldserver1.s().a(entity, d3, d4, d5, f);
+                worldserver1.t().a(entity, d3, d4, d5, f);
             }
 
             worldserver.methodProfiler.b();
@@ -687,7 +688,7 @@ public abstract class PlayerList {
                 // worldserver1.s().a(entity, d3, d4, d5, f);
                 if (portal) {
                     Vector velocity = entity.getBukkitEntity().getVelocity();
-                    worldserver1.s().adjustExit(entity, exit, velocity);
+                    worldserver1.t().adjustExit(entity, exit, velocity); // Should be getTravelAgent
                     entity.setPositionRotation(exit.getX(), exit.getY(), exit.getZ(), exit.getYaw(), exit.getPitch());
                     if (entity.motX != velocity.getX() || entity.motY != velocity.getY() || entity.motZ != velocity.getZ()) {
                         entity.getBukkitEntity().setVelocity(velocity);
@@ -707,7 +708,7 @@ public abstract class PlayerList {
             this.n = 0;
         }
 
-        /* CraftBukkit start - remove updating of lag to players -- it spams way to much on big servers.
+        /* CraftBukkit start - Remove updating of lag to players -- it spams way to much on big servers.
         if (this.n < this.players.size()) {
             EntityPlayer entityplayer = (EntityPlayer) this.players.get(this.n);
 
@@ -796,7 +797,7 @@ public abstract class PlayerList {
         return this.operators.contains(s.trim().toLowerCase()) || this.server.I() && this.server.worlds.get(0).getWorldData().allowCommands() && this.server.H().equalsIgnoreCase(s) || this.m;
     }
 
-    public EntityPlayer f(String s) {
+    public EntityPlayer getPlayer(String s) {
         Iterator iterator = this.players.iterator();
 
         EntityPlayer entityplayer;
@@ -975,8 +976,8 @@ public abstract class PlayerList {
 
     public void b(EntityPlayer entityplayer, WorldServer worldserver) {
         entityplayer.playerConnection.sendPacket(new Packet4UpdateTime(worldserver.getTime(), worldserver.getDayTime()));
-        if (worldserver.O()) {
-            entityplayer.setPlayerWeather(WeatherType.DOWNFALL, false); // CraftBukkit - handle player specific weather
+        if (worldserver.P()) {
+            entityplayer.setPlayerWeather(org.bukkit.WeatherType.DOWNFALL, false); // CraftBukkit - handle player specific weather
         }
     }
 

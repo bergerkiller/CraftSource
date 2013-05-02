@@ -8,14 +8,12 @@ import org.bukkit.craftbukkit.inventory.CraftInventoryFurnace;
 import org.bukkit.inventory.FurnaceInventory;
 
 public class CraftFurnace extends CraftBlockState implements Furnace {
-    private final CraftWorld world;
     private final TileEntityFurnace furnace;
 
     public CraftFurnace(final Block block) {
         super(block);
 
-        world = (CraftWorld) block.getWorld();
-        furnace = (TileEntityFurnace) world.getTileEntityAt(getX(), getY(), getZ());
+        furnace = (TileEntityFurnace) ((CraftWorld) block.getWorld()).getTileEntityAt(getX(), getY(), getZ());
     }
 
     public FurnaceInventory getInventory() {
@@ -23,8 +21,8 @@ public class CraftFurnace extends CraftBlockState implements Furnace {
     }
 
     @Override
-    public boolean update(boolean force) {
-        boolean result = super.update(force);
+    public boolean update(boolean force, boolean applyPhysics) {
+        boolean result = super.update(force, applyPhysics);
 
         if (result) {
             furnace.update();

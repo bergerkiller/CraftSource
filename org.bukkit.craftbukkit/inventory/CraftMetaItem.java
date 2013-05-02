@@ -303,8 +303,8 @@ class CraftMetaItem implements ItemMeta, Repairable {
         }
 
         NBTTagList tagList = new NBTTagList(key.NBT);
-        for (int i = 0; i < list.size(); i++) {
-            tagList.add(new NBTTagString("", list.get(i)));
+        for (String value : list) {
+            tagList.add(new NBTTagString("", value));
         }
 
         return tagList;
@@ -370,7 +370,7 @@ class CraftMetaItem implements ItemMeta, Repairable {
     }
 
     public boolean hasEnchant(Enchantment ench) {
-        return hasEnchants() ? enchantments.containsKey(ench) : false;
+        return hasEnchants() && enchantments.containsKey(ench);
     }
 
     public int getEnchantLevel(Enchantment ench) {
@@ -398,11 +398,15 @@ class CraftMetaItem implements ItemMeta, Repairable {
     }
 
     public boolean removeEnchant(Enchantment ench) {
-        return hasEnchants() ? enchantments.remove(ench) != null : false;
+        return hasEnchants() && enchantments.remove(ench) != null;
     }
 
     public boolean hasEnchants() {
         return !(enchantments == null || enchantments.isEmpty());
+    }
+
+    public boolean hasConflictingEnchant(Enchantment ench) {
+        return checkConflictingEnchants(enchantments, ench);
     }
 
     public List<String> getLore() {
@@ -486,7 +490,14 @@ class CraftMetaItem implements ItemMeta, Repairable {
     @Override
     public CraftMetaItem clone() {
         try {
-            return (CraftMetaItem) super.clone();
+            CraftMetaItem clone = (CraftMetaItem) super.clone();
+            if (this.lore != null) {
+                clone.lore = new ArrayList<String>(this.lore);
+            }
+            if (this.enchantments != null) {
+                clone.enchantments = new HashMap<Enchantment, Integer>(this.enchantments);
+            }
+            return clone;
         } catch (CloneNotSupportedException e) {
             throw new Error(e);
         }
@@ -553,6 +564,20 @@ class CraftMetaItem implements ItemMeta, Repairable {
                 addTo.add(page);
             }
         }
+    }
+
+    static boolean checkConflictingEnchants(Map<Enchantment, Integer> enchantments, Enchantment ench) {
+        if (enchantments == null || enchantments.isEmpty()) {
+            return false;
+        }
+
+        for (Enchantment enchant : enchantments.keySet()) {
+            if (enchant.conflictsWith(ench)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     @Override

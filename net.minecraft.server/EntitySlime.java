@@ -1,6 +1,11 @@
 package net.minecraft.server;
 
-import org.bukkit.event.entity.SlimeSplitEvent; // CraftBukkit
+// CraftBukkit start
+import org.bukkit.craftbukkit.entity.CraftEntity;
+import org.bukkit.craftbukkit.event.CraftEventFactory;
+import org.bukkit.event.entity.EntityTargetEvent;
+import org.bukkit.event.entity.SlimeSplitEvent; 
+// CraftBukkit end
 
 public class EntitySlime extends EntityLiving implements IMonster {
 
@@ -9,6 +14,7 @@ public class EntitySlime extends EntityLiving implements IMonster {
     public float c;
     public float d;
     private int jumpDelay = 0;
+    private Entity lastTarget; // CraftBukkit
 
     public EntitySlime(World world) {
         super(world);
@@ -110,7 +116,22 @@ public class EntitySlime extends EntityLiving implements IMonster {
 
     protected void bq() {
         this.bn();
-        EntityHuman entityhuman = this.world.findNearbyVulnerablePlayer(this, 16.0D); // CraftBukkit TODO: EntityTargetEvent
+        // CraftBukkit start
+        Entity entityhuman = this.world.findNearbyVulnerablePlayer(this, 16.0D); // EntityHuman -> Entity
+        EntityTargetEvent event = null;
+
+        if (entityhuman != null && !entityhuman.equals(lastTarget)) {
+            event = CraftEventFactory.callEntityTargetEvent(this, entityhuman, EntityTargetEvent.TargetReason.CLOSEST_PLAYER);
+        } else if (lastTarget != null && entityhuman == null) {
+            event = CraftEventFactory.callEntityTargetEvent(this, entityhuman, EntityTargetEvent.TargetReason.FORGOT_TARGET);
+        }
+
+        if (event != null && !event.isCancelled()) {
+            entityhuman = event.getTarget() == null ? null : ((CraftEntity) event.getTarget()).getHandle();
+        }
+
+        this.lastTarget = entityhuman;
+        // CraftBukkit end
 
         if (entityhuman != null) {
             this.a(entityhuman, 10.0F, 20.0F);
@@ -220,7 +241,7 @@ public class EntitySlime extends EntityLiving implements IMonster {
             if (this.getSize() == 1 || this.world.difficulty > 0) {
                 BiomeBase biomebase = this.world.getBiome(MathHelper.floor(this.locX), MathHelper.floor(this.locZ));
 
-                if (biomebase == BiomeBase.SWAMPLAND && this.locY > 50.0D && this.locY < 70.0D && this.random.nextFloat() < 0.5F && this.random.nextFloat() < e[this.world.v()] && this.world.getLightLevel(MathHelper.floor(this.locX), MathHelper.floor(this.locY), MathHelper.floor(this.locZ)) <= this.random.nextInt(8)) {
+                if (biomebase == BiomeBase.SWAMPLAND && this.locY > 50.0D && this.locY < 70.0D && this.random.nextFloat() < 0.5F && this.random.nextFloat() < e[this.world.w()] && this.world.getLightLevel(MathHelper.floor(this.locX), MathHelper.floor(this.locY), MathHelper.floor(this.locZ)) <= this.random.nextInt(8)) {
                     return super.canSpawn();
                 }
 

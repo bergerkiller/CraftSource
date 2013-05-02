@@ -2,8 +2,6 @@ package net.minecraft.server;
 
 import java.util.List;
 
-import org.bukkit.event.entity.ProjectileHitEvent; // CraftBukkit
-
 public abstract class EntityFireball extends Entity {
 
     private int e = -1;
@@ -47,7 +45,7 @@ public abstract class EntityFireball extends Entity {
         this.setPosition(this.locX, this.locY, this.locZ);
         this.height = 0.0F;
         this.motX = this.motY = this.motZ = 0.0D;
-        // CraftBukkit start - (added setDirection method)
+        // CraftBukkit start - Added setDirection method
         this.setDirection(d0, d1, d2);
     }
 
@@ -133,8 +131,7 @@ public abstract class EntityFireball extends Entity {
 
                 // CraftBukkit start
                 if (this.dead) {
-                    ProjectileHitEvent phe = new ProjectileHitEvent((org.bukkit.entity.Projectile) this.getBukkitEntity());
-                    this.world.getServer().getPluginManager().callEvent(phe);
+                    org.bukkit.craftbukkit.event.CraftEventFactory.callProjectileHitEvent(this);
                 }
                 // CraftBukkit end
             }
@@ -209,7 +206,7 @@ public abstract class EntityFireball extends Entity {
         this.g = nbttagcompound.getShort("zTile");
         this.h = nbttagcompound.getByte("inTile") & 255;
         this.i = nbttagcompound.getByte("inGround") == 1;
-        // CraftBukkit - direction -> power
+        // CraftBukkit start - direction -> power
         if (nbttagcompound.hasKey("power")) {
             NBTTagList nbttaglist = nbttagcompound.getList("power");
 

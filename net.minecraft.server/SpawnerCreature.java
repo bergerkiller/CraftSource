@@ -21,7 +21,7 @@ public final class SpawnerCreature {
         Chunk chunk = world.getChunkAt(i, j);
         int k = i * 16 + world.random.nextInt(16);
         int l = j * 16 + world.random.nextInt(16);
-        int i1 = world.random.nextInt(chunk == null ? world.Q() : chunk.h() + 16 - 1);
+        int i1 = world.random.nextInt(chunk == null ? world.R() : chunk.h() + 16 - 1);
 
         return new ChunkPosition(k, i1, l);
     }
@@ -68,7 +68,7 @@ public final class SpawnerCreature {
             for (int j1 = 0; j1 < j; ++j1) {
                 EnumCreatureType enumcreaturetype = aenumcreaturetype[j1];
 
-                // CraftBukkit start - use per-world spawn limits
+                // CraftBukkit start - Use per-world spawn limits
                 int limit = enumcreaturetype.b();
                 switch (enumcreaturetype) {
                     case MONSTER:
@@ -154,7 +154,7 @@ public final class SpawnerCreature {
                                                             entityliving.setPositionRotation((double) f, (double) f1, (double) f2, worldserver.random.nextFloat() * 360.0F, 0.0F);
                                                             if (entityliving.canSpawn()) {
                                                                 ++j2;
-                                                                // CraftBukkit start - added a reason for spawning this creature, moved a(entityliving, world...) up
+                                                                // CraftBukkit start - Added a reason for spawning this creature, moved a(entityliving, world...) up
                                                                 a(entityliving, worldserver, f, f1, f2);
                                                                 worldserver.addEntity(entityliving, SpawnReason.NATURAL);
                                                                 // CraftBukkit end
@@ -236,7 +236,7 @@ public final class SpawnerCreature {
                             }
 
                             entityliving.setPositionRotation((double) f, (double) f1, (double) f2, random.nextFloat() * 360.0F, 0.0F);
-                            // CraftBukkit start - added a reason for spawning this creature, moved a(entity, world...) up
+                            // CraftBukkit start - Added a reason for spawning this creature, moved a(entity, world...) up
                             a(entityliving, world, f, f1, f2);
                             world.addEntity(entityliving, SpawnReason.CHUNK_GEN);
                             // CraftBukkit end

@@ -32,12 +32,6 @@ public class PlayerInteractManager {
         this.world = world;
     }
 
-    // CraftBukkit start - keep this for backwards compatibility
-    public PlayerInteractManager(WorldServer world) {
-        this((World) world);
-    }
-    // CraftBukkit end
-
     public void setGameMode(EnumGamemode enumgamemode) {
         this.gamemode = enumgamemode;
         enumgamemode.a(this.player.abilities);
@@ -61,7 +55,7 @@ public class PlayerInteractManager {
     }
 
     public void a() {
-        this.currentTick = (int) (System.currentTimeMillis() / 50); // CraftBukkit
+        this.currentTick = MinecraftServer.currentTick; // CraftBukkit
         int i;
         float f;
         int j;
@@ -195,7 +189,7 @@ public class PlayerInteractManager {
 
     public void a(int i, int j, int k) {
         if (i == this.f && j == this.g && k == this.h) {
-            this.currentTick = (int) (System.currentTimeMillis() / 50); // CraftBukkit
+            this.currentTick = MinecraftServer.currentTick; // CraftBukkit
             int l = this.currentTick - this.lastDigTick;
             int i1 = this.world.getTypeId(i, j, k);
 
@@ -216,9 +210,9 @@ public class PlayerInteractManager {
                     this.n = this.lastDigTick;
                 }
             }
-        // CraftBukkit start - force blockreset to client
+        // CraftBukkit start - Force block reset to client
         } else {
-            ((EntityPlayer) this.player).playerConnection.sendPacket(new Packet53BlockChange(i, j, k, this.world));
+            this.player.playerConnection.sendPacket(new Packet53BlockChange(i, j, k, this.world));
             // CraftBukkit end
         }
     }
@@ -298,10 +292,10 @@ public class PlayerInteractManager {
             return false;
         } else {
             int l = this.world.getTypeId(i, j, k);
-            if (Block.byId[l] == null) return false; // CraftBukkit - a plugin set block to air without cancelling
+            if (Block.byId[l] == null) return false; // CraftBukkit - A plugin set block to air without cancelling
             int i1 = this.world.getData(i, j, k);
 
-            // CraftBukkit start - special case skulls, their item data comes from a tile entity
+            // CraftBukkit start - Special case skulls, their item data comes from a tile entity
             if (l == Block.SKULL.id && !this.isCreative()) {
                 Block.SKULL.dropNaturally(world, i, j, k, i1, 1.0F, 0);
                 return this.d(i, j, k);
@@ -314,13 +308,13 @@ public class PlayerInteractManager {
             if (this.isCreative()) {
                 this.player.playerConnection.sendPacket(new Packet53BlockChange(i, j, k, this.world));
             } else {
-                ItemStack itemstack = this.player.cb();
+                ItemStack itemstack = this.player.cd();
                 boolean flag1 = this.player.a(Block.byId[l]);
 
                 if (itemstack != null) {
                     itemstack.a(this.world, l, i, j, k, this.player);
                     if (itemstack.count == 0) {
-                        this.player.cc();
+                        this.player.ce();
                     }
                 }
 
@@ -329,7 +323,7 @@ public class PlayerInteractManager {
                 }
             }
 
-            // CraftBukkit start - drop event experience
+            // CraftBukkit start - Drop event experience
             if (flag && event != null) {
                 Block.byId[l].j(this.world, i, j, k, event.getExpToDrop());
             }
@@ -359,7 +353,7 @@ public class PlayerInteractManager {
                 entityhuman.inventory.items[entityhuman.inventory.itemInHandIndex] = null;
             }
 
-            if (!entityhuman.bV()) {
+            if (!entityhuman.bX()) {
                 ((EntityPlayer) entityhuman).updateInventory(entityhuman.defaultContainer);
             }
 

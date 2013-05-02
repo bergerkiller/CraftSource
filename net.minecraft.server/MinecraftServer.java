@@ -13,10 +13,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 // CraftBukkit start
-import java.util.concurrent.ExecutionException;
 import java.io.IOException;
 
-import com.google.common.io.Files;
 import jline.console.ConsoleReader;
 import joptsimple.OptionSet;
 
@@ -72,6 +70,7 @@ public abstract class MinecraftServer implements ICommandListener, Runnable, IMo
     private long Q;
     private String R;
     private boolean S;
+    private boolean T = false;
 
     // CraftBukkit start
     public List<WorldServer> worlds = new ArrayList<WorldServer>();
@@ -80,7 +79,7 @@ public abstract class MinecraftServer implements ICommandListener, Runnable, IMo
     public org.bukkit.command.ConsoleCommandSender console;
     public org.bukkit.command.RemoteConsoleCommandSender remoteConsole;
     public ConsoleReader reader;
-    public static int currentTick;
+    public static int currentTick = (int) (System.currentTimeMillis() / 50);
     public final Thread primaryThread;
     public java.util.Queue<Runnable> processQueue = new java.util.concurrent.ConcurrentLinkedQueue<Runnable>();
     public int autosavePeriod;
@@ -91,7 +90,7 @@ public abstract class MinecraftServer implements ICommandListener, Runnable, IMo
         // this.universe = file1; // CraftBukkit
         this.p = new CommandDispatcher();
         // this.convertable = new WorldLoaderServer(server.getWorldContainer()); // CraftBukkit - moved to DedicatedServer.init
-        this.am();
+        this.an();
 
         // CraftBukkit start
         this.options = options;
@@ -106,7 +105,7 @@ public abstract class MinecraftServer implements ICommandListener, Runnable, IMo
                 org.bukkit.craftbukkit.Main.useJline = false;
                 this.reader = new ConsoleReader(System.in, System.out);
                 this.reader.setExpandEvents(false);
-            } catch (java.io.IOException ex) {
+            } catch (IOException ex) {
                 Logger.getLogger(MinecraftServer.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
@@ -118,7 +117,7 @@ public abstract class MinecraftServer implements ICommandListener, Runnable, IMo
     public abstract PropertyManager getPropertyManager();
     // CraftBukkit end
 
-    private void am() {
+    private void an() {
         DispenserRegistry.a();
     }
 
@@ -140,10 +139,10 @@ public abstract class MinecraftServer implements ICommandListener, Runnable, IMo
         this.b(s);
         this.c("menu.loadingLevel");
         this.worldServer = new WorldServer[3];
-        // CraftBukkit - removed ticktime arrays
+        // CraftBukkit - Removed ticktime arrays
         IDataManager idatamanager = this.convertable.a(s, true);
         WorldData worlddata = idatamanager.getWorldData();
-        // CraftBukkit start - removed worldsettings
+        // CraftBukkit start - Removed worldsettings
         int worldCount = 3;
 
         for (int j = 0; j < worldCount; ++j) {
@@ -202,7 +201,7 @@ public abstract class MinecraftServer implements ICommandListener, Runnable, IMo
                             log.info("Success! To restore " + worldType + " in the future, simply move " + newWorld + " to " + oldWorld);
                             // Migrate world data too.
                             try {
-                                Files.copy(new File(new File(s), "level.dat"), new File(new File(name), "level.dat"));
+                                com.google.common.io.Files.copy(new File(new File(s), "level.dat"), new File(new File(name), "level.dat"));
                             } catch (IOException exception) {
                                 log.severe("Unable to migrate world data.");
                             }
@@ -226,6 +225,8 @@ public abstract class MinecraftServer implements ICommandListener, Runnable, IMo
             if (gen != null) {
                 world.getWorld().getPopulators().addAll(gen.getDefaultPopulators(world.getWorld()));
             }
+
+            this.server.scoreboardManager = new org.bukkit.craftbukkit.scoreboard.CraftScoreboardManager(this, world.getScoreboard());
 
             this.server.getPluginManager().callEvent(new org.bukkit.event.world.WorldInitEvent(world.getWorld()));
 
@@ -347,7 +348,7 @@ public abstract class MinecraftServer implements ICommandListener, Runnable, IMo
             this.getLogger().info("Saving worlds");
             this.saveChunks(false);
 
-            /* CraftBukkit start - handled in saveChunks
+            /* CraftBukkit start - Handled in saveChunks
             for (int i = 0; i < this.worldServer.length; ++i) {
                 WorldServer worldserver = this.worldServer[i];
 
@@ -442,7 +443,7 @@ public abstract class MinecraftServer implements ICommandListener, Runnable, IMo
             } catch (Throwable throwable1) {
                 throwable1.printStackTrace();
             } finally {
-                // CraftBukkit start - restore terminal to original settings
+                // CraftBukkit start - Restore terminal to original settings
                 try {
                     this.reader.getTerminal().restore();
                 } catch (Exception e) {
@@ -508,7 +509,7 @@ public abstract class MinecraftServer implements ICommandListener, Runnable, IMo
     public void r() {
         this.methodProfiler.a("levels");
 
-        // CraftBukkit start - only send timeupdates to the people in that world
+        // CraftBukkit start
         this.server.getScheduler().mainThreadHeartbeat(this.ticks);
 
         // Run tasks that are waiting on processing
@@ -518,7 +519,7 @@ public abstract class MinecraftServer implements ICommandListener, Runnable, IMo
 
         org.bukkit.craftbukkit.chunkio.ChunkIOExecutor.tick();
 
-        // Send timeupdates to everyone, it will get the right time from the world the player is in.
+        // Send time updates to everyone, it will get the right time from the world the player is in.
         if (this.ticks % 20 == 0) {
             for (int i = 0; i < this.getPlayerList().players.size(); ++i) {
                 EntityPlayer entityplayer = (EntityPlayer) this.getPlayerList().players.get(i);
@@ -602,7 +603,7 @@ public abstract class MinecraftServer implements ICommandListener, Runnable, IMo
         IConsoleLogManager iconsolelogmanager = null;
 
         try {
-            /* CraftBukkit start - replace everything
+            /* CraftBukkit start - Replace everything
             boolean flag = false;
             String s = null;
             String s1 = ".";
@@ -689,7 +690,7 @@ public abstract class MinecraftServer implements ICommandListener, Runnable, IMo
             }
 
             if (flag) {
-                dedicatedserver.ao();
+                dedicatedserver.ap();
             }
             */
 
@@ -746,7 +747,7 @@ public abstract class MinecraftServer implements ICommandListener, Runnable, IMo
     }
 
     public String getVersion() {
-        return "1.5.1";
+        return "1.5.2";
     }
 
     public int y() {
@@ -762,7 +763,7 @@ public abstract class MinecraftServer implements ICommandListener, Runnable, IMo
     }
 
     public String getPlugins() {
-        // CraftBukkit start - whole method
+        // CraftBukkit start - Whole method
         StringBuilder result = new StringBuilder();
         org.bukkit.plugin.Plugin[] plugins = server.getPluginManager().getPlugins();
 
@@ -806,7 +807,7 @@ public abstract class MinecraftServer implements ICommandListener, Runnable, IMo
         processQueue.add(waitable);
         try {
             return waitable.get();
-        } catch (ExecutionException e) {
+        } catch (java.util.concurrent.ExecutionException e) {
             throw new RuntimeException("Exception processing rcon command " + s, e.getCause());
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt(); // Maintain interrupted state
@@ -1048,7 +1049,7 @@ public abstract class MinecraftServer implements ICommandListener, Runnable, IMo
                 mojangstatisticsgenerator.a("world[" + i + "][generator_name]", worlddata.getType().name());
                 mojangstatisticsgenerator.a("world[" + i + "][generator_version]", Integer.valueOf(worlddata.getType().getVersion()));
                 mojangstatisticsgenerator.a("world[" + i + "][height]", Integer.valueOf(this.C));
-                mojangstatisticsgenerator.a("world[" + i + "][chunks_loaded]", Integer.valueOf(worldserver.J().getLoadedChunks()));
+                mojangstatisticsgenerator.a("world[" + i + "][chunks_loaded]", Integer.valueOf(worldserver.K().getLoadedChunks()));
                 ++i;
             // } // CraftBukkit
         }
@@ -1180,6 +1181,14 @@ public abstract class MinecraftServer implements ICommandListener, Runnable, IMo
     }
 
     public abstract IConsoleLogManager getLogger();
+
+    public void setForceGamemode(boolean flag) {
+        this.T = flag;
+    }
+
+    public boolean getForceGamemode() {
+        return this.T;
+    }
 
     public static PlayerList a(MinecraftServer minecraftserver) {
         return minecraftserver.s;

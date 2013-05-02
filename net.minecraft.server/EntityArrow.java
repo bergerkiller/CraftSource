@@ -3,9 +3,7 @@ package net.minecraft.server;
 import java.util.List;
 
 // CraftBukkit start
-import org.bukkit.entity.Projectile;
 import org.bukkit.event.entity.EntityCombustByEntityEvent;
-import org.bukkit.event.entity.ProjectileHitEvent;
 import org.bukkit.event.player.PlayerPickupItemEvent;
 // CraftBukkit end
 
@@ -209,11 +207,7 @@ public class EntityArrow extends Entity implements IProjectile {
             float f3;
 
             if (movingobjectposition != null) {
-                // CraftBukkit start
-                Projectile projectile = (Projectile) this.getBukkitEntity();
-                ProjectileHitEvent phe = new ProjectileHitEvent(projectile);
-                this.world.getServer().getPluginManager().callEvent(phe);
-                // CraftBukkit end
+                org.bukkit.craftbukkit.event.CraftEventFactory.callProjectileHitEvent(this); // CraftBukkit - Call event
 
                 if (movingobjectposition.entity != null) {
                     f2 = MathHelper.sqrt(this.motX * this.motX + this.motY * this.motY + this.motZ * this.motZ);
@@ -231,7 +225,7 @@ public class EntityArrow extends Entity implements IProjectile {
                         damagesource = DamageSource.arrow(this, this.shooter);
                     }
 
-                    // CraftBukkit start - moved damage call
+                    // CraftBukkit start - Moved damage call
                     if (movingobjectposition.entity.damageEntity(damagesource, i1)) {
                     if (this.isBurning() && !(movingobjectposition.entity instanceof EntityEnderman) && (!(movingobjectposition.entity instanceof EntityPlayer) || !(this.shooter instanceof EntityPlayer) || this.world.pvpMode)) { // CraftBukkit - abide by pvp setting if destination is a player
                         EntityCombustByEntityEvent combustEvent = new EntityCombustByEntityEvent(this.getBukkitEntity(), entity.getBukkitEntity(), 5);

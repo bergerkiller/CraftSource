@@ -11,6 +11,7 @@ public class EntityEnderman extends EntityMonster {
     private static boolean[] d = new boolean[256];
     private int e = 0;
     private int f = 0;
+    private boolean g;
 
     public EntityEnderman(World world) {
         super(world);
@@ -48,6 +49,7 @@ public class EntityEnderman extends EntityMonster {
 
         if (entityhuman != null) {
             if (this.e(entityhuman)) {
+                this.g = true;
                 if (this.f == 0) {
                     this.world.makeSound(entityhuman, "mob.endermen.stare", 1.0F, 1.0F);
                 }
@@ -102,7 +104,7 @@ public class EntityEnderman extends EntityMonster {
                     k = MathHelper.floor(this.locZ - 2.0D + this.random.nextDouble() * 4.0D);
                     l = this.world.getTypeId(i, j, k);
                     if (d[l]) {
-                        // CraftBukkit start - pickup event
+                        // CraftBukkit start - Pickup event
                         if (!CraftEventFactory.callEntityChangeBlockEvent(this, this.world.getWorld().getBlockAt(i, j, k), org.bukkit.Material.AIR).isCancelled()) {
                             this.setCarriedId(this.world.getTypeId(i, j, k));
                             this.setCarriedData(this.world.getData(i, j, k));
@@ -119,7 +121,7 @@ public class EntityEnderman extends EntityMonster {
                 int i1 = this.world.getTypeId(i, j - 1, k);
 
                 if (l == 0 && i1 > 0 && Block.byId[i1].b()) {
-                    // CraftBukkit start - place event
+                    // CraftBukkit start - Place event
                     if (!CraftEventFactory.callEntityChangeBlockEvent(this, i, j, k, this.getCarriedId(), this.getCarriedData()).isCancelled()) {
                         this.world.setTypeIdAndData(i, j, k, this.getCarriedId(), this.getCarriedData(), 3);
                         this.setCarriedId(0);
@@ -133,12 +135,13 @@ public class EntityEnderman extends EntityMonster {
             this.world.addParticle("portal", this.locX + (this.random.nextDouble() - 0.5D) * (double) this.width, this.locY + this.random.nextDouble() * (double) this.length - 0.25D, this.locZ + (this.random.nextDouble() - 0.5D) * (double) this.width, (this.random.nextDouble() - 0.5D) * 2.0D, -this.random.nextDouble(), (this.random.nextDouble() - 0.5D) * 2.0D);
         }
 
-        if (this.world.u() && !this.world.isStatic) {
+        if (this.world.v() && !this.world.isStatic) {
             float f = this.c(1.0F);
 
             if (f > 0.5F && this.world.l(MathHelper.floor(this.locX), MathHelper.floor(this.locY), MathHelper.floor(this.locZ)) && this.random.nextFloat() * 30.0F < (f - 0.4F) * 2.0F) {
                 this.target = null;
                 this.a(false);
+                this.g = false;
                 this.m();
             }
         }
@@ -146,7 +149,12 @@ public class EntityEnderman extends EntityMonster {
         if (this.F() || this.isBurning()) {
             this.target = null;
             this.a(false);
+            this.g = false;
             this.m();
+        }
+
+        if (this.q() && !this.g && this.random.nextInt(100) == 0) {
+            this.a(false);
         }
 
         this.bG = false;
@@ -224,7 +232,7 @@ public class EntityEnderman extends EntityMonster {
             }
 
             if (flag1) {
-                // CraftBukkit start - teleport event
+                // CraftBukkit start - Teleport event
                 EntityTeleportEvent teleport = new EntityTeleportEvent(this.getBukkitEntity(), new Location(this.world.getWorld(), d3, d4, d5), new Location(this.world.getWorld(), this.locX, this.locY, this.locZ));
                 this.world.getServer().getPluginManager().callEvent(teleport);
                 if (teleport.isCancelled()) {
@@ -285,7 +293,7 @@ public class EntityEnderman extends EntityMonster {
         int j = this.getLootId();
 
         if (j > 0) {
-            // CraftBukkit start - whole method
+            // CraftBukkit start - Whole method
             java.util.List<org.bukkit.inventory.ItemStack> loot = new java.util.ArrayList<org.bukkit.inventory.ItemStack>();
             int count = this.random.nextInt(2 + i);
 
@@ -319,7 +327,13 @@ public class EntityEnderman extends EntityMonster {
             return false;
         } else {
             this.a(true);
+            if (damagesource instanceof EntityDamageSource && damagesource.getEntity() instanceof EntityHuman) {
+                this.g = true;
+            }
+
             if (damagesource instanceof EntityDamageSourceIndirect) {
+                this.g = false;
+
                 for (int j = 0; j < 64; ++j) {
                     if (this.m()) {
                         return true;

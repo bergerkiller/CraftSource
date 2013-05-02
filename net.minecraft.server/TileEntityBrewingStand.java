@@ -17,6 +17,7 @@ public class TileEntityBrewingStand extends TileEntity implements IWorldInventor
     private int e;
     private int f;
     private String g;
+    private int lastTick = MinecraftServer.currentTick; // CraftBukkit
 
     public TileEntityBrewingStand() {}
 
@@ -62,9 +63,14 @@ public class TileEntityBrewingStand extends TileEntity implements IWorldInventor
     }
 
     public void h() {
+        // CraftBukkit start - Use wall time instead of ticks for brewing
+        int elapsedTicks = MinecraftServer.currentTick - this.lastTick;
+        this.lastTick = MinecraftServer.currentTick;
+
         if (this.brewTime > 0) {
-            --this.brewTime;
-            if (this.brewTime == 0) {
+            this.brewTime -= elapsedTicks;
+            if (this.brewTime <= 0) { // == -> <=
+                // CraftBukkit end
                 this.u();
                 this.update();
             } else if (!this.l()) {
@@ -133,11 +139,11 @@ public class TileEntityBrewingStand extends TileEntity implements IWorldInventor
         if (this.l()) {
             ItemStack itemstack = this.items[3];
 
-            // CraftBukkit start - fire BREW event
+            // CraftBukkit start
             if (getOwner() != null) {
                 BrewEvent event = new BrewEvent(world.getWorld().getBlockAt(x, y, z), (org.bukkit.inventory.BrewerInventory) this.getOwner().getInventory());
                 org.bukkit.Bukkit.getPluginManager().callEvent(event);
-                if(event.isCancelled()) {
+                if (event.isCancelled()) {
                     return;
                 }
             }

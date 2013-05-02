@@ -23,7 +23,7 @@ public abstract class Packet {
     public static long q;
     public static long r;
     public boolean lowPriority = false;
-    // CraftBukkit start - calculate packet ID once - used a bunch of times
+    // CraftBukkit start - Calculate packet ID once - used a bunch of times
     private int packetID;
 
     public Packet() {
@@ -219,7 +219,7 @@ public abstract class Packet {
             dataoutputstream.writeShort(itemstack.getData());
             NBTTagCompound nbttagcompound = null;
 
-            if (itemstack.getItem().o() || itemstack.getItem().r()) {
+            if (itemstack.getItem().usesDurability() || itemstack.getItem().r()) {
                 nbttagcompound = itemstack.tag;
             }
 

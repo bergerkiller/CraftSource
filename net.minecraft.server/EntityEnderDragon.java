@@ -7,7 +7,6 @@ import java.util.List;
 import org.bukkit.block.BlockState;
 import org.bukkit.craftbukkit.util.BlockStateListPopulator;
 import org.bukkit.event.entity.EntityCreatePortalEvent;
-import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityExplodeEvent;
 import org.bukkit.event.entity.EntityRegainHealthEvent;
 import org.bukkit.Bukkit;
@@ -35,6 +34,7 @@ public class EntityEnderDragon extends EntityLiving implements IComplex {
     private Entity bT;
     public int bR = 0;
     public EntityEnderCrystal bS = null;
+    private Explosion explosionSource = new Explosion(null, this, Double.NaN, Double.NaN, Double.NaN, Float.NaN); // CraftBukkit - reusable source for CraftTNTPrimed.getSource()
 
     public EntityEnderDragon(World world) {
         super(world);
@@ -363,20 +363,7 @@ public class EntityEnderDragon extends EntityLiving implements IComplex {
             Entity entity = (Entity) list.get(i);
 
             if (entity instanceof EntityLiving) {
-                // CraftBukkit start - throw damage events when the dragon attacks
-                // The EntityHuman case is handled in EntityHuman, so don't throw it here
-                if (!(entity instanceof EntityHuman)) {
-                    EntityDamageByEntityEvent damageEvent = new EntityDamageByEntityEvent(this.getBukkitEntity(), entity.getBukkitEntity(), org.bukkit.event.entity.EntityDamageEvent.DamageCause.ENTITY_ATTACK, 10);
-                    Bukkit.getPluginManager().callEvent(damageEvent);
-
-                    if (!damageEvent.isCancelled()) {
-                        entity.getBukkitEntity().setLastDamageCause(damageEvent);
-                        entity.damageEntity(DamageSource.mobAttack(this), damageEvent.getDamage());
-                    }
-                } else {
-                    entity.damageEntity(DamageSource.mobAttack(this), 10);
-                }
-                // CraftBukkit end
+                entity.damageEntity(DamageSource.mobAttack(this), 10);
             }
         }
     }
@@ -419,7 +406,7 @@ public class EntityEnderDragon extends EntityLiving implements IComplex {
         boolean flag = false;
         boolean flag1 = false;
 
-        // CraftBukkit start - create a list to hold all the destroyed blocks
+        // CraftBukkit start - Create a list to hold all the destroyed blocks
         List<org.bukkit.block.Block> destroyedBlocks = new java.util.ArrayList<org.bukkit.block.Block>();
         org.bukkit.craftbukkit.CraftWorld craftWorld = this.world.getWorld();
         // CraftBukkit end
@@ -431,7 +418,7 @@ public class EntityEnderDragon extends EntityLiving implements IComplex {
 
                     if (j2 != 0) {
                         if (j2 != Block.OBSIDIAN.id && j2 != Block.WHITESTONE.id && j2 != Block.BEDROCK.id && this.world.getGameRules().getBoolean("mobGriefing")) {
-                            // CraftBukkit start - add blocks to list rather than destroying them
+                            // CraftBukkit start - Add blocks to list rather than destroying them
                             // flag1 = this.world.setAir(k1, l1, i2) || flag1;
                             flag1 = true;
                             destroyedBlocks.add(craftWorld.getBlockAt(k1, l1, i2));
@@ -445,17 +432,37 @@ public class EntityEnderDragon extends EntityLiving implements IComplex {
         }
 
         if (flag1) {
-            // CraftBukkit start - set off an EntityExplodeEvent for the dragon exploding all these blocks
+            // CraftBukkit start - Set off an EntityExplodeEvent for the dragon exploding all these blocks
             org.bukkit.entity.Entity bukkitEntity = this.getBukkitEntity();
             EntityExplodeEvent event = new EntityExplodeEvent(bukkitEntity, bukkitEntity.getLocation(), destroyedBlocks, 0F);
             Bukkit.getPluginManager().callEvent(event);
             if (event.isCancelled()) {
-                // this flag literally means 'Dragon hit something hard' (Obsidian, White Stone or Bedrock) and will cause the dragon to slow down.
+                // This flag literally means 'Dragon hit something hard' (Obsidian, White Stone or Bedrock) and will cause the dragon to slow down.
                 // We should consider adding an event extension for it, or perhaps returning true if the event is cancelled.
                 return flag;
+            } else if (event.getYield() == 0F) {
+                // Yield zero ==> no drops
+                for (org.bukkit.block.Block block : event.blockList()) {
+                    this.world.setAir(block.getX(), block.getY(), block.getZ());
+                }
             } else {
                 for (org.bukkit.block.Block block : event.blockList()) {
-                    craftWorld.explodeBlock(block, event.getYield());
+                    int blockId = block.getTypeId();
+
+                    if (blockId == 0) {
+                        continue;
+                    }
+
+                    int blockX = block.getX();
+                    int blockY = block.getY();
+                    int blockZ = block.getZ();
+
+                    if (Block.byId[blockId].a(explosionSource)) {
+                        Block.byId[blockId].dropNaturally(this.world, blockX, blockY, blockZ, block.getData(), event.getYield(), 0);
+                    }
+                    Block.byId[blockId].wasExploded(world, blockX, blockY, blockZ, explosionSource);
+
+                    this.world.setAir(blockX, blockY, blockZ);
                 }
             }
             // CraftBukkit end
