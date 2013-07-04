@@ -61,6 +61,7 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
     private final Set<String> channels = new HashSet<String>();
     private final Map<String, Player> hiddenPlayers = new MapMaker().softValues().makeMap();
     private int hash = 0;
+    private boolean scaledHealth;
 
     public CraftPlayer(CraftServer server, EntityPlayer entity) {
         super(server, entity);
@@ -89,7 +90,7 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
     public boolean isOnline() {
         for (Object obj : server.getHandle().players) {
             EntityPlayer player = (EntityPlayer) obj;
-            if (player.name.equalsIgnoreCase(getName())) {
+            if (player.getName().equalsIgnoreCase(getName())) {
                 return true;
             }
         }
@@ -128,7 +129,7 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
     public void sendRawMessage(String message) {
         if (getHandle().playerConnection == null) return;
 
-        getHandle().playerConnection.sendPacket(new Packet3Chat(message));
+        getHandle().playerConnection.sendPacket(new Packet3Chat(ChatMessage.d(message)));
     }
 
     public void sendMessage(String message) {
@@ -859,10 +860,12 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
         }
     }
 
+    @Override
     public EntityType getType() {
         return EntityType.PLAYER;
     }
 
+    @Override
     public void setMetadata(String metadataKey, MetadataValue newMetadataValue) {
         server.getPlayerMetadata().setMetadata(this, metadataKey, newMetadataValue);
     }
@@ -967,11 +970,13 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
         }
     }
 
-    public void setMaxHealth(int amount) {
+    @Override
+    public void setMaxHealth(double amount) {
         super.setMaxHealth(amount);
         getHandle().triggerHealthUpdate();
     }
 
+    @Override
     public void resetMaxHealth() {
         super.resetMaxHealth();
         getHandle().triggerHealthUpdate();
@@ -992,5 +997,17 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
         }
 
         this.server.getScoreboardManager().setPlayerBoard(this, scoreboard);
+    }
+
+    public float getScaledHealth() {
+        return (float) (this.scaledHealth ? getHealth() / getMaxHealth() * 20.0D : getHealth());
+    }
+
+    public void setScaleHealth(boolean scale) {
+        this.scaledHealth = scale;
+    }
+
+    public boolean isScaledHealth() {
+        return this.scaledHealth;
     }
 }

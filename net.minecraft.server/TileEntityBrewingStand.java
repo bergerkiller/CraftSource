@@ -103,7 +103,7 @@ public class TileEntityBrewingStand extends TileEntity implements IWorldInventor
         if (this.items[3] != null && this.items[3].count > 0) {
             ItemStack itemstack = this.items[3];
 
-            if (!Item.byId[itemstack.id].w()) {
+            if (!Item.byId[itemstack.id].x()) {
                 return false;
             } else {
                 boolean flag = false;
@@ -166,8 +166,8 @@ public class TileEntityBrewingStand extends TileEntity implements IWorldInventor
                 }
             }
 
-            if (Item.byId[itemstack.id].t()) {
-                this.items[3] = new ItemStack(Item.byId[itemstack.id].s());
+            if (Item.byId[itemstack.id].u()) {
+                this.items[3] = new ItemStack(Item.byId[itemstack.id].t());
             } else {
                 --this.items[3].count;
                 if (this.items[3].count <= 0) {
@@ -178,7 +178,7 @@ public class TileEntityBrewingStand extends TileEntity implements IWorldInventor
     }
 
     private int c(int i, ItemStack itemstack) {
-        return itemstack == null ? i : (Item.byId[itemstack.id].w() ? PotionBrewer.a(i, Item.byId[itemstack.id].v()) : i);
+        return itemstack == null ? i : (Item.byId[itemstack.id].x() ? PotionBrewer.a(i, Item.byId[itemstack.id].w()) : i);
     }
 
     public void a(NBTTagCompound nbttagcompound) {
@@ -268,7 +268,7 @@ public class TileEntityBrewingStand extends TileEntity implements IWorldInventor
     public void g() {}
 
     public boolean b(int i, ItemStack itemstack) {
-        return i == 3 ? Item.byId[itemstack.id].w() : itemstack.id == Item.POTION.id || itemstack.id == Item.GLASS_BOTTLE.id;
+        return i == 3 ? Item.byId[itemstack.id].x() : itemstack.id == Item.POTION.id || itemstack.id == Item.GLASS_BOTTLE.id;
     }
 
     public int j() {

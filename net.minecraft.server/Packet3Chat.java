@@ -1,18 +1,23 @@
 package net.minecraft.server;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-
-import java.io.IOException; // CraftBukkit
+import java.io.DataInput;
+import java.io.DataOutput;
 
 public class Packet3Chat extends Packet {
 
-    public static int a = 119;
     public String message;
-    private boolean c;
+    private boolean b;
 
     public Packet3Chat() {
-        this.c = true;
+        this.b = true;
+    }
+
+    public Packet3Chat(ChatMessage chatmessage) {
+        this(chatmessage.i());
+    }
+
+    public Packet3Chat(ChatMessage chatmessage, boolean flag) {
+        this(chatmessage.i(), flag);
     }
 
     public Packet3Chat(String s) {
@@ -20,24 +25,21 @@ public class Packet3Chat extends Packet {
     }
 
     public Packet3Chat(String s, boolean flag) {
-        this.c = true;
-
-        /* CraftBukkit start - Handle this later
-        if (s.length() > b) {
-            s = s.substring(0, b);
+        this.b = true;
+        if (s.length() > 32767) {
+            s = s.substring(0, 32767);
         }
-        // CraftBukkit end */
 
         this.message = s;
-        this.c = flag;
+        this.b = flag;
     }
 
-    public void a(DataInputStream datainputstream) throws IOException { // CraftBukkit
-        this.message = a(datainputstream, a);
+    public void a(DataInput datainput) {
+        this.message = a(datainput, 32767);
     }
 
-    public void a(DataOutputStream dataoutputstream) throws IOException { // CraftBukkit
-        a(this.message, dataoutputstream);
+    public void a(DataOutput dataoutput) {
+        a(this.message, dataoutput);
     }
 
     public void handle(Connection connection) {
@@ -49,10 +51,6 @@ public class Packet3Chat extends Packet {
     }
 
     public boolean isServer() {
-        return this.c;
-    }
-
-    public boolean a_() {
-        return !this.message.startsWith("/");
+        return this.b;
     }
 }

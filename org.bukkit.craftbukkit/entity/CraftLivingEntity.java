@@ -11,6 +11,7 @@ import net.minecraft.server.EntityArrow;
 import net.minecraft.server.EntityEgg;
 import net.minecraft.server.EntityEnderDragon;
 import net.minecraft.server.EntityEnderPearl;
+import net.minecraft.server.EntityInsentient;
 import net.minecraft.server.EntityLargeFireball;
 import net.minecraft.server.EntityLiving;
 import net.minecraft.server.EntitySmallFireball;
@@ -18,6 +19,7 @@ import net.minecraft.server.EntitySnowball;
 import net.minecraft.server.EntityPlayer;
 import net.minecraft.server.EntityPotion;
 import net.minecraft.server.EntityWitherSkull;
+import net.minecraft.server.GenericAttributes;
 import net.minecraft.server.MobEffect;
 import net.minecraft.server.MobEffectList;
 import net.minecraft.server.Packet42RemoveMobEffect;
@@ -51,6 +53,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.util.BlockIterator;
+import org.bukkit.util.NumberConversions;
 import org.bukkit.util.Vector;
 
 public class CraftLivingEntity extends CraftEntity implements LivingEntity {
@@ -59,16 +62,16 @@ public class CraftLivingEntity extends CraftEntity implements LivingEntity {
     public CraftLivingEntity(final CraftServer server, final EntityLiving entity) {
         super(server, entity);
 
-        if (!(this instanceof HumanEntity)) {
+        if (entity instanceof EntityInsentient) {
             equipment = new CraftEntityEquipment(this);
         }
     }
 
-    public int getHealth() {
+    public double getHealth() {
         return Math.min(Math.max(0, getHandle().getHealth()), getMaxHealth());
     }
 
-    public void setHealth(int health) {
+    public void setHealth(double health) {
         if ((health < 0) || (health > getMaxHealth())) {
             throw new IllegalArgumentException("Health must be between 0 and " + getMaxHealth());
         }
@@ -77,17 +80,17 @@ public class CraftLivingEntity extends CraftEntity implements LivingEntity {
             ((EntityPlayer) entity).die(DamageSource.GENERIC);
         }
 
-        getHandle().setHealth(health);
+        getHandle().setHealth((float) health);
     }
 
-    public int getMaxHealth() {
-        return getHandle().maxHealth;
+    public double getMaxHealth() {
+        return getHandle().getMaxHealth();
     }
 
-    public void setMaxHealth(int amount) {
+    public void setMaxHealth(double amount) {
         Validate.isTrue(amount > 0, "Max health must be greater than 0");
 
-        getHandle().maxHealth = amount;
+        getHandle().a(GenericAttributes.a).a(amount);
 
         if (getHealth() > amount) {
             setHealth(amount);
@@ -176,11 +179,11 @@ public class CraftLivingEntity extends CraftEntity implements LivingEntity {
         getHandle().maxAirTicks = ticks;
     }
 
-    public void damage(int amount) {
+    public void damage(double amount) {
         damage(amount, null);
     }
 
-    public void damage(int amount, org.bukkit.entity.Entity source) {
+    public void damage(double amount, org.bukkit.entity.Entity source) {
         DamageSource reason = DamageSource.GENERIC;
 
         if (source instanceof HumanEntity) {
@@ -190,9 +193,9 @@ public class CraftLivingEntity extends CraftEntity implements LivingEntity {
         }
 
         if (entity instanceof EntityEnderDragon) {
-            ((EntityEnderDragon) entity).dealDamage(reason, amount);
+            ((EntityEnderDragon) entity).dealDamage(reason, (float) amount);
         } else {
-            entity.damageEntity(reason, amount);
+            entity.damageEntity(reason, (float) amount);
         }
     }
 
@@ -210,12 +213,12 @@ public class CraftLivingEntity extends CraftEntity implements LivingEntity {
         getHandle().maxNoDamageTicks = ticks;
     }
 
-    public int getLastDamage() {
+    public double getLastDamage() {
         return getHandle().lastDamage;
     }
 
-    public void setLastDamage(int damage) {
-        getHandle().lastDamage = damage;
+    public void setLastDamage(double damage) {
+        getHandle().lastDamage = (float) damage;
     }
 
     public int getNoDamageTicks() {
@@ -272,12 +275,7 @@ public class CraftLivingEntity extends CraftEntity implements LivingEntity {
     }
 
     public void removePotionEffect(PotionEffectType type) {
-        getHandle().effects.remove(type.getId());
-        getHandle().updateEffects = true;
-        if (getHandle() instanceof EntityPlayer) {
-            if (((EntityPlayer) getHandle()).playerConnection == null) return;
-            ((EntityPlayer) getHandle()).playerConnection.sendPacket(new Packet42RemoveMobEffect(getHandle().id, new MobEffect(type.getId(), 0, 0)));
-        }
+        getHandle().k(type.getId()); // Should be removeEffect.
     }
 
     public Collection<PotionEffect> getActivePotionEffects() {
@@ -332,15 +330,17 @@ public class CraftLivingEntity extends CraftEntity implements LivingEntity {
     }
 
     public boolean hasLineOfSight(Entity other) {
-        return getHandle().getEntitySenses().canSee(((CraftEntity) other).getHandle());
+        return getHandle() instanceof EntityInsentient && ((EntityInsentient) getHandle()).getEntitySenses().canSee(((CraftEntity) other).getHandle());
     }
 
     public boolean getRemoveWhenFarAway() {
-        return !getHandle().persistent;
+        return getHandle() instanceof EntityInsentient && !((EntityInsentient) getHandle()).persistent;
     }
 
     public void setRemoveWhenFarAway(boolean remove) {
-        getHandle().persistent = !remove;
+        if (getHandle() instanceof EntityInsentient) {
+            ((EntityInsentient) getHandle()).persistent = !remove;
+        }
     }
 
     public EntityEquipment getEquipment() {
@@ -348,11 +348,13 @@ public class CraftLivingEntity extends CraftEntity implements LivingEntity {
     }
 
     public void setCanPickupItems(boolean pickup) {
-        getHandle().canPickUpLoot = pickup;
+        if (getHandle() instanceof EntityInsentient) {
+            ((EntityInsentient) getHandle()).canPickUpLoot = pickup;
+        }
     }
 
     public boolean getCanPickupItems() {
-        return getHandle().canPickUpLoot;
+        return getHandle() instanceof EntityInsentient && ((EntityInsentient) getHandle()).canPickUpLoot;
     }
 
     @Override
@@ -365,6 +367,10 @@ public class CraftLivingEntity extends CraftEntity implements LivingEntity {
     }
 
     public void setCustomName(String name) {
+        if (!(getHandle() instanceof EntityInsentient)) {
+            return;
+        }
+
         if (name == null) {
             name = "";
         }
@@ -374,11 +380,15 @@ public class CraftLivingEntity extends CraftEntity implements LivingEntity {
             name = name.substring(0, 64);
         }
 
-        getHandle().setCustomName(name);
+        ((EntityInsentient) getHandle()).setCustomName(name);
     }
 
     public String getCustomName() {
-        String name = getHandle().getCustomName();
+        if (!(getHandle() instanceof EntityInsentient)) {
+            return null;
+        }
+
+        String name = ((EntityInsentient) getHandle()).getCustomName();
 
         if (name == null || name.length() == 0) {
             return null;
@@ -388,10 +398,52 @@ public class CraftLivingEntity extends CraftEntity implements LivingEntity {
     }
 
     public void setCustomNameVisible(boolean flag) {
-        getHandle().setCustomNameVisible(flag);
+        if (getHandle() instanceof EntityInsentient) {
+            ((EntityInsentient) getHandle()).setCustomNameVisible(flag);
+        }
     }
 
     public boolean isCustomNameVisible() {
-        return getHandle().getCustomNameVisible();
+        return getHandle() instanceof EntityInsentient && ((EntityInsentient) getHandle()).getCustomNameVisible();
+    }
+
+    @Deprecated
+    public int _INVALID_getLastDamage() {
+        return NumberConversions.ceil(getLastDamage());
+    }
+
+    @Deprecated
+    public void _INVALID_setLastDamage(int damage) {
+        setLastDamage(damage);
+    }
+
+    @Deprecated
+    public void _INVALID_damage(int amount) {
+        damage(amount);
+    }
+
+    @Deprecated
+    public void _INVALID_damage(int amount, Entity source) {
+        damage(amount, source);
+    }
+
+    @Deprecated
+    public int _INVALID_getHealth() {
+        return NumberConversions.ceil(getHealth());
+    }
+
+    @Deprecated
+    public void _INVALID_setHealth(int health) {
+        setHealth(health);
+    }
+
+    @Deprecated
+    public int _INVALID_getMaxHealth() {
+        return NumberConversions.ceil(getMaxHealth());
+    }
+
+    @Deprecated
+    public void _INVALID_setMaxHealth(int health) {
+        setMaxHealth(health);
     }
 }

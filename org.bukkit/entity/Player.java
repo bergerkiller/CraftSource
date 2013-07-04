@@ -23,6 +23,7 @@ import org.bukkit.scoreboard.Scoreboard;
  * Represents a player, connected or not
  */
 public interface Player extends HumanEntity, Conversable, CommandSender, OfflinePlayer, PluginMessageRecipient {
+
     /**
      * Gets the "friendly" name to display of this player. This may include color.
      * <p>
@@ -560,7 +561,7 @@ public interface Player extends HumanEntity, Conversable, CommandSender, Offline
      * not be reliable, as it is a state provided by the client, and may therefore not be accurate.
      *
      * @return True if the player standing on a solid block, else false.
-     * @deprecated Inconsistent with {@link org.bukkit.craftbukkit.entity.Entity#isOnGround()}
+     * @deprecated Inconsistent with {@link org.bukkit.entity.Entity#isOnGround()}
      */
     @Deprecated
     public boolean isOnGround();
@@ -646,4 +647,24 @@ public interface Player extends HumanEntity, Conversable, CommandSender, Offline
      *     yet or has logged out
      */
     public void setScoreboard(Scoreboard scoreboard) throws IllegalArgumentException, IllegalStateException;
+
+    /**
+     * Gets if the client is displayed a 'scaled' health, that is, health on a
+     * scale from 0-20.
+     *
+     * @return if client health display is scaled
+     * @see Player#setScaledHealth(boolean)
+     */
+    public boolean isScaledHealth();
+
+    /**
+     * Sets if the client is displayed a 'scaled' health, that is, health on a
+     * scale from 0-20.
+     * <p>
+     * Displayed health follows a simple formula <code>displayedHealth =
+     * getHealth() / getMaxHealth() * 20.0D</code>.
+     *
+     * @param scale if the client health display is scaled
+     */
+    public void setScaleHealth(boolean scale);
 }
