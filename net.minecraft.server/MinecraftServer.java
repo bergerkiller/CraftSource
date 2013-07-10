@@ -674,7 +674,7 @@ public abstract class MinecraftServer implements ICommandListener, Runnable, IMo
             }
 
             if (options.has("world")) {
-                dedicatedserver.j((String) options.valueOf("world"));
+                dedicatedserver.k((String) options.valueOf("world"));
             }
             /*
             if (s != null) {
@@ -755,7 +755,7 @@ public abstract class MinecraftServer implements ICommandListener, Runnable, IMo
     }
 
     public String getVersion() {
-        return "1.6.1";
+        return "1.6.2";
     }
 
     public int A() {
