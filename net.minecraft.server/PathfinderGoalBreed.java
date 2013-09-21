@@ -69,6 +69,11 @@ public class PathfinderGoalBreed extends PathfinderGoal {
         EntityAgeable entityageable = this.d.createChild(this.e);
 
         if (entityageable != null) {
+            // CraftBukkit start - set persistence for tame animals
+            if (entityageable instanceof EntityTameableAnimal && ((EntityTameableAnimal) entityageable).isTamed()) {
+                entityageable.persistent = true;
+            }
+            // CraftBukkit end
             this.d.setAge(6000);
             this.e.setAge(6000);
             this.d.bZ();
@@ -76,7 +81,7 @@ public class PathfinderGoalBreed extends PathfinderGoal {
             entityageable.setAge(-24000);
             entityageable.setPositionRotation(this.d.locX, this.d.locY, this.d.locZ, 0.0F, 0.0F);
             this.a.addEntity(entityageable, org.bukkit.event.entity.CreatureSpawnEvent.SpawnReason.BREEDING); // CraftBukkit - added SpawnReason
-            Random random = this.d.aC();
+            Random random = this.d.aD();
 
             for (int i = 0; i < 7; ++i) {
                 double d0 = random.nextGaussian() * 0.02D;

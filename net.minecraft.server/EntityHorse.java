@@ -3,10 +3,15 @@ package net.minecraft.server;
 import java.util.Iterator;
 import java.util.List;
 
+// CraftBukkit start
+import org.bukkit.craftbukkit.event.CraftEventFactory;
+import org.bukkit.event.entity.EntityDamageEvent;
+// CraftBukkit end
+
 public class EntityHorse extends EntityAnimal implements IInventoryListener {
 
     private static final IEntitySelector bu = new EntitySelectorHorse();
-    private static final IAttribute attributeJumpStrength = (new AttributeRanged("horse.jumpStrength", 0.7D, 0.0D, 2.0D)).a("Jump Strength").a(true);
+    public static final IAttribute attributeJumpStrength = (new AttributeRanged("horse.jumpStrength", 0.7D, 0.0D, 2.0D)).a("Jump Strength").a(true); // CraftBukkit - private -> public
     private static final String[] bw = new String[] { null, "textures/entity/horse/armor/horse_armor_iron.png", "textures/entity/horse/armor/horse_armor_gold.png", "textures/entity/horse/armor/horse_armor_diamond.png"};
     private static final String[] bx = new String[] { "", "meo", "goo", "dio"};
     private static final int[] by = new int[] { 0, 5, 7, 11};
@@ -20,7 +25,7 @@ public class EntityHorse extends EntityAnimal implements IInventoryListener {
     public int bp;
     public int bq;
     protected boolean br;
-    private InventoryHorseChest inventoryChest;
+    public InventoryHorseChest inventoryChest; // CraftBukkit - private -> public
     private boolean bH;
     protected int bs;
     protected float bt;
@@ -34,6 +39,7 @@ public class EntityHorse extends EntityAnimal implements IInventoryListener {
     private int bP;
     private String bQ;
     private String[] bR = new String[3];
+    public int maxDomestication = 100; // CraftBukkit - store max domestication value
 
     public EntityHorse(World world) {
         super(world);
@@ -49,7 +55,7 @@ public class EntityHorse extends EntityAnimal implements IInventoryListener {
         this.goalSelector.a(6, new PathfinderGoalRandomStroll(this, 0.7D));
         this.goalSelector.a(7, new PathfinderGoalLookAtPlayer(this, EntityHuman.class, 6.0F));
         this.goalSelector.a(8, new PathfinderGoalRandomLookaround(this));
-        this.cH();
+        this.loadChest();
     }
 
     protected void a() {
@@ -233,7 +239,7 @@ public class EntityHorse extends EntityAnimal implements IInventoryListener {
     }
 
     public int t(int i) {
-        int j = MathHelper.a(this.getTemper() + i, 0, this.cq());
+        int j = MathHelper.a(this.getTemper() + i, 0, this.getMaxDomestication());
 
         this.setTemper(j);
         return j;
@@ -245,11 +251,11 @@ public class EntityHorse extends EntityAnimal implements IInventoryListener {
         return this.passenger != null && this.passenger.equals(entity) ? false : super.damageEntity(damagesource, f);
     }
 
-    public int aP() {
+    public int aQ() {
         return by[this.cf()];
     }
 
-    public boolean L() {
+    public boolean M() {
         return this.passenger == null;
     }
 
@@ -281,9 +287,26 @@ public class EntityHorse extends EntityAnimal implements IInventoryListener {
         int i = MathHelper.f(f * 0.5F - 3.0F);
 
         if (i > 0) {
-            this.damageEntity(DamageSource.FALL, (float) i);
+            // CraftBukkit start
+            EntityDamageEvent event = CraftEventFactory.callEntityDamageEvent(null, this, EntityDamageEvent.DamageCause.FALL, i);
+            if (!event.isCancelled()) {
+                float damage = (float) event.getDamage();
+                if (damage > 0) {
+                    this.getBukkitEntity().setLastDamageCause(event);
+                    this.damageEntity(DamageSource.FALL, damage);
+                }
+            }
+
             if (this.passenger != null) {
-                this.passenger.damageEntity(DamageSource.FALL, (float) i);
+                EntityDamageEvent passengerEvent = CraftEventFactory.callEntityDamageEvent(null, this.passenger, EntityDamageEvent.DamageCause.FALL, i);
+                if (!passengerEvent.isCancelled() && this.passenger != null) { // Check again in case of plugin
+                    float damage = (float) passengerEvent.getDamage();
+                    if (damage > 0) {
+                        this.passenger.getBukkitEntity().setLastDamageCause(passengerEvent);
+                        this.passenger.damageEntity(DamageSource.FALL, damage);
+                    }
+                }
+                // CraftBukkit end
             }
 
             int j = this.world.getTypeId(MathHelper.floor(this.locX), MathHelper.floor(this.locY - 0.2D - (double) this.lastYaw), MathHelper.floor(this.locZ));
@@ -299,13 +322,13 @@ public class EntityHorse extends EntityAnimal implements IInventoryListener {
     private int cG() {
         int i = this.getType();
 
-        return this.hasChest() && (i == 1 || i == 2) ? 17 : 2;
+        return this.hasChest() /* && (i == 1 || i == 2) */ ? 17 : 2; // CraftBukkit - Remove type check
     }
 
-    private void cH() {
+    public void loadChest() { // CraftBukkit - private -> public
         InventoryHorseChest inventoryhorsechest = this.inventoryChest;
 
-        this.inventoryChest = new InventoryHorseChest("HorseChest", this.cG());
+        this.inventoryChest = new InventoryHorseChest("HorseChest", this.cG(), this); // CraftBukkit - add this horse
         this.inventoryChest.a(this.getLocalizedName());
         if (inventoryhorsechest != null) {
             inventoryhorsechest.b(this);
@@ -379,7 +402,7 @@ public class EntityHorse extends EntityAnimal implements IInventoryListener {
         return this.getAttributeInstance(attributeJumpStrength).getValue();
     }
 
-    protected String aO() {
+    protected String aP() {
         this.cM();
         int i = this.getType();
 
@@ -393,7 +416,7 @@ public class EntityHorse extends EntityAnimal implements IInventoryListener {
         return i == 4 ? Item.BONE.id : (i == 3 ? (flag ? 0 : Item.ROTTEN_FLESH.id) : Item.LEATHER.id);
     }
 
-    protected String aN() {
+    protected String aO() {
         this.cM();
         if (this.random.nextInt(3) == 0) {
             this.cO();
@@ -410,7 +433,7 @@ public class EntityHorse extends EntityAnimal implements IInventoryListener {
 
     protected String r() {
         this.cM();
-        if (this.random.nextInt(10) == 0 && !this.bb()) {
+        if (this.random.nextInt(10) == 0 && !this.bc()) {
             this.cO();
         }
 
@@ -455,9 +478,9 @@ public class EntityHorse extends EntityAnimal implements IInventoryListener {
         }
     }
 
-    protected void ay() {
-        super.ay();
-        this.aW().b(attributeJumpStrength);
+    protected void az() {
+        super.az();
+        this.aX().b(attributeJumpStrength);
         this.getAttributeInstance(GenericAttributes.a).setValue(53.0D);
         this.getAttributeInstance(GenericAttributes.d).setValue(0.22499999403953552D);
     }
@@ -466,11 +489,11 @@ public class EntityHorse extends EntityAnimal implements IInventoryListener {
         return 6;
     }
 
-    public int cq() {
-        return 100;
+    public int getMaxDomestication() {
+        return this.maxDomestication; // CraftBukkit - return stored max domestication instead of 100
     }
 
-    protected float aZ() {
+    protected float ba() {
         return 0.8F;
     }
 
@@ -579,7 +602,7 @@ public class EntityHorse extends EntityAnimal implements IInventoryListener {
                         flag = true;
                     }
 
-                    if (b1 > 0 && (flag || !this.isTame()) && b1 < this.cq()) {
+                    if (b1 > 0 && (flag || !this.isTame()) && b1 < this.getMaxDomestication()) {
                         flag = true;
                         this.t(b1);
                     }
@@ -602,7 +625,7 @@ public class EntityHorse extends EntityAnimal implements IInventoryListener {
                     this.setHasChest(true);
                     this.makeSound("mob.chickenplop", 1.0F, (this.random.nextFloat() - this.random.nextFloat()) * 0.2F + 1.0F);
                     flag = true;
-                    this.cH();
+                    this.loadChest();
                 }
 
                 if (!flag && this.ca() && !this.co() && itemstack.id == Item.SADDLE.id) {
@@ -652,7 +675,7 @@ public class EntityHorse extends EntityAnimal implements IInventoryListener {
         return i == 2 || i == 1;
     }
 
-    protected boolean bb() {
+    protected boolean bc() {
         return this.passenger != null && this.co() ? true : this.cg() || this.ch();
     }
 
@@ -822,7 +845,7 @@ public class EntityHorse extends EntityAnimal implements IInventoryListener {
         String s = this.cp();
 
         if (s != null) {
-            this.makeSound(s, this.aZ(), this.ba());
+            this.makeSound(s, this.ba(), this.bb());
         }
     }
 
@@ -888,7 +911,7 @@ public class EntityHorse extends EntityAnimal implements IInventoryListener {
             }
 
             this.Y = 1.0F;
-            this.aR = this.bf() * 0.1F;
+            this.aR = this.bg() * 0.1F;
             if (!this.world.isStatic) {
                 this.i((float) this.getAttributeInstance(GenericAttributes.d).getValue());
                 super.e(f, f1);
@@ -928,6 +951,7 @@ public class EntityHorse extends EntityAnimal implements IInventoryListener {
         nbttagcompound.setInt("Temper", this.getTemper());
         nbttagcompound.setBoolean("Tame", this.isTame());
         nbttagcompound.setString("OwnerName", this.getOwnerName());
+        nbttagcompound.setInt("Bukkit.MaxDomestication", this.maxDomestication); // CraftBukkit
         if (this.hasChest()) {
             NBTTagList nbttaglist = new NBTTagList();
 
@@ -968,8 +992,12 @@ public class EntityHorse extends EntityAnimal implements IInventoryListener {
         if (nbttagcompound.hasKey("OwnerName")) {
             this.setOwnerName(nbttagcompound.getString("OwnerName"));
         }
-
-        AttributeInstance attributeinstance = this.aW().a("Speed");
+        // CraftBukkit start
+        if (nbttagcompound.hasKey("Bukkit.MaxDomestication")) {
+            this.maxDomestication = nbttagcompound.getInt("Bukkit.MaxDomestication");
+        }
+        // CraftBukkit end
+        AttributeInstance attributeinstance = this.aX().a("Speed");
 
         if (attributeinstance != null) {
             this.getAttributeInstance(GenericAttributes.d).setValue(attributeinstance.b() * 0.25D);
@@ -978,7 +1006,7 @@ public class EntityHorse extends EntityAnimal implements IInventoryListener {
         if (this.hasChest()) {
             NBTTagList nbttaglist = nbttagcompound.getList("Items");
 
-            this.cH();
+            this.loadChest();
 
             for (int i = 0; i < nbttaglist.size(); ++i) {
                 NBTTagCompound nbttagcompound1 = (NBTTagCompound) nbttaglist.get(i);
@@ -1132,36 +1160,43 @@ public class EntityHorse extends EntityAnimal implements IInventoryListener {
         return (GroupDataEntity) object;
     }
 
-    protected boolean be() {
+    protected boolean bf() {
         return true;
     }
 
     public void u(int i) {
         if (this.co()) {
+            // CraftBukkit start - fire HorseJumpEvent, use event power
             if (i < 0) {
                 i = 0;
-            } else {
-                this.bI = true;
-                this.cO();
             }
 
+            float power;
             if (i >= 90) {
-                this.bt = 1.0F;
+                power = 1.0F;
             } else {
-                this.bt = 0.4F + 0.4F * (float) i / 90.0F;
+                power = 0.4F + 0.4F * (float) i / 90.0F;
             }
+
+            org.bukkit.event.entity.HorseJumpEvent event = org.bukkit.craftbukkit.event.CraftEventFactory.callHorseJumpEvent(this, power);
+            if (!event.isCancelled()) {
+                this.bI = true;
+                this.cO();
+                this.bt = event.getPower();
+            }
+            // CraftBukkit end
         }
     }
 
-    public void V() {
-        super.V();
+    public void W() {
+        super.W();
         if (this.bM > 0.0F) {
             float f = MathHelper.sin(this.aN * 3.1415927F / 180.0F);
             float f1 = MathHelper.cos(this.aN * 3.1415927F / 180.0F);
             float f2 = 0.7F * this.bM;
             float f3 = 0.15F * this.bM;
 
-            this.passenger.setPosition(this.locX + (double) (f2 * f), this.locY + this.X() + this.passenger.W() + (double) f3, this.locZ - (double) (f2 * f1));
+            this.passenger.setPosition(this.locX + (double) (f2 * f), this.locY + this.Y() + this.passenger.X() + (double) f3, this.locZ - (double) (f2 * f1));
             if (this.passenger instanceof EntityLiving) {
                 ((EntityLiving) this.passenger).aN = this.aN;
             }

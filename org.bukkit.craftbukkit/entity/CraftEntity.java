@@ -51,6 +51,7 @@ public abstract class CraftEntity implements org.bukkit.entity.Entity {
                         else if (entity instanceof EntityOcelot) { return new CraftOcelot(server, (EntityOcelot) entity); }
                     }
                     else if (entity instanceof EntitySheep) { return new CraftSheep(server, (EntitySheep) entity); }
+                    else if (entity instanceof EntityHorse) { return new CraftHorse(server, (EntityHorse) entity); }
                     else  { return new CraftAnimals(server, (EntityAnimal) entity); }
                 }
                 // Monsters
@@ -146,6 +147,7 @@ public abstract class CraftEntity implements org.bukkit.entity.Entity {
         } else if (entity instanceof EntityHanging) {
             if (entity instanceof EntityPainting) { return new CraftPainting(server, (EntityPainting) entity); }
             else if (entity instanceof EntityItemFrame) { return new CraftItemFrame(server, (EntityItemFrame) entity); }
+            else if (entity instanceof EntityLeash) { return new CraftLeash(server, (EntityLeash) entity); }
             else { return new CraftHanging(server, (EntityHanging) entity); }
         }
         else if (entity instanceof EntityTNTPrimed) { return new CraftTNTPrimed(server, (EntityTNTPrimed) entity); }
@@ -183,6 +185,9 @@ public abstract class CraftEntity implements org.bukkit.entity.Entity {
     }
 
     public boolean isOnGround() {
+        if (entity instanceof EntityArrow) {
+            return ((EntityArrow) entity).isInGround();
+        }
         return entity.onGround;
     }
 

@@ -4,7 +4,6 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
 import java.util.Set;
@@ -906,6 +905,8 @@ public class CraftWorld implements World {
                 // need a net server handler for this one
             } else if (Sheep.class.isAssignableFrom(clazz)) {
                 entity = new EntitySheep(world);
+            } else if (Horse.class.isAssignableFrom(clazz)) {
+                entity = new EntityHorse(world);
             } else if (Skeleton.class.isAssignableFrom(clazz)) {
                 entity = new EntitySkeleton(world);
             } else if (Slime.class.isAssignableFrom(clazz)) {
@@ -992,6 +993,9 @@ public class CraftWorld implements World {
                 entity = new EntityPainting(world, (int) x, (int) y, (int) z, dir);
             } else if (ItemFrame.class.isAssignableFrom(clazz)) {
                 entity = new EntityItemFrame(world, (int) x, (int) y, (int) z, dir);
+            } else if (LeashHitch.class.isAssignableFrom(clazz)) {
+                entity = new EntityLeash(world, (int) x, (int) y, (int) z);
+                entity.p = true;
             }
 
             if (entity != null && !((EntityHanging) entity).survives()) {

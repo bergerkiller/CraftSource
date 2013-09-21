@@ -69,14 +69,14 @@ public class EntityTrackerEntry {
             this.scanPlayers(list);
         }
 
-        if (this.v != this.tracker.vehicle /* || this.tracker.vehicle != null && this.m % 60 == 0 */) { // CraftBukkit - Revert to 1.4 logic, this packet is a toggle
+        if (this.v != this.tracker.vehicle || this.tracker.vehicle != null && this.m % 60 == 0) {
             this.v = this.tracker.vehicle;
             this.broadcast(new Packet39AttachEntity(0, this.tracker, this.tracker.vehicle));
         }
 
         if (this.tracker instanceof EntityItemFrame /*&& this.m % 10 == 0*/) { // CraftBukkit - Moved below, should always enter this block
             EntityItemFrame i3 = (EntityItemFrame) this.tracker;
-            ItemStack i4 = i3.h();
+            ItemStack i4 = i3.getItem();
 
             if (this.m % 10 == 0 && i4 != null && i4.getItem() instanceof ItemWorldMap) { // CraftBukkit - Moved this.m % 10 logic here so item frames do not enter the other blocks
                 WorldMap i6 = Item.MAP.getSavedMap(i4, this.tracker.world);
@@ -246,10 +246,15 @@ public class EntityTrackerEntry {
         }
 
         if (this.tracker instanceof EntityLiving) {
-            AttributeMapServer attributemapserver = (AttributeMapServer) ((EntityLiving) this.tracker).aW();
+            AttributeMapServer attributemapserver = (AttributeMapServer) ((EntityLiving) this.tracker).aX();
             Set set = attributemapserver.b();
 
             if (!set.isEmpty()) {
+                // CraftBukkit start - Send scaled max health
+                if (this.tracker instanceof EntityPlayer) {
+                    ((EntityPlayer) this.tracker).getBukkitEntity().injectScaledMaxHealth(set, false);
+                }
+                // CraftBukkit end
                 this.broadcastIncludingSelf(new Packet44UpdateAttributes(this.tracker.id, set));
             }
 
@@ -318,9 +323,14 @@ public class EntityTrackerEntry {
                     }
 
                     if (this.tracker instanceof EntityLiving) {
-                        AttributeMapServer attributemapserver = (AttributeMapServer) ((EntityLiving) this.tracker).aW();
+                        AttributeMapServer attributemapserver = (AttributeMapServer) ((EntityLiving) this.tracker).aX();
                         Collection collection = attributemapserver.c();
 
+                        // CraftBukkit start - If sending own attributes send scaled health instead of current maximum health
+                        if (this.tracker.id == entityplayer.id) {
+                            ((EntityPlayer) this.tracker).getBukkitEntity().injectScaledMaxHealth(collection, false);
+                        }
+                        // CraftBukkit end
                         if (!collection.isEmpty()) {
                             entityplayer.playerConnection.sendPacket(new Packet44UpdateAttributes(this.tracker.id, collection));
                         }
@@ -333,17 +343,19 @@ public class EntityTrackerEntry {
                         entityplayer.playerConnection.sendPacket(new Packet28EntityVelocity(this.tracker.id, this.tracker.motX, this.tracker.motY, this.tracker.motZ));
                     }
 
-                    // CraftBukkit start
-                    if (this.tracker.vehicle != null && this.tracker.id > this.tracker.vehicle.id) {
+                    if (this.tracker.vehicle != null) {
                         entityplayer.playerConnection.sendPacket(new Packet39AttachEntity(0, this.tracker, this.tracker.vehicle));
-                    } else if (this.tracker.passenger != null && this.tracker.id > this.tracker.passenger.id) {
-                        entityplayer.playerConnection.sendPacket(new Packet39AttachEntity(0, this.tracker.passenger, this.tracker));
                     }
 
-                    if (this.tracker instanceof EntityInsentient && ((EntityInsentient) this.tracker).bI() != null) {
-                        entityplayer.playerConnection.sendPacket(new Packet39AttachEntity(1, this.tracker, ((EntityInsentient) this.tracker).bI()));
+                    // CraftBukkit start
+                    if (this.tracker.passenger != null) {
+                        entityplayer.playerConnection.sendPacket(new Packet39AttachEntity(0, this.tracker.passenger, this.tracker));
                     }
                     // CraftBukkit end
+
+                    if (this.tracker instanceof EntityInsentient && ((EntityInsentient) this.tracker).getLeashHolder() != null) {
+                        entityplayer.playerConnection.sendPacket(new Packet39AttachEntity(1, this.tracker, ((EntityInsentient) this.tracker).getLeashHolder()));
+                    }
 
                     if (this.tracker instanceof EntityLiving) {
                         for (int i = 0; i < 5; ++i) {

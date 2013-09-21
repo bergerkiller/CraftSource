@@ -39,12 +39,12 @@ public class FoodMetaData {
                     this.foodLevel = event.getFoodLevel();
                 }
 
-                ((EntityPlayer) entityhuman).playerConnection.sendPacket(new Packet8UpdateHealth(entityhuman.getHealth(), this.foodLevel, this.saturationLevel));
+                ((EntityPlayer) entityhuman).playerConnection.sendPacket(new Packet8UpdateHealth(((EntityPlayer) entityhuman).getBukkitEntity().getScaledHealth(), this.foodLevel, this.saturationLevel));
                 // CraftBukkit end
             }
         }
 
-        if (entityhuman.world.getGameRules().getBoolean("naturalRegeneration") && this.foodLevel >= 18 && entityhuman.bI()) {
+        if (entityhuman.world.getGameRules().getBoolean("naturalRegeneration") && this.foodLevel >= 18 && entityhuman.bJ()) {
             ++this.foodTickTimer;
             if (this.foodTickTimer >= 80) {
                 // CraftBukkit - added RegainReason
