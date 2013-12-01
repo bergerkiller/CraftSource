@@ -21,22 +21,15 @@ public class PendingConnection extends Connection {
     private int f;
     private String g;
     private volatile boolean h;
-    private String loginKey = Long.toString(random.nextLong(), 16); // CraftBukkit - Security fix
+    private String loginKey = "";
     private boolean j;
     private SecretKey k;
-    public String hostname = ""; // CraftBukkit - add field
 
-    public PendingConnection(MinecraftServer minecraftserver, Socket socket, String s) throws java.io.IOException { // CraftBukkit - throws IOException
+    public PendingConnection(MinecraftServer minecraftserver, Socket socket, String s) {
         this.server = minecraftserver;
         this.networkManager = new NetworkManager(minecraftserver.getLogger(), socket, s, this, minecraftserver.H().getPrivate());
         this.networkManager.e = 0;
     }
-
-    // CraftBukkit start
-    public Socket getSocket() {
-        return this.networkManager.getSocket();
-    }
-    // CraftBukkit end
 
     public void d() {
         if (this.h) {
@@ -65,7 +58,6 @@ public class PendingConnection extends Connection {
         if (this.g != null) {
             this.disconnect("Quit repeating yourself!");
         } else {
-            this.hostname = packet2handshake.c + ':' + packet2handshake.d; // CraftBukkit - initialize field
             this.g = packet2handshake.f();
             if (!this.g.equals(StripColor.a(this.g))) {
                 this.disconnect("Invalid username!");
@@ -108,7 +100,7 @@ public class PendingConnection extends Connection {
 
             this.j = true;
             if (this.server.getOnlineMode()) {
-                (new ThreadLoginVerifier(this, server.server)).start(); // CraftBukkit - add CraftServer
+                (new ThreadLoginVerifier(this)).start();
             } else {
                 this.h = true;
             }
@@ -118,15 +110,12 @@ public class PendingConnection extends Connection {
     public void a(Packet1Login packet1login) {}
 
     public void e() {
-        // CraftBukkit start
-        EntityPlayer s = this.server.getPlayerList().attemptLogin(this, this.g, this.hostname);
+        String s = this.server.getPlayerList().attemptLogin(this.networkManager.getSocketAddress(), this.g);
 
-        if (s == null) {
-            // this.disconnect(s);
-            return;
-            // CraftBukkit end
+        if (s != null) {
+            this.disconnect(s);
         } else {
-            EntityPlayer entityplayer = this.server.getPlayerList().processLogin(s); // CraftBukkit - this.g -> s
+            EntityPlayer entityplayer = this.server.getPlayerList().processLogin(this.g);
 
             if (entityplayer != null) {
                 this.server.getPlayerList().a((INetworkManager) this.networkManager, entityplayer);
@@ -142,31 +131,25 @@ public class PendingConnection extends Connection {
     }
 
     public void a(Packet254GetInfo packet254getinfo) {
-        if (this.networkManager.getSocket() == null) return; // CraftBukkit - fix NPE when a client queries a server that is unable to handle it.
         try {
             PlayerList playerlist = this.server.getPlayerList();
             String s = null;
-            // CraftBukkit
-            org.bukkit.event.server.ServerListPingEvent pingEvent = org.bukkit.craftbukkit.event.CraftEventFactory.callServerListPingEvent(this.server.server, getSocket().getInetAddress(), this.server.getMotd(), playerlist.getPlayerCount(), playerlist.getMaxPlayers());
+
             if (packet254getinfo.d()) {
-                // CraftBukkit
-                s = pingEvent.getMotd() + "\u00A7" + playerlist.getPlayerCount() + "\u00A7" + pingEvent.getMaxPlayers();
+                s = this.server.getMotd() + "\u00A7" + playerlist.getPlayerCount() + "\u00A7" + playerlist.getMaxPlayers();
             } else {
-                // CraftBukkit start - Don't create a list from an array
-                Object[] list = new Object[] { 1, 78, this.server.getVersion(), pingEvent.getMotd(), playerlist.getPlayerCount(), pingEvent.getMaxPlayers() };
+                List list = Arrays.asList(new Serializable[] { Integer.valueOf(1), Integer.valueOf(78), this.server.getVersion(), this.server.getMotd(), Integer.valueOf(playerlist.getPlayerCount()), Integer.valueOf(playerlist.getMaxPlayers())});
 
-                StringBuilder builder = new StringBuilder();
-                for (Object object : list) {
-                    if (builder.length() == 0) {
-                        builder.append('\u00A7');
+                Object object;
+
+                for (Iterator iterator = list.iterator(); iterator.hasNext(); s = s + object.toString().replaceAll(", "")) {
+                    object = iterator.next();
+                    if (s == null) {
+                        s = "\u00A7";
                     } else {
-                        builder.append('\0');
+                        s = s + ";
                     }
-
-                    builder.append(org.apache.commons.lang.StringUtils.replace(object.toString(), "\0", ""));
                 }
-                s = builder.toString();
-                // CraftBukkit end
             }
 
             InetAddress inetaddress = null;

@@ -4,8 +4,6 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.util.List;
 
-import java.io.IOException; // CraftBukkit
-
 public class Packet20NamedEntitySpawn extends Packet {
 
     public int a;
@@ -23,15 +21,6 @@ public class Packet20NamedEntitySpawn extends Packet {
 
     public Packet20NamedEntitySpawn(EntityHuman entityhuman) {
         this.a = entityhuman.id;
-
-        // CraftBukkit start - Limit name length to 16 characters
-        if (entityhuman.name.length() > 16) {
-            this.b = entityhuman.name.substring(0, 16);
-        } else {
-            this.b = entityhuman.name;
-        }
-        // CraftBukkit end
-
         this.b = entityhuman.getName();
         this.c = MathHelper.floor(entityhuman.locX * 32.0D);
         this.d = MathHelper.floor(entityhuman.locY * 32.0D);
@@ -44,7 +33,7 @@ public class Packet20NamedEntitySpawn extends Packet {
         this.i = entityhuman.getDataWatcher();
     }
 
-    public void a(DataInput datainput) throws IOException { // CraftBukkit
+    public void a(DataInput datainput) {
         this.a = datainput.readInt();
         this.b = a(datainput, 16);
         this.c = datainput.readInt();
@@ -56,7 +45,7 @@ public class Packet20NamedEntitySpawn extends Packet {
         this.j = DataWatcher.a(datainput);
     }
 
-    public void a(DataOutput dataoutput) throws IOException { // CraftBukkit
+    public void a(DataOutput dataoutput) {
         dataoutput.writeInt(this.a);
         a(this.b, dataoutput);
         dataoutput.writeInt(this.c);

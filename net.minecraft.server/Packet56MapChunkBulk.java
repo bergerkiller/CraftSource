@@ -18,16 +18,7 @@ public class Packet56MapChunkBulk extends Packet {
     private byte[][] inflatedBuffers;
     private int size;
     private boolean h;
-    private byte[] buildBuffer = new byte[0]; // CraftBukkit - remove static
-    // CraftBukkit start
-    static final ThreadLocal<Deflater> localDeflater = new ThreadLocal<Deflater>() {
-        @Override
-        protected Deflater initialValue() {
-            // Don't use higher compression level, slows things down too much
-            return new Deflater(6);
-        }
-    };
-    // CraftBukkit end
+    private static byte[] buildBuffer = new byte[0];
 
     public Packet56MapChunkBulk() {}
 
@@ -62,7 +53,6 @@ public class Packet56MapChunkBulk extends Packet {
             this.inflatedBuffers[k] = chunkmap.a;
         }
 
-        /* CraftBukkit start - Moved to compress()
         Deflater deflater = new Deflater(-1);
 
         try {
@@ -73,26 +63,9 @@ public class Packet56MapChunkBulk extends Packet {
         } finally {
             deflater.end();
         }
-        */
     }
 
-    // Add compression method
-    public void compress() {
-        if (this.buffer != null) {
-            return;
-        }
-
-        Deflater deflater = localDeflater.get();
-        deflater.reset();
-        deflater.setInput(this.buildBuffer);
-        deflater.finish();
-
-        this.buffer = new byte[this.buildBuffer.length + 100];
-        this.size = deflater.deflate(this.buffer);
-    }
-    // CraftBukkit end
-
-    public void a(DataInput datainput) throws IOException { // CraftBukkit - throws IOException
+    public void a(DataInput datainput) {
         short short1 = datainput.readShort();
 
         this.size = datainput.readInt();
@@ -149,8 +122,7 @@ public class Packet56MapChunkBulk extends Packet {
         }
     }
 
-    public void a(DataOutput dataoutput) throws IOException { // CraftBukkit - throws IOException
-        compress(); // CraftBukkit
+    public void a(DataOutput dataoutput) {
         dataoutput.writeShort(this.c.length);
         dataoutput.writeInt(this.size);
         dataoutput.writeBoolean(this.h);

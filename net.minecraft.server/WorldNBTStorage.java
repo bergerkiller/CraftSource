@@ -8,7 +8,9 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.logging.Logger;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 // CraftBukkit start
 import java.util.UUID;
@@ -18,11 +20,12 @@ import org.bukkit.craftbukkit.entity.CraftPlayer;
 
 public class WorldNBTStorage implements IDataManager, IPlayerFileData {
 
+    private static final Logger a = LogManager.getLogger();
     private final File baseDir;
     private final File playerDir;
     private final File dataDir;
-    private final long sessionId = MinecraftServer.aq();
-    private final String e;
+    private final long sessionId = MinecraftServer.ap();
+    private final String f;
     private UUID uuid = null; // CraftBukkit
 
     public WorldNBTStorage(File file1, String s, boolean flag) {
@@ -31,7 +34,7 @@ public class WorldNBTStorage implements IDataManager, IPlayerFileData {
         this.playerDir = new File(this.baseDir, "players");
         this.dataDir = new File(this.baseDir, "data");
         this.dataDir.mkdirs();
-        this.e = s;
+        this.f = s;
         if (flag) {
             this.playerDir.mkdirs();
         }
@@ -55,7 +58,7 @@ public class WorldNBTStorage implements IDataManager, IPlayerFileData {
         }
     }
 
-    public File getDirectory() { // CraftBukkit - protected to public
+    public File getDirectory() {
         return this.baseDir;
     }
 
@@ -184,7 +187,7 @@ public class WorldNBTStorage implements IDataManager, IPlayerFileData {
 
             file1.renameTo(file2);
         } catch (Exception exception) {
-            MinecraftServer.getServer().getLogger().warning("Failed to save player data for " + entityhuman.getName());
+            a.warn("Failed to save player data for " + entityhuman.getName());
         }
     }
 
@@ -195,7 +198,7 @@ public class WorldNBTStorage implements IDataManager, IPlayerFileData {
             // CraftBukkit start
             if (entityhuman instanceof EntityPlayer) {
                 CraftPlayer player = (CraftPlayer) entityhuman.bukkitEntity;
-                player.setFirstPlayed(new File(playerDir, entityhuman.name + ".dat").lastModified());
+                player.setFirstPlayed(new File(playerDir, entityhuman.getName() + ".dat").lastModified());
             }
             // CraftBukkit end
             entityhuman.f(nbttagcompound);
@@ -212,7 +215,7 @@ public class WorldNBTStorage implements IDataManager, IPlayerFileData {
                 return NBTCompressedStreamTools.a((InputStream) (new FileInputStream(file1)));
             }
         } catch (Exception exception) {
-            MinecraftServer.getServer().getLogger().warning("Failed to load player data for " + s);
+            a.warn("Failed to load player data for " + s);
         }
 
         return null;
@@ -241,31 +244,48 @@ public class WorldNBTStorage implements IDataManager, IPlayerFileData {
     }
 
     public String g() {
-        return this.e;
+        return this.f;
     }
 
     // CraftBukkit start
     public UUID getUUID() {
         if (uuid != null) return uuid;
+        File file1 = new File(this.baseDir, "uid.dat");
+        if (file1.exists()) {
+            DataInputStream dis = null;
+            try {
+                dis = new DataInputStream(new FileInputStream(file1));
+                return uuid = new UUID(dis.readLong(), dis.readLong());
+            } catch (IOException ex) {
+                a.warn("Failed to read " + file1 + ", generating new random UUID", ex);
+            } finally {
+                if (dis != null) {
+                    try {
+                        dis.close();
+                    } catch (IOException ex) {
+                        // NOOP
+                    }
+                }
+            }
+        }
+        uuid = UUID.randomUUID();
+        DataOutputStream dos = null;
         try {
-            File file1 = new File(this.baseDir, "uid.dat");
-            if (!file1.exists()) {
-                DataOutputStream dos = new DataOutputStream(new FileOutputStream(file1));
-                uuid = UUID.randomUUID();
-                dos.writeLong(uuid.getMostSignificantBits());
-                dos.writeLong(uuid.getLeastSignificantBits());
-                dos.close();
+            dos = new DataOutputStream(new FileOutputStream(file1));
+            dos.writeLong(uuid.getMostSignificantBits());
+            dos.writeLong(uuid.getLeastSignificantBits());
+        } catch (IOException ex) {
+            a.warn("Failed to write " + file1, ex);
+        } finally {
+            if (dos != null) {
+                try {
+                    dos.close();
+                } catch (IOException ex) {
+                    // NOOP
+                }
             }
-            else {
-                DataInputStream dis = new DataInputStream(new FileInputStream(file1));
-                uuid = new UUID(dis.readLong(), dis.readLong());
-                dis.close();
-            }
-            return uuid;
         }
-        catch (IOException ex) {
-            return null;
-        }
+        return uuid;
     }
 
     public File getPlayerDir() {

@@ -172,7 +172,7 @@ public abstract class Command {
     }
 
     /**
-     * Returns the current lable for this command
+     * Returns the current label for this command
      *
      * @return Label of this command or null if not registered
      */
@@ -345,7 +345,7 @@ public abstract class Command {
         }
 
         Set<Permissible> users = Bukkit.getPluginManager().getPermissionSubscriptions(Server.BROADCAST_CHANNEL_ADMINISTRATIVE);
-        String colored = ChatColor.GRAY + "" + ChatColor.ITALIC + "[" + result + "]";
+        String colored = ChatColor.GRAY + "" + ChatColor.ITALIC + "[" + result + ChatColor.GRAY + ChatColor.ITALIC + "]";
 
         if (sendToSource && !(source instanceof ConsoleCommandSender)) {
             source.sendMessage(message);

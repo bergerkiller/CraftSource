@@ -19,9 +19,7 @@ public class DedicatedServerConnectionThread extends Thread {
     private final InetAddress f;
     private final int g;
 
-    long connectionThrottle; // CraftBukkit
-
-    public DedicatedServerConnectionThread(ServerConnection serverconnection, InetAddress inetaddress, int i) throws IOException { // CraftBukkit - added throws
+    public DedicatedServerConnectionThread(ServerConnection serverconnection, InetAddress inetaddress, int i) {
         super("Listen thread");
         this.e = serverconnection;
         this.g = i;
@@ -57,34 +55,11 @@ public class DedicatedServerConnectionThread extends Thread {
         while (this.e.a) {
             try {
                 Socket socket = this.d.accept();
-
-                // CraftBukkit start - Connection throttle
-                InetAddress address = socket.getInetAddress();
-                long currentTime = System.currentTimeMillis();
-
-                if (((MinecraftServer) this.e.d()).server == null) {
-                    socket.close();
-                    continue;
-                }
-
-                connectionThrottle = ((MinecraftServer) this.e.d()).server.getConnectionThrottle();
-
-                synchronized (this.b) {
-                    if (this.b.containsKey(address) && !"127.0.0.1".equals(address.getHostAddress()) && currentTime - ((Long) this.b.get(address)).longValue() < connectionThrottle) {
-                        this.b.put(address, Long.valueOf(currentTime));
-                        socket.close();
-                        continue;
-                    }
-
-                    this.b.put(address, Long.valueOf(currentTime));
-                }
-                // CraftBukkit end
-
                 PendingConnection pendingconnection = new PendingConnection(this.e.d(), socket, "Connection #" + this.c++);
 
                 this.a(pendingconnection);
             } catch (IOException ioexception) {
-                this.e.d().getLogger().warning("DSCT: " + ioexception.getMessage()); // CraftBukkit
+                ioexception.printStackTrace();
             }
         }
 

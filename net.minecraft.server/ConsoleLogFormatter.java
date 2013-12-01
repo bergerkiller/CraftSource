@@ -4,25 +4,17 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.text.SimpleDateFormat;
 import java.util.logging.Formatter;
-import java.util.logging.Level;
 import java.util.logging.LogRecord;
-
-import java.util.regex.Pattern; // CraftBukkit
 
 class ConsoleLogFormatter extends Formatter {
 
     private SimpleDateFormat b;
 
     final ConsoleLogManager a;
-    // CraftBukkit start - Add color stripping
-    private Pattern pattern = Pattern.compile("\\x1B\\[([0-9]{1,2}(;[0-9]{1,2})*)?[m|K]");
-    private boolean strip = false;
-    // CraftBukkit end
 
     private ConsoleLogFormatter(ConsoleLogManager consolelogmanager) {
         this.a = consolelogmanager;
         this.b = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-        this.strip = MinecraftServer.getServer().options.has("log-strip-color"); // CraftBukkit
     }
 
     public String format(LogRecord logrecord) {
@@ -45,13 +37,7 @@ class ConsoleLogFormatter extends Formatter {
             stringbuilder.append(stringwriter.toString());
         }
 
-        // CraftBukkit start - handle stripping color
-        if (this.strip) {
-            return this.pattern.matcher(stringbuilder.toString()).replaceAll("");
-        } else {
-            return stringbuilder.toString();
-        }
-        // CraftBukkit end
+        return stringbuilder.toString();
     }
 
     ConsoleLogFormatter(ConsoleLogManager consolelogmanager, EmptyClass3 emptyclass3) {
