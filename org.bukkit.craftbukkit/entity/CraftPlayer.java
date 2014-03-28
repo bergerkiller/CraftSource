@@ -20,11 +20,12 @@ import net.minecraft.server.*;
 
 import org.apache.commons.lang.Validate;
 import org.apache.commons.lang.NotImplementedException;
-
 import org.bukkit.*;
 import org.bukkit.Achievement;
-import org.bukkit.Material;
+import org.bukkit.BanList;
 import org.bukkit.Statistic;
+import org.bukkit.Material;
+import org.bukkit.Statistic.Type;
 import org.bukkit.World;
 import org.bukkit.configuration.serialization.DelegateDeserialization;
 import org.bukkit.conversations.Conversation;
@@ -35,6 +36,7 @@ import org.bukkit.craftbukkit.CraftEffect;
 import org.bukkit.craftbukkit.CraftOfflinePlayer;
 import org.bukkit.craftbukkit.CraftServer;
 import org.bukkit.craftbukkit.CraftSound;
+import org.bukkit.craftbukkit.CraftStatistic;
 import org.bukkit.craftbukkit.CraftWorld;
 import org.bukkit.craftbukkit.map.CraftMapView;
 import org.bukkit.craftbukkit.map.RenderData;
@@ -51,7 +53,6 @@ import org.bukkit.inventory.InventoryView.Property;
 import org.bukkit.map.MapView;
 import org.bukkit.metadata.MetadataValue;
 import org.bukkit.plugin.Plugin;
-import org.bukkit.plugin.messaging.Messenger;
 import org.bukkit.plugin.messaging.StandardMessenger;
 import org.bukkit.scoreboard.Scoreboard;
 
@@ -517,7 +518,29 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
 
     @Override
     public void awardAchievement(Achievement achievement) {
-        // TODO - non-functional as of ID purge
+        Validate.notNull(achievement, "Achievement cannot be null");
+        if (achievement.hasParent() && !hasAchievement(achievement.getParent())) {
+            awardAchievement(achievement.getParent());
+        }
+        getHandle().getStatisticManager().setStatistic(getHandle(), CraftStatistic.getNMSAchievement(achievement), 1);
+        getHandle().getStatisticManager().updateStatistics(getHandle());
+    }
+
+    @Override
+    public void removeAchievement(Achievement achievement) {
+        Validate.notNull(achievement, "Achievement cannot be null");
+        for (Achievement achieve : Achievement.values()) {
+            if (achieve.getParent() == achievement && hasAchievement(achieve)) {
+                removeAchievement(achieve);
+            }
+        }
+        getHandle().getStatisticManager().setStatistic(getHandle(), CraftStatistic.getNMSAchievement(achievement), 0);
+    }
+
+    @Override
+    public boolean hasAchievement(Achievement achievement) {
+        Validate.notNull(achievement, "Achievement cannot be null");
+        return getHandle().getStatisticManager().a(CraftStatistic.getNMSAchievement(achievement));
     }
 
     @Override
@@ -526,8 +549,36 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
     }
 
     @Override
+    public void decrementStatistic(Statistic statistic) {
+        decrementStatistic(statistic, 1);
+    }
+
+    @Override
+    public int getStatistic(Statistic statistic) {
+        Validate.notNull(statistic, "Statistic cannot be null");
+        Validate.isTrue(statistic.getType() == Type.UNTYPED, "Must supply additional paramater for this statistic");
+        return getHandle().getStatisticManager().getStatisticValue(CraftStatistic.getNMSStatistic(statistic));
+    }
+
+    @Override
     public void incrementStatistic(Statistic statistic, int amount) {
-        // TODO - non-functional as of ID purge
+        Validate.isTrue(amount > 0, "Amount must be greater than 0");
+        setStatistic(statistic, getStatistic(statistic) + amount);
+    }
+
+    @Override
+    public void decrementStatistic(Statistic statistic, int amount) {
+        Validate.isTrue(amount > 0, "Amount must be greater than 0");
+        setStatistic(statistic, getStatistic(statistic) - amount);
+    }
+
+    @Override
+    public void setStatistic(Statistic statistic, int newValue) {
+        Validate.notNull(statistic, "Statistic cannot be null");
+        Validate.isTrue(statistic.getType() == Type.UNTYPED, "Must supply additional paramater for this statistic");
+        Validate.isTrue(newValue >= 0, "Value must be greater than or equal to 0");
+        net.minecraft.server.Statistic nmsStatistic = CraftStatistic.getNMSStatistic(statistic);
+        getHandle().getStatisticManager().setStatistic(getHandle(), nmsStatistic, newValue);
     }
 
     @Override
@@ -536,8 +587,84 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
     }
 
     @Override
+    public void decrementStatistic(Statistic statistic, Material material) {
+        decrementStatistic(statistic, material, 1);
+    }
+
+    @Override
+    public int getStatistic(Statistic statistic, Material material) {
+        Validate.notNull(statistic, "Statistic cannot be null");
+        Validate.notNull(material, "Material cannot be null");
+        Validate.isTrue(statistic.getType() == Type.BLOCK || statistic.getType() == Type.ITEM, "This statistic does not take a Material parameter");
+        net.minecraft.server.Statistic nmsStatistic = CraftStatistic.getMaterialStatistic(statistic, material);
+        Validate.notNull(nmsStatistic, "The supplied Material does not have a corresponding statistic");
+        return getHandle().getStatisticManager().getStatisticValue(nmsStatistic);
+    }
+
+    @Override
     public void incrementStatistic(Statistic statistic, Material material, int amount) {
-        // TODO - non-functional as of ID purge
+        Validate.isTrue(amount > 0, "Amount must be greater than 0");
+        setStatistic(statistic, material, getStatistic(statistic, material) + amount);
+    }
+
+    @Override
+    public void decrementStatistic(Statistic statistic, Material material, int amount) {
+        Validate.isTrue(amount > 0, "Amount must be greater than 0");
+        setStatistic(statistic, material, getStatistic(statistic, material) - amount);
+    }
+
+    @Override
+    public void setStatistic(Statistic statistic, Material material, int newValue) {
+        Validate.notNull(statistic, "Statistic cannot be null");
+        Validate.notNull(material, "Material cannot be null");
+        Validate.isTrue(newValue >= 0, "Value must be greater than or equal to 0");
+        Validate.isTrue(statistic.getType() == Type.BLOCK || statistic.getType() == Type.ITEM, "This statistic does not take a Material parameter");
+        net.minecraft.server.Statistic nmsStatistic = CraftStatistic.getMaterialStatistic(statistic, material);
+        Validate.notNull(nmsStatistic, "The supplied Material does not have a corresponding statistic");
+        getHandle().getStatisticManager().setStatistic(getHandle(), nmsStatistic, newValue);
+    }
+
+    @Override
+    public void incrementStatistic(Statistic statistic, EntityType entityType) {
+        incrementStatistic(statistic, entityType, 1);
+    }
+
+    @Override
+    public void decrementStatistic(Statistic statistic, EntityType entityType) {
+        decrementStatistic(statistic, entityType, 1);
+    }
+
+    @Override
+    public int getStatistic(Statistic statistic, EntityType entityType) {
+        Validate.notNull(statistic, "Statistic cannot be null");
+        Validate.notNull(entityType, "EntityType cannot be null");
+        Validate.isTrue(statistic.getType() == Type.ENTITY, "This statistic does not take an EntityType parameter");
+        net.minecraft.server.Statistic nmsStatistic = CraftStatistic.getEntityStatistic(statistic, entityType);
+        Validate.notNull(nmsStatistic, "The supplied EntityType does not have a corresponding statistic");
+        return getHandle().getStatisticManager().getStatisticValue(nmsStatistic);
+    }
+
+    @Override
+    public void incrementStatistic(Statistic statistic, EntityType entityType, int amount) {
+        Validate.isTrue(amount > 0, "Amount must be greater than 0");
+        setStatistic(statistic, entityType, getStatistic(statistic, entityType) + amount);
+    }
+
+    @Override
+    public void decrementStatistic(Statistic statistic, EntityType entityType, int amount) {
+        Validate.isTrue(amount > 0, "Amount must be greater than 0");
+        setStatistic(statistic, entityType, getStatistic(statistic, entityType) - amount);
+    }
+
+    @Override
+    public void setStatistic(Statistic statistic, EntityType entityType, int newValue) {
+        Validate.notNull(statistic, "Statistic cannot be null");
+        Validate.notNull(entityType, "EntityType cannot be null");
+        Validate.isTrue(newValue >= 0, "Value must be greater than or equal to 0");
+        Validate.isTrue(statistic.getType() == Type.ENTITY, "This statistic does not take an EntityType parameter");
+        net.minecraft.server.Statistic nmsStatistic = CraftStatistic.getEntityStatistic(statistic, entityType);
+        Validate.notNull(nmsStatistic, "The supplied EntityType does not have a corresponding statistic");
+        getHandle().getStatisticManager().setStatistic(getHandle(), nmsStatistic, newValue);
     }
 
     @Override
@@ -583,19 +710,16 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
 
     @Override
     public boolean isBanned() {
-        return server.getHandle().getNameBans().isBanned(getName().toLowerCase());
+        return server.getBanList(BanList.Type.NAME).isBanned(getName());
     }
 
     @Override
     public void setBanned(boolean value) {
         if (value) {
-            BanEntry entry = new BanEntry(getName().toLowerCase());
-            server.getHandle().getNameBans().add(entry);
+            server.getBanList(BanList.Type.NAME).addBan(getName(), null, null, null);
         } else {
-            server.getHandle().getNameBans().remove(getName().toLowerCase());
+            server.getBanList(BanList.Type.NAME).pardon(getName());
         }
-
-        server.getHandle().getNameBans().save();
     }
 
     @Override
@@ -628,6 +752,7 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
             }
 
             getHandle().playerInteractManager.setGameMode(EnumGamemode.a(mode.getValue()));
+            getHandle().fallDistance = 0;
             getHandle().playerConnection.sendPacket(new PacketPlayOutGameStateChange(3, mode.getValue()));
         }
     }
@@ -879,12 +1004,14 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
     }
 
     public void setTexturePack(String url) {
-        Validate.notNull(url, "Texture pack URL cannot be null");
+        setResourcePack(url);
+    }
 
-        byte[] message = (url + "\0" + "16").getBytes();
-        Validate.isTrue(message.length <= Messenger.MAX_MESSAGE_SIZE, "Texture pack URL is too long");
+    @Override
+    public void setResourcePack(String url) {
+        Validate.notNull(url, "Resource pack URL cannot be null");
 
-        getHandle().playerConnection.sendPacket(new PacketPlayOutCustomPayload("MC|TPack", message));
+        getHandle().setResourcePack(url);
     }
 
     public void addChannel(String channel) {
@@ -1098,7 +1225,7 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
     }
 
     public void updateScaledHealth() {
-        AttributeMapServer attributemapserver = (AttributeMapServer) getHandle().bc();
+        AttributeMapServer attributemapserver = (AttributeMapServer) getHandle().bb();
         Set set = attributemapserver.b();
 
         injectScaledMaxHealth(set, true);
@@ -1123,6 +1250,6 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
             }
             continue;
         }
-        collection.add(new AttributeModifiable(getHandle().bc(), (new AttributeRanged("generic.maxHealth", scaledHealth ? healthScale : getMaxHealth(), 0.0D, Float.MAX_VALUE)).a("Max Health").a(true)));
+        collection.add(new AttributeModifiable(getHandle().bb(), (new AttributeRanged("generic.maxHealth", scaledHealth ? healthScale : getMaxHealth(), 0.0D, Float.MAX_VALUE)).a("Max Health").a(true)));
     }
 }

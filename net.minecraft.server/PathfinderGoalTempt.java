@@ -12,14 +12,14 @@ public class PathfinderGoalTempt extends PathfinderGoal {
     private EntityHuman h;
     private int i;
     private boolean j;
-    private int k;
+    private Item k;
     private boolean l;
     private boolean m;
 
-    public PathfinderGoalTempt(EntityCreature entitycreature, double d0, int i, boolean flag) {
+    public PathfinderGoalTempt(EntityCreature entitycreature, double d0, Item item, boolean flag) {
         this.a = entitycreature;
         this.b = d0;
-        this.k = i;
+        this.k = item;
         this.l = flag;
         this.a(3);
     }
@@ -33,16 +33,16 @@ public class PathfinderGoalTempt extends PathfinderGoal {
             if (this.h == null) {
                 return false;
             } else {
-                ItemStack itemstack = this.h.by();
+                ItemStack itemstack = this.h.bE();
 
-                return itemstack == null ? false : itemstack.id == this.k;
+                return itemstack == null ? false : itemstack.getItem() == this.k;
             }
         }
     }
 
     public boolean b() {
         if (this.l) {
-            if (this.a.e(this.h) < 36.0D) {
+            if (this.a.f(this.h) < 36.0D) {
                 if (this.h.e(this.c, this.d, this.e) > 0.010000000000000002D) {
                     return false;
                 }
@@ -81,8 +81,8 @@ public class PathfinderGoalTempt extends PathfinderGoal {
     }
 
     public void e() {
-        this.a.getControllerLook().a(this.h, 30.0F, (float) this.a.bp());
-        if (this.a.e(this.h) < 6.25D) {
+        this.a.getControllerLook().a(this.h, 30.0F, (float) this.a.bv());
+        if (this.a.f(this.h) < 6.25D) {
             this.a.getNavigation().h();
         } else {
             this.a.getNavigation().a((Entity) this.h, this.b);

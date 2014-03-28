@@ -3,7 +3,6 @@ package net.minecraft.server;
 public class ConvertProgressUpdater implements IProgressUpdate {
 
     private long b;
-
     final MinecraftServer a;
 
     public ConvertProgressUpdater(MinecraftServer minecraftserver) {
@@ -16,7 +15,7 @@ public class ConvertProgressUpdater implements IProgressUpdate {
     public void a(int i) {
         if (MinecraftServer.aq() - this.b >= 1000L) {
             this.b = MinecraftServer.aq();
-            this.a.getLogger().info("Converting... " + i + "%");
+            MinecraftServer.getLogger().info("Converting... " + i + "%");
         }
     }
 

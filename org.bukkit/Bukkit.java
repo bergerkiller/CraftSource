@@ -448,6 +448,13 @@ public final class Bukkit {
     }
 
     /**
+     * @see Server#getBanList(BanList.Type)
+     */
+    public static BanList getBanList(BanList.Type type){
+        return server.getBanList(type);
+    }
+
+    /**
      * @see Server#setWhitelist(boolean value)
      */
     public static void setWhitelist(boolean value) {
@@ -574,7 +581,8 @@ public final class Bukkit {
     }
 
     /**
-     * @see Server#createInventory(InventoryHolder owner, int size, String title)
+     * @see Server#createInventory(InventoryHolder owner, int size, String
+     *     title)
      */
     public static Inventory createInventory(InventoryHolder owner, int size, String title) {
         return server.createInventory(owner, size, title);
@@ -665,7 +673,7 @@ public final class Bukkit {
     }
 
     /**
-     * @see Server#loadServerIcon(File)()
+     * @see Server#loadServerIcon(File)
      */
     public static CachedServerIcon loadServerIcon(File file) throws Exception {
         return server.loadServerIcon(file);
@@ -676,5 +684,27 @@ public final class Bukkit {
      */
     public static CachedServerIcon loadServerIcon(BufferedImage image) throws Exception {
         return server.loadServerIcon(image);
+    }
+
+    /**
+     * @see Server#setIdleTimeout(int)
+     */
+    public static void setIdleTimeout(int threshold) {
+        server.setIdleTimeout(threshold);
+    }
+
+    /**
+     * @see Server#getIdleTimeout()
+     */
+    public static int getIdleTimeout() {
+        return server.getIdleTimeout();
+    }
+
+    /**
+     * @see Server#getUnsafe()
+     */
+    @Deprecated
+    public static UnsafeValues getUnsafe() {
+        return server.getUnsafe();
     }
 }

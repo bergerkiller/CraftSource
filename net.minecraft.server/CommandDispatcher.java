@@ -24,13 +24,19 @@ public class CommandDispatcher extends CommandHandler implements ICommandDispatc
         this.a(new CommandTell());
         this.a(new CommandSay());
         this.a(new CommandSpawnpoint());
+        this.a(new CommandSetWorldSpawn());
         this.a(new CommandGamerule());
         this.a(new CommandClear());
         this.a(new CommandTestFor());
         this.a(new CommandSpreadPlayers());
         this.a(new CommandPlaySound());
         this.a(new CommandScoreboard());
-        if (MinecraftServer.getServer().V()) {
+        this.a(new CommandAchievement());
+        this.a(new CommandSummon());
+        this.a(new CommandSetBlock());
+        this.a(new CommandTestForBlock());
+        this.a(new CommandTellRaw());
+        if (MinecraftServer.getServer().W()) {
             this.a(new CommandOp());
             this.a(new CommandDeop());
             this.a(new CommandStop());
@@ -46,6 +52,7 @@ public class CommandDispatcher extends CommandHandler implements ICommandDispatc
             this.a(new CommandList());
             this.a(new CommandWhitelist());
             this.a(new CommandIdleTimeout());
+            this.a(new CommandNetstat());
         } else {
             this.a(new CommandPublish());
         }
@@ -53,24 +60,24 @@ public class CommandDispatcher extends CommandHandler implements ICommandDispatc
         CommandAbstract.a((ICommandDispatcher) this);
     }
 
-    public void a(ICommandListener icommandlistener, int i, String s, Object... aobject) {
+    public void a(ICommandListener icommandlistener, ICommand icommand, int i, String s, Object... aobject) {
         boolean flag = true;
 
-        if (icommandlistener instanceof TileEntityCommand && !MinecraftServer.getServer().worldServer[0].getGameRules().getBoolean("commandBlockOutput")) {
+        if (icommandlistener instanceof CommandBlockListenerAbstract && !MinecraftServer.getServer().worldServer[0].getGameRules().getBoolean("commandBlockOutput")) {
             flag = false;
         }
 
-        ChatMessage chatmessage = ChatMessage.b("chat.type.admin", new Object[] { icommandlistener.getName(), ChatMessage.b(s, aobject)});
+        ChatMessage chatmessage = new ChatMessage("chat.type.admin", new Object[] { icommandlistener.getName(), new ChatMessage(s, aobject)});
 
-        chatmessage.a(EnumChatFormat.GRAY);
-        chatmessage.b(Boolean.valueOf(true));
+        chatmessage.getChatModifier().setColor(EnumChatFormat.GRAY);
+        chatmessage.getChatModifier().setItalic(Boolean.valueOf(true));
         if (flag) {
             Iterator iterator = MinecraftServer.getServer().getPlayerList().players.iterator();
 
             while (iterator.hasNext()) {
                 EntityPlayer entityplayer = (EntityPlayer) iterator.next();
 
-                if (entityplayer != icommandlistener && MinecraftServer.getServer().getPlayerList().isOp(entityplayer.getName())) {
+                if (entityplayer != icommandlistener && MinecraftServer.getServer().getPlayerList().isOp(entityplayer.getName()) && icommand.canUse(entityplayer) && (!(icommandlistener instanceof RemoteControlCommandListener) || MinecraftServer.getServer().m())) {
                     entityplayer.sendMessage(chatmessage);
                 }
             }
@@ -81,7 +88,7 @@ public class CommandDispatcher extends CommandHandler implements ICommandDispatc
         }
 
         if ((i & 1) != 1) {
-            icommandlistener.sendMessage(ChatMessage.b(s, aobject));
+            icommandlistener.sendMessage(new ChatMessage(s, aobject));
         }
     }
 }

@@ -4,22 +4,18 @@ public class CommandSaveAll extends CommandAbstract {
 
     public CommandSaveAll() {}
 
-    public String c() {
+    public String getCommand() {
         return "save-all";
-    }
-
-    public int a() {
-        return 4;
     }
 
     public String c(ICommandListener icommandlistener) {
         return "commands.save.usage";
     }
 
-    public void b(ICommandListener icommandlistener, String[] astring) {
+    public void execute(ICommandListener icommandlistener, String[] astring) {
         MinecraftServer minecraftserver = MinecraftServer.getServer();
 
-        icommandlistener.sendMessage(ChatMessage.e("commands.save.start"));
+        icommandlistener.sendMessage(new ChatMessage("commands.save.start", new Object[0]));
         if (minecraftserver.getPlayerList() != null) {
             minecraftserver.getPlayerList().savePlayers();
         }
@@ -40,7 +36,7 @@ public class CommandSaveAll extends CommandAbstract {
             }
 
             if (astring.length > 0 && "flush".equals(astring[0])) {
-                icommandlistener.sendMessage(ChatMessage.e("commands.save.flushStart"));
+                icommandlistener.sendMessage(new ChatMessage("commands.save.flushStart", new Object[0]));
 
                 for (i = 0; i < minecraftserver.worldServer.length; ++i) {
                     if (minecraftserver.worldServer[i] != null) {
@@ -52,13 +48,13 @@ public class CommandSaveAll extends CommandAbstract {
                     }
                 }
 
-                icommandlistener.sendMessage(ChatMessage.e("commands.save.flushEnd"));
+                icommandlistener.sendMessage(new ChatMessage("commands.save.flushEnd", new Object[0]));
             }
         } catch (ExceptionWorldConflict exceptionworldconflict) {
-            a(icommandlistener, "commands.save.failed", new Object[] { exceptionworldconflict.getMessage()});
+            a(icommandlistener, this, "commands.save.failed", new Object[] { exceptionworldconflict.getMessage()});
             return;
         }
 
-        a(icommandlistener, "commands.save.success", new Object[0]);
+        a(icommandlistener, this, "commands.save.success", new Object[0]);
     }
 }

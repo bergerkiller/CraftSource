@@ -9,7 +9,7 @@ public class CommandHelp extends CommandAbstract {
 
     public CommandHelp() {}
 
-    public String c() {
+    public String getCommand() {
         return "help";
     }
 
@@ -25,39 +25,50 @@ public class CommandHelp extends CommandAbstract {
         return Arrays.asList(new String[] { "?"});
     }
 
-    public void b(ICommandListener icommandlistener, String[] astring) {
+    public void execute(ICommandListener icommandlistener, String[] astring) {
         List list = this.d(icommandlistener);
         byte b0 = 7;
         int i = (list.size() - 1) / b0;
         boolean flag = false;
 
-        ICommand icommand;
         int j;
 
         try {
             j = astring.length == 0 ? 0 : a(icommandlistener, astring[0], 1, i + 1) - 1;
-        } catch (ExceptionInvalidNumber exceptioninvalidnumber) {
+        } catch (ExceptionInvalidNumber throw) {
             Map map = this.d();
+            ICommand icommand = (ICommand) map.get(astring[0]);
 
-            icommand = (ICommand) map.get(astring[0]);
             if (icommand != null) {
                 throw new ExceptionUsage(icommand.c(icommandlistener), new Object[0]);
+            }
+
+            if (MathHelper.a(astring[0], -1) != -1) {
+                throw throw;
             }
 
             throw new ExceptionUnknownCommand();
         }
 
         int k = Math.min((j + 1) * b0, list.size());
+        ChatMessage chatmessage = new ChatMessage("commands.help.header", new Object[] { Integer.valueOf(j + 1), Integer.valueOf(i + 1)});
 
-        icommandlistener.sendMessage(ChatMessage.b("commands.help.header", new Object[] { Integer.valueOf(j + 1), Integer.valueOf(i + 1)}).a(EnumChatFormat.DARK_GREEN));
+        chatmessage.getChatModifier().setColor(EnumChatFormat.DARK_GREEN);
+        icommandlistener.sendMessage(chatmessage);
 
         for (int l = j * b0; l < k; ++l) {
-            icommand = (ICommand) list.get(l);
-            icommandlistener.sendMessage(ChatMessage.e(icommand.c(icommandlistener)));
+            ICommand icommand1 = (ICommand) list.get(l);
+            ChatMessage chatmessage1 = new ChatMessage(icommand1.c(icommandlistener), new Object[0]);
+
+            chatmessage1.getChatModifier().setChatClickable(new ChatClickable(EnumClickAction.SUGGEST_COMMAND, "/" + icommand1.getCommand() + " "));
+            icommandlistener.sendMessage(chatmessage1);
         }
 
         if (j == 0 && icommandlistener instanceof EntityHuman) {
-            icommandlistener.sendMessage(ChatMessage.e("commands.help.footer").a(EnumChatFormat.GREEN));
+            ChatMessage chatmessage2 = new ChatMessage("commands.help.footer", new Object[0]);
+
+            chatmessage2.getChatModifier().setColor(EnumChatFormat.GREEN);
+            icommandlistener.sendMessage(chatmessage2);
         }
     }
 

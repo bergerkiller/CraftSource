@@ -317,7 +317,7 @@ public class CraftWorld implements World {
         Validate.notNull(velocity, "Can not spawn arrow with a null velocity");
 
         EntityArrow arrow = new EntityArrow(world);
-        arrow.setPositionRotation(loc.getX(), loc.getY(), loc.getZ(), loc.getPitch(), loc.getYaw());
+        arrow.setPositionRotation(loc.getX(), loc.getY(), loc.getZ(), loc.getYaw(), loc.getPitch());
         arrow.shoot(velocity.getX(), velocity.getY(), velocity.getZ(), speed, spread);
         world.addEntity(arrow);
         return (Arrow) arrow.getBukkitEntity();
@@ -370,7 +370,7 @@ public class CraftWorld implements World {
             gen = new WorldGenTaiga1();
             break;
         case JUNGLE:
-            gen = new WorldGenMegaTree(true, rand.nextBoolean());
+            gen = new WorldGenJungleTree(true, 10, 20, 3, 3); // Magic values as in BlockSapling
             break;
         case SMALL_JUNGLE:
             gen = new WorldGenTrees(true, 4 + rand.nextInt(7), 3, 3, false);
@@ -392,6 +392,12 @@ public class CraftWorld implements World {
             break;
         case DARK_OAK:
             gen = new WorldGenForestTree(true);
+            break;
+        case MEGA_REDWOOD:
+            gen = new WorldGenMegaTree(true, rand.nextBoolean());
+            break;
+        case TALL_BIRCH:
+            gen = new WorldGenForest(true, true);
             break;
         case TREE:
         default:
@@ -854,6 +860,9 @@ public class CraftWorld implements World {
             } else if (ThrownExpBottle.class.isAssignableFrom(clazz)) {
                 entity = new EntityThrownExpBottle(world);
                 entity.setPositionRotation(x, y, z, 0, 0);
+            } else if (EnderPearl.class.isAssignableFrom(clazz)) {
+                entity = new EntityEnderPearl(world);
+                entity.setPositionRotation(x, y, z, 0, 0);
             } else if (ThrownPotion.class.isAssignableFrom(clazz)) {
                 entity = new EntityPotion(world, x, y, z, CraftItemStack.asNMSCopy(new ItemStack(org.bukkit.Material.POTION, 1)));
             } else if (Fireball.class.isAssignableFrom(clazz)) {
@@ -965,7 +974,7 @@ public class CraftWorld implements World {
             }
 
             if (entity != null) {
-                entity.setLocation(x, y, z, pitch, yaw);
+                entity.setLocation(x, y, z, yaw, pitch);
             }
         } else if (Hanging.class.isAssignableFrom(clazz)) {
             Block block = getBlockAt(location);
@@ -1002,7 +1011,7 @@ public class CraftWorld implements World {
                 entity = new EntityItemFrame(world, (int) x, (int) y, (int) z, dir);
             } else if (LeashHitch.class.isAssignableFrom(clazz)) {
                 entity = new EntityLeash(world, (int) x, (int) y, (int) z);
-                entity.o = true;
+                entity.n = true;
             }
 
             if (entity != null && !((EntityHanging) entity).survives()) {
@@ -1014,13 +1023,10 @@ public class CraftWorld implements World {
             entity = new EntityExperienceOrb(world, x, y, z, 0);
         } else if (Weather.class.isAssignableFrom(clazz)) {
             // not sure what this can do
-            entity = new EntityLightning(world, x, y, z);
-        } else if (LightningStrike.class.isAssignableFrom(clazz)) {
-            // what is this, I don't even
-        } else if (Fish.class.isAssignableFrom(clazz)) {
-            // this is not a fish, it's a bobber, and it's probably useless
-            entity = new EntityFishingHook(world);
-            entity.setLocation(x, y, z, pitch, yaw);
+            if (LightningStrike.class.isAssignableFrom(clazz)) {
+                entity = new EntityLightning(world, x, y, z);
+                // what is this, I don't even
+            }
         } else if (Firework.class.isAssignableFrom(clazz)) {
             entity = new EntityFireworks(world, x, y, z, null);
         }

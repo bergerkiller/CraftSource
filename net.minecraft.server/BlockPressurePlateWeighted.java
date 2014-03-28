@@ -1,36 +1,47 @@
 package net.minecraft.server;
 
-import java.util.Iterator;
+import org.bukkit.event.entity.EntityInteractEvent; // CraftBukkit
 
 public class BlockPressurePlateWeighted extends BlockPressurePlateAbstract {
-
     private final int a;
 
-    protected BlockPressurePlateWeighted(int i, String s, Material material, int j) {
-        super(i, s, material);
-        this.a = j;
+    protected BlockPressurePlateWeighted(String s, Material material, int i) {
+        super(s, material);
+        this.a = i;
     }
 
     protected int e(World world, int i, int j, int k) {
+        // CraftBukkit start
         int l = 0;
-        Iterator iterator = world.a(EntityItem.class, this.a(i, j, k)).iterator();
+        java.util.Iterator iterator = world.a(Entity.class, this.a(i, j, k)).iterator();
 
         while (iterator.hasNext()) {
-            EntityItem entityitem = (EntityItem) iterator.next();
+            Entity entity = (Entity) iterator.next();
 
-            l += entityitem.getItemStack().count;
-            if (l >= this.a) {
-                break;
+            org.bukkit.event.Cancellable cancellable;
+
+            if (entity instanceof EntityHuman) {
+                cancellable = org.bukkit.craftbukkit.event.CraftEventFactory.callPlayerInteractEvent((EntityHuman) entity, org.bukkit.event.block.Action.PHYSICAL, i, j, k, -1, null);
+            } else {
+                cancellable = new EntityInteractEvent(entity.getBukkitEntity(), world.getWorld().getBlockAt(i, j, k));
+                world.getServer().getPluginManager().callEvent((EntityInteractEvent) cancellable);
+            }
+
+            // We only want to block turning the plate on if all events are cancelled
+            if (!cancellable.isCancelled()) {
+                l++;
             }
         }
 
+        l = Math.min(l, this.a);
+        // CraftBukkit end
+
         if (l <= 0) {
             return 0;
-        } else {
-            float f = (float) Math.min(this.a, l) / (float) this.a;
-
-            return MathHelper.f(f * 15.0F);
         }
+
+        float f = (float) Math.min(this.a, l) / (float) this.a;
+        return MathHelper.f(f * 15.0F);
     }
 
     protected int c(int i) {

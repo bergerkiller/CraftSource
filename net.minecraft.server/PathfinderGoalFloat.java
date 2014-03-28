@@ -11,11 +11,11 @@ public class PathfinderGoalFloat extends PathfinderGoal {
     }
 
     public boolean a() {
-        return this.a.H() || this.a.J();
+        return this.a.L() || this.a.O();
     }
 
     public void e() {
-        if (this.a.aD().nextFloat() < 0.8F) {
+        if (this.a.aH().nextFloat() < 0.8F) {
             this.a.getControllerJump().a();
         }
     }

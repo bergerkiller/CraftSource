@@ -19,12 +19,12 @@ public class EntitySnowman extends EntityGolem implements IRangedEntity {
         this.targetSelector.a(1, new PathfinderGoalNearestAttackableTarget(this, EntityInsentient.class, 0, true, false, IMonster.a));
     }
 
-    public boolean bk() {
+    public boolean bj() {
         return true;
     }
 
-    protected void aD() {
-        super.aD();
+    protected void aC() {
+        super.aC();
         this.getAttributeInstance(GenericAttributes.a).setValue(4.0D);
         this.getAttributeInstance(GenericAttributes.d).setValue(0.20000000298023224D);
     }
@@ -35,7 +35,7 @@ public class EntitySnowman extends EntityGolem implements IRangedEntity {
         int j = MathHelper.floor(this.locY);
         int k = MathHelper.floor(this.locZ);
 
-        if (this.L()) {
+        if (this.K()) {
             this.damageEntity(DamageSource.DROWN, 1.0F);
         }
 
@@ -49,7 +49,7 @@ public class EntitySnowman extends EntityGolem implements IRangedEntity {
             k = MathHelper.floor(this.locZ + (double) ((float) (l / 2 % 2 * 2 - 1) * 0.25F));
             if (this.world.getType(i, j, k).getMaterial() == Material.AIR && this.world.getBiome(i, k).a(i, j, k) < 0.8F && Blocks.SNOW.canPlace(this.world, i, j, k)) {
                 // CraftBukkit start
-                org.bukkit.block.BlockState blockState = this.world.getWorld().getBlockAt(j, k, l).getState();
+                org.bukkit.block.BlockState blockState = this.world.getWorld().getBlockAt(i, j, k).getState();
                 blockState.setType(CraftMagicNumbers.getMaterial(Blocks.SNOW));
 
                 EntityBlockFormEvent event = new EntityBlockFormEvent(this.getBukkitEntity(), blockState.getBlock(), blockState);
@@ -88,7 +88,7 @@ public class EntitySnowman extends EntityGolem implements IRangedEntity {
         float f1 = MathHelper.sqrt(d0 * d0 + d2 * d2) * 0.2F;
 
         entitysnowball.shoot(d0, d1 + (double) f1, d2, 1.6F, 12.0F);
-        this.makeSound("random.bow", 1.0F, 1.0F / (this.aI().nextFloat() * 0.4F + 0.8F));
+        this.makeSound("random.bow", 1.0F, 1.0F / (this.aH().nextFloat() * 0.4F + 0.8F));
         this.world.addEntity(entitysnowball);
     }
 }

@@ -6,7 +6,7 @@ public class CommandMe extends CommandAbstract {
 
     public CommandMe() {}
 
-    public String c() {
+    public String getCommand() {
         return "me";
     }
 
@@ -18,17 +18,17 @@ public class CommandMe extends CommandAbstract {
         return "commands.me.usage";
     }
 
-    public void b(ICommandListener icommandlistener, String[] astring) {
+    public void execute(ICommandListener icommandlistener, String[] astring) {
         if (astring.length > 0) {
-            String s = a(icommandlistener, astring, 0, icommandlistener.a(1, "me"));
+            IChatBaseComponent ichatbasecomponent = a(icommandlistener, astring, 0, icommandlistener.a(1, "me"));
 
-            MinecraftServer.getServer().getPlayerList().sendMessage(ChatMessage.b("chat.type.emote", new Object[] { icommandlistener.getName(), s}));
+            MinecraftServer.getServer().getPlayerList().sendMessage(new ChatMessage("chat.type.emote", new Object[] { icommandlistener.getScoreboardDisplayName(), ichatbasecomponent}));
         } else {
             throw new ExceptionUsage("commands.me.usage", new Object[0]);
         }
     }
 
-    public List a(ICommandListener icommandlistener, String[] astring) {
+    public List tabComplete(ICommandListener icommandlistener, String[] astring) {
         return a(astring, MinecraftServer.getServer().getPlayers());
     }
 }

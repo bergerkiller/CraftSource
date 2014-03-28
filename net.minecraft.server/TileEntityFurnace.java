@@ -21,7 +21,7 @@ public class TileEntityFurnace extends TileEntity implements IWorldInventory {
     public int cookTime;
     private String o;
 
-    // CraftBukkit start
+    // CraftBukkit start - add fields and methods
     private int lastTick = MinecraftServer.currentTick;
     private int maxStack = MAX_STACK;
     public List<HumanEntity> transaction = new java.util.ArrayList<HumanEntity>();
@@ -183,49 +183,51 @@ public class TileEntityFurnace extends TileEntity implements IWorldInventory {
         // CraftBukkit end
 
         if (this.burnTime > 0) {
-            this.burnTime -= elapsedTicks; // CraftBukkit
+            this.burnTime -= elapsedTicks; // CraftBukkit - use elapsedTicks in place of constant
         }
 
         if (!this.world.isStatic) {
-            // CraftBukkit start - Handle multiple elapsed ticks
-            if (this.burnTime <= 0 && this.canBurn() && this.items[1] != null) { // CraftBukkit - == to <=
-                CraftItemStack fuel = CraftItemStack.asCraftMirror(this.items[1]);
+            if (this.burnTime != 0 || this.items[1] != null && this.items[0] != null) {
+                // CraftBukkit start - Handle multiple elapsed ticks
+                if (this.burnTime <= 0 && this.canBurn()) { // CraftBukkit - == to <=
+                    CraftItemStack fuel = CraftItemStack.asCraftMirror(this.items[1]);
 
-                FurnaceBurnEvent furnaceBurnEvent = new FurnaceBurnEvent(this.world.getWorld().getBlockAt(this.x, this.y, this.z), fuel, fuelTime(this.items[1]));
-                this.world.getServer().getPluginManager().callEvent(furnaceBurnEvent);
+                    FurnaceBurnEvent furnaceBurnEvent = new FurnaceBurnEvent(this.world.getWorld().getBlockAt(this.x, this.y, this.z), fuel, fuelTime(this.items[1]));
+                    this.world.getServer().getPluginManager().callEvent(furnaceBurnEvent);
 
-                if (furnaceBurnEvent.isCancelled()) {
-                    return;
-                }
+                    if (furnaceBurnEvent.isCancelled()) {
+                        return;
+                    }
 
-                this.ticksForCurrentFuel = furnaceBurnEvent.getBurnTime();
-                this.burnTime += this.ticksForCurrentFuel;
-                if (this.burnTime > 0 && furnaceBurnEvent.isBurning()) {
-                    // CraftBukkit end
-                    flag1 = true;
-                    if (this.items[1] != null) {
-                        --this.items[1].count;
-                        if (this.items[1].count == 0) {
-                            Item item = this.items[1].getItem().t();
+                    this.ticksForCurrentFuel = furnaceBurnEvent.getBurnTime();
+                    this.burnTime += this.ticksForCurrentFuel;
+                    if (this.burnTime > 0 && furnaceBurnEvent.isBurning()) {
+                        // CraftBukkit end
+                        flag1 = true;
+                        if (this.items[1] != null) {
+                            --this.items[1].count;
+                            if (this.items[1].count == 0) {
+                                Item item = this.items[1].getItem().t();
 
-                            this.items[1] = item != null ? new ItemStack(item) : null;
+                                this.items[1] = item != null ? new ItemStack(item) : null;
+                            }
                         }
                     }
                 }
-            }
 
-            /* CraftBukkit start - Moved up
-            if (this.isBurning() && this.canBurn()) {
-                ++this.cookTime;
-                if (this.cookTime == 200) {
+                /* CraftBukkit start - Moved up
+                if (this.isBurning() && this.canBurn()) {
+                    ++this.cookTime;
+                    if (this.cookTime == 200) {
+                        this.cookTime = 0;
+                        this.burn();
+                        flag1 = true;
+                    }
+                } else {
                     this.cookTime = 0;
-                    this.burn();
-                    flag1 = true;
                 }
-            } else {
-                this.cookTime = 0;
+                */
             }
-            // CraftBukkit end */
 
             if (flag != this.burnTime > 0) {
                 flag1 = true;
@@ -253,9 +255,9 @@ public class TileEntityFurnace extends TileEntity implements IWorldInventory {
         if (this.canBurn()) {
             ItemStack itemstack = RecipesFurnace.getInstance().getResult(this.items[0]);
 
-            // CraftBukkit start
+            // CraftBukkit start - fire FurnaceSmeltEvent
             CraftItemStack source = CraftItemStack.asCraftMirror(this.items[0]);
-            CraftItemStack result = CraftItemStack.asCraftMirror(itemstack.cloneItemStack());
+            org.bukkit.inventory.ItemStack result = CraftItemStack.asBukkitCopy(itemstack);
 
             FurnaceSmeltEvent furnaceSmeltEvent = new FurnaceSmeltEvent(this.world.getWorld().getBlockAt(this.x, this.y, this.z), source, result);
             this.world.getServer().getPluginManager().callEvent(furnaceSmeltEvent);
@@ -264,17 +266,19 @@ public class TileEntityFurnace extends TileEntity implements IWorldInventory {
                 return;
             }
 
-            itemstack = CraftItemStack.asNMSCopy(furnaceSmeltEvent.getResult());
+            result = furnaceSmeltEvent.getResult();
+            itemstack = CraftItemStack.asNMSCopy(result);
 
-            if (this.items[2] == null) {
-                this.items[2] = itemstack.cloneItemStack();
-            } else if (this.items[2].getItem() == itemstack.getItem()) {
-                // CraftBukkit - compare damage too
-                if (this.items[2].getData() == itemstack.getData()) {
+            if (itemstack != null) {
+                if (this.items[2] == null) {
+                    this.items[2] = itemstack;
+                } else if (CraftItemStack.asCraftMirror(this.items[2]).isSimilar(result)) {
                     this.items[2].count += itemstack.count;
+                } else {
+                    return;
                 }
-                // CraftBukkit end
             }
+            // CraftBukkit end
 
             --this.items[0].count;
             if (this.items[0].count <= 0) {

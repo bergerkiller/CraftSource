@@ -26,7 +26,7 @@ public class BiomeCache {
             this.d.add(biomecacheblock);
         }
 
-        biomecacheblock.f = MinecraftServer.aq();
+        biomecacheblock.e = MinecraftServer.aq();
         return biomecacheblock;
     }
 
@@ -43,11 +43,11 @@ public class BiomeCache {
 
             for (int k = 0; k < this.d.size(); ++k) {
                 BiomeCacheBlock biomecacheblock = (BiomeCacheBlock) this.d.get(k);
-                long l = i - biomecacheblock.f;
+                long l = i - biomecacheblock.e;
 
                 if (l > 30000L || l < 0L) {
                     this.d.remove(k--);
-                    long i1 = (long) biomecacheblock.d & 4294967295L | ((long) biomecacheblock.e & 4294967295L) << 32;
+                    long i1 = (long) biomecacheblock.c & 4294967295L | ((long) biomecacheblock.d & 4294967295L) << 32;
 
                     this.c.remove(i1);
                 }
@@ -55,8 +55,8 @@ public class BiomeCache {
         }
     }
 
-    public BiomeBase[] e(int i, int j) {
-        return this.a(i, j).c;
+    public BiomeBase[] d(int i, int j) {
+        return this.a(i, j).b;
     }
 
     static WorldChunkManager a(BiomeCache biomecache) {

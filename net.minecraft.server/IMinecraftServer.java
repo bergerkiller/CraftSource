@@ -10,23 +10,23 @@ public interface IMinecraftServer {
 
     void a();
 
-    String b_();
-
-    String w();
-
-    int x();
+    String b();
 
     String y();
 
+    int z();
+
+    String A();
+
     String getVersion();
 
-    int A();
+    int C();
 
-    int B();
+    int D();
 
     String[] getPlayers();
 
-    String L();
+    String N();
 
     String getPlugins();
 

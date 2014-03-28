@@ -6,7 +6,7 @@ public class CommandGamerule extends CommandAbstract {
 
     public CommandGamerule() {}
 
-    public String c() {
+    public String getCommand() {
         return "gamerule";
     }
 
@@ -18,7 +18,7 @@ public class CommandGamerule extends CommandAbstract {
         return "commands.gamerule.usage";
     }
 
-    public void b(ICommandListener icommandlistener, String[] astring) {
+    public void execute(ICommandListener icommandlistener, String[] astring) {
         String s;
 
         if (astring.length == 2) {
@@ -28,9 +28,9 @@ public class CommandGamerule extends CommandAbstract {
 
             if (gamerules.e(s)) {
                 gamerules.set(s, s1);
-                a(icommandlistener, "commands.gamerule.success", new Object[0]);
+                a(icommandlistener, this, "commands.gamerule.success", new Object[0]);
             } else {
-                a(icommandlistener, "commands.gamerule.norule", new Object[] { s});
+                a(icommandlistener, this, "commands.gamerule.norule", new Object[] { s});
             }
         } else if (astring.length == 1) {
             s = astring[0];
@@ -39,20 +39,20 @@ public class CommandGamerule extends CommandAbstract {
             if (gamerules1.e(s)) {
                 String s2 = gamerules1.get(s);
 
-                icommandlistener.sendMessage(ChatMessage.d(s).a(" = ").a(s2));
+                icommandlistener.sendMessage((new ChatComponentText(s)).a(" = ").a(s2));
             } else {
-                a(icommandlistener, "commands.gamerule.norule", new Object[] { s});
+                a(icommandlistener, this, "commands.gamerule.norule", new Object[] { s});
             }
         } else if (astring.length == 0) {
             GameRules gamerules2 = this.d();
 
-            icommandlistener.sendMessage(ChatMessage.d(a(gamerules2.b())));
+            icommandlistener.sendMessage(new ChatComponentText(a(gamerules2.b())));
         } else {
             throw new ExceptionUsage("commands.gamerule.usage", new Object[0]);
         }
     }
 
-    public List a(ICommandListener icommandlistener, String[] astring) {
+    public List tabComplete(ICommandListener icommandlistener, String[] astring) {
         return astring.length == 1 ? a(astring, this.d().b()) : (astring.length == 2 ? a(astring, new String[] { "true", "false"}) : null);
     }
 

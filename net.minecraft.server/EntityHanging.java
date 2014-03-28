@@ -105,7 +105,7 @@ public abstract class EntityHanging extends Entity {
         if (this.e++ == 100 && !this.world.isStatic) {
             this.e = 0;
             if (!this.dead && !this.survives()) {
-                // CraftBukkit start
+                // CraftBukkit start - fire break events
                 Material material = this.world.getType((int) this.locX, (int) this.locY, (int) this.locZ).getMaterial();
                 HangingBreakEvent.RemoveCause cause;
 
@@ -199,11 +199,11 @@ public abstract class EntityHanging extends Entity {
         }
     }
 
-    public boolean R() {
+    public boolean Q() {
         return true;
     }
 
-    public boolean i(Entity entity) {
+    public boolean j(Entity entity) {
         return entity instanceof EntityHuman ? this.damageEntity(DamageSource.playerAttack((EntityHuman) entity), 0.0F) : false;
     }
 
@@ -216,7 +216,7 @@ public abstract class EntityHanging extends Entity {
             return false;
         } else {
             if (!this.dead && !this.world.isStatic) {
-                // CraftBukkit start
+                // CraftBukkit start - fire break events
                 HangingBreakEvent event = new HangingBreakEvent((Hanging) this.getBukkitEntity(), HangingBreakEvent.RemoveCause.DEFAULT);
                 PaintingBreakEvent paintingEvent = null;
                 if (damagesource.getEntity() != null) {
@@ -226,7 +226,7 @@ public abstract class EntityHanging extends Entity {
                         // Fire old painting event until it can be removed
                         paintingEvent = new org.bukkit.event.painting.PaintingBreakByEntityEvent((Painting) this.getBukkitEntity(), damagesource.getEntity() == null ? null : damagesource.getEntity().getBukkitEntity());
                     }
-                } else if (damagesource.c()) {
+                } else if (damagesource.isExplosion()) {
                     event = new HangingBreakEvent((Hanging) this.getBukkitEntity(), HangingBreakEvent.RemoveCause.EXPLOSION);
                 }
 
@@ -237,13 +237,13 @@ public abstract class EntityHanging extends Entity {
                     this.world.getServer().getPluginManager().callEvent(paintingEvent);
                 }
 
-                if (dead || event.isCancelled() || (paintingEvent != null && paintingEvent.isCancelled())) {
+                if (this.dead || event.isCancelled() || (paintingEvent != null && paintingEvent.isCancelled())) {
                     return true;
                 }
                 // CraftBukkit end
 
                 this.die();
-                this.Q();
+                this.P();
                 this.b(damagesource.getEntity());
             }
 
@@ -253,7 +253,17 @@ public abstract class EntityHanging extends Entity {
 
     public void move(double d0, double d1, double d2) {
         if (!this.world.isStatic && !this.dead && d0 * d0 + d1 * d1 + d2 * d2 > 0.0D) {
-            if (dead) return; // CraftBukkit
+            if (this.dead) return; // CraftBukkit
+
+            // CraftBukkit start - fire break events
+            // TODO - Does this need its own cause? Seems to only be triggered by pistons
+            HangingBreakEvent event = new HangingBreakEvent((Hanging) this.getBukkitEntity(), HangingBreakEvent.RemoveCause.PHYSICS);
+            this.world.getServer().getPluginManager().callEvent(event);
+
+            if (this.dead || event.isCancelled()) {
+                return;
+            }
+            // CraftBukkit end
 
             this.die();
             this.b((Entity) null);
@@ -324,7 +334,7 @@ public abstract class EntityHanging extends Entity {
 
     public abstract void b(Entity entity);
 
-    protected boolean V() {
+    protected boolean U() {
         return false;
     }
 }

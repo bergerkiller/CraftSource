@@ -23,10 +23,11 @@ public class BlockPortal extends BlockHalfTransparent {
             }
 
             if (l > 0 && !world.getType(i, l + 1, k).r()) {
-                Entity entity = ItemMonsterEgg.a(world, 57, (double) i + 0.5D, (double) l + 1.1D, (double) k + 0.5D);
+                // CraftBukkit - set spawn reason to NETHER_PORTAL
+                Entity entity = ItemMonsterEgg.spawnCreature(world, 57, (double) i + 0.5D, (double) l + 1.1D, (double) k + 0.5D, org.bukkit.event.entity.CreatureSpawnEvent.SpawnReason.NETHER_PORTAL);
 
                 if (entity != null) {
-                    entity.portalCooldown = entity.ai();
+                    entity.portalCooldown = entity.ah();
                 }
             }
         }
@@ -111,7 +112,7 @@ public class BlockPortal extends BlockHalfTransparent {
             world.getServer().getPluginManager().callEvent(event);
             // CraftBukkit end
 
-            entity.ah();
+            entity.ag();
         }
     }
 

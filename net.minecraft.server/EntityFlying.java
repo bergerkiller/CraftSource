@@ -11,13 +11,13 @@ public abstract class EntityFlying extends EntityInsentient {
     protected void a(double d0, boolean flag) {}
 
     public void e(float f, float f1) {
-        if (this.H()) {
+        if (this.L()) {
             this.a(f, f1, 0.02F);
             this.move(this.motX, this.motY, this.motZ);
             this.motX *= 0.800000011920929D;
             this.motY *= 0.800000011920929D;
             this.motZ *= 0.800000011920929D;
-        } else if (this.J()) {
+        } else if (this.O()) {
             this.a(f, f1, 0.02F);
             this.move(this.motX, this.motY, this.motZ);
             this.motX *= 0.5D;
@@ -27,12 +27,7 @@ public abstract class EntityFlying extends EntityInsentient {
             float f2 = 0.91F;
 
             if (this.onGround) {
-                f2 = 0.54600006F;
-                int i = this.world.getTypeId(MathHelper.floor(this.locX), MathHelper.floor(this.boundingBox.b) - 1, MathHelper.floor(this.locZ));
-
-                if (i > 0) {
-                    f2 = Block.byId[i].frictionFactor * 0.91F;
-                }
+                f2 = this.world.getType(MathHelper.floor(this.locX), MathHelper.floor(this.boundingBox.b) - 1, MathHelper.floor(this.locZ)).frictionFactor * 0.91F;
             }
 
             float f3 = 0.16277136F / (f2 * f2 * f2);
@@ -40,12 +35,7 @@ public abstract class EntityFlying extends EntityInsentient {
             this.a(f, f1, this.onGround ? 0.1F * f3 : 0.02F);
             f2 = 0.91F;
             if (this.onGround) {
-                f2 = 0.54600006F;
-                int j = this.world.getTypeId(MathHelper.floor(this.locX), MathHelper.floor(this.boundingBox.b) - 1, MathHelper.floor(this.locZ));
-
-                if (j > 0) {
-                    f2 = Block.byId[j].frictionFactor * 0.91F;
-                }
+                f2 = this.world.getType(MathHelper.floor(this.locX), MathHelper.floor(this.boundingBox.b) - 1, MathHelper.floor(this.locZ)).frictionFactor * 0.91F;
             }
 
             this.move(this.motX, this.motY, this.motZ);
@@ -54,7 +44,7 @@ public abstract class EntityFlying extends EntityInsentient {
             this.motZ *= (double) f2;
         }
 
-        this.aF = this.aG;
+        this.aE = this.aF;
         double d0 = this.locX - this.lastX;
         double d1 = this.locZ - this.lastZ;
         float f4 = MathHelper.sqrt(d0 * d0 + d1 * d1) * 4.0F;
@@ -63,11 +53,11 @@ public abstract class EntityFlying extends EntityInsentient {
             f4 = 1.0F;
         }
 
-        this.aG += (f4 - this.aG) * 0.4F;
-        this.aH += this.aG;
+        this.aF += (f4 - this.aF) * 0.4F;
+        this.aG += this.aF;
     }
 
-    public boolean e() {
+    public boolean h_() {
         return false;
     }
 }

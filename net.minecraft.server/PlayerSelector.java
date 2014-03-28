@@ -1,10 +1,6 @@
 package net.minecraft.server;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -20,28 +16,32 @@ public class PlayerSelector {
         return aentityplayer != null && aentityplayer.length == 1 ? aentityplayer[0] : null;
     }
 
-    public static String getPlayerNames(ICommandListener icommandlistener, String s) {
+    public static IChatBaseComponent getPlayerNames(ICommandListener icommandlistener, String s) {
         EntityPlayer[] aentityplayer = getPlayers(icommandlistener, s);
 
         if (aentityplayer != null && aentityplayer.length != 0) {
-            String[] astring = new String[aentityplayer.length];
+            IChatBaseComponent[] aichatbasecomponent = new IChatBaseComponent[aentityplayer.length];
 
-            for (int i = 0; i < astring.length; ++i) {
-                astring[i] = aentityplayer[i].getScoreboardDisplayName();
+            for (int i = 0; i < aichatbasecomponent.length; ++i) {
+                aichatbasecomponent[i] = aentityplayer[i].getScoreboardDisplayName();
             }
 
-            return CommandAbstract.a((Object[]) astring);
+            return CommandAbstract.a(aichatbasecomponent);
         } else {
             return null;
         }
     }
 
     public static EntityPlayer[] getPlayers(ICommandListener icommandlistener, String s) {
+        // CraftBukkit start - disable playerselections for ICommandListeners other than command blocks
+        if (!(icommandlistener instanceof CommandBlockListenerAbstract)) {
+            return null;
+        }
+        // CraftBukkit end
+
         Matcher matcher = a.matcher(s);
 
-        if (!matcher.matches()) {
-            return null;
-        } else {
+        if (matcher.matches()) {
             Map map = h(matcher.group(2));
             String s1 = matcher.group(1);
             int i = c(s1);
@@ -50,7 +50,7 @@ public class PlayerSelector {
             int l = e(s1);
             int i1 = g(s1);
             int j1 = EnumGamemode.NONE.a();
-            ChunkCoordinates chunkcoordinates = icommandlistener.b();
+            ChunkCoordinates chunkcoordinates = icommandlistener.getChunkCoordinates();
             Map map1 = a(map);
             String s2 = null;
             String s3 = null;
@@ -105,22 +105,24 @@ public class PlayerSelector {
                 s2 = (String) map.get("name");
             }
 
-            World world = flag ? icommandlistener.f_() : null;
+            World world = flag ? icommandlistener.getWorld() : null;
             List list;
 
             if (!s1.equals("p") && !s1.equals("a")) {
-                if (!s1.equals("r")) {
-                    return null;
-                } else {
+                if (s1.equals("r")) {
                     list = MinecraftServer.getServer().getPlayerList().a(chunkcoordinates, i, j, 0, j1, k, l, map1, s2, s3, world);
                     Collections.shuffle(list);
                     list = list.subList(0, Math.min(i1, list.size()));
-                    return list != null && !list.isEmpty() ? (EntityPlayer[]) list.toArray(new EntityPlayer[0]) : new EntityPlayer[0];
+                    return list.isEmpty() ? new EntityPlayer[0] : (EntityPlayer[]) list.toArray(new EntityPlayer[list.size()]);
+                } else {
+                    return null;
                 }
             } else {
                 list = MinecraftServer.getServer().getPlayerList().a(chunkcoordinates, i, j, i1, j1, k, l, map1, s2, s3, world);
-                return list != null && !list.isEmpty() ? (EntityPlayer[]) list.toArray(new EntityPlayer[0]) : new EntityPlayer[0];
+                return list.isEmpty() ? new EntityPlayer[0] : (EntityPlayer[]) list.toArray(new EntityPlayer[list.size()]);
             }
+        } else {
+            return null;
         }
     }
 

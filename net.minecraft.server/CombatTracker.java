@@ -9,82 +9,89 @@ public class CombatTracker {
     private final List a = new ArrayList();
     private final EntityLiving b;
     private int c;
-    private boolean d;
-    private boolean e;
-    private String f;
+    private int d;
+    private int e;
+    private boolean f;
+    private boolean g;
+    private String h;
 
     public CombatTracker(EntityLiving entityliving) {
         this.b = entityliving;
     }
 
     public void a() {
-        this.g();
-        if (this.b.e()) {
-            int i = this.b.world.getTypeId(MathHelper.floor(this.b.locX), MathHelper.floor(this.b.boundingBox.b), MathHelper.floor(this.b.locZ));
+        this.j();
+        if (this.b.h_()) {
+            Block block = this.b.world.getType(MathHelper.floor(this.b.locX), MathHelper.floor(this.b.boundingBox.b), MathHelper.floor(this.b.locZ));
 
-            if (i == Block.LADDER.id) {
-                this.f = "ladder";
-            } else if (i == Block.VINE.id) {
-                this.f = "vines";
+            if (block == Blocks.LADDER) {
+                this.h = "ladder";
+            } else if (block == Blocks.VINE) {
+                this.h = "vines";
             }
-        } else if (this.b.H()) {
-            this.f = "water";
+        } else if (this.b.L()) {
+            this.h = "water";
         }
     }
 
     public void a(DamageSource damagesource, float f, float f1) {
-        this.h();
+        this.g();
         this.a();
-        CombatEntry combatentry = new CombatEntry(damagesource, this.b.ticksLived, f, f1, this.f, this.b.fallDistance);
+        CombatEntry combatentry = new CombatEntry(damagesource, this.b.ticksLived, f, f1, this.h, this.b.fallDistance);
 
         this.a.add(combatentry);
         this.c = this.b.ticksLived;
-        this.e = true;
-        this.d |= combatentry.f();
+        this.g = true;
+        if (combatentry.f() && !this.f && this.b.isAlive()) {
+            this.f = true;
+            this.d = this.b.ticksLived;
+            this.e = this.d;
+            this.b.bt();
+        }
     }
 
-    public ChatMessage b() {
+    public IChatBaseComponent b() {
         if (this.a.size() == 0) {
-            return ChatMessage.b("death.attack.generic", new Object[] { this.b.getScoreboardDisplayName()});
+            return new ChatMessage("death.attack.generic", new Object[] { this.b.getScoreboardDisplayName()});
         } else {
-            CombatEntry combatentry = this.f();
+            CombatEntry combatentry = this.i();
             CombatEntry combatentry1 = (CombatEntry) this.a.get(this.a.size() - 1);
-            String s = combatentry1.h();
+            IChatBaseComponent ichatbasecomponent = combatentry1.h();
             Entity entity = combatentry1.a().getEntity();
-            ChatMessage chatmessage;
+            Object object;
 
             if (combatentry != null && combatentry1.a() == DamageSource.FALL) {
-                String s1 = combatentry.h();
+                IChatBaseComponent ichatbasecomponent1 = combatentry.h();
 
                 if (combatentry.a() != DamageSource.FALL && combatentry.a() != DamageSource.OUT_OF_WORLD) {
-                    if (s1 != null && (s == null || !s1.equals(s))) {
+                    if (ichatbasecomponent1 != null && (ichatbasecomponent == null || !ichatbasecomponent1.equals(ichatbasecomponent))) {
                         Entity entity1 = combatentry.a().getEntity();
-                        ItemStack itemstack = entity1 instanceof EntityLiving ? ((EntityLiving) entity1).aZ() : null;
+                        ItemStack itemstack = entity1 instanceof EntityLiving ? ((EntityLiving) entity1).bd() : null;
 
                         if (itemstack != null && itemstack.hasName()) {
-                            chatmessage = ChatMessage.b("death.fell.assist.item", new Object[] { this.b.getScoreboardDisplayName(), s1, itemstack.getName()});
+                            object = new ChatMessage("death.fell.assist.item", new Object[] { this.b.getScoreboardDisplayName(), ichatbasecomponent1, itemstack.E()});
                         } else {
-                            chatmessage = ChatMessage.b("death.fell.assist", new Object[] { this.b.getScoreboardDisplayName(), s1});
+                            object = new ChatMessage("death.fell.assist", new Object[] { this.b.getScoreboardDisplayName(), ichatbasecomponent1});
                         }
-                    } else if (s != null) {
-                        ItemStack itemstack1 = entity instanceof EntityLiving ? ((EntityLiving) entity).aZ() : null;
+                    } else if (ichatbasecomponent != null) {
+                        ItemStack itemstack1 = entity instanceof EntityLiving ? ((EntityLiving) entity).bd() : null;
 
                         if (itemstack1 != null && itemstack1.hasName()) {
-                            chatmessage = ChatMessage.b("death.fell.finish.item", new Object[] { this.b.getScoreboardDisplayName(), s, itemstack1.getName()});
+                            object = new ChatMessage("death.fell.finish.item", new Object[] { this.b.getScoreboardDisplayName(), ichatbasecomponent, itemstack1.E()});
                         } else {
-                            chatmessage = ChatMessage.b("death.fell.finish", new Object[] { this.b.getScoreboardDisplayName(), s});
+                            object = new ChatMessage("death.fell.finish", new Object[] { this.b.getScoreboardDisplayName(), ichatbasecomponent});
                         }
                     } else {
-                        chatmessage = ChatMessage.b("death.fell.killer", new Object[] { this.b.getScoreboardDisplayName()});
+                        object = new ChatMessage("death.fell.killer", new Object[] { this.b.getScoreboardDisplayName()});
                     }
                 } else {
-                    chatmessage = ChatMessage.b("death.fell.accident." + this.a(combatentry), new Object[] { this.b.getScoreboardDisplayName()});
+                    object = new ChatMessage("death.fell.accident." + this.a(combatentry), new Object[] { this.b.getScoreboardDisplayName()});
                 }
             } else {
-                chatmessage = combatentry1.a().getLocalizedDeathMessage(this.b);
+                object = combatentry1.a().getLocalizedDeathMessage(this.b);
             }
 
-            return chatmessage;
+            return (IChatBaseComponent) object;
         }
     }
 
@@ -116,7 +123,7 @@ public class CombatTracker {
         }
     }
 
-    private CombatEntry f() {
+    private CombatEntry i() {
         CombatEntry combatentry = null;
         CombatEntry combatentry1 = null;
         byte b0 = 0;
@@ -154,17 +161,24 @@ public class CombatTracker {
         return combatentry.g() == null ? "generic" : combatentry.g();
     }
 
-    private void g() {
-        this.f = null;
+    private void j() {
+        this.h = null;
     }
 
-    private void h() {
-        int i = this.d ? 300 : 100;
+    public void g() {
+        int i = this.f ? 300 : 100;
 
-        if (this.e && this.b.ticksLived - this.c > i) {
+        if (this.g && (!this.b.isAlive() || this.b.ticksLived - this.c > i)) {
+            boolean flag = this.f;
+
+            this.g = false;
+            this.f = false;
+            this.e = this.b.ticksLived;
+            if (flag) {
+                this.b.bu();
+            }
+
             this.a.clear();
-            this.e = false;
-            this.d = false;
         }
     }
 }

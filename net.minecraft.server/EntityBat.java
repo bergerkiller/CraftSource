@@ -9,52 +9,52 @@ public class EntityBat extends EntityAmbient {
     public EntityBat(World world) {
         super(world);
         this.a(0.5F, 0.9F);
-        this.a(true);
+        this.setStartled(true);
     }
 
-    protected void a() {
-        super.a();
+    protected void c() {
+        super.c();
         this.datawatcher.a(16, new Byte((byte) 0));
     }
 
-    protected float ba() {
+    protected float be() {
         return 0.1F;
     }
 
-    protected float bb() {
-        return super.bb() * 0.95F;
+    protected float bf() {
+        return super.bf() * 0.95F;
     }
 
-    protected String r() {
-        return this.bJ() && this.random.nextInt(4) != 0 ? null : "mob.bat.idle";
+    protected String t() {
+        return this.isStartled() && this.random.nextInt(4) != 0 ? null : "mob.bat.idle";
     }
 
-    protected String aO() {
+    protected String aS() {
         return "mob.bat.hurt";
     }
 
-    protected String aP() {
+    protected String aT() {
         return "mob.bat.death";
     }
 
-    public boolean M() {
+    public boolean R() {
         return false;
     }
 
-    protected void n(Entity entity) {}
+    protected void o(Entity entity) {}
 
-    protected void bj() {}
+    protected void bn() {}
 
-    protected void az() {
-        super.az();
+    protected void aC() {
+        super.aC();
         this.getAttributeInstance(GenericAttributes.a).setValue(6.0D);
     }
 
-    public boolean bJ() {
+    public boolean isStartled() {
         return (this.datawatcher.getByte(16) & 1) != 0;
     }
 
-    public void a(boolean flag) {
+    public void setStartled(boolean flag) {
         byte b0 = this.datawatcher.getByte(16);
 
         if (flag) {
@@ -64,13 +64,13 @@ public class EntityBat extends EntityAmbient {
         }
     }
 
-    protected boolean bf() {
+    protected boolean bj() {
         return true;
     }
 
-    public void l_() {
-        super.l_();
-        if (this.bJ()) {
+    public void h() {
+        super.h();
+        if (this.isStartled()) {
             this.motX = this.motY = this.motZ = 0.0D;
             this.locY = (double) MathHelper.floor(this.locY) + 1.0D - (double) this.length;
         } else {
@@ -78,19 +78,19 @@ public class EntityBat extends EntityAmbient {
         }
     }
 
-    protected void bi() {
-        super.bi();
-        if (this.bJ()) {
-            if (!this.world.u(MathHelper.floor(this.locX), (int) this.locY + 1, MathHelper.floor(this.locZ))) {
-                this.a(false);
+    protected void bm() {
+        super.bm();
+        if (this.isStartled()) {
+            if (!this.world.getType(MathHelper.floor(this.locX), (int) this.locY + 1, MathHelper.floor(this.locZ)).r()) {
+                this.setStartled(false);
                 this.world.a((EntityHuman) null, 1015, (int) this.locX, (int) this.locY, (int) this.locZ, 0);
             } else {
                 if (this.random.nextInt(200) == 0) {
-                    this.aP = (float) this.random.nextInt(360);
+                    this.aO = (float) this.random.nextInt(360);
                 }
 
                 if (this.world.findNearbyPlayer(this, 4.0D) != null) {
-                    this.a(false);
+                    this.setStartled(false);
                     this.world.a((EntityHuman) null, 1015, (int) this.locX, (int) this.locY, (int) this.locZ, 0);
                 }
             }
@@ -113,15 +113,15 @@ public class EntityBat extends EntityAmbient {
             float f = (float) (Math.atan2(this.motZ, this.motX) * 180.0D / 3.1415927410125732D) - 90.0F;
             float f1 = MathHelper.g(f - this.yaw);
 
-            this.bf = 0.5F;
+            this.be = 0.5F;
             this.yaw += f1;
-            if (this.random.nextInt(100) == 0 && this.world.u(MathHelper.floor(this.locX), (int) this.locY + 1, MathHelper.floor(this.locZ))) {
-                this.a(true);
+            if (this.random.nextInt(100) == 0 && this.world.getType(MathHelper.floor(this.locX), (int) this.locY + 1, MathHelper.floor(this.locZ)).r()) {
+                this.setStartled(true);
             }
         }
     }
 
-    protected boolean e_() {
+    protected boolean g_() {
         return false;
     }
 
@@ -129,7 +129,7 @@ public class EntityBat extends EntityAmbient {
 
     protected void a(double d0, boolean flag) {}
 
-    public boolean au() {
+    public boolean ay() {
         return true;
     }
 
@@ -137,8 +137,8 @@ public class EntityBat extends EntityAmbient {
         if (this.isInvulnerable()) {
             return false;
         } else {
-            if (!this.world.isStatic && this.bJ()) {
-                this.a(false);
+            if (!this.world.isStatic && this.isStartled()) {
+                this.setStartled(false);
             }
 
             return super.damageEntity(damagesource, f);
@@ -165,7 +165,7 @@ public class EntityBat extends EntityAmbient {
             int k = MathHelper.floor(this.locZ);
             int l = this.world.getLightLevel(j, i, k);
             byte b0 = 4;
-            Calendar calendar = this.world.W();
+            Calendar calendar = this.world.V();
 
             if ((calendar.get(2) + 1 != 10 || calendar.get(5) < 20) && (calendar.get(2) + 1 != 11 || calendar.get(5) > 3)) {
                 if (this.random.nextBoolean()) {

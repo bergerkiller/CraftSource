@@ -7,8 +7,12 @@ import java.io.FileWriter;
 import java.io.PrintWriter;
 import java.util.Iterator;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 public class DedicatedPlayerList extends PlayerList {
 
+    private static final Logger c = LogManager.getLogger();
     private File d;
     private File e;
 
@@ -16,10 +20,10 @@ public class DedicatedPlayerList extends PlayerList {
         super(dedicatedserver);
         this.d = dedicatedserver.d("ops.txt");
         this.e = dedicatedserver.d("white-list.txt");
-        this.c = dedicatedserver.a("view-distance", 10);
+        this.a(dedicatedserver.a("view-distance", 10));
         this.maxPlayers = dedicatedserver.a("max-players", 20);
         this.setHasWhitelist(dedicatedserver.a("white-list", false));
-        if (!dedicatedserver.K()) {
+        if (!dedicatedserver.M()) {
             this.getNameBans().setEnabled(true);
             this.getIPBans().setEnabled(true);
         }
@@ -78,7 +82,7 @@ public class DedicatedPlayerList extends PlayerList {
 
             bufferedreader.close();
         } catch (Exception exception) {
-            this.getServer().getLogger().warning("Failed to load operators list: " + exception);
+            c.warn("Failed to load operators list: " + exception);
         }
     }
 
@@ -95,7 +99,7 @@ public class DedicatedPlayerList extends PlayerList {
 
             printwriter.close();
         } catch (Exception exception) {
-            this.getServer().getLogger().warning("Failed to save operators list: " + exception);
+            c.warn("Failed to save operators list: " + exception);
         }
     }
 
@@ -111,7 +115,7 @@ public class DedicatedPlayerList extends PlayerList {
 
             bufferedreader.close();
         } catch (Exception exception) {
-            this.getServer().getLogger().warning("Failed to load white-list: " + exception);
+            c.warn("Failed to load white-list: " + exception);
         }
     }
 
@@ -128,7 +132,7 @@ public class DedicatedPlayerList extends PlayerList {
 
             printwriter.close();
         } catch (Exception exception) {
-            this.getServer().getLogger().warning("Failed to save white-list: " + exception);
+            c.warn("Failed to save white-list: " + exception);
         }
     }
 

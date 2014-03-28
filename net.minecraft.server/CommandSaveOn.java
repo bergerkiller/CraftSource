@@ -4,19 +4,15 @@ public class CommandSaveOn extends CommandAbstract {
 
     public CommandSaveOn() {}
 
-    public String c() {
+    public String getCommand() {
         return "save-on";
-    }
-
-    public int a() {
-        return 4;
     }
 
     public String c(ICommandListener icommandlistener) {
         return "commands.save-on.usage";
     }
 
-    public void b(ICommandListener icommandlistener, String[] astring) {
+    public void execute(ICommandListener icommandlistener, String[] astring) {
         MinecraftServer minecraftserver = MinecraftServer.getServer();
         boolean flag = false;
 
@@ -32,7 +28,7 @@ public class CommandSaveOn extends CommandAbstract {
         }
 
         if (flag) {
-            a(icommandlistener, "commands.save.enabled", new Object[0]);
+            a(icommandlistener, this, "commands.save.enabled", new Object[0]);
         } else {
             throw new CommandException("commands.save-on.alreadyOn", new Object[0]);
         }

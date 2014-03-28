@@ -6,6 +6,8 @@ import java.util.Random;
 import net.minecraft.util.com.google.common.collect.HashMultimap;
 import net.minecraft.util.com.google.common.collect.Multimap;
 
+import org.bukkit.craftbukkit.util.CraftMagicNumbers; // CraftBukkit
+
 public final class ItemStack {
 
     public static final DecimalFormat a = new DecimalFormat("#.###");
@@ -76,7 +78,7 @@ public final class ItemStack {
         boolean flag = this.getItem().interactWith(this, entityhuman, world, i, j, k, l, f, f1, f2);
 
         if (flag) {
-            entityhuman.a(StatisticList.E[Item.b(this.item)], 1);
+            entityhuman.a(StatisticList.USE_ITEM_COUNT[Item.b(this.item)], 1);
         }
 
         return flag;
@@ -155,13 +157,12 @@ public final class ItemStack {
             return;
         }
 
-        if (!(this.usesData() || this.getItem().usesDurability())) { // || this.id > 255)) {
-            i = 0;
-        }
-
-        // Filter wool to avoid confusing the client
-        if (this.getItem() == Item.getItemOf(Blocks.WOOL)) {
-            i = Math.min(15, i);
+        // Is this a block?
+        if (CraftMagicNumbers.getBlock(CraftMagicNumbers.getId(this.getItem())) != Blocks.AIR) {
+            // If vanilla doesn't use data on it don't allow any
+            if (!(this.usesData() || this.getItem().usesDurability())) {
+                i = 0;
+            }
         }
         // CraftBukkit end
 
@@ -203,15 +204,15 @@ public final class ItemStack {
     public void damage(int i, EntityLiving entityliving) {
         if (!(entityliving instanceof EntityHuman) || !((EntityHuman) entityliving).abilities.canInstantlyBuild) {
             if (this.g()) {
-                if (this.isDamaged(i, entityliving.aI())) {
+                if (this.isDamaged(i, entityliving.aH())) {
                     entityliving.a(this);
                     --this.count;
                     if (entityliving instanceof EntityHuman) {
                         EntityHuman entityhuman = (EntityHuman) entityliving;
 
-                        entityhuman.a(StatisticList.F[Item.b(this.item)], 1);
+                        entityhuman.a(StatisticList.BREAK_ITEM_COUNT[Item.b(this.item)], 1);
                         if (this.count == 0 && this.getItem() instanceof ItemBow) {
-                            entityhuman.bE();
+                            entityhuman.bF();
                         }
                     }
 
@@ -235,7 +236,7 @@ public final class ItemStack {
         boolean flag = this.item.a(this, entityliving, (EntityLiving) entityhuman);
 
         if (flag) {
-            entityhuman.a(StatisticList.E[Item.b(this.item)], 1);
+            entityhuman.a(StatisticList.USE_ITEM_COUNT[Item.b(this.item)], 1);
         }
     }
 
@@ -243,7 +244,7 @@ public final class ItemStack {
         boolean flag = this.item.a(this, world, block, i, j, k, entityhuman);
 
         if (flag) {
-            entityhuman.a(StatisticList.E[Item.b(this.item)], 1);
+            entityhuman.a(StatisticList.USE_ITEM_COUNT[Item.b(this.item)], 1);
         }
     }
 
@@ -302,7 +303,7 @@ public final class ItemStack {
     }
 
     public void a(World world, EntityHuman entityhuman, int i) {
-        entityhuman.a(StatisticList.D[Item.b(this.item)], i);
+        entityhuman.a(StatisticList.CRAFT_BLOCK_COUNT[Item.b(this.item)], i);
         this.item.d(this, world, entityhuman);
     }
 
@@ -479,8 +480,8 @@ public final class ItemStack {
             NBTTagCompound nbttagcompound = new NBTTagCompound();
 
             this.save(nbttagcompound);
-            ichatbasecomponent.b().a(new ChatHoverable(EnumHoverAction.SHOW_ITEM, new ChatComponentText(nbttagcompound.toString())));
-            ichatbasecomponent.b().setColor(this.w().e);
+            ichatbasecomponent.getChatModifier().a(new ChatHoverable(EnumHoverAction.SHOW_ITEM, new ChatComponentText(nbttagcompound.toString())));
+            ichatbasecomponent.getChatModifier().setColor(this.w().e);
         }
 
         return ichatbasecomponent;
