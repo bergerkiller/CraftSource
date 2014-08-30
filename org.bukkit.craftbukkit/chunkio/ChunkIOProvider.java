@@ -28,14 +28,14 @@ class ChunkIOProvider implements AsynchronousExecutor.CallBackProvider<QueuedChu
 
     // sync stuff
     public void callStage2(QueuedChunk queuedChunk, Chunk chunk) throws RuntimeException {
-        if(chunk == null) {
+        if (chunk == null) {
             // If the chunk loading failed just do it synchronously (may generate)
             queuedChunk.provider.originalGetChunkAt(queuedChunk.x, queuedChunk.z);
             return;
         }
 
         queuedChunk.loader.loadEntities(chunk, queuedChunk.compound.getCompound("Level"), queuedChunk.world);
-        chunk.p = queuedChunk.provider.world.getTime();
+        chunk.lastSaved = queuedChunk.provider.world.getTime();
         queuedChunk.provider.chunks.put(LongHash.toLong(queuedChunk.x, queuedChunk.z), chunk);
         chunk.addEntities();
 
@@ -48,7 +48,22 @@ class ChunkIOProvider implements AsynchronousExecutor.CallBackProvider<QueuedChu
             server.getPluginManager().callEvent(new org.bukkit.event.world.ChunkLoadEvent(chunk.bukkitChunk, false));
         }
 
-        chunk.a(queuedChunk.provider, queuedChunk.provider, queuedChunk.x, queuedChunk.z);
+        // Update neighbor counts
+        for (int x = -2; x < 3; x++) {
+            for (int z = -2; z < 3; z++) {
+                if (x == 0 && z == 0) {
+                    continue;
+                }
+
+                Chunk neighbor = queuedChunk.provider.getChunkIfLoaded(chunk.locX + x, chunk.locZ + z);
+                if (neighbor != null) {
+                    neighbor.setNeighborLoaded(-x, -z);
+                    chunk.setNeighborLoaded(x, z);
+                }
+            }
+        }
+
+        chunk.loadNearby(queuedChunk.provider, queuedChunk.provider, queuedChunk.x, queuedChunk.z);
     }
 
     public void callStage3(QueuedChunk queuedChunk, Chunk chunk, Runnable runnable) throws RuntimeException {

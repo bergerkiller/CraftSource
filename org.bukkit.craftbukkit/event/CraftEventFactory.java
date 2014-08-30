@@ -2,8 +2,12 @@ package org.bukkit.craftbukkit.event;
 
 import java.net.InetAddress;
 import java.util.ArrayList;
+import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
+
+import com.google.common.base.Function;
+import com.google.common.base.Functions;
 
 import net.minecraft.server.ChunkCoordinates;
 import net.minecraft.server.Container;
@@ -12,6 +16,8 @@ import net.minecraft.server.Entity;
 import net.minecraft.server.EntityArrow;
 import net.minecraft.server.EntityDamageSource;
 import net.minecraft.server.EntityDamageSourceIndirect;
+import net.minecraft.server.EntityEnderCrystal;
+import net.minecraft.server.EntityEnderDragon;
 import net.minecraft.server.EntityHuman;
 import net.minecraft.server.EntityInsentient;
 import net.minecraft.server.EntityItem;
@@ -19,7 +25,6 @@ import net.minecraft.server.EntityLiving;
 import net.minecraft.server.EntityPlayer;
 import net.minecraft.server.EntityPotion;
 import net.minecraft.server.Explosion;
-import net.minecraft.server.IInventory;
 import net.minecraft.server.InventoryCrafting;
 import net.minecraft.server.ItemStack;
 import net.minecraft.server.Items;
@@ -41,6 +46,7 @@ import org.bukkit.craftbukkit.CraftStatistic;
 import org.bukkit.craftbukkit.CraftWorld;
 import org.bukkit.craftbukkit.block.CraftBlock;
 import org.bukkit.craftbukkit.block.CraftBlockState;
+import org.bukkit.craftbukkit.entity.CraftEntity;
 import org.bukkit.craftbukkit.entity.CraftLivingEntity;
 import org.bukkit.craftbukkit.entity.CraftPlayer;
 import org.bukkit.craftbukkit.inventory.CraftInventoryCrafting;
@@ -66,6 +72,7 @@ import org.bukkit.event.block.BlockIgniteEvent.IgniteCause;
 import org.bukkit.event.entity.*;
 import org.bukkit.event.entity.CreatureSpawnEvent.SpawnReason;
 import org.bukkit.event.entity.EntityDamageEvent.DamageCause;
+import org.bukkit.event.entity.EntityDamageEvent.DamageModifier;
 import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.event.inventory.InventoryOpenEvent;
 import org.bukkit.event.inventory.PrepareItemCraftEvent;
@@ -77,6 +84,8 @@ import org.bukkit.inventory.meta.BookMeta;
 public class CraftEventFactory {
     public static final DamageSource MELTING = CraftDamageSource.copyOf(DamageSource.BURN);
     public static final DamageSource POISON = CraftDamageSource.copyOf(DamageSource.MAGIC);
+    public static org.bukkit.block.Block blockDamage; // For use in EntityDamageByBlockEvent
+    public static Entity entityDamage; // For use in EntityDamageByEntityEvent
 
     // helper methods
     private static boolean canBuild(CraftWorld world, Player player, int x, int z) {
@@ -85,7 +94,7 @@ public class CraftEventFactory {
 
         if (world.getHandle().dimension != 0) return true;
         if (spawnSize <= 0) return true;
-        if (((CraftServer) Bukkit.getServer()).getHandle().getOPs().d()) return true; // Should be isEmpty
+        if (((CraftServer) Bukkit.getServer()).getHandle().getOPs().isEmpty()) return true;
         if (player.isOp()) return true;
 
         ChunkCoordinates chunkcoordinates = worldServer.getSpawn();
@@ -102,6 +111,27 @@ public class CraftEventFactory {
     /**
      * Block place methods
      */
+    public static BlockMultiPlaceEvent callBlockMultiPlaceEvent(World world, EntityHuman who, List<BlockState> blockStates, int clickedX, int clickedY, int clickedZ) {
+        CraftWorld craftWorld = world.getWorld();
+        CraftServer craftServer = world.getServer();
+        Player player = (who == null) ? null : (Player) who.getBukkitEntity();
+
+        Block blockClicked = craftWorld.getBlockAt(clickedX, clickedY, clickedZ);
+
+        boolean canBuild = true;
+        for (int i = 0; i < blockStates.size(); i++) {
+            if (!canBuild(craftWorld, player, blockStates.get(i).getX(), blockStates.get(i).getZ())) {
+                canBuild = false;
+                break;
+            }
+        }
+
+        BlockMultiPlaceEvent event = new BlockMultiPlaceEvent(blockStates, blockClicked, player.getItemInHand(), player, canBuild);
+        craftServer.getPluginManager().callEvent(event);
+
+        return event;
+    }
+
     public static BlockPlaceEvent callBlockPlaceEvent(World world, EntityHuman who, BlockState replacedBlockState, int clickedX, int clickedY, int clickedZ) {
         CraftWorld craftWorld = world.getWorld();
         CraftServer craftServer = world.getServer();
@@ -160,7 +190,7 @@ public class CraftEventFactory {
      */
     public static PlayerInteractEvent callPlayerInteractEvent(EntityHuman who, Action action, ItemStack itemstack) {
         if (action != Action.LEFT_CLICK_AIR && action != Action.RIGHT_CLICK_AIR) {
-            throw new IllegalArgumentException();
+            throw new AssertionError(String.format("%s performing %s with %s", who, action, itemstack));
         }
         return callPlayerInteractEvent(who, action, 0, 256, 0, 0, itemstack);
     }
@@ -301,7 +331,7 @@ public class CraftEventFactory {
      */
     public static BlockFadeEvent callBlockFadeEvent(Block block, net.minecraft.server.Block type) {
         BlockState state = block.getState();
-        state.setTypeId(net.minecraft.server.Block.b(type));
+        state.setTypeId(net.minecraft.server.Block.getId(type));
 
         BlockFadeEvent event = new BlockFadeEvent(block, state);
         Bukkit.getPluginManager().callEvent(event);
@@ -310,7 +340,7 @@ public class CraftEventFactory {
 
     public static void handleBlockSpreadEvent(Block block, Block source, net.minecraft.server.Block type, int data) {
         BlockState state = block.getState();
-        state.setTypeId(net.minecraft.server.Block.b(type));
+        state.setTypeId(net.minecraft.server.Block.getId(type));
         state.setRawData((byte) data);
 
         BlockSpreadEvent event = new BlockSpreadEvent(block, source, state);
@@ -342,9 +372,10 @@ public class CraftEventFactory {
         return event;
     }
 
-    public static PlayerDeathEvent callPlayerDeathEvent(EntityPlayer victim, List<org.bukkit.inventory.ItemStack> drops, String deathMessage) {
+    public static PlayerDeathEvent callPlayerDeathEvent(EntityPlayer victim, List<org.bukkit.inventory.ItemStack> drops, String deathMessage, boolean keepInventory) {
         CraftPlayer entity = victim.getBukkitEntity();
         PlayerDeathEvent event = new PlayerDeathEvent(entity, drops, victim.getExpReward(), 0, deathMessage);
+        event.setKeepInventory(keepInventory);
         org.bukkit.World world = entity.getWorld();
         Bukkit.getServer().getPluginManager().callEvent(event);
 
@@ -353,6 +384,10 @@ public class CraftEventFactory {
         victim.newTotalExp = event.getNewTotalExp();
         victim.expToDrop = event.getDroppedExp();
         victim.newExp = event.getNewExp();
+
+        if (event.getKeepInventory()) {
+            return event;
+        }
 
         for (org.bukkit.inventory.ItemStack stack : event.getDrops()) {
             if (stack == null || stack.getType() == Material.AIR) continue;
@@ -372,29 +407,31 @@ public class CraftEventFactory {
         return event;
     }
 
-    /**
-     * EntityDamage(ByEntityEvent)
-     */
-    public static EntityDamageEvent callEntityDamageEvent(Entity damager, Entity damagee, DamageCause cause, double damage) {
-        EntityDamageEvent event;
-        if (damager != null) {
-            event = new EntityDamageByEntityEvent(damager.getBukkitEntity(), damagee.getBukkitEntity(), cause, damage);
-        } else {
-            event = new EntityDamageEvent(damagee.getBukkitEntity(), cause, damage);
-        }
-
-        callEvent(event);
-
-        if (!event.isCancelled()) {
-            event.getEntity().setLastDamageCause(event);
-        }
-
-        return event;
-    }
-
-    public static EntityDamageEvent handleEntityDamageEvent(Entity entity, DamageSource source, float damage) {
+    private static EntityDamageEvent handleEntityDamageEvent(Entity entity, DamageSource source, Map<DamageModifier, Double> modifiers, Map<DamageModifier, Function<? super Double, Double>> modifierFunctions) {
         if (source.isExplosion()) {
-            return null;
+            DamageCause damageCause;
+            Entity damager = entityDamage;
+            entityDamage = null;
+            EntityDamageEvent event;
+            if (damager == null) {
+                event = new EntityDamageByBlockEvent(null, entity.getBukkitEntity(), DamageCause.BLOCK_EXPLOSION, modifiers, modifierFunctions);
+            } else if (entity instanceof EntityEnderDragon && ((EntityEnderDragon) entity).bC == damager) {
+                event = new EntityDamageEvent(entity.getBukkitEntity(), DamageCause.ENTITY_EXPLOSION, modifiers, modifierFunctions);
+            } else {
+                if (damager instanceof org.bukkit.entity.TNTPrimed) {
+                    damageCause = DamageCause.BLOCK_EXPLOSION;
+                } else {
+                    damageCause = DamageCause.ENTITY_EXPLOSION;
+                }
+                event = new EntityDamageByEntityEvent(damager.getBukkitEntity(), entity.getBukkitEntity(), damageCause, modifiers, modifierFunctions);
+            }
+
+            callEvent(event);
+
+            if (!event.isCancelled()) {
+                event.getEntity().setLastDamageCause(event);
+            }
+            return event;
         } else if (source instanceof EntityDamageSource) {
             Entity damager = source.getEntity();
             DamageCause cause = DamageCause.ENTITY_ATTACK;
@@ -410,9 +447,47 @@ public class CraftEventFactory {
                 cause = DamageCause.THORNS;
             }
 
-            return callEntityDamageEvent(damager, entity, cause, damage);
+            return callEntityDamageEvent(damager, entity, cause, modifiers, modifierFunctions);
         } else if (source == DamageSource.OUT_OF_WORLD) {
-            EntityDamageEvent event = callEvent(new EntityDamageByBlockEvent(null, entity.getBukkitEntity(), DamageCause.VOID, damage));
+            EntityDamageEvent event = callEvent(new EntityDamageByBlockEvent(null, entity.getBukkitEntity(), DamageCause.VOID, modifiers, modifierFunctions));
+            if (!event.isCancelled()) {
+                event.getEntity().setLastDamageCause(event);
+            }
+            return event;
+        } else if (source == DamageSource.LAVA) {
+            EntityDamageEvent event = callEvent(new EntityDamageByBlockEvent(null, entity.getBukkitEntity(), DamageCause.LAVA, modifiers, modifierFunctions));
+            if (!event.isCancelled()) {
+                event.getEntity().setLastDamageCause(event);
+            }
+            return event;
+        } else if (blockDamage != null) {
+            DamageCause cause = null;
+            Block damager = blockDamage;
+            blockDamage = null;
+            if (source == DamageSource.CACTUS) {
+                cause = DamageCause.CONTACT;
+            } else {
+                throw new AssertionError(String.format("Unhandled damage of %s by %s from %s", entity, damager, source.translationIndex));
+            }
+            EntityDamageEvent event = callEvent(new EntityDamageByBlockEvent(damager, entity.getBukkitEntity(), cause, modifiers, modifierFunctions));
+            if (!event.isCancelled()) {
+                event.getEntity().setLastDamageCause(event);
+            }
+            return event;
+        } else if (entityDamage != null) {
+            DamageCause cause = null;
+            CraftEntity damager = entityDamage.getBukkitEntity();
+            entityDamage = null;
+            if (source == DamageSource.ANVIL || source == DamageSource.FALLING_BLOCK) {
+                cause = DamageCause.FALLING_BLOCK;
+            } else if (damager instanceof LightningStrike) {
+                cause = DamageCause.LIGHTNING;
+            } else if (source == DamageSource.FALL) {
+                cause = DamageCause.FALL;
+            } else {
+                throw new AssertionError(String.format("Unhandled damage of %s by %s from %s", entity, damager.getHandle(), source.translationIndex));
+            }
+            EntityDamageEvent event = callEvent(new EntityDamageByEntityEvent(damager, entity.getBukkitEntity(), cause, modifiers, modifierFunctions));
             if (!event.isCancelled()) {
                 event.getEntity().setLastDamageCause(event);
             }
@@ -438,27 +513,83 @@ public class CraftEventFactory {
             cause = DamageCause.POISON;
         } else if (source == DamageSource.MAGIC) {
             cause = DamageCause.MAGIC;
+        } else if (source == DamageSource.FALL) {
+            cause = DamageCause.FALL;
+        } else if (source == DamageSource.GENERIC) {
+            return new EntityDamageEvent(entity.getBukkitEntity(), null, modifiers, modifierFunctions);
         }
 
         if (cause != null) {
-            return callEntityDamageEvent(null, entity, cause, damage);
+            return callEntityDamageEvent(null, entity, cause, modifiers, modifierFunctions);
         }
 
-        // If an event was called earlier, we return null.
-        // EG: Cactus, Lava, EntityEnderPearl "fall", FallingSand
-        return null;
+        throw new AssertionError(String.format("Unhandled damage of %s from %s", entity, source.translationIndex));
     }
 
-    // Non-Living Entities such as EntityEnderCrystal need to call this
-    public static boolean handleNonLivingEntityDamageEvent(Entity entity, DamageSource source, float damage) {
-        if (!(source instanceof EntityDamageSource)) {
+    private static EntityDamageEvent callEntityDamageEvent(Entity damager, Entity damagee, DamageCause cause, Map<DamageModifier, Double> modifiers, Map<DamageModifier, Function<? super Double, Double>> modifierFunctions) {
+        EntityDamageEvent event;
+        if (damager != null) {
+            event = new EntityDamageByEntityEvent(damager.getBukkitEntity(), damagee.getBukkitEntity(), cause, modifiers, modifierFunctions);
+        } else {
+            event = new EntityDamageEvent(damagee.getBukkitEntity(), cause, modifiers, modifierFunctions);
+        }
+
+        callEvent(event);
+
+        if (!event.isCancelled()) {
+            event.getEntity().setLastDamageCause(event);
+        }
+
+        return event;
+    }
+
+    private static final Function<? super Double, Double> ZERO = Functions.constant(-0.0);
+
+    public static EntityDamageEvent handleLivingEntityDamageEvent(Entity damagee, DamageSource source, double rawDamage, double hardHatModifier, double blockingModifier, double armorModifier, double resistanceModifier, double magicModifier, double absorptionModifier, Function<Double, Double> hardHat, Function<Double, Double> blocking, Function<Double, Double> armor, Function<Double, Double> resistance, Function<Double, Double> magic, Function<Double, Double> absorption) {
+        Map<DamageModifier, Double> modifiers = new EnumMap<DamageModifier, Double>(DamageModifier.class);
+        Map<DamageModifier, Function<? super Double, Double>> modifierFunctions = new EnumMap<DamageModifier, Function<? super Double, Double>>(DamageModifier.class);
+        modifiers.put(DamageModifier.BASE, rawDamage);
+        modifierFunctions.put(DamageModifier.BASE, ZERO);
+        if (source == DamageSource.FALLING_BLOCK || source == DamageSource.ANVIL) {
+            modifiers.put(DamageModifier.HARD_HAT, hardHatModifier);
+            modifierFunctions.put(DamageModifier.HARD_HAT, hardHat);
+        }
+        if (damagee instanceof EntityHuman) {
+            modifiers.put(DamageModifier.BLOCKING, blockingModifier);
+            modifierFunctions.put(DamageModifier.BLOCKING, blocking);
+        }
+        modifiers.put(DamageModifier.ARMOR, armorModifier);
+        modifierFunctions.put(DamageModifier.ARMOR, armor);
+        modifiers.put(DamageModifier.RESISTANCE, resistanceModifier);
+        modifierFunctions.put(DamageModifier.RESISTANCE, resistance);
+        modifiers.put(DamageModifier.MAGIC, magicModifier);
+        modifierFunctions.put(DamageModifier.MAGIC, magic);
+        modifiers.put(DamageModifier.ABSORPTION, absorptionModifier);
+        modifierFunctions.put(DamageModifier.ABSORPTION, absorption);
+        return handleEntityDamageEvent(damagee, source, modifiers, modifierFunctions);
+    }
+
+    // Non-Living Entities such as EntityEnderCrystal and EntityFireball need to call this
+    public static boolean handleNonLivingEntityDamageEvent(Entity entity, DamageSource source, double damage) {
+        return handleNonLivingEntityDamageEvent(entity, source, damage, true);
+    }
+
+    public static boolean handleNonLivingEntityDamageEvent(Entity entity, DamageSource source, double damage, boolean cancelOnZeroDamage) {
+        if (entity instanceof EntityEnderCrystal && !(source instanceof EntityDamageSource)) {
             return false;
         }
-        EntityDamageEvent event = handleEntityDamageEvent(entity, source, damage);
+
+        final EnumMap<DamageModifier, Double> modifiers = new EnumMap<DamageModifier, Double>(DamageModifier.class);
+        final EnumMap<DamageModifier, Function<? super Double, Double>> functions = new EnumMap(DamageModifier.class);
+
+        modifiers.put(DamageModifier.BASE, damage);
+        functions.put(DamageModifier.BASE, ZERO);
+
+        final EntityDamageEvent event = handleEntityDamageEvent(entity, source, modifiers, functions);
         if (event == null) {
             return false;
         }
-        return event.isCancelled() || event.getDamage() == 0;
+        return event.isCancelled() || (cancelOnZeroDamage && event.getDamage() == 0);
     }
 
     public static PlayerLevelChangeEvent callPlayerLevelChangeEvent(Player player, int oldLevel, int newLevel) {
@@ -477,7 +608,7 @@ public class CraftEventFactory {
     public static void handleBlockGrowEvent(World world, int x, int y, int z, net.minecraft.server.Block type, int data) {
         Block block = world.getWorld().getBlockAt(x, y, z);
         CraftBlockState state = (CraftBlockState) block.getState();
-        state.setTypeId(net.minecraft.server.Block.b(type));
+        state.setTypeId(net.minecraft.server.Block.getId(type));
         state.setRawData((byte) data);
 
         BlockGrowEvent event = new BlockGrowEvent(block, state);
@@ -718,7 +849,7 @@ public class CraftEventFactory {
             }
 
             // Client will have updated its idea of the book item; we need to overwrite that
-            Slot slot = player.activeContainer.a((IInventory) player.inventory, itemInHandIndex);
+            Slot slot = player.activeContainer.getSlot(player.inventory, itemInHandIndex);
             player.playerConnection.sendPacket(new PacketPlayOutSetSlot(player.activeContainer.windowId, slot.rawSlotIndex, itemInHand));
         }
     }

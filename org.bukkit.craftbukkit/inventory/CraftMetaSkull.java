@@ -34,9 +34,9 @@ class CraftMetaSkull extends CraftMetaItem implements SkullMeta {
         super(tag);
 
         if (tag.hasKeyOfType(SKULL_OWNER.NBT, 10)) {
-            profile = GameProfileSerializer.a(tag.getCompound(SKULL_OWNER.NBT));
+            profile = GameProfileSerializer.deserialize(tag.getCompound(SKULL_OWNER.NBT));
         } else if (tag.hasKeyOfType(SKULL_OWNER.NBT, 8)) {
-            profile = MinecraftServer.getServer().getUserCache().a(tag.getString(SKULL_OWNER.NBT));
+            profile = new GameProfile(null, tag.getString(SKULL_OWNER.NBT));
         }
     }
 
@@ -51,7 +51,7 @@ class CraftMetaSkull extends CraftMetaItem implements SkullMeta {
 
         if (hasOwner()) {
             NBTTagCompound owner = new NBTTagCompound();
-            GameProfileSerializer.a(owner, profile);
+            GameProfileSerializer.serialize(owner, profile);
             tag.set(SKULL_OWNER.NBT, owner);
         }
     }
@@ -93,12 +93,12 @@ class CraftMetaSkull extends CraftMetaItem implements SkullMeta {
             return false;
         }
 
-        GameProfile profile = MinecraftServer.getServer().getUserCache().a(name);
-        if (profile == null) {
-            return false;
+        if (name == null) {
+            profile = null;
+        } else {
+            profile = new GameProfile(null, name);
         }
 
-        this.profile = profile;
         return true;
     }
 

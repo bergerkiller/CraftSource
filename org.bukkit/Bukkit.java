@@ -2,6 +2,7 @@ package org.bukkit;
 
 import java.awt.image.BufferedImage;
 import java.io.File;
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -10,6 +11,7 @@ import java.util.UUID;
 import java.util.logging.Logger;
 
 import org.bukkit.Warning.WarningState;
+import org.bukkit.command.CommandException;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.ConsoleCommandSender;
 import org.bukkit.command.PluginCommand;
@@ -19,6 +21,7 @@ import org.bukkit.help.HelpMap;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
+import org.bukkit.inventory.ItemFactory;
 import org.bukkit.inventory.Recipe;
 import org.bukkit.map.MapView;
 import org.bukkit.plugin.PluginManager;
@@ -29,7 +32,6 @@ import org.bukkit.scoreboard.ScoreboardManager;
 import org.bukkit.util.CachedServerIcon;
 
 import com.avaje.ebean.config.ServerConfig;
-import org.bukkit.inventory.ItemFactory;
 
 /**
  * Represents the Bukkit core, for version and Server singleton handling
@@ -89,9 +91,22 @@ public final class Bukkit {
     }
 
     /**
+     * This method exists for legacy reasons to provide backwards
+     * compatibility. It will not exist at runtime and should not be used
+     * under any circumstances.
+     *
+     * @Deprecated
+     * @see Server#_INVALID_getOnlinePlayers()
+     */
+    @Deprecated
+    public static Player[] _INVALID_getOnlinePlayers() {
+        return server._INVALID_getOnlinePlayers();
+    }
+
+    /**
      * @see Server#getOnlinePlayers()
      */
-    public static Player[] getOnlinePlayers() {
+    public static Collection<? extends Player> getOnlinePlayers() {
         return server.getOnlinePlayers();
     }
 
@@ -312,7 +327,7 @@ public final class Bukkit {
     /**
      * @see Server#dispatchCommand(CommandSender sender, String commandLine)
      */
-    public static boolean dispatchCommand(CommandSender sender, String commandLine) {
+    public static boolean dispatchCommand(CommandSender sender, String commandLine) throws CommandException {
         return server.dispatchCommand(sender, commandLine);
     }
 
@@ -592,9 +607,16 @@ public final class Bukkit {
     }
 
     /**
+     * @see Server#createInventory(InventoryHolder owner, InventoryType type, String title)
+     */
+    public static Inventory createInventory(InventoryHolder owner, InventoryType type, String title) {
+        return server.createInventory(owner, type, title);
+    }
+
+    /**
      * @see Server#createInventory(InventoryHolder owner, int size)
      */
-    public static Inventory createInventory(InventoryHolder owner, int size) {
+    public static Inventory createInventory(InventoryHolder owner, int size) throws IllegalArgumentException {
         return server.createInventory(owner, size);
     }
 
@@ -602,7 +624,7 @@ public final class Bukkit {
      * @see Server#createInventory(InventoryHolder owner, int size, String
      *     title)
      */
-    public static Inventory createInventory(InventoryHolder owner, int size, String title) {
+    public static Inventory createInventory(InventoryHolder owner, int size, String title) throws IllegalArgumentException {
         return server.createInventory(owner, size, title);
     }
 
@@ -693,14 +715,14 @@ public final class Bukkit {
     /**
      * @see Server#loadServerIcon(File)
      */
-    public static CachedServerIcon loadServerIcon(File file) throws Exception {
+    public static CachedServerIcon loadServerIcon(File file) throws IllegalArgumentException, Exception {
         return server.loadServerIcon(file);
     }
 
     /**
      * @see Server#loadServerIcon(BufferedImage)
      */
-    public static CachedServerIcon loadServerIcon(BufferedImage image) throws Exception {
+    public static CachedServerIcon loadServerIcon(BufferedImage image) throws IllegalArgumentException, Exception {
         return server.loadServerIcon(image);
     }
 
