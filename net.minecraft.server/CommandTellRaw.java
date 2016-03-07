@@ -1,9 +1,8 @@
 package net.minecraft.server;
 
+import com.google.gson.JsonParseException;
+import java.util.Collections;
 import java.util.List;
-
-import net.minecraft.util.com.google.gson.JsonParseException;
-import net.minecraft.util.org.apache.commons.lang3.exception.ExceptionUtils;
 
 public class CommandTellRaw extends CommandAbstract {
 
@@ -17,31 +16,29 @@ public class CommandTellRaw extends CommandAbstract {
         return 2;
     }
 
-    public String c(ICommandListener icommandlistener) {
+    public String getUsage(ICommandListener icommandlistener) {
         return "commands.tellraw.usage";
     }
 
-    public void execute(ICommandListener icommandlistener, String[] astring) {
+    public void execute(MinecraftServer minecraftserver, ICommandListener icommandlistener, String[] astring) throws CommandException {
         if (astring.length < 2) {
             throw new ExceptionUsage("commands.tellraw.usage", new Object[0]);
         } else {
-            EntityPlayer entityplayer = d(icommandlistener, astring[0]);
-            String s = b(icommandlistener, astring, 1);
+            EntityPlayer entityplayer = a(minecraftserver, icommandlistener, astring[0]);
+            String s = a(astring, 1);
 
             try {
-                IChatBaseComponent ichatbasecomponent = ChatSerializer.a(s);
+                IChatBaseComponent ichatbasecomponent = IChatBaseComponent.ChatSerializer.a(s);
 
-                entityplayer.sendMessage(ichatbasecomponent);
+                entityplayer.sendMessage(ChatComponentUtils.filterForDisplay(icommandlistener, ichatbasecomponent, entityplayer));
             } catch (JsonParseException jsonparseexception) {
-                Throwable throwable = ExceptionUtils.getRootCause(jsonparseexception);
-
-                throw new ExceptionInvalidSyntax("commands.tellraw.jsonException", new Object[] { throwable == null ? "" : throwable.getMessage()});
+                throw a(jsonparseexception);
             }
         }
     }
 
-    public List tabComplete(ICommandListener icommandlistener, String[] astring) {
-        return astring.length == 1 ? a(astring, MinecraftServer.getServer().getPlayers()) : null;
+    public List<String> tabComplete(MinecraftServer minecraftserver, ICommandListener icommandlistener, String[] astring, BlockPosition blockposition) {
+        return astring.length == 1 ? a(astring, minecraftserver.getPlayers()) : Collections.emptyList();
     }
 
     public boolean isListStart(String[] astring, int i) {

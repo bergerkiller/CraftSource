@@ -1,72 +1,111 @@
 package net.minecraft.server;
 
+import com.google.common.collect.Queues;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
+import io.netty.channel.Channel;
+import io.netty.channel.ChannelFuture;
+import io.netty.channel.ChannelFutureListener;
+import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.SimpleChannelInboundHandler;
+import io.netty.channel.epoll.EpollEventLoopGroup;
+import io.netty.channel.local.LocalChannel;
+import io.netty.channel.local.LocalEventLoopGroup;
+import io.netty.channel.local.LocalServerChannel;
+import io.netty.channel.nio.NioEventLoopGroup;
+import io.netty.handler.timeout.TimeoutException;
+import io.netty.util.AttributeKey;
+import io.netty.util.concurrent.Future;
+import io.netty.util.concurrent.GenericFutureListener;
 import java.net.SocketAddress;
 import java.util.Queue;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 import javax.crypto.SecretKey;
-
-import net.minecraft.util.com.google.common.collect.Queues;
-import net.minecraft.util.com.google.common.util.concurrent.ThreadFactoryBuilder;
-import net.minecraft.util.io.netty.channel.Channel;
-import net.minecraft.util.io.netty.channel.ChannelFutureListener;
-import net.minecraft.util.io.netty.channel.ChannelHandlerContext;
-import net.minecraft.util.io.netty.channel.SimpleChannelInboundHandler;
-import net.minecraft.util.io.netty.channel.local.LocalChannel;
-import net.minecraft.util.io.netty.channel.local.LocalServerChannel;
-import net.minecraft.util.io.netty.channel.nio.NioEventLoopGroup;
-import net.minecraft.util.io.netty.handler.timeout.TimeoutException;
-import net.minecraft.util.io.netty.util.AttributeKey;
-import net.minecraft.util.io.netty.util.concurrent.GenericFutureListener;
-import net.minecraft.util.org.apache.commons.lang3.Validate;
+import org.apache.commons.lang3.ArrayUtils;
+import org.apache.commons.lang3.Validate;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.Marker;
 import org.apache.logging.log4j.MarkerManager;
 
-public class NetworkManager extends SimpleChannelInboundHandler {
+public class NetworkManager extends SimpleChannelInboundHandler<Packet<?>> {
 
-    private static final Logger i = LogManager.getLogger();
+    private static final Logger g = LogManager.getLogger();
     public static final Marker a = MarkerManager.getMarker("NETWORK");
-    public static final Marker b = MarkerManager.getMarker("NETWORK_PACKETS", a);
-    public static final Marker c = MarkerManager.getMarker("NETWORK_STAT", a);
-    public static final AttributeKey d = new AttributeKey("protocol");
-    public static final AttributeKey e = new AttributeKey("receivable_packets");
-    public static final AttributeKey f = new AttributeKey("sendable_packets");
-    public static final NioEventLoopGroup g = new NioEventLoopGroup(0, (new ThreadFactoryBuilder()).setNameFormat("Netty Client IO #%d").setDaemon(true).build());
-    public static final NetworkStatistics h = new NetworkStatistics();
-    private final boolean j;
-    private final Queue k = Queues.newConcurrentLinkedQueue();
-    private final Queue l = Queues.newConcurrentLinkedQueue();
-    private Channel m;
-    private SocketAddress n;
-    private PacketListener o;
-    private EnumProtocol p;
-    private IChatBaseComponent q;
-    private boolean r;
+    public static final Marker b = MarkerManager.getMarker("NETWORK_PACKETS", NetworkManager.a);
+    public static final AttributeKey<EnumProtocol> c = AttributeKey.valueOf("protocol");
+    public static final LazyInitVar<NioEventLoopGroup> d = new LazyInitVar() {
+        protected NioEventLoopGroup a() {
+            return new NioEventLoopGroup(0, (new ThreadFactoryBuilder()).setNameFormat("Netty Client IO #%d").setDaemon(true).build());
+        }
 
-    public NetworkManager(boolean flag) {
-        this.j = flag;
+        protected Object init() {
+            return this.a();
+        }
+    };
+    public static final LazyInitVar<EpollEventLoopGroup> e = new LazyInitVar() {
+        protected EpollEventLoopGroup a() {
+            return new EpollEventLoopGroup(0, (new ThreadFactoryBuilder()).setNameFormat("Netty Epoll Client IO #%d").setDaemon(true).build());
+        }
+
+        protected Object init() {
+            return this.a();
+        }
+    };
+    public static final LazyInitVar<LocalEventLoopGroup> f = new LazyInitVar() {
+        protected LocalEventLoopGroup a() {
+            return new LocalEventLoopGroup(0, (new ThreadFactoryBuilder()).setNameFormat("Netty Local Client IO #%d").setDaemon(true).build());
+        }
+
+        protected Object init() {
+            return this.a();
+        }
+    };
+    private final EnumProtocolDirection h;
+    private final Queue<NetworkManager.QueuedPacket> i = Queues.newConcurrentLinkedQueue();
+    private final ReentrantReadWriteLock j = new ReentrantReadWriteLock();
+    public Channel channel;
+    // Spigot Start // PAIL
+    public SocketAddress l;
+    public java.util.UUID spoofedUUID;
+    public com.mojang.authlib.properties.Property[] spoofedProfile;
+    public boolean preparing = true;
+    // Spigot End
+    private PacketListener m;
+    private IChatBaseComponent n;
+    private boolean o;
+    private boolean p;
+
+    public NetworkManager(EnumProtocolDirection enumprotocoldirection) {
+        this.h = enumprotocoldirection;
     }
 
-    public void channelActive(ChannelHandlerContext channelhandlercontext) throws Exception { // CraftBukkit - throws Exception
+    public void channelActive(ChannelHandlerContext channelhandlercontext) throws Exception {
         super.channelActive(channelhandlercontext);
-        this.m = channelhandlercontext.channel();
-        this.n = this.m.remoteAddress();
-        this.a(EnumProtocol.HANDSHAKING);
+        this.channel = channelhandlercontext.channel();
+        this.l = this.channel.remoteAddress();
+        // Spigot Start
+        this.preparing = false;
+        // Spigot End
+
+        try {
+            this.setProtocol(EnumProtocol.HANDSHAKING);
+        } catch (Throwable throwable) {
+            NetworkManager.g.fatal(throwable);
+        }
+
     }
 
-    public void a(EnumProtocol enumprotocol) {
-        this.p = (EnumProtocol) this.m.attr(d).getAndSet(enumprotocol);
-        this.m.attr(e).set(enumprotocol.a(this.j));
-        this.m.attr(f).set(enumprotocol.b(this.j));
-        this.m.config().setAutoRead(true);
-        i.debug("Enabled auto read");
+    public void setProtocol(EnumProtocol enumprotocol) {
+        this.channel.attr(NetworkManager.c).set(enumprotocol);
+        this.channel.config().setAutoRead(true);
+        NetworkManager.g.debug("Enabled auto read");
     }
 
-    public void channelInactive(ChannelHandlerContext channelhandlercontext) {
+    public void channelInactive(ChannelHandlerContext channelhandlercontext) throws Exception {
         this.close(new ChatMessage("disconnect.endOfStream", new Object[0]));
     }
 
-    public void exceptionCaught(ChannelHandlerContext channelhandlercontext, Throwable throwable) {
+    public void exceptionCaught(ChannelHandlerContext channelhandlercontext, Throwable throwable) throws Exception {
         ChatMessage chatmessage;
 
         if (throwable instanceof TimeoutException) {
@@ -75,136 +114,233 @@ public class NetworkManager extends SimpleChannelInboundHandler {
             chatmessage = new ChatMessage("disconnect.genericReason", new Object[] { "Internal Exception: " + throwable});
         }
 
+        NetworkManager.g.debug(throwable);
         this.close(chatmessage);
+        if (MinecraftServer.getServer().isDebugging()) throwable.printStackTrace(); // Spigot
     }
 
-    protected void a(ChannelHandlerContext channelhandlercontext, Packet packet) {
-        if (this.m.isOpen()) {
-            if (packet.a()) {
-                packet.handle(this.o);
-            } else {
-                this.k.add(packet);
+    protected void a(ChannelHandlerContext channelhandlercontext, Packet<?> packet) throws Exception {
+        if (this.channel.isOpen()) {
+            try {
+                ((Packet) packet).a(this.m); // CraftBukkit - decompile error
+            } catch (CancelledPacketHandleException cancelledpackethandleexception) {
+                ;
             }
         }
+
     }
 
-    public void a(PacketListener packetlistener) {
+    public void setPacketListener(PacketListener packetlistener) {
         Validate.notNull(packetlistener, "packetListener", new Object[0]);
-        i.debug("Set listener of {} to {}", new Object[] { this, packetlistener});
-        this.o = packetlistener;
+        NetworkManager.g.debug("Set listener of {} to {}", new Object[] { this, packetlistener});
+        this.m = packetlistener;
     }
 
-    public void handle(Packet packet, GenericFutureListener... agenericfuturelistener) {
-        if (this.m != null && this.m.isOpen()) {
-            this.i();
-            this.b(packet, agenericfuturelistener);
+    public void sendPacket(Packet<?> packet) {
+        if (this.isConnected()) {
+            this.m();
+            this.a(packet, (GenericFutureListener[]) null);
         } else {
-            this.l.add(new QueuedPacket(packet, agenericfuturelistener));
+            this.j.writeLock().lock();
+
+            try {
+                this.i.add(new NetworkManager.QueuedPacket(packet, (GenericFutureListener[]) null));
+            } finally {
+                this.j.writeLock().unlock();
+            }
         }
+
     }
 
-    private void b(Packet packet, GenericFutureListener[] agenericfuturelistener) {
-        EnumProtocol enumprotocol = EnumProtocol.a(packet);
-        EnumProtocol enumprotocol1 = (EnumProtocol) this.m.attr(d).get();
+    public void sendPacket(Packet<?> packet, GenericFutureListener<? extends Future<? super Void>> genericfuturelistener, GenericFutureListener<? extends Future<? super Void>>... agenericfuturelistener) {
+        if (this.isConnected()) {
+            this.m();
+            this.a(packet, (GenericFutureListener[]) ArrayUtils.add(agenericfuturelistener, 0, genericfuturelistener));
+        } else {
+            this.j.writeLock().lock();
+
+            try {
+                this.i.add(new NetworkManager.QueuedPacket(packet, (GenericFutureListener[]) ArrayUtils.add(agenericfuturelistener, 0, genericfuturelistener)));
+            } finally {
+                this.j.writeLock().unlock();
+            }
+        }
+
+    }
+
+    private void a(final Packet<?> packet, final GenericFutureListener<? extends Future<? super Void>>[] agenericfuturelistener) {
+        final EnumProtocol enumprotocol = EnumProtocol.a(packet);
+        final EnumProtocol enumprotocol1 = (EnumProtocol) this.channel.attr(NetworkManager.c).get();
 
         if (enumprotocol1 != enumprotocol) {
-            i.debug("Disabled auto read");
-            this.m.config().setAutoRead(false);
+            NetworkManager.g.debug("Disabled auto read");
+            this.channel.config().setAutoRead(false);
         }
 
-        if (this.m.eventLoop().inEventLoop()) {
+        if (this.channel.eventLoop().inEventLoop()) {
             if (enumprotocol != enumprotocol1) {
-                this.a(enumprotocol);
+                this.setProtocol(enumprotocol);
             }
 
-            this.m.writeAndFlush(packet).addListeners(agenericfuturelistener).addListener(ChannelFutureListener.FIRE_EXCEPTION_ON_FAILURE);
+            ChannelFuture channelfuture = this.channel.writeAndFlush(packet);
+
+            if (agenericfuturelistener != null) {
+                channelfuture.addListeners(agenericfuturelistener);
+            }
+
+            channelfuture.addListener(ChannelFutureListener.FIRE_EXCEPTION_ON_FAILURE);
         } else {
-            this.m.eventLoop().execute(new QueuedProtocolSwitch(this, enumprotocol, enumprotocol1, packet, agenericfuturelistener));
+            this.channel.eventLoop().execute(new Runnable() {
+                public void run() {
+                    if (enumprotocol != enumprotocol1) {
+                        NetworkManager.this.setProtocol(enumprotocol);
+                    }
+
+                    ChannelFuture channelfuture = NetworkManager.this.channel.writeAndFlush(packet);
+
+                    if (agenericfuturelistener != null) {
+                        channelfuture.addListeners(agenericfuturelistener);
+                    }
+
+                    channelfuture.addListener(ChannelFutureListener.FIRE_EXCEPTION_ON_FAILURE);
+                }
+            });
         }
+
     }
 
-    private void i() {
-        if (this.m != null && this.m.isOpen()) {
-            while (!this.l.isEmpty()) {
-                QueuedPacket queuedpacket = (QueuedPacket) this.l.poll();
+    private void m() {
+        if (this.channel != null && this.channel.isOpen()) {
+            this.j.readLock().lock();
 
-                this.b(QueuedPacket.a(queuedpacket), QueuedPacket.b(queuedpacket));
+            try {
+                while (!this.i.isEmpty()) {
+                    NetworkManager.QueuedPacket networkmanager_queuedpacket = (NetworkManager.QueuedPacket) this.i.poll();
+
+                    this.a(networkmanager_queuedpacket.a, networkmanager_queuedpacket.b);
+                }
+            } finally {
+                this.j.readLock().unlock();
             }
+
         }
     }
 
     public void a() {
-        this.i();
-        EnumProtocol enumprotocol = (EnumProtocol) this.m.attr(d).get();
-
-        if (this.p != enumprotocol) {
-            if (this.p != null) {
-                this.o.a(this.p, enumprotocol);
-            }
-
-            this.p = enumprotocol;
+        this.m();
+        if (this.m instanceof ITickable) {
+            ((ITickable) this.m).c();
         }
 
-        if (this.o != null) {
-            for (int i = 1000; !this.k.isEmpty() && i >= 0; --i) {
-                Packet packet = (Packet) this.k.poll();
-
-                // CraftBukkit start
-                if (!this.isConnected() || !this.m.config().isAutoRead()) {
-                    continue;
-                }
-                // CraftBukkit end
-                packet.handle(this.o);
-            }
-
-            this.o.a();
-        }
-
-        this.m.flush();
+        this.channel.flush();
     }
 
     public SocketAddress getSocketAddress() {
-        return this.n;
+        return this.l;
     }
 
     public void close(IChatBaseComponent ichatbasecomponent) {
-        if (this.m.isOpen()) {
-            this.m.close();
-            this.q = ichatbasecomponent;
+        // Spigot Start
+        this.preparing = false;
+        // Spigot End
+        if (this.channel.isOpen()) {
+            this.channel.close(); // We can't wait as this may be called from an event loop.
+            this.n = ichatbasecomponent;
         }
+
     }
 
-    public boolean c() {
-        return this.m instanceof LocalChannel || this.m instanceof LocalServerChannel;
+    public boolean isLocal() {
+        return this.channel instanceof LocalChannel || this.channel instanceof LocalServerChannel;
     }
 
     public void a(SecretKey secretkey) {
-        this.m.pipeline().addBefore("splitter", "decrypt", new PacketDecrypter(MinecraftEncryption.a(2, secretkey)));
-        this.m.pipeline().addBefore("prepender", "encrypt", new PacketEncrypter(MinecraftEncryption.a(1, secretkey)));
-        this.r = true;
+        this.o = true;
+        this.channel.pipeline().addBefore("splitter", "decrypt", new PacketDecrypter(MinecraftEncryption.a(2, secretkey)));
+        this.channel.pipeline().addBefore("prepender", "encrypt", new PacketEncrypter(MinecraftEncryption.a(1, secretkey)));
     }
 
     public boolean isConnected() {
-        return this.m != null && this.m.isOpen();
+        return this.channel != null && this.channel.isOpen();
     }
 
-    public PacketListener getPacketListener() {
-        return this.o;
+    public boolean h() {
+        return this.channel == null;
     }
 
-    public IChatBaseComponent f() {
-        return this.q;
+    public PacketListener i() {
+        return this.m;
     }
 
-    public void g() {
-        this.m.config().setAutoRead(false);
+    public IChatBaseComponent j() {
+        return this.n;
     }
 
-    protected void channelRead0(ChannelHandlerContext channelhandlercontext, Object object) {
+    public void stopReading() {
+        this.channel.config().setAutoRead(false);
+    }
+
+    public void setCompressionLevel(int i) {
+        if (i >= 0) {
+            if (this.channel.pipeline().get("decompress") instanceof PacketDecompressor) {
+                ((PacketDecompressor) this.channel.pipeline().get("decompress")).a(i);
+            } else {
+                this.channel.pipeline().addBefore("decoder", "decompress", new PacketDecompressor(i));
+            }
+
+            if (this.channel.pipeline().get("compress") instanceof PacketCompressor) {
+                ((PacketCompressor) this.channel.pipeline().get("compress")).a(i);
+            } else {
+                this.channel.pipeline().addBefore("encoder", "compress", new PacketCompressor(i));
+            }
+        } else {
+            if (this.channel.pipeline().get("decompress") instanceof PacketDecompressor) {
+                this.channel.pipeline().remove("decompress");
+            }
+
+            if (this.channel.pipeline().get("compress") instanceof PacketCompressor) {
+                this.channel.pipeline().remove("compress");
+            }
+        }
+
+    }
+
+    public void handleDisconnection() {
+        if (this.channel != null && !this.channel.isOpen()) {
+            if (this.p) {
+                NetworkManager.g.warn("handleDisconnection() called twice");
+            } else {
+                this.p = true;
+                if (this.j() != null) {
+                    this.i().a(this.j());
+                } else if (this.i() != null) {
+                    this.i().a(new ChatComponentText("Disconnected"));
+                }
+                this.i.clear(); // Free up packet queue.
+            }
+
+        }
+    }
+
+    protected void channelRead0(ChannelHandlerContext channelhandlercontext, Packet object) throws Exception { // CraftBukkit - fix decompile error
         this.a(channelhandlercontext, (Packet) object);
     }
 
-    static Channel a(NetworkManager networkmanager) {
-        return networkmanager.m;
+    static class QueuedPacket {
+
+        private final Packet<?> a;
+        private final GenericFutureListener<? extends Future<? super Void>>[] b;
+
+        public QueuedPacket(Packet<?> packet, GenericFutureListener<? extends Future<? super Void>>... agenericfuturelistener) {
+            this.a = packet;
+            this.b = agenericfuturelistener;
+        }
     }
+
+    // Spigot Start
+    public SocketAddress getRawAddress()
+    {
+        return this.channel.remoteAddress();
+    }
+    // Spigot End
 }

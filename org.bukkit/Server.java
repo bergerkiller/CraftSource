@@ -13,6 +13,10 @@ import java.util.UUID;
 import java.util.logging.Logger;
 
 import org.bukkit.Warning.WarningState;
+import org.bukkit.boss.BarColor;
+import org.bukkit.boss.BarFlag;
+import org.bukkit.boss.BarStyle;
+import org.bukkit.boss.BossBar;
 import org.bukkit.command.CommandException;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.ConsoleCommandSender;
@@ -38,6 +42,7 @@ import org.bukkit.util.CachedServerIcon;
 
 import com.avaje.ebean.config.ServerConfig;
 import com.google.common.collect.ImmutableList;
+import org.bukkit.generator.ChunkGenerator;
 
 import org.bukkit.inventory.ItemFactory;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -91,7 +96,7 @@ public interface Server extends PluginMessageRecipient {
      * compatibility. It will not exist at runtime and should not be used
      * under any circumstances.
      *
-     * @Deprecated superseded by {@link #getOnlinePlayers()}
+     * @deprecated superseded by {@link #getOnlinePlayers()}
      * @return an array of Players that are currently online
      */
     @Deprecated
@@ -575,7 +580,10 @@ public interface Server extends PluginMessageRecipient {
      *
      * @return true if exact location locations are used for spawning, false
      *     for vanilla collision detection or otherwise
+     *
+     * @deprecated non standard and unused feature.
      */
+    @Deprecated
     public boolean useExactLoginLocation();
 
     /**
@@ -735,7 +743,7 @@ public interface Server extends PluginMessageRecipient {
     /**
      * Creates an empty inventory with the specified type and title. If the type
      * is {@link InventoryType#CHEST}, the new inventory has a size of 27;
-     * otherwise the new inventory has the normal size for its type.<br />
+     * otherwise the new inventory has the normal size for its type.<br>
      * It should be noted that some inventory types do not support titles and
      * may not render with said titles on the Minecraft client.
      *
@@ -912,7 +920,31 @@ public interface Server extends PluginMessageRecipient {
     public int getIdleTimeout();
 
     /**
+     * Create a ChunkData for use in a generator.
+     * 
+     * See {@link ChunkGenerator#generateChunkData(org.bukkit.World, java.util.Random, int, int, org.bukkit.generator.ChunkGenerator.BiomeGrid)}
+     * 
+     * @param world the world to create the ChunkData for
+     * @return a new ChunkData for the world
+     * 
+     */
+    public ChunkGenerator.ChunkData createChunkData(World world);
+
+    /**
+     * Creates a boss bar instance to display to players. The progress
+     * defaults to 1.0
+     *
+     * @param title the title of the boss bar
+     * @param color the color of the boss bar
+     * @param style the style of the boss bar
+     * @param flags an optional list of flags to set on the boss bar
+     * @return the created boss bar
+     */
+    BossBar createBossBar(String title, BarColor color, BarStyle style, BarFlag ...flags);
+
+    /**
      * @see UnsafeValues
+     * @return the unsafe values instance
      */
     @Deprecated
     UnsafeValues getUnsafe();

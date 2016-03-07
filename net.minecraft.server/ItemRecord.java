@@ -1,36 +1,41 @@
 package net.minecraft.server;
 
-import java.util.HashMap;
+import com.google.common.collect.Maps;
 import java.util.Map;
 
 public class ItemRecord extends Item {
 
-    private static final Map b = new HashMap();
-    public final String a;
+    private static final Map<SoundEffect, ItemRecord> a = Maps.newHashMap();
+    private final SoundEffect b;
+    private final String c;
 
-    protected ItemRecord(String s) {
-        this.a = s;
+    protected ItemRecord(String s, SoundEffect soundeffect) {
+        this.c = "item.record." + s + ".desc";
+        this.b = soundeffect;
         this.maxStackSize = 1;
         this.a(CreativeModeTab.f);
-        b.put(s, this);
+        ItemRecord.a.put(this.b, this);
     }
 
-    public boolean interactWith(ItemStack itemstack, EntityHuman entityhuman, World world, int i, int j, int k, int l, float f, float f1, float f2) {
-        if (world.getType(i, j, k) == Blocks.JUKEBOX && world.getData(i, j, k) == 0) {
-            if (world.isStatic) {
-                return true;
-            } else {
-                ((BlockJukeBox) Blocks.JUKEBOX).b(world, i, j, k, itemstack);
-                world.a((EntityHuman) null, 1005, i, j, k, Item.getId(this));
+    public EnumInteractionResult a(ItemStack itemstack, EntityHuman entityhuman, World world, BlockPosition blockposition, EnumHand enumhand, EnumDirection enumdirection, float f, float f1, float f2) {
+        IBlockData iblockdata = world.getType(blockposition);
+
+        if (iblockdata.getBlock() == Blocks.JUKEBOX && !((Boolean) iblockdata.get(BlockJukeBox.HAS_RECORD)).booleanValue()) {
+            if (!world.isClientSide) {
+                if (true) return EnumInteractionResult.SUCCESS; // CraftBukkit - handled in ItemStack
+                ((BlockJukeBox) Blocks.JUKEBOX).a(world, blockposition, iblockdata, itemstack);
+                world.a((EntityHuman) null, 1010, blockposition, Item.getId(this));
                 --itemstack.count;
-                return true;
+                entityhuman.b(StatisticList.Z);
             }
+
+            return EnumInteractionResult.SUCCESS;
         } else {
-            return false;
+            return EnumInteractionResult.PASS;
         }
     }
 
-    public EnumItemRarity f(ItemStack itemstack) {
+    public EnumItemRarity g(ItemStack itemstack) {
         return EnumItemRarity.RARE;
     }
 }

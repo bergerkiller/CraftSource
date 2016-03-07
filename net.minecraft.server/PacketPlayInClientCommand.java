@@ -1,32 +1,37 @@
 package net.minecraft.server;
 
-public class PacketPlayInClientCommand extends Packet {
+import java.io.IOException;
 
-    private EnumClientCommand a;
+public class PacketPlayInClientCommand implements Packet<PacketListenerPlayIn> {
+
+    private PacketPlayInClientCommand.EnumClientCommand a;
 
     public PacketPlayInClientCommand() {}
 
-    public PacketPlayInClientCommand(EnumClientCommand enumclientcommand) {
-        this.a = enumclientcommand;
+    public PacketPlayInClientCommand(PacketPlayInClientCommand.EnumClientCommand packetplayinclientcommand_enumclientcommand) {
+        this.a = packetplayinclientcommand_enumclientcommand;
     }
 
-    public void a(PacketDataSerializer packetdataserializer) {
-        this.a = EnumClientCommand.a()[packetdataserializer.readByte() % EnumClientCommand.a().length];
+    public void a(PacketDataSerializer packetdataserializer) throws IOException {
+        this.a = (PacketPlayInClientCommand.EnumClientCommand) packetdataserializer.a(PacketPlayInClientCommand.EnumClientCommand.class);
     }
 
-    public void b(PacketDataSerializer packetdataserializer) {
-        packetdataserializer.writeByte(EnumClientCommand.a(this.a));
+    public void b(PacketDataSerializer packetdataserializer) throws IOException {
+        packetdataserializer.a((Enum) this.a);
     }
 
-    public void a(PacketPlayInListener packetplayinlistener) {
-        packetplayinlistener.a(this);
+    public void a(PacketListenerPlayIn packetlistenerplayin) {
+        packetlistenerplayin.a(this);
     }
 
-    public EnumClientCommand c() {
+    public PacketPlayInClientCommand.EnumClientCommand a() {
         return this.a;
     }
 
-    public void handle(PacketListener packetlistener) {
-        this.a((PacketPlayInListener) packetlistener);
+    public static enum EnumClientCommand {
+
+        PERFORM_RESPAWN, REQUEST_STATS, OPEN_INVENTORY_ACHIEVEMENT;
+
+        private EnumClientCommand() {}
     }
 }

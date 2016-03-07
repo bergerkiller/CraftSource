@@ -2,26 +2,40 @@ package net.minecraft.server;
 
 public class EntityDamageSource extends DamageSource {
 
-    protected Entity p;
+    protected Entity s;
+    private boolean t = false;
 
     public EntityDamageSource(String s, Entity entity) {
         super(s);
-        this.p = entity;
+        this.s = entity;
+    }
+
+    public EntityDamageSource w() {
+        this.t = true;
+        return this;
+    }
+
+    public boolean x() {
+        return this.t;
     }
 
     public Entity getEntity() {
-        return this.p;
+        return this.s;
     }
 
     public IChatBaseComponent getLocalizedDeathMessage(EntityLiving entityliving) {
-        ItemStack itemstack = this.p instanceof EntityLiving ? ((EntityLiving) this.p).be() : null;
+        ItemStack itemstack = this.s instanceof EntityLiving ? ((EntityLiving) this.s).getItemInMainHand() : null;
         String s = "death.attack." + this.translationIndex;
         String s1 = s + ".item";
 
-        return itemstack != null && itemstack.hasName() && LocaleI18n.c(s1) ? new ChatMessage(s1, new Object[] { entityliving.getScoreboardDisplayName(), this.p.getScoreboardDisplayName(), itemstack.E()}) : new ChatMessage(s, new Object[] { entityliving.getScoreboardDisplayName(), this.p.getScoreboardDisplayName()});
+        return itemstack != null && itemstack.hasName() && LocaleI18n.c(s1) ? new ChatMessage(s1, new Object[] { entityliving.getScoreboardDisplayName(), this.s.getScoreboardDisplayName(), itemstack.B()}) : new ChatMessage(s, new Object[] { entityliving.getScoreboardDisplayName(), this.s.getScoreboardDisplayName()});
     }
 
     public boolean r() {
-        return this.p != null && this.p instanceof EntityLiving && !(this.p instanceof EntityHuman);
+        return this.s != null && this.s instanceof EntityLiving && !(this.s instanceof EntityHuman);
+    }
+
+    public Vec3D v() {
+        return new Vec3D(this.s.locX, this.s.locY, this.s.locZ);
     }
 }

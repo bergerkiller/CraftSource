@@ -3,109 +3,59 @@ package net.minecraft.server;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 public class WorldLoader implements Convertable {
 
-    private static final Logger b = LogManager.getLogger();
+    private static final Logger c = LogManager.getLogger();
     protected final File a;
+    protected final DataConverterManager b;
 
-    public WorldLoader(File file1) {
-        if (!file1.exists()) {
-            file1.mkdirs();
+    public WorldLoader(File file, DataConverterManager dataconvertermanager) {
+        this.b = dataconvertermanager;
+        if (!file.exists()) {
+            file.mkdirs();
         }
 
-        this.a = file1;
+        this.a = file;
     }
-
-    public void d() {}
 
     public WorldData c(String s) {
-        File file1 = new File(this.a, s);
+        File file = new File(this.a, s);
 
-        if (!file1.exists()) {
+        if (!file.exists()) {
             return null;
         } else {
-            File file2 = new File(file1, "level.dat");
-            NBTTagCompound nbttagcompound;
-            NBTTagCompound nbttagcompound1;
+            File file1 = new File(file, "level.dat");
 
-            if (file2.exists()) {
-                try {
-                    nbttagcompound = NBTCompressedStreamTools.a((InputStream) (new FileInputStream(file2)));
-                    nbttagcompound1 = nbttagcompound.getCompound("Data");
-                    return new WorldData(nbttagcompound1);
-                } catch (Exception exception) {
-                    b.error("Exception reading " + file2, exception);
+            if (file1.exists()) {
+                WorldData worlddata = a(file1, this.b);
+
+                if (worlddata != null) {
+                    return worlddata;
                 }
             }
 
-            file2 = new File(file1, "level.dat_old");
-            if (file2.exists()) {
-                try {
-                    nbttagcompound = NBTCompressedStreamTools.a((InputStream) (new FileInputStream(file2)));
-                    nbttagcompound1 = nbttagcompound.getCompound("Data");
-                    return new WorldData(nbttagcompound1);
-                } catch (Exception exception1) {
-                    b.error("Exception reading " + file2, exception1);
-                }
-            }
-
-            return null;
+            file1 = new File(file, "level.dat_old");
+            return file1.exists() ? a(file1, this.b) : null;
         }
     }
 
-    public boolean e(String s) {
-        File file1 = new File(this.a, s);
+    public static WorldData a(File file, DataConverterManager dataconvertermanager) {
+        try {
+            NBTTagCompound nbttagcompound = NBTCompressedStreamTools.a((InputStream) (new FileInputStream(file)));
+            NBTTagCompound nbttagcompound1 = nbttagcompound.getCompound("Data");
 
-        if (!file1.exists()) {
-            return true;
-        } else {
-            b.info("Deleting level " + s);
-
-            for (int i = 1; i <= 5; ++i) {
-                b.info("Attempt " + i + "...");
-                if (a(file1.listFiles())) {
-                    break;
-                }
-
-                b.warn("Unsuccessful in deleting contents.");
-                if (i < 5) {
-                    try {
-                        Thread.sleep(500L);
-                    } catch (InterruptedException interruptedexception) {
-                        ;
-                    }
-                }
-            }
-
-            return file1.delete();
+            return new WorldData(dataconvertermanager.a((DataConverterType) DataConverterTypes.LEVEL, nbttagcompound1));
+        } catch (Exception exception) {
+            WorldLoader.c.error("Exception reading " + file, exception);
+            return null;
         }
-    }
-
-    protected static boolean a(File[] afile) {
-        for (int i = 0; i < afile.length; ++i) {
-            File file1 = afile[i];
-
-            b.debug("Deleting " + file1);
-            if (file1.isDirectory() && !a(file1.listFiles())) {
-                b.warn("Couldn\'t delete directory " + file1);
-                return false;
-            }
-
-            if (!file1.delete()) {
-                b.warn("Couldn\'t delete file " + file1);
-                return false;
-            }
-        }
-
-        return true;
     }
 
     public IDataManager a(String s, boolean flag) {
-        return new WorldNBTStorage(this.a, s, flag);
+        return new WorldNBTStorage(this.a, s, flag, this.b);
     }
 
     public boolean isConvertable(String s) {
@@ -114,5 +64,9 @@ public class WorldLoader implements Convertable {
 
     public boolean convert(String s, IProgressUpdate iprogressupdate) {
         return false;
+    }
+
+    public File b(String s, String s1) {
+        return new File(new File(this.a, s), s1);
     }
 }

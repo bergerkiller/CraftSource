@@ -1,8 +1,6 @@
 package net.minecraft.server;
 
-public interface IRegistry {
+public interface IRegistry<K, V> extends Iterable<V> {
 
-    Object get(Object object);
-
-    void a(Object object, Object object1);
+    void a(K k0, V v0);
 }

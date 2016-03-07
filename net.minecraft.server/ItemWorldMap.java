@@ -1,8 +1,8 @@
 package net.minecraft.server;
 
-import net.minecraft.util.com.google.common.collect.HashMultiset;
-import net.minecraft.util.com.google.common.collect.Iterables;
-import net.minecraft.util.com.google.common.collect.Multisets;
+import com.google.common.collect.HashMultiset;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Multisets;
 
 // CraftBukkit start
 import org.bukkit.Bukkit;
@@ -20,15 +20,12 @@ public class ItemWorldMap extends ItemWorldMapBase {
         String s = "map_" + itemstack.getData();
         WorldMap worldmap = (WorldMap) worldMain.a(WorldMap.class, s); // CraftBukkit - use primary world for maps
 
-        if (worldmap == null && !world.isStatic) {
+        if (worldmap == null && !world.isClientSide) {
             itemstack.setData(worldMain.b("map")); // CraftBukkit - use primary world for maps
             s = "map_" + itemstack.getData();
             worldmap = new WorldMap(s);
             worldmap.scale = 3;
-            int i = 128 * (1 << worldmap.scale);
-
-            worldmap.centerX = Math.round((float) world.getWorldData().c() / (float) i) * i;
-            worldmap.centerZ = Math.round((float) (world.getWorldData().e() / i)) * i;
+            worldmap.a((double) world.getWorldData().b(), (double) world.getWorldData().d(), worldmap.scale);
             worldmap.map = (byte) ((WorldServer) world).dimension; // CraftBukkit - fixes Bukkit multiworld maps
             worldmap.c();
             worldMain.a(s, (PersistentBase) worldmap); // CraftBukkit - use primary world for maps
@@ -52,81 +49,81 @@ public class ItemWorldMap extends ItemWorldMapBase {
             int i1 = MathHelper.floor(entity.locZ - (double) k) / i + 64;
             int j1 = 128 / i;
 
-            if (world.worldProvider.g) {
+            if (world.worldProvider.m()) {
                 j1 /= 2;
             }
 
-            WorldMapHumanTracker worldmaphumantracker = worldmap.a((EntityHuman) entity);
+            WorldMap.WorldMapHumanTracker worldmap_worldmaphumantracker = worldmap.a((EntityHuman) entity);
 
-            ++worldmaphumantracker.d;
+            ++worldmap_worldmaphumantracker.b;
+            boolean flag = false;
 
             for (int k1 = l - j1 + 1; k1 < l + j1; ++k1) {
-                if ((k1 & 15) == (worldmaphumantracker.d & 15)) {
-                    int l1 = 255;
-                    int i2 = 0;
+                if ((k1 & 15) == (worldmap_worldmaphumantracker.b & 15) || flag) {
+                    flag = false;
                     double d0 = 0.0D;
 
-                    for (int j2 = i1 - j1 - 1; j2 < i1 + j1; ++j2) {
-                        if (k1 >= 0 && j2 >= -1 && k1 < 128 && j2 < 128) {
-                            int k2 = k1 - l;
-                            int l2 = j2 - i1;
-                            boolean flag = k2 * k2 + l2 * l2 > (j1 - 2) * (j1 - 2);
-                            int i3 = (j / i + k1 - 64) * i;
-                            int j3 = (k / i + j2 - 64) * i;
+                    for (int l1 = i1 - j1 - 1; l1 < i1 + j1; ++l1) {
+                        if (k1 >= 0 && l1 >= -1 && k1 < 128 && l1 < 128) {
+                            int i2 = k1 - l;
+                            int j2 = l1 - i1;
+                            boolean flag1 = i2 * i2 + j2 * j2 > (j1 - 2) * (j1 - 2);
+                            int k2 = (j / i + k1 - 64) * i;
+                            int l2 = (k / i + l1 - 64) * i;
                             HashMultiset hashmultiset = HashMultiset.create();
-                            Chunk chunk = world.getChunkAtWorldCoords(i3, j3);
+                            Chunk chunk = world.getChunkAtWorldCoords(new BlockPosition(k2, 0, l2));
 
                             if (!chunk.isEmpty()) {
-                                int k3 = i3 & 15;
-                                int l3 = j3 & 15;
-                                int i4 = 0;
+                                int i3 = k2 & 15;
+                                int j3 = l2 & 15;
+                                int k3 = 0;
                                 double d1 = 0.0D;
-                                int j4;
 
-                                if (world.worldProvider.g) {
-                                    j4 = i3 + j3 * 231871;
-                                    j4 = j4 * j4 * 31287121 + j4 * 11;
-                                    if ((j4 >> 20 & 1) == 0) {
-                                        hashmultiset.add(Blocks.DIRT.f(0), 10);
+                                if (world.worldProvider.m()) {
+                                    int l3 = k2 + l2 * 231871;
+
+                                    l3 = l3 * l3 * 31287121 + l3 * 11;
+                                    if ((l3 >> 20 & 1) == 0) {
+                                        hashmultiset.add(Blocks.DIRT.getBlockData().set(BlockDirt.VARIANT, BlockDirt.EnumDirtVariant.DIRT).g(), 10);
                                     } else {
-                                        hashmultiset.add(Blocks.STONE.f(0), 100);
+                                        hashmultiset.add(Blocks.STONE.getBlockData().set(BlockStone.VARIANT, BlockStone.EnumStoneVariant.STONE).g(), 100);
                                     }
 
                                     d1 = 100.0D;
                                 } else {
-                                    for (j4 = 0; j4 < i; ++j4) {
-                                        for (int k4 = 0; k4 < i; ++k4) {
-                                            int l4 = chunk.b(j4 + k3, k4 + l3) + 1;
-                                            Block block = Blocks.AIR;
-                                            int i5 = 0;
+                                    BlockPosition.MutableBlockPosition blockposition_mutableblockposition = new BlockPosition.MutableBlockPosition();
 
-                                            if (l4 > 1) {
+                                    for (int i4 = 0; i4 < i; ++i4) {
+                                        for (int j4 = 0; j4 < i; ++j4) {
+                                            int k4 = chunk.b(i4 + i3, j4 + j3) + 1;
+                                            IBlockData iblockdata = Blocks.AIR.getBlockData();
+
+                                            if (k4 > 1) {
                                                 do {
-                                                    --l4;
-                                                    block = chunk.getType(j4 + k3, l4, k4 + l3);
-                                                    i5 = chunk.getData(j4 + k3, l4, k4 + l3);
-                                                } while (block.f(i5) == MaterialMapColor.b && l4 > 0);
+                                                    --k4;
+                                                    iblockdata = chunk.getBlockData(blockposition_mutableblockposition.c(i4 + i3, k4, j4 + j3));
+                                                } while (iblockdata.g() == MaterialMapColor.b && k4 > 0);
 
-                                                if (l4 > 0 && block.getMaterial().isLiquid()) {
-                                                    int j5 = l4 - 1;
+                                                if (k4 > 0 && iblockdata.getMaterial().isLiquid()) {
+                                                    int l4 = k4 - 1;
 
-                                                    Block block1;
+                                                    IBlockData iblockdata1;
 
                                                     do {
-                                                        block1 = chunk.getType(j4 + k3, j5--, k4 + l3);
-                                                        ++i4;
-                                                    } while (j5 > 0 && block1.getMaterial().isLiquid());
+                                                        iblockdata1 = chunk.a(i4 + i3, l4--, j4 + j3);
+                                                        ++k3;
+                                                    } while (l4 > 0 && iblockdata1.getMaterial().isLiquid());
                                                 }
                                             }
 
-                                            d1 += (double) l4 / (double) (i * i);
-                                            hashmultiset.add(block.f(i5));
+                                            d1 += (double) k4 / (double) (i * i);
+                                            hashmultiset.add(iblockdata.g());
                                         }
                                     }
                                 }
 
-                                i4 /= i * i;
-                                double d2 = (d1 - d0) * 4.0D / (double) (i + 4) + ((double) (k1 + j2 & 1) - 0.5D) * 0.4D;
+                                k3 /= i * i;
+                                double d2 = (d1 - d0) * 4.0D / (double) (i + 4) + ((double) (k1 + l1 & 1) - 0.5D) * 0.4D;
                                 byte b0 = 1;
 
                                 if (d2 > 0.6D) {
@@ -140,7 +137,7 @@ public class ItemWorldMap extends ItemWorldMapBase {
                                 MaterialMapColor materialmapcolor = (MaterialMapColor) Iterables.getFirst(Multisets.copyHighestCountFirst(hashmultiset), MaterialMapColor.b);
 
                                 if (materialmapcolor == MaterialMapColor.n) {
-                                    d2 = (double) i4 * 0.1D + (double) (k1 + j2 & 1) * 0.2D;
+                                    d2 = (double) k3 * 0.1D + (double) (k1 + l1 & 1) * 0.2D;
                                     b0 = 1;
                                     if (d2 < 0.5D) {
                                         b0 = 2;
@@ -152,36 +149,27 @@ public class ItemWorldMap extends ItemWorldMapBase {
                                 }
 
                                 d0 = d1;
-                                if (j2 >= 0 && k2 * k2 + l2 * l2 < j1 * j1 && (!flag || (k1 + j2 & 1) != 0)) {
-                                    byte b1 = worldmap.colors[k1 + j2 * 128];
+                                if (l1 >= 0 && i2 * i2 + j2 * j2 < j1 * j1 && (!flag1 || (k1 + l1 & 1) != 0)) {
+                                    byte b1 = worldmap.colors[k1 + l1 * 128];
                                     byte b2 = (byte) (materialmapcolor.M * 4 + b0);
 
                                     if (b1 != b2) {
-                                        if (l1 > j2) {
-                                            l1 = j2;
-                                        }
-
-                                        if (i2 < j2) {
-                                            i2 = j2;
-                                        }
-
-                                        worldmap.colors[k1 + j2 * 128] = b2;
+                                        worldmap.colors[k1 + l1 * 128] = b2;
+                                        worldmap.flagDirty(k1, l1);
+                                        flag = true;
                                     }
                                 }
                             }
                         }
                     }
-
-                    if (l1 <= i2) {
-                        worldmap.flagDirty(k1, l1, i2);
-                    }
                 }
             }
+
         }
     }
 
     public void a(ItemStack itemstack, World world, Entity entity, int i, boolean flag) {
-        if (!world.isStatic) {
+        if (!world.isClientSide) {
             WorldMap worldmap = this.getSavedMap(itemstack, world);
 
             if (entity instanceof EntityHuman) {
@@ -190,42 +178,68 @@ public class ItemWorldMap extends ItemWorldMapBase {
                 worldmap.a(entityhuman, itemstack);
             }
 
-            if (flag) {
+            if (flag || entity instanceof EntityHuman && ((EntityHuman) entity).getItemInOffHand() == itemstack) {
                 this.a(world, entity, worldmap);
             }
+
         }
     }
 
-    public Packet c(ItemStack itemstack, World world, EntityHuman entityhuman) {
-        byte[] abyte = this.getSavedMap(itemstack, world).getUpdatePacket(itemstack, world, entityhuman);
-
-        return abyte == null ? null : new PacketPlayOutMap(itemstack.getData(), abyte);
+    public Packet<?> a(ItemStack itemstack, World world, EntityHuman entityhuman) {
+        return this.getSavedMap(itemstack, world).a(itemstack, world, entityhuman);
     }
 
-    public void d(ItemStack itemstack, World world, EntityHuman entityhuman) {
-        if (itemstack.hasTag() && itemstack.getTag().getBoolean("map_is_scaling")) {
-            WorldMap worldmap = Items.MAP.getSavedMap(itemstack, world);
+    public void b(ItemStack itemstack, World world, EntityHuman entityhuman) {
+        NBTTagCompound nbttagcompound = itemstack.getTag();
 
-            world = world.getServer().getServer().worlds.get(0); // CraftBukkit - use primary world for maps
-
-            itemstack.setData(world.b("map"));
-            WorldMap worldmap1 = new WorldMap("map_" + itemstack.getData());
-
-            worldmap1.scale = (byte) (worldmap.scale + 1);
-            if (worldmap1.scale > 4) {
-                worldmap1.scale = 4;
+        if (nbttagcompound != null) {
+            if (nbttagcompound.hasKeyOfType("map_scale_direction", 99)) {
+                a(itemstack, world, nbttagcompound.getInt("map_scale_direction"));
+                nbttagcompound.remove("map_scale_direction");
+            } else if (nbttagcompound.getBoolean("map_tracking_position")) {
+                b(itemstack, world);
+                nbttagcompound.remove("map_tracking_position");
             }
-
-            worldmap1.centerX = worldmap.centerX;
-            worldmap1.centerZ = worldmap.centerZ;
-            worldmap1.map = worldmap.map;
-            worldmap1.c();
-            world.a("map_" + itemstack.getData(), (PersistentBase) worldmap1);
-
-            // CraftBukkit start
-            MapInitializeEvent event = new MapInitializeEvent(worldmap1.mapView);
-            Bukkit.getServer().getPluginManager().callEvent(event);
-            // CraftBukkit end
         }
+
+    }
+
+    protected static void a(ItemStack itemstack, World world, int i) {
+        WorldMap worldmap = Items.FILLED_MAP.getSavedMap(itemstack, world);
+
+        world = world.getServer().getServer().worlds.get(0); // CraftBukkit - use primary world for maps
+        itemstack.setData(world.b("map"));
+        WorldMap worldmap1 = new WorldMap("map_" + itemstack.getData());
+
+        worldmap1.scale = (byte) MathHelper.clamp(worldmap.scale + i, 0, 4);
+        worldmap1.track = worldmap.track;
+        worldmap1.a((double) worldmap.centerX, (double) worldmap.centerZ, worldmap1.scale);
+        worldmap1.map = worldmap.map;
+        worldmap1.c();
+        world.a("map_" + itemstack.getData(), (PersistentBase) worldmap1);
+        // CraftBukkit start
+        MapInitializeEvent event = new MapInitializeEvent(worldmap1.mapView);
+        Bukkit.getServer().getPluginManager().callEvent(event);
+        // CraftBukkit end
+    }
+
+    protected static void b(ItemStack itemstack, World world) {
+        WorldMap worldmap = Items.FILLED_MAP.getSavedMap(itemstack, world);
+
+        world = world.getServer().getServer().worlds.get(0); // CraftBukkit - use primary world for maps
+        itemstack.setData(world.b("map"));
+        WorldMap worldmap1 = new WorldMap("map_" + itemstack.getData());
+
+        worldmap1.track = true;
+        worldmap1.centerX = worldmap.centerX;
+        worldmap1.centerZ = worldmap.centerZ;
+        worldmap1.scale = worldmap.scale;
+        worldmap1.map = worldmap.map;
+        worldmap1.c();
+        world.a("map_" + itemstack.getData(), (PersistentBase) worldmap1);
+        // CraftBukkit start
+        MapInitializeEvent event = new MapInitializeEvent(worldmap1.mapView);
+        Bukkit.getServer().getPluginManager().callEvent(event);
+        // CraftBukkit end
     }
 }

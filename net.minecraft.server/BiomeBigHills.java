@@ -4,82 +4,71 @@ import java.util.Random;
 
 public class BiomeBigHills extends BiomeBase {
 
-    private WorldGenerator aC;
-    private WorldGenTaiga2 aD;
-    private int aE;
-    private int aF;
-    private int aG;
-    private int aH;
+    private WorldGenerator y;
+    private WorldGenTaiga2 z;
+    private final BiomeBigHills.Type A;
 
-    protected BiomeBigHills(int i, boolean flag) {
-        super(i);
-        this.aC = new WorldGenMinable(Blocks.MONSTER_EGGS, 8);
-        this.aD = new WorldGenTaiga2(false);
-        this.aE = 0;
-        this.aF = 1;
-        this.aG = 2;
-        this.aH = this.aE;
-        if (flag) {
-            this.ar.x = 3;
-            this.aH = this.aF;
+    protected BiomeBigHills(BiomeBigHills.Type biomebighills_type, BiomeBase.a biomebase_a) {
+        super(biomebase_a);
+        this.y = new WorldGenMinable(Blocks.MONSTER_EGG.getBlockData().set(BlockMonsterEggs.VARIANT, BlockMonsterEggs.EnumMonsterEggVarient.STONE), 9);
+        this.z = new WorldGenTaiga2(false);
+        if (biomebighills_type == BiomeBigHills.Type.EXTRA_TREES) {
+            this.t.z = 3;
         }
+
+        this.A = biomebighills_type;
     }
 
     public WorldGenTreeAbstract a(Random random) {
-        return (WorldGenTreeAbstract) (random.nextInt(3) > 0 ? this.aD : super.a(random));
+        return (WorldGenTreeAbstract) (random.nextInt(3) > 0 ? this.z : super.a(random));
     }
 
-    public void a(World world, Random random, int i, int j) {
-        super.a(world, random, i, j);
-        int k = 3 + random.nextInt(6);
+    public void a(World world, Random random, BlockPosition blockposition) {
+        super.a(world, random, blockposition);
+        int i = 3 + random.nextInt(6);
 
+        int j;
+        int k;
         int l;
-        int i1;
-        int j1;
 
-        for (l = 0; l < k; ++l) {
-            i1 = i + random.nextInt(16);
-            j1 = random.nextInt(28) + 4;
-            int k1 = j + random.nextInt(16);
+        for (j = 0; j < i; ++j) {
+            k = random.nextInt(16);
+            l = random.nextInt(28) + 4;
+            int i1 = random.nextInt(16);
+            BlockPosition blockposition1 = blockposition.a(k, l, i1);
 
-            if (world.getType(i1, j1, k1) == Blocks.STONE) {
-                world.setTypeAndData(i1, j1, k1, Blocks.EMERALD_ORE, 0, 2);
+            if (world.getType(blockposition1).getBlock() == Blocks.STONE) {
+                world.setTypeAndData(blockposition1, Blocks.EMERALD_ORE.getBlockData(), 2);
             }
         }
 
-        for (k = 0; k < 7; ++k) {
-            l = i + random.nextInt(16);
-            i1 = random.nextInt(64);
-            j1 = j + random.nextInt(16);
-            this.aC.generate(world, random, l, i1, j1);
-        }
-    }
-
-    public void a(World world, Random random, Block[] ablock, byte[] abyte, int i, int j, double d0) {
-        this.ai = Blocks.GRASS;
-        this.aj = 0;
-        this.ak = Blocks.DIRT;
-        if ((d0 < -1.0D || d0 > 2.0D) && this.aH == this.aG) {
-            this.ai = Blocks.GRAVEL;
-            this.ak = Blocks.GRAVEL;
-        } else if (d0 > 1.0D && this.aH != this.aF) {
-            this.ai = Blocks.STONE;
-            this.ak = Blocks.STONE;
+        for (i = 0; i < 7; ++i) {
+            j = random.nextInt(16);
+            k = random.nextInt(64);
+            l = random.nextInt(16);
+            this.y.generate(world, random, blockposition.a(j, k, l));
         }
 
-        this.b(world, random, ablock, abyte, i, j, d0);
     }
 
-    private BiomeBigHills b(BiomeBase biomebase) {
-        this.aH = this.aG;
-        this.a(biomebase.ag, true);
-        this.a(biomebase.af + " M");
-        this.a(new BiomeTemperature(biomebase.am, biomebase.an));
-        this.a(biomebase.temperature, biomebase.humidity);
-        return this;
+    public void a(World world, Random random, ChunkSnapshot chunksnapshot, int i, int j, double d0) {
+        this.r = Blocks.GRASS.getBlockData();
+        this.s = Blocks.DIRT.getBlockData();
+        if ((d0 < -1.0D || d0 > 2.0D) && this.A == BiomeBigHills.Type.MUTATED) {
+            this.r = Blocks.GRAVEL.getBlockData();
+            this.s = Blocks.GRAVEL.getBlockData();
+        } else if (d0 > 1.0D && this.A != BiomeBigHills.Type.EXTRA_TREES) {
+            this.r = Blocks.STONE.getBlockData();
+            this.s = Blocks.STONE.getBlockData();
+        }
+
+        this.b(world, random, chunksnapshot, i, j, d0);
     }
 
-    protected BiomeBase k() {
-        return (new BiomeBigHills(this.id + 128, false)).b(this);
+    public static enum Type {
+
+        NORMAL, EXTRA_TREES, MUTATED;
+
+        private Type() {}
     }
 }

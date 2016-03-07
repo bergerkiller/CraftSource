@@ -1,6 +1,8 @@
 package net.minecraft.server;
 
-public class PacketPlayOutUpdateHealth extends Packet {
+import java.io.IOException;
+
+public class PacketPlayOutUpdateHealth implements Packet<PacketListenerPlayOut> {
 
     private float a;
     private int b;
@@ -14,23 +16,19 @@ public class PacketPlayOutUpdateHealth extends Packet {
         this.c = f1;
     }
 
-    public void a(PacketDataSerializer packetdataserializer) {
+    public void a(PacketDataSerializer packetdataserializer) throws IOException {
         this.a = packetdataserializer.readFloat();
-        this.b = packetdataserializer.readShort();
+        this.b = packetdataserializer.g();
         this.c = packetdataserializer.readFloat();
     }
 
-    public void b(PacketDataSerializer packetdataserializer) {
+    public void b(PacketDataSerializer packetdataserializer) throws IOException {
         packetdataserializer.writeFloat(this.a);
-        packetdataserializer.writeShort(this.b);
+        packetdataserializer.b(this.b);
         packetdataserializer.writeFloat(this.c);
     }
 
-    public void a(PacketPlayOutListener packetplayoutlistener) {
-        packetplayoutlistener.a(this);
-    }
-
-    public void handle(PacketListener packetlistener) {
-        this.a((PacketPlayOutListener) packetlistener);
+    public void a(PacketListenerPlayOut packetlistenerplayout) {
+        packetlistenerplayout.a(this);
     }
 }

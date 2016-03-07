@@ -6,21 +6,21 @@ public abstract class EntityGolem extends EntityCreature implements IAnimal {
         super(world);
     }
 
-    protected void b(float f) {}
+    public void e(float f, float f1) {}
 
-    protected String t() {
-        return "none";
+    protected SoundEffect G() {
+        return null;
     }
 
-    protected String aT() {
-        return "none";
+    protected SoundEffect bR() {
+        return null;
     }
 
-    protected String aU() {
-        return "none";
+    protected SoundEffect bS() {
+        return null;
     }
 
-    public int q() {
+    public int C() {
         return 120;
     }
 

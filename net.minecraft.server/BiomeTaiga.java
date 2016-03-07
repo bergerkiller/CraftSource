@@ -4,84 +4,86 @@ import java.util.Random;
 
 public class BiomeTaiga extends BiomeBase {
 
-    private static final WorldGenTaiga1 aC = new WorldGenTaiga1();
-    private static final WorldGenTaiga2 aD = new WorldGenTaiga2(false);
-    private static final WorldGenMegaTree aE = new WorldGenMegaTree(false, false);
-    private static final WorldGenMegaTree aF = new WorldGenMegaTree(false, true);
-    private static final WorldGenTaigaStructure aG = new WorldGenTaigaStructure(Blocks.MOSSY_COBBLESTONE, 0);
-    private int aH;
+    private static final WorldGenTaiga1 y = new WorldGenTaiga1();
+    private static final WorldGenTaiga2 z = new WorldGenTaiga2(false);
+    private static final WorldGenMegaTree A = new WorldGenMegaTree(false, false);
+    private static final WorldGenMegaTree B = new WorldGenMegaTree(false, true);
+    private static final WorldGenTaigaStructure C = new WorldGenTaigaStructure(Blocks.MOSSY_COBBLESTONE, 0);
+    private BiomeTaiga.Type D;
 
-    public BiomeTaiga(int i, int j) {
-        super(i);
-        this.aH = j;
-        this.at.add(new BiomeMeta(EntityWolf.class, 8, 4, 4));
-        this.ar.x = 10;
-        if (j != 1 && j != 2) {
-            this.ar.z = 1;
-            this.ar.B = 1;
+    public BiomeTaiga(BiomeTaiga.Type biometaiga_type, BiomeBase.a biomebase_a) {
+        super(biomebase_a);
+        this.D = biometaiga_type;
+        this.v.add(new BiomeBase.BiomeMeta(EntityWolf.class, 8, 4, 4));
+        this.v.add(new BiomeBase.BiomeMeta(EntityRabbit.class, 4, 2, 3));
+        this.t.z = 10;
+        if (biometaiga_type != BiomeTaiga.Type.MEGA && biometaiga_type != BiomeTaiga.Type.MEGA_SPRUCE) {
+            this.t.B = 1;
+            this.t.D = 1;
         } else {
-            this.ar.z = 7;
-            this.ar.A = 1;
-            this.ar.B = 3;
+            this.t.B = 7;
+            this.t.C = 1;
+            this.t.D = 3;
         }
+
     }
 
     public WorldGenTreeAbstract a(Random random) {
-        return (WorldGenTreeAbstract) ((this.aH == 1 || this.aH == 2) && random.nextInt(3) == 0 ? (this.aH != 2 && random.nextInt(13) != 0 ? aE : aF) : (random.nextInt(3) == 0 ? aC : aD));
+        return (WorldGenTreeAbstract) ((this.D == BiomeTaiga.Type.MEGA || this.D == BiomeTaiga.Type.MEGA_SPRUCE) && random.nextInt(3) == 0 ? (this.D != BiomeTaiga.Type.MEGA_SPRUCE && random.nextInt(13) != 0 ? BiomeTaiga.A : BiomeTaiga.B) : (random.nextInt(3) == 0 ? BiomeTaiga.y : BiomeTaiga.z));
     }
 
     public WorldGenerator b(Random random) {
-        return random.nextInt(5) > 0 ? new WorldGenGrass(Blocks.LONG_GRASS, 2) : new WorldGenGrass(Blocks.LONG_GRASS, 1);
+        return random.nextInt(5) > 0 ? new WorldGenGrass(BlockLongGrass.EnumTallGrassType.FERN) : new WorldGenGrass(BlockLongGrass.EnumTallGrassType.GRASS);
     }
 
-    public void a(World world, Random random, int i, int j) {
+    public void a(World world, Random random, BlockPosition blockposition) {
+        int i;
+        int j;
         int k;
         int l;
-        int i1;
-        int j1;
 
-        if (this.aH == 1 || this.aH == 2) {
-            k = random.nextInt(3);
+        if (this.D == BiomeTaiga.Type.MEGA || this.D == BiomeTaiga.Type.MEGA_SPRUCE) {
+            i = random.nextInt(3);
 
-            for (l = 0; l < k; ++l) {
-                i1 = i + random.nextInt(16) + 8;
-                j1 = j + random.nextInt(16) + 8;
-                int k1 = world.getHighestBlockYAt(i1, j1);
+            for (j = 0; j < i; ++j) {
+                k = random.nextInt(16) + 8;
+                l = random.nextInt(16) + 8;
+                BlockPosition blockposition1 = world.getHighestBlockYAt(blockposition.a(k, 0, l));
 
-                aG.generate(world, random, i1, k1, j1);
+                BiomeTaiga.C.generate(world, random, blockposition1);
             }
         }
 
-        ae.a(3);
+        BiomeTaiga.m.a(BlockTallPlant.EnumTallFlowerVariants.FERN);
 
-        for (k = 0; k < 7; ++k) {
-            l = i + random.nextInt(16) + 8;
-            i1 = j + random.nextInt(16) + 8;
-            j1 = random.nextInt(world.getHighestBlockYAt(l, i1) + 32);
-            ae.generate(world, random, l, j1, i1);
+        for (i = 0; i < 7; ++i) {
+            j = random.nextInt(16) + 8;
+            k = random.nextInt(16) + 8;
+            l = random.nextInt(world.getHighestBlockYAt(blockposition.a(j, 0, k)).getY() + 32);
+            BiomeTaiga.m.generate(world, random, blockposition.a(j, l, k));
         }
 
-        super.a(world, random, i, j);
+        super.a(world, random, blockposition);
     }
 
-    public void a(World world, Random random, Block[] ablock, byte[] abyte, int i, int j, double d0) {
-        if (this.aH == 1 || this.aH == 2) {
-            this.ai = Blocks.GRASS;
-            this.aj = 0;
-            this.ak = Blocks.DIRT;
+    public void a(World world, Random random, ChunkSnapshot chunksnapshot, int i, int j, double d0) {
+        if (this.D == BiomeTaiga.Type.MEGA || this.D == BiomeTaiga.Type.MEGA_SPRUCE) {
+            this.r = Blocks.GRASS.getBlockData();
+            this.s = Blocks.DIRT.getBlockData();
             if (d0 > 1.75D) {
-                this.ai = Blocks.DIRT;
-                this.aj = 1;
+                this.r = Blocks.DIRT.getBlockData().set(BlockDirt.VARIANT, BlockDirt.EnumDirtVariant.COARSE_DIRT);
             } else if (d0 > -0.95D) {
-                this.ai = Blocks.DIRT;
-                this.aj = 2;
+                this.r = Blocks.DIRT.getBlockData().set(BlockDirt.VARIANT, BlockDirt.EnumDirtVariant.PODZOL);
             }
         }
 
-        this.b(world, random, ablock, abyte, i, j, d0);
+        this.b(world, random, chunksnapshot, i, j, d0);
     }
 
-    protected BiomeBase k() {
-        return this.id == BiomeBase.MEGA_TAIGA.id ? (new BiomeTaiga(this.id + 128, 2)).a(5858897, true).a("Mega Spruce Taiga").a(5159473).a(0.25F, 0.8F).a(new BiomeTemperature(this.am, this.an)) : super.k();
+    public static enum Type {
+
+        NORMAL, MEGA, MEGA_SPRUCE;
+
+        private Type() {}
     }
 }

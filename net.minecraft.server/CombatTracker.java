@@ -1,12 +1,12 @@
 package net.minecraft.server;
 
-import java.util.ArrayList;
+import com.google.common.collect.Lists;
 import java.util.Iterator;
 import java.util.List;
 
 public class CombatTracker {
 
-    private final List a = new ArrayList();
+    private final List<CombatEntry> a = Lists.newArrayList();
     private final EntityLiving b;
     private int c;
     private int d;
@@ -20,21 +20,22 @@ public class CombatTracker {
     }
 
     public void a() {
-        this.j();
-        if (this.b.h_()) {
-            Block block = this.b.world.getType(MathHelper.floor(this.b.locX), MathHelper.floor(this.b.boundingBox.b), MathHelper.floor(this.b.locZ));
+        this.k();
+        if (this.b.n_()) {
+            Block block = this.b.world.getType(new BlockPosition(this.b.locX, this.b.getBoundingBox().b, this.b.locZ)).getBlock();
 
             if (block == Blocks.LADDER) {
                 this.h = "ladder";
             } else if (block == Blocks.VINE) {
                 this.h = "vines";
             }
-        } else if (this.b.M()) {
+        } else if (this.b.isInWater()) {
             this.h = "water";
         }
+
     }
 
-    public void a(DamageSource damagesource, float f, float f1) {
+    public void trackDamage(DamageSource damagesource, float f, float f1) {
         this.g();
         this.a();
         CombatEntry combatentry = new CombatEntry(damagesource, this.b.ticksLived, f, f1, this.h, this.b.fallDistance);
@@ -46,15 +47,16 @@ public class CombatTracker {
             this.f = true;
             this.d = this.b.ticksLived;
             this.e = this.d;
-            this.b.bu();
+            this.b.enterCombat();
         }
+
     }
 
-    public IChatBaseComponent b() {
-        if (this.a.size() == 0) {
+    public IChatBaseComponent getDeathMessage() {
+        if (this.a.isEmpty()) {
             return new ChatMessage("death.attack.generic", new Object[] { this.b.getScoreboardDisplayName()});
         } else {
-            CombatEntry combatentry = this.i();
+            CombatEntry combatentry = this.j();
             CombatEntry combatentry1 = (CombatEntry) this.a.get(this.a.size() - 1);
             IChatBaseComponent ichatbasecomponent = combatentry1.h();
             Entity entity = combatentry1.a().getEntity();
@@ -66,18 +68,18 @@ public class CombatTracker {
                 if (combatentry.a() != DamageSource.FALL && combatentry.a() != DamageSource.OUT_OF_WORLD) {
                     if (ichatbasecomponent1 != null && (ichatbasecomponent == null || !ichatbasecomponent1.equals(ichatbasecomponent))) {
                         Entity entity1 = combatentry.a().getEntity();
-                        ItemStack itemstack = entity1 instanceof EntityLiving ? ((EntityLiving) entity1).be() : null;
+                        ItemStack itemstack = entity1 instanceof EntityLiving ? ((EntityLiving) entity1).getItemInMainHand() : null;
 
                         if (itemstack != null && itemstack.hasName()) {
-                            object = new ChatMessage("death.fell.assist.item", new Object[] { this.b.getScoreboardDisplayName(), ichatbasecomponent1, itemstack.E()});
+                            object = new ChatMessage("death.fell.assist.item", new Object[] { this.b.getScoreboardDisplayName(), ichatbasecomponent1, itemstack.B()});
                         } else {
                             object = new ChatMessage("death.fell.assist", new Object[] { this.b.getScoreboardDisplayName(), ichatbasecomponent1});
                         }
                     } else if (ichatbasecomponent != null) {
-                        ItemStack itemstack1 = entity instanceof EntityLiving ? ((EntityLiving) entity).be() : null;
+                        ItemStack itemstack1 = entity instanceof EntityLiving ? ((EntityLiving) entity).getItemInMainHand() : null;
 
                         if (itemstack1 != null && itemstack1.hasName()) {
-                            object = new ChatMessage("death.fell.finish.item", new Object[] { this.b.getScoreboardDisplayName(), ichatbasecomponent, itemstack1.E()});
+                            object = new ChatMessage("death.fell.finish.item", new Object[] { this.b.getScoreboardDisplayName(), ichatbasecomponent, itemstack1.B()});
                         } else {
                             object = new ChatMessage("death.fell.finish", new Object[] { this.b.getScoreboardDisplayName(), ichatbasecomponent});
                         }
@@ -123,34 +125,35 @@ public class CombatTracker {
         }
     }
 
-    private CombatEntry i() {
+    private CombatEntry j() {
         CombatEntry combatentry = null;
         CombatEntry combatentry1 = null;
-        byte b0 = 0;
         float f = 0.0F;
+        float f1 = 0.0F;
 
         for (int i = 0; i < this.a.size(); ++i) {
             CombatEntry combatentry2 = (CombatEntry) this.a.get(i);
             CombatEntry combatentry3 = i > 0 ? (CombatEntry) this.a.get(i - 1) : null;
 
-            if ((combatentry2.a() == DamageSource.FALL || combatentry2.a() == DamageSource.OUT_OF_WORLD) && combatentry2.i() > 0.0F && (combatentry == null || combatentry2.i() > f)) {
+            if ((combatentry2.a() == DamageSource.FALL || combatentry2.a() == DamageSource.OUT_OF_WORLD) && combatentry2.j() > 0.0F && (combatentry == null || combatentry2.j() > f1)) {
                 if (i > 0) {
                     combatentry = combatentry3;
                 } else {
                     combatentry = combatentry2;
                 }
 
-                f = combatentry2.i();
+                f1 = combatentry2.j();
             }
 
-            if (combatentry2.g() != null && (combatentry1 == null || combatentry2.c() > (float) b0)) {
+            if (combatentry2.g() != null && (combatentry1 == null || combatentry2.c() > f)) {
                 combatentry1 = combatentry2;
+                f = combatentry2.c();
             }
         }
 
-        if (f > 5.0F && combatentry != null) {
+        if (f1 > 5.0F && combatentry != null) {
             return combatentry;
-        } else if (b0 > 5 && combatentry1 != null) {
+        } else if (f > 5.0F && combatentry1 != null) {
             return combatentry1;
         } else {
             return null;
@@ -161,7 +164,11 @@ public class CombatTracker {
         return combatentry.g() == null ? "generic" : combatentry.g();
     }
 
-    private void j() {
+    public int f() {
+        return this.f ? this.b.ticksLived - this.d : this.e - this.d;
+    }
+
+    private void k() {
         this.h = null;
     }
 
@@ -175,10 +182,15 @@ public class CombatTracker {
             this.f = false;
             this.e = this.b.ticksLived;
             if (flag) {
-                this.b.bv();
+                this.b.exitCombat();
             }
 
             this.a.clear();
         }
+
+    }
+
+    public EntityLiving h() {
+        return this.b;
     }
 }

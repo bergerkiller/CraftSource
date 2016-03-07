@@ -2,19 +2,19 @@ package net.minecraft.server;
 
 import java.util.List;
 
-public interface ICommand extends Comparable {
+public interface ICommand extends Comparable<ICommand> {
 
     String getCommand();
 
-    String c(ICommandListener icommandlistener);
+    String getUsage(ICommandListener icommandlistener);
 
-    List b();
+    List<String> b();
 
-    void execute(ICommandListener icommandlistener, String[] astring);
+    void execute(MinecraftServer minecraftserver, ICommandListener icommandlistener, String[] astring) throws CommandException;
 
-    boolean canUse(ICommandListener icommandlistener);
+    boolean canUse(MinecraftServer minecraftserver, ICommandListener icommandlistener);
 
-    List tabComplete(ICommandListener icommandlistener, String[] astring);
+    List<String> tabComplete(MinecraftServer minecraftserver, ICommandListener icommandlistener, String[] astring, BlockPosition blockposition);
 
     boolean isListStart(String[] astring, int i);
 }

@@ -2,10 +2,10 @@ package net.minecraft.server;
 
 public class ItemBlock extends Item {
 
-    protected final Block block;
+    protected final Block a;
 
     public ItemBlock(Block block) {
-        this.block = block;
+        this.a = block;
     }
 
     public ItemBlock b(String s) {
@@ -13,69 +13,83 @@ public class ItemBlock extends Item {
         return this;
     }
 
-    public boolean interactWith(ItemStack itemstack, EntityHuman entityhuman, World world, int i, int j, int k, int l, float f, float f1, float f2) {
-        Block block = world.getType(i, j, k);
+    public EnumInteractionResult a(ItemStack itemstack, EntityHuman entityhuman, World world, BlockPosition blockposition, EnumHand enumhand, EnumDirection enumdirection, float f, float f1, float f2) {
+        IBlockData iblockdata = world.getType(blockposition);
+        Block block = iblockdata.getBlock();
 
-        if (block == Blocks.SNOW && (world.getData(i, j, k) & 7) < 1) {
-            l = 1;
-        } else if (block != Blocks.VINE && block != Blocks.LONG_GRASS && block != Blocks.DEAD_BUSH) {
-            if (l == 0) {
-                --j;
-            }
-
-            if (l == 1) {
-                ++j;
-            }
-
-            if (l == 2) {
-                --k;
-            }
-
-            if (l == 3) {
-                ++k;
-            }
-
-            if (l == 4) {
-                --i;
-            }
-
-            if (l == 5) {
-                ++i;
-            }
+        if (!block.a((IBlockAccess) world, blockposition)) {
+            blockposition = blockposition.shift(enumdirection);
         }
 
-        if (itemstack.count == 0) {
-            return false;
-        } else if (!entityhuman.a(i, j, k, l, itemstack)) {
-            return false;
-        } else if (j == 255 && this.block.getMaterial().isBuildable()) {
-            return false;
-        } else if (world.mayPlace(this.block, i, j, k, false, l, entityhuman, itemstack)) {
-            int i1 = this.filterData(itemstack.getData());
-            int j1 = this.block.getPlacedData(world, i, j, k, l, f, f1, f2, i1);
+        if (itemstack.count != 0 && entityhuman.a(blockposition, enumdirection, itemstack) && world.a(this.a, blockposition, false, enumdirection, (Entity) null, itemstack)) {
+            int i = this.filterData(itemstack.getData());
+            IBlockData iblockdata1 = this.a.getPlacedState(world, blockposition, enumdirection, f, f1, f2, i, entityhuman);
 
-            if (world.setTypeAndData(i, j, k, this.block, j1, 3)) {
-                if (world.getType(i, j, k) == this.block) {
-                    this.block.postPlace(world, i, j, k, entityhuman, itemstack);
-                    this.block.postPlace(world, i, j, k, j1);
+            if (world.setTypeAndData(blockposition, iblockdata1, 11)) {
+                iblockdata1 = world.getType(blockposition);
+                if (iblockdata1.getBlock() == this.a) {
+                    a(world, entityhuman, blockposition, itemstack);
+                    this.a.postPlace(world, blockposition, iblockdata1, entityhuman, itemstack);
                 }
 
-                world.makeSound((double) ((float) i + 0.5F), (double) ((float) j + 0.5F), (double) ((float) k + 0.5F), this.block.stepSound.getPlaceSound(), (this.block.stepSound.getVolume1() + 1.0F) / 2.0F, this.block.stepSound.getVolume2() * 0.8F);
+                SoundEffectType soundeffecttype = this.a.w();
+
+                world.a(entityhuman, blockposition, soundeffecttype.e(), SoundCategory.BLOCKS, (soundeffecttype.a() + 1.0F) / 2.0F, soundeffecttype.b() * 0.8F);
                 --itemstack.count;
             }
 
-            return true;
+            return EnumInteractionResult.SUCCESS;
         } else {
+            return EnumInteractionResult.FAIL;
+        }
+    }
+
+    public static boolean a(World world, EntityHuman entityhuman, BlockPosition blockposition, ItemStack itemstack) {
+        MinecraftServer minecraftserver = world.getMinecraftServer();
+
+        if (minecraftserver == null) {
+            return false;
+        } else {
+            if (itemstack.hasTag() && itemstack.getTag().hasKeyOfType("BlockEntityTag", 10)) {
+                TileEntity tileentity = world.getTileEntity(blockposition);
+
+                if (tileentity != null) {
+                    if (!world.isClientSide && tileentity.isFilteredNBT() && (entityhuman == null || !minecraftserver.getPlayerList().isOp(entityhuman.getProfile()))) {
+                        return false;
+                    }
+
+                    NBTTagCompound nbttagcompound = new NBTTagCompound();
+                    NBTTagCompound nbttagcompound1 = (NBTTagCompound) nbttagcompound.clone();
+
+                    tileentity.save(nbttagcompound);
+                    NBTTagCompound nbttagcompound2 = (NBTTagCompound) itemstack.getTag().get("BlockEntityTag");
+
+                    nbttagcompound.a(nbttagcompound2);
+                    nbttagcompound.setInt("x", blockposition.getX());
+                    nbttagcompound.setInt("y", blockposition.getY());
+                    nbttagcompound.setInt("z", blockposition.getZ());
+                    if (!nbttagcompound.equals(nbttagcompound1)) {
+                        tileentity.a(nbttagcompound);
+                        tileentity.update();
+                        return true;
+                    }
+                }
+            }
+
             return false;
         }
     }
 
-    public String a(ItemStack itemstack) {
-        return this.block.a();
+    public String f_(ItemStack itemstack) {
+        return this.a.a();
     }
 
     public String getName() {
-        return this.block.a();
+        return this.a.a();
+    }
+
+    public Block d() {
+        return this.a;
     }
 
     public Item c(String s) {

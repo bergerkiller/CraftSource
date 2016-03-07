@@ -21,11 +21,14 @@ public final class CraftItemFactory implements ItemFactory {
         instance = new CraftItemFactory();
         ConfigurationSerialization.registerClass(CraftMetaItem.SerializableMeta.class);
         KNOWN_NBT_ATTRIBUTE_NAMES = ImmutableSet.<String>builder()
+            .add("generic.armor")
             .add("generic.attackDamage")
             .add("generic.followRange")
             .add("generic.knockbackResistance")
             .add("generic.maxHealth")
             .add("generic.movementSpeed")
+            .add("generic.attackSpeed")
+            .add("generic.luck")
             .add("horse.jumpStrength")
             .add("zombie.spawnReinforcements")
             .build();
@@ -62,8 +65,9 @@ public final class CraftItemFactory implements ItemFactory {
         case AIR:
             return null;
         case WRITTEN_BOOK:
+            return meta instanceof CraftMetaBookSigned ? meta : new CraftMetaBookSigned(meta);
         case BOOK_AND_QUILL:
-            return meta instanceof CraftMetaBook ? meta : new CraftMetaBook(meta);
+            return meta != null && meta.getClass().equals(CraftMetaBook.class) ? meta : new CraftMetaBook(meta);
         case SKULL_ITEM:
             return meta instanceof CraftMetaSkull ? meta : new CraftMetaSkull(meta);
         case LEATHER_HELMET:
@@ -72,6 +76,9 @@ public final class CraftItemFactory implements ItemFactory {
         case LEATHER_BOOTS:
             return meta instanceof CraftMetaLeatherArmor ? meta : new CraftMetaLeatherArmor(meta);
         case POTION:
+        case SPLASH_POTION:
+        case LINGERING_POTION:
+        case TIPPED_ARROW:
             return meta instanceof CraftMetaPotion ? meta : new CraftMetaPotion(meta);
         case MAP:
             return meta instanceof CraftMetaMap ? meta : new CraftMetaMap(meta);
@@ -81,6 +88,31 @@ public final class CraftItemFactory implements ItemFactory {
             return meta instanceof CraftMetaCharge ? meta : new CraftMetaCharge(meta);
         case ENCHANTED_BOOK:
             return meta instanceof CraftMetaEnchantedBook ? meta : new CraftMetaEnchantedBook(meta);
+        case BANNER:
+            return meta instanceof CraftMetaBanner ? meta : new CraftMetaBanner(meta);
+        case FURNACE:
+        case CHEST:
+        case TRAPPED_CHEST:
+        case JUKEBOX:
+        case DISPENSER:
+        case DROPPER:
+        case SIGN:
+        case MOB_SPAWNER:
+        case NOTE_BLOCK:
+        case PISTON_BASE:
+        case BREWING_STAND_ITEM:
+        case ENCHANTMENT_TABLE:
+        case COMMAND:
+        case COMMAND_REPEATING:
+        case COMMAND_CHAIN:
+        case BEACON:
+        case DAYLIGHT_DETECTOR:
+        case DAYLIGHT_DETECTOR_INVERTED:
+        case HOPPER:
+        case REDSTONE_COMPARATOR:
+        case FLOWER_POT_ITEM:
+        case SHIELD:
+            return new CraftMetaBlockState(meta, material);
         default:
             return new CraftMetaItem(meta);
         }

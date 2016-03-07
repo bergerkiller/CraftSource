@@ -1,20 +1,30 @@
 package net.minecraft.server;
 
 import java.util.Comparator;
-import java.util.List;
 
 public class ScoreboardScore {
 
-    public static final Comparator a = new ScoreboardComparator();
+    public static final Comparator<ScoreboardScore> a = new Comparator() {
+        public int a(ScoreboardScore scoreboardscore, ScoreboardScore scoreboardscore1) {
+            return scoreboardscore.getScore() > scoreboardscore1.getScore() ? 1 : (scoreboardscore.getScore() < scoreboardscore1.getScore() ? -1 : scoreboardscore1.getPlayerName().compareToIgnoreCase(scoreboardscore.getPlayerName()));
+        }
+
+        public int compare(Object object, Object object1) {
+            return this.a((ScoreboardScore) object, (ScoreboardScore) object1);
+        }
+    };
     private final Scoreboard b;
     private final ScoreboardObjective c;
     private final String playerName;
     private int score;
+    private boolean f;
+    private boolean g;
 
     public ScoreboardScore(Scoreboard scoreboard, ScoreboardObjective scoreboardobjective, String s) {
         this.b = scoreboard;
         this.c = scoreboardobjective;
         this.playerName = s;
+        this.g = true;
     }
 
     public void addScore(int i) {
@@ -49,9 +59,11 @@ public class ScoreboardScore {
         int j = this.score;
 
         this.score = i;
-        if (j != i) {
+        if (j != i || this.g) {
+            this.g = false;
             this.f().handleScoreChanged(this);
         }
+
     }
 
     public ScoreboardObjective getObjective() {
@@ -66,7 +78,11 @@ public class ScoreboardScore {
         return this.b;
     }
 
-    public void updateForList(List list) {
-        this.setScore(this.c.getCriteria().getScoreModifier(list));
+    public boolean g() {
+        return this.f;
+    }
+
+    public void a(boolean flag) {
+        this.f = flag;
     }
 }

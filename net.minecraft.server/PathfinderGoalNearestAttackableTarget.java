@@ -1,52 +1,110 @@
 package net.minecraft.server;
 
+import com.google.common.base.Function;
+import com.google.common.base.Predicate;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
-public class PathfinderGoalNearestAttackableTarget extends PathfinderGoalTarget {
+public class PathfinderGoalNearestAttackableTarget<T extends EntityLiving> extends PathfinderGoalTarget {
 
-    private final Class a;
-    private final int b;
-    private final DistanceComparator e;
-    private final IEntitySelector f;
-    private EntityLiving g;
+    protected final Class<T> a;
+    private final int i;
+    protected final PathfinderGoalNearestAttackableTarget.DistanceComparator b;
+    protected final Predicate<? super T> c;
+    protected T d;
 
-    public PathfinderGoalNearestAttackableTarget(EntityCreature entitycreature, Class oclass, int i, boolean flag) {
-        this(entitycreature, oclass, i, flag, false);
+    public PathfinderGoalNearestAttackableTarget(EntityCreature entitycreature, Class<T> oclass, boolean flag) {
+        this(entitycreature, oclass, flag, false);
     }
 
-    public PathfinderGoalNearestAttackableTarget(EntityCreature entitycreature, Class oclass, int i, boolean flag, boolean flag1) {
-        this(entitycreature, oclass, i, flag, flag1, (IEntitySelector) null);
+    public PathfinderGoalNearestAttackableTarget(EntityCreature entitycreature, Class<T> oclass, boolean flag, boolean flag1) {
+        this(entitycreature, oclass, 10, flag, flag1, (Predicate) null);
     }
 
-    public PathfinderGoalNearestAttackableTarget(EntityCreature entitycreature, Class oclass, int i, boolean flag, boolean flag1, IEntitySelector ientityselector) {
+    public PathfinderGoalNearestAttackableTarget(EntityCreature entitycreature, Class<T> oclass, int i, boolean flag, boolean flag1, final Predicate<? super T> predicate) {
         super(entitycreature, flag, flag1);
         this.a = oclass;
-        this.b = i;
-        this.e = new DistanceComparator(entitycreature);
+        this.i = i;
+        this.b = new PathfinderGoalNearestAttackableTarget.DistanceComparator(entitycreature);
         this.a(1);
-        this.f = new EntitySelectorNearestAttackableTarget(this, ientityselector);
+        this.c = new Predicate() {
+            public boolean a(T t0) {
+                return t0 == null ? false : (predicate != null && !predicate.apply(t0) ? false : (!IEntitySelector.e.apply(t0) ? false : PathfinderGoalNearestAttackableTarget.this.a(t0, false)));
+            }
+
+            public boolean apply(Object object) {
+                return this.a((T) object); // CraftBukkit - fix decompile error
+            }
+        };
     }
 
     public boolean a() {
-        if (this.b > 0 && this.c.aI().nextInt(this.b) != 0) {
+        if (this.i > 0 && this.e.getRandom().nextInt(this.i) != 0) {
             return false;
-        } else {
-            double d0 = this.f();
-            List list = this.c.world.a(this.a, this.c.boundingBox.grow(d0, 4.0D, d0), this.f);
+        } else if (this.a != EntityHuman.class && this.a != EntityPlayer.class) {
+            List list = this.e.world.a(this.a, this.a(this.f()), this.c);
 
-            Collections.sort(list, this.e);
             if (list.isEmpty()) {
                 return false;
             } else {
-                this.g = (EntityLiving) list.get(0);
+                Collections.sort(list, this.b);
+                this.d = (T) list.get(0); // CraftBukkit - fix decompile error
                 return true;
             }
+        } else {
+            this.d = (T) this.e.world.a(this.e.locX, this.e.locY + (double) this.e.getHeadHeight(), this.e.locZ, this.f(), this.f(), new Function<EntityHuman, Double>() { // CraftBukkit - fix decompile error
+                public Double a(EntityHuman entityhuman) {
+                    ItemStack itemstack = entityhuman.getEquipment(EnumItemSlot.HEAD);
+
+                    if (itemstack != null && itemstack.getItem() == Items.SKULL) {
+                        int i = itemstack.h();
+                        boolean flag = PathfinderGoalNearestAttackableTarget.this.e instanceof EntitySkeleton && ((EntitySkeleton) PathfinderGoalNearestAttackableTarget.this.e).getSkeletonType() == 0 && i == 0;
+                        boolean flag1 = PathfinderGoalNearestAttackableTarget.this.e instanceof EntityZombie && i == 2;
+                        boolean flag2 = PathfinderGoalNearestAttackableTarget.this.e instanceof EntityCreeper && i == 4;
+
+                        if (flag || flag1 || flag2) {
+                            return Double.valueOf(0.5D);
+                        }
+                    }
+
+                    return Double.valueOf(1.0D);
+                }
+
+                public Double apply(EntityHuman object) { // CraftBukkit - fix decompile error
+                    return this.a((EntityHuman) object);
+                }
+            }, (Predicate<EntityHuman>) this.c); // CraftBukkit - fix decompile error
+            return this.d != null;
         }
     }
 
+    protected AxisAlignedBB a(double d0) {
+        return this.e.getBoundingBox().grow(d0, 4.0D, d0);
+    }
+
     public void c() {
-        this.c.setGoalTarget(this.g);
+        this.e.setGoalTarget(this.d, d instanceof EntityPlayer ? org.bukkit.event.entity.EntityTargetEvent.TargetReason.CLOSEST_PLAYER : org.bukkit.event.entity.EntityTargetEvent.TargetReason.CLOSEST_ENTITY, true); // Craftbukkit - reason
         super.c();
+    }
+
+    public static class DistanceComparator implements Comparator<Entity> {
+
+        private final Entity a;
+
+        public DistanceComparator(Entity entity) {
+            this.a = entity;
+        }
+
+        public int a(Entity entity, Entity entity1) {
+            double d0 = this.a.h(entity);
+            double d1 = this.a.h(entity1);
+
+            return d0 < d1 ? -1 : (d0 > d1 ? 1 : 0);
+        }
+
+        public int compare(Entity object, Entity object1) { // CraftBukkit - fix decompile error
+            return this.a((Entity) object, (Entity) object1);
+        }
     }
 }

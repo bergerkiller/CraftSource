@@ -12,25 +12,25 @@ public interface IMinecraftServer {
 
     String b();
 
-    String y();
+    String d_();
 
-    int z();
+    int e_();
 
-    String A();
+    String f_();
 
     String getVersion();
 
-    int C();
+    int H();
 
-    int D();
+    int I();
 
     String[] getPlayers();
 
-    String O();
+    String S();
 
     String getPlugins();
 
-    String g(String s);
+    String executeRemoteCommand(String s);
 
     boolean isDebugging();
 
@@ -38,7 +38,7 @@ public interface IMinecraftServer {
 
     void warning(String s);
 
-    void h(String s);
+    void g(String s);
 
-    void i(String s);
+    void h(String s);
 }

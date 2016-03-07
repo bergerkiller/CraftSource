@@ -9,8 +9,10 @@ public class EntityCow extends EntityAnimal {
 
     public EntityCow(World world) {
         super(world);
-        this.a(0.9F, 1.3F);
-        this.getNavigation().a(true);
+        this.setSize(0.9F, 1.4F);
+    }
+
+    protected void r() {
         this.goalSelector.a(0, new PathfinderGoalFloat(this));
         this.goalSelector.a(1, new PathfinderGoalPanic(this, 2.0D));
         this.goalSelector.a(2, new PathfinderGoalBreed(this, 1.0D));
@@ -21,87 +23,67 @@ public class EntityCow extends EntityAnimal {
         this.goalSelector.a(7, new PathfinderGoalRandomLookaround(this));
     }
 
-    public boolean bk() {
-        return true;
-    }
-
-    protected void aD() {
-        super.aD();
+    protected void initAttributes() {
+        super.initAttributes();
         this.getAttributeInstance(GenericAttributes.maxHealth).setValue(10.0D);
-        this.getAttributeInstance(GenericAttributes.d).setValue(0.20000000298023224D);
+        this.getAttributeInstance(GenericAttributes.MOVEMENT_SPEED).setValue(0.20000000298023224D);
     }
 
-    protected String t() {
-        return "mob.cow.say";
+    protected SoundEffect G() {
+        return SoundEffects.am;
     }
 
-    protected String aT() {
-        return "mob.cow.hurt";
+    protected SoundEffect bR() {
+        return SoundEffects.ao;
     }
 
-    protected String aU() {
-        return "mob.cow.hurt";
+    protected SoundEffect bS() {
+        return SoundEffects.an;
     }
 
-    protected void a(int i, int j, int k, Block block) {
-        this.makeSound("mob.cow.step", 0.15F, 1.0F);
+    protected void a(BlockPosition blockposition, Block block) {
+        this.a(SoundEffects.aq, 0.15F, 1.0F);
     }
 
-    protected float bf() {
+    protected float cd() {
         return 0.4F;
     }
 
-    protected Item getLoot() {
-        return Items.LEATHER;
+    protected MinecraftKey J() {
+        return LootTables.G;
     }
 
-    protected void dropDeathLoot(boolean flag, int i) {
-        int j = this.random.nextInt(3) + this.random.nextInt(1 + i);
-
-        int k;
-
-        for (k = 0; k < j; ++k) {
-            this.a(Items.LEATHER, 1);
-        }
-
-        j = this.random.nextInt(3) + 1 + this.random.nextInt(1 + i);
-
-        for (k = 0; k < j; ++k) {
-            if (this.isBurning()) {
-                this.a(Items.COOKED_BEEF, 1);
-            } else {
-                this.a(Items.RAW_BEEF, 1);
-            }
-        }
-    }
-
-    public boolean a(EntityHuman entityhuman) {
-        ItemStack itemstack = entityhuman.inventory.getItemInHand();
-
-        if (itemstack != null && itemstack.getItem() == Items.BUCKET && !entityhuman.abilities.canInstantlyBuild) {
+    public boolean a(EntityHuman entityhuman, EnumHand enumhand, ItemStack itemstack) {
+        if (itemstack != null && itemstack.getItem() == Items.BUCKET && !entityhuman.abilities.canInstantlyBuild && !this.isBaby()) {
             // CraftBukkit start - Got milk?
             org.bukkit.Location loc = this.getBukkitEntity().getLocation();
-            org.bukkit.event.player.PlayerBucketFillEvent event = CraftEventFactory.callPlayerBucketFillEvent(entityhuman, loc.getBlockX(), loc.getBlockY(), loc.getBlockZ(), -1, itemstack, Items.MILK_BUCKET);
+            org.bukkit.event.player.PlayerBucketFillEvent event = CraftEventFactory.callPlayerBucketFillEvent(entityhuman, loc.getBlockX(), loc.getBlockY(), loc.getBlockZ(), null, itemstack, Items.MILK_BUCKET);
 
             if (event.isCancelled()) {
                 return false;
             }
 
+            ItemStack result = CraftItemStack.asNMSCopy(event.getItemStack());
+            entityhuman.a(SoundEffects.ap, 1.0F, 1.0F);
             if (--itemstack.count <= 0) {
-                entityhuman.inventory.setItem(entityhuman.inventory.itemInHandIndex, CraftItemStack.asNMSCopy(event.getItemStack()));
-            } else if (!entityhuman.inventory.pickup(new ItemStack(Items.MILK_BUCKET))) {
-                entityhuman.drop(CraftItemStack.asNMSCopy(event.getItemStack()), false);
+                entityhuman.a(enumhand, result);
+            } else if (!entityhuman.inventory.pickup(result)) {
+                entityhuman.drop(result, false);
             }
             // CraftBukkit end
 
             return true;
         } else {
-            return super.a(entityhuman);
+            return super.a(entityhuman, enumhand, itemstack);
         }
     }
 
     public EntityCow b(EntityAgeable entityageable) {
         return new EntityCow(this.world);
+    }
+
+    public float getHeadHeight() {
+        return this.isBaby() ? this.length : 1.3F;
     }
 
     public EntityAgeable createChild(EntityAgeable entityageable) {

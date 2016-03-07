@@ -1,6 +1,8 @@
 package net.minecraft.server;
 
-public class PacketPlayOutSetSlot extends Packet {
+import java.io.IOException;
+
+public class PacketPlayOutSetSlot implements Packet<PacketListenerPlayOut> {
 
     private int a;
     private int b;
@@ -14,23 +16,19 @@ public class PacketPlayOutSetSlot extends Packet {
         this.c = itemstack == null ? null : itemstack.cloneItemStack();
     }
 
-    public void a(PacketPlayOutListener packetplayoutlistener) {
-        packetplayoutlistener.a(this);
+    public void a(PacketListenerPlayOut packetlistenerplayout) {
+        packetlistenerplayout.a(this);
     }
 
-    public void a(PacketDataSerializer packetdataserializer) {
+    public void a(PacketDataSerializer packetdataserializer) throws IOException {
         this.a = packetdataserializer.readByte();
         this.b = packetdataserializer.readShort();
-        this.c = packetdataserializer.c();
+        this.c = packetdataserializer.k();
     }
 
-    public void b(PacketDataSerializer packetdataserializer) {
+    public void b(PacketDataSerializer packetdataserializer) throws IOException {
         packetdataserializer.writeByte(this.a);
         packetdataserializer.writeShort(this.b);
         packetdataserializer.a(this.c);
-    }
-
-    public void handle(PacketListener packetlistener) {
-        this.a((PacketPlayOutListener) packetlistener);
     }
 }

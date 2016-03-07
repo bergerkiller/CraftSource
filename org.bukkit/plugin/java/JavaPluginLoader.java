@@ -52,6 +52,8 @@ public final class JavaPluginLoader implements PluginLoader {
 
     /**
      * This class was not meant to be constructed explicitly
+     * 
+     * @param instance the server instance
      */
     @Deprecated
     public JavaPluginLoader(Server instance) {
@@ -232,11 +234,12 @@ public final class JavaPluginLoader implements PluginLoader {
         Set<Method> methods;
         try {
             Method[] publicMethods = listener.getClass().getMethods();
-            methods = new HashSet<Method>(publicMethods.length, Float.MAX_VALUE);
+            Method[] privateMethods = listener.getClass().getDeclaredMethods();
+            methods = new HashSet<Method>(publicMethods.length + privateMethods.length, 1.0f);
             for (Method method : publicMethods) {
                 methods.add(method);
             }
-            for (Method method : listener.getClass().getDeclaredMethods()) {
+            for (Method method : privateMethods) {
                 methods.add(method);
             }
         } catch (NoClassDefFoundError e) {
@@ -247,6 +250,11 @@ public final class JavaPluginLoader implements PluginLoader {
         for (final Method method : methods) {
             final EventHandler eh = method.getAnnotation(EventHandler.class);
             if (eh == null) continue;
+            // Do not register bridge or synthetic methods to avoid event duplication
+            // Fixes SPIGOT-893
+            if (method.isBridge() || method.isSynthetic()) {
+                continue;
+            }
             final Class<?> checkClass;
             if (method.getParameterTypes().length != 1 || !Event.class.isAssignableFrom(checkClass = method.getParameterTypes()[0])) {
                 plugin.getLogger().severe(plugin.getDescription().getFullName() + " attempted to register an invalid EventHandler method signature \"" + method.toGenericString() + "\" in " + listener.getClass());

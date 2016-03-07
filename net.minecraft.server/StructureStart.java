@@ -1,12 +1,13 @@
 package net.minecraft.server;
 
+import com.google.common.collect.Lists;
 import java.util.Iterator;
-import java.util.LinkedList;
+import java.util.List;
 import java.util.Random;
 
 public abstract class StructureStart {
 
-    protected LinkedList a = new LinkedList();
+    protected List<StructurePiece> a = Lists.newLinkedList();
     protected StructureBoundingBox b;
     private int c;
     private int d;
@@ -18,11 +19,11 @@ public abstract class StructureStart {
         this.d = j;
     }
 
-    public StructureBoundingBox a() {
+    public StructureBoundingBox b() {
         return this.b;
     }
 
-    public LinkedList b() {
+    public List<StructurePiece> c() {
         return this.a;
     }
 
@@ -36,9 +37,10 @@ public abstract class StructureStart {
                 iterator.remove();
             }
         }
+
     }
 
-    protected void c() {
+    protected void d() {
         this.b = StructureBoundingBox.a();
         Iterator iterator = this.a.iterator();
 
@@ -47,6 +49,7 @@ public abstract class StructureStart {
 
             this.b.b(structurepiece.c());
         }
+
     }
 
     public NBTTagCompound a(int i, int j) {
@@ -55,7 +58,7 @@ public abstract class StructureStart {
         nbttagcompound.setString("id", WorldGenFactory.a(this));
         nbttagcompound.setInt("ChunkX", i);
         nbttagcompound.setInt("ChunkZ", j);
-        nbttagcompound.set("BB", this.b.h());
+        nbttagcompound.set("BB", this.b.g());
         NBTTagList nbttaglist = new NBTTagList();
         Iterator iterator = this.a.iterator();
 
@@ -91,8 +94,8 @@ public abstract class StructureStart {
     public void b(NBTTagCompound nbttagcompound) {}
 
     protected void a(World world, Random random, int i) {
-        int j = 63 - i;
-        int k = this.b.c() + 1;
+        int j = world.K() - i;
+        int k = this.b.d() + 1;
 
         if (k < j) {
             k += random.nextInt(j - k);
@@ -106,12 +109,13 @@ public abstract class StructureStart {
         while (iterator.hasNext()) {
             StructurePiece structurepiece = (StructurePiece) iterator.next();
 
-            structurepiece.c().a(0, l, 0);
+            structurepiece.a(0, l, 0);
         }
+
     }
 
     protected void a(World world, Random random, int i, int j) {
-        int k = j - i + 1 - this.b.c();
+        int k = j - i + 1 - this.b.d();
         boolean flag = true;
         int l;
 
@@ -129,13 +133,20 @@ public abstract class StructureStart {
         while (iterator.hasNext()) {
             StructurePiece structurepiece = (StructurePiece) iterator.next();
 
-            structurepiece.c().a(0, i1, 0);
+            structurepiece.a(0, i1, 0);
         }
+
     }
 
-    public boolean d() {
+    public boolean a() {
         return true;
     }
+
+    public boolean a(ChunkCoordIntPair chunkcoordintpair) {
+        return true;
+    }
+
+    public void b(ChunkCoordIntPair chunkcoordintpair) {}
 
     public int e() {
         return this.c;

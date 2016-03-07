@@ -4,140 +4,143 @@ import java.util.Calendar;
 
 public class EntityBat extends EntityAmbient {
 
-    private ChunkCoordinates h;
+    private static final DataWatcherObject<Byte> a = DataWatcher.a(EntityBat.class, DataWatcherRegistry.a);
+    private BlockPosition b;
 
     public EntityBat(World world) {
         super(world);
-        this.a(0.5F, 0.9F);
+        this.setSize(0.5F, 0.9F);
         this.setAsleep(true);
     }
 
-    protected void c() {
-        super.c();
-        this.datawatcher.a(16, new Byte((byte) 0));
+    protected void i() {
+        super.i();
+        this.datawatcher.register(EntityBat.a, Byte.valueOf((byte) 0));
     }
 
-    protected float bf() {
+    protected float cd() {
         return 0.1F;
     }
 
-    protected float bg() {
-        return super.bg() * 0.95F;
+    protected float ce() {
+        return super.ce() * 0.95F;
     }
 
-    protected String t() {
-        return this.isAsleep() && this.random.nextInt(4) != 0 ? null : "mob.bat.idle";
+    protected SoundEffect G() {
+        return this.isAsleep() && this.random.nextInt(4) != 0 ? null : SoundEffects.w;
     }
 
-    protected String aT() {
-        return "mob.bat.hurt";
+    protected SoundEffect bR() {
+        return SoundEffects.y;
     }
 
-    protected String aU() {
-        return "mob.bat.death";
+    protected SoundEffect bS() {
+        return SoundEffects.x;
     }
 
-    public boolean S() {
+    public boolean isCollidable() {
         return false;
     }
 
-    protected void o(Entity entity) {}
+    protected void C(Entity entity) {}
 
-    protected void bo() {}
+    protected void cn() {}
 
-    protected void aD() {
-        super.aD();
+    protected void initAttributes() {
+        super.initAttributes();
         this.getAttributeInstance(GenericAttributes.maxHealth).setValue(6.0D);
     }
 
     public boolean isAsleep() {
-        return (this.datawatcher.getByte(16) & 1) != 0;
+        return (((Byte) this.datawatcher.get(EntityBat.a)).byteValue() & 1) != 0;
     }
 
     public void setAsleep(boolean flag) {
-        byte b0 = this.datawatcher.getByte(16);
+        byte b0 = ((Byte) this.datawatcher.get(EntityBat.a)).byteValue();
 
         if (flag) {
-            this.datawatcher.watch(16, Byte.valueOf((byte) (b0 | 1)));
+            this.datawatcher.set(EntityBat.a, Byte.valueOf((byte) (b0 | 1)));
         } else {
-            this.datawatcher.watch(16, Byte.valueOf((byte) (b0 & -2)));
+            this.datawatcher.set(EntityBat.a, Byte.valueOf((byte) (b0 & -2)));
         }
+
     }
 
-    protected boolean bk() {
-        return true;
-    }
-
-    public void h() {
-        super.h();
+    public void m() {
+        super.m();
         if (this.isAsleep()) {
             this.motX = this.motY = this.motZ = 0.0D;
             this.locY = (double) MathHelper.floor(this.locY) + 1.0D - (double) this.length;
         } else {
             this.motY *= 0.6000000238418579D;
         }
+
     }
 
-    protected void bn() {
-        super.bn();
+    protected void M() {
+        super.M();
+        BlockPosition blockposition = new BlockPosition(this);
+        BlockPosition blockposition1 = blockposition.up();
+
         if (this.isAsleep()) {
-            if (!this.world.getType(MathHelper.floor(this.locX), (int) this.locY + 1, MathHelper.floor(this.locZ)).r()) {
+            if (!this.world.getType(blockposition1).l()) {
                 this.setAsleep(false);
-                this.world.a((EntityHuman) null, 1015, (int) this.locX, (int) this.locY, (int) this.locZ, 0);
+                this.world.a((EntityHuman) null, 1025, blockposition, 0);
             } else {
                 if (this.random.nextInt(200) == 0) {
                     this.aO = (float) this.random.nextInt(360);
                 }
 
-                if (this.world.findNearbyPlayer(this, 4.0D) != null) {
+                if (this.world.b(this, 4.0D) != null) {
                     this.setAsleep(false);
-                    this.world.a((EntityHuman) null, 1015, (int) this.locX, (int) this.locY, (int) this.locZ, 0);
+                    this.world.a((EntityHuman) null, 1025, blockposition, 0);
                 }
             }
         } else {
-            if (this.h != null && (!this.world.isEmpty(this.h.x, this.h.y, this.h.z) || this.h.y < 1)) {
-                this.h = null;
+            if (this.b != null && (!this.world.isEmpty(this.b) || this.b.getY() < 1)) {
+                this.b = null;
             }
 
-            if (this.h == null || this.random.nextInt(30) == 0 || this.h.e((int) this.locX, (int) this.locY, (int) this.locZ) < 4.0F) {
-                this.h = new ChunkCoordinates((int) this.locX + this.random.nextInt(7) - this.random.nextInt(7), (int) this.locY + this.random.nextInt(6) - 2, (int) this.locZ + this.random.nextInt(7) - this.random.nextInt(7));
+            if (this.b == null || this.random.nextInt(30) == 0 || this.b.distanceSquared((double) ((int) this.locX), (double) ((int) this.locY), (double) ((int) this.locZ)) < 4.0D) {
+                this.b = new BlockPosition((int) this.locX + this.random.nextInt(7) - this.random.nextInt(7), (int) this.locY + this.random.nextInt(6) - 2, (int) this.locZ + this.random.nextInt(7) - this.random.nextInt(7));
             }
 
-            double d0 = (double) this.h.x + 0.5D - this.locX;
-            double d1 = (double) this.h.y + 0.1D - this.locY;
-            double d2 = (double) this.h.z + 0.5D - this.locZ;
+            double d0 = (double) this.b.getX() + 0.5D - this.locX;
+            double d1 = (double) this.b.getY() + 0.1D - this.locY;
+            double d2 = (double) this.b.getZ() + 0.5D - this.locZ;
 
             this.motX += (Math.signum(d0) * 0.5D - this.motX) * 0.10000000149011612D;
             this.motY += (Math.signum(d1) * 0.699999988079071D - this.motY) * 0.10000000149011612D;
             this.motZ += (Math.signum(d2) * 0.5D - this.motZ) * 0.10000000149011612D;
-            float f = (float) (Math.atan2(this.motZ, this.motX) * 180.0D / 3.1415927410125732D) - 90.0F;
+            float f = (float) (MathHelper.b(this.motZ, this.motX) * 57.2957763671875D) - 90.0F;
             float f1 = MathHelper.g(f - this.yaw);
 
             this.be = 0.5F;
             this.yaw += f1;
-            if (this.random.nextInt(100) == 0 && this.world.getType(MathHelper.floor(this.locX), (int) this.locY + 1, MathHelper.floor(this.locZ)).r()) {
+            if (this.random.nextInt(100) == 0 && this.world.getType(blockposition1).l()) {
                 this.setAsleep(true);
             }
         }
+
     }
 
-    protected boolean g_() {
+    protected boolean playStepSound() {
         return false;
     }
 
-    protected void b(float f) {}
+    public void e(float f, float f1) {}
 
-    protected void a(double d0, boolean flag) {}
+    protected void a(double d0, boolean flag, IBlockData iblockdata, BlockPosition blockposition) {}
 
-    public boolean az() {
+    public boolean isIgnoreBlockTrigger() {
         return true;
     }
 
     public boolean damageEntity(DamageSource damagesource, float f) {
-        if (this.isInvulnerable()) {
+        if (this.isInvulnerable(damagesource)) {
             return false;
         } else {
-            if (!this.world.isStatic && this.isAsleep()) {
+            if (!this.world.isClientSide && this.isAsleep()) {
                 this.setAsleep(false);
             }
 
@@ -147,35 +150,42 @@ public class EntityBat extends EntityAmbient {
 
     public void a(NBTTagCompound nbttagcompound) {
         super.a(nbttagcompound);
-        this.datawatcher.watch(16, Byte.valueOf(nbttagcompound.getByte("BatFlags")));
+        this.datawatcher.set(EntityBat.a, Byte.valueOf(nbttagcompound.getByte("BatFlags")));
     }
 
     public void b(NBTTagCompound nbttagcompound) {
         super.b(nbttagcompound);
-        nbttagcompound.setByte("BatFlags", this.datawatcher.getByte(16));
+        nbttagcompound.setByte("BatFlags", ((Byte) this.datawatcher.get(EntityBat.a)).byteValue());
     }
 
-    public boolean canSpawn() {
-        int i = MathHelper.floor(this.boundingBox.b);
+    public boolean cF() {
+        BlockPosition blockposition = new BlockPosition(this.locX, this.getBoundingBox().b, this.locZ);
 
-        if (i >= 63) {
+        if (blockposition.getY() >= this.world.K()) {
             return false;
         } else {
-            int j = MathHelper.floor(this.locX);
-            int k = MathHelper.floor(this.locZ);
-            int l = this.world.getLightLevel(j, i, k);
+            int i = this.world.getLightLevel(blockposition);
             byte b0 = 4;
-            Calendar calendar = this.world.V();
 
-            if ((calendar.get(2) + 1 != 10 || calendar.get(5) < 20) && (calendar.get(2) + 1 != 11 || calendar.get(5) > 3)) {
-                if (this.random.nextBoolean()) {
-                    return false;
-                }
-            } else {
+            if (this.a(this.world.ac())) {
                 b0 = 7;
+            } else if (this.random.nextBoolean()) {
+                return false;
             }
 
-            return l > this.random.nextInt(b0) ? false : super.canSpawn();
+            return i > this.random.nextInt(b0) ? false : super.cF();
         }
+    }
+
+    private boolean a(Calendar calendar) {
+        return calendar.get(2) + 1 == 10 && calendar.get(5) >= 20 || calendar.get(2) + 1 == 11 && calendar.get(5) <= 3;
+    }
+
+    public float getHeadHeight() {
+        return this.length / 2.0F;
+    }
+
+    protected MinecraftKey J() {
+        return LootTables.ab;
     }
 }

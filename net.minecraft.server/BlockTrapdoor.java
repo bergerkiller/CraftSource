@@ -4,209 +4,251 @@ import org.bukkit.event.block.BlockRedstoneEvent; // CraftBukkit
 
 public class BlockTrapdoor extends Block {
 
+    public static final BlockStateDirection FACING = BlockFacingHorizontal.FACING;
+    public static final BlockStateBoolean OPEN = BlockStateBoolean.of("open");
+    public static final BlockStateEnum<BlockTrapdoor.EnumTrapdoorHalf> HALF = BlockStateEnum.of("half", BlockTrapdoor.EnumTrapdoorHalf.class);
+    protected static final AxisAlignedBB d = new AxisAlignedBB(0.0D, 0.0D, 0.0D, 0.1875D, 1.0D, 1.0D);
+    protected static final AxisAlignedBB e = new AxisAlignedBB(0.8125D, 0.0D, 0.0D, 1.0D, 1.0D, 1.0D);
+    protected static final AxisAlignedBB f = new AxisAlignedBB(0.0D, 0.0D, 0.0D, 1.0D, 1.0D, 0.1875D);
+    protected static final AxisAlignedBB g = new AxisAlignedBB(0.0D, 0.0D, 0.8125D, 1.0D, 1.0D, 1.0D);
+    protected static final AxisAlignedBB B = new AxisAlignedBB(0.0D, 0.0D, 0.0D, 1.0D, 0.1875D, 1.0D);
+    protected static final AxisAlignedBB C = new AxisAlignedBB(0.0D, 0.8125D, 0.0D, 1.0D, 1.0D, 1.0D);
+
     protected BlockTrapdoor(Material material) {
         super(material);
+        this.w(this.blockStateList.getBlockData().set(BlockTrapdoor.FACING, EnumDirection.NORTH).set(BlockTrapdoor.OPEN, Boolean.valueOf(false)).set(BlockTrapdoor.HALF, BlockTrapdoor.EnumTrapdoorHalf.BOTTOM));
         float f = 0.5F;
         float f1 = 1.0F;
 
-        this.a(0.5F - f, 0.0F, 0.5F - f, 0.5F + f, f1, 0.5F + f);
         this.a(CreativeModeTab.d);
     }
 
-    public boolean c() {
-        return false;
-    }
+    public AxisAlignedBB a(IBlockData iblockdata, IBlockAccess iblockaccess, BlockPosition blockposition) {
+        AxisAlignedBB axisalignedbb;
 
-    public boolean d() {
-        return false;
-    }
+        if (((Boolean) iblockdata.get(BlockTrapdoor.OPEN)).booleanValue()) {
+            switch (BlockTrapdoor.SyntheticClass_1.a[((EnumDirection) iblockdata.get(BlockTrapdoor.FACING)).ordinal()]) {
+            case 1:
+            default:
+                axisalignedbb = BlockTrapdoor.g;
+                break;
 
-    public boolean b(IBlockAccess iblockaccess, int i, int j, int k) {
-        return !d(iblockaccess.getData(i, j, k));
-    }
+            case 2:
+                axisalignedbb = BlockTrapdoor.f;
+                break;
 
-    public int b() {
-        return 0;
-    }
+            case 3:
+                axisalignedbb = BlockTrapdoor.e;
+                break;
 
-    public AxisAlignedBB a(World world, int i, int j, int k) {
-        this.updateShape(world, i, j, k);
-        return super.a(world, i, j, k);
-    }
-
-    public void updateShape(IBlockAccess iblockaccess, int i, int j, int k) {
-        this.b(iblockaccess.getData(i, j, k));
-    }
-
-    public void g() {
-        float f = 0.1875F;
-
-        this.a(0.0F, 0.5F - f / 2.0F, 0.0F, 1.0F, 0.5F + f / 2.0F, 1.0F);
-    }
-
-    public void b(int i) {
-        float f = 0.1875F;
-
-        if ((i & 8) != 0) {
-            this.a(0.0F, 1.0F - f, 0.0F, 1.0F, 1.0F, 1.0F);
+            case 4:
+                axisalignedbb = BlockTrapdoor.d;
+            }
+        } else if (iblockdata.get(BlockTrapdoor.HALF) == BlockTrapdoor.EnumTrapdoorHalf.TOP) {
+            axisalignedbb = BlockTrapdoor.C;
         } else {
-            this.a(0.0F, 0.0F, 0.0F, 1.0F, f, 1.0F);
+            axisalignedbb = BlockTrapdoor.B;
         }
 
-        if (d(i)) {
-            if ((i & 3) == 0) {
-                this.a(0.0F, 0.0F, 1.0F - f, 1.0F, 1.0F, 1.0F);
-            }
-
-            if ((i & 3) == 1) {
-                this.a(0.0F, 0.0F, 0.0F, 1.0F, 1.0F, f);
-            }
-
-            if ((i & 3) == 2) {
-                this.a(1.0F - f, 0.0F, 0.0F, 1.0F, 1.0F, 1.0F);
-            }
-
-            if ((i & 3) == 3) {
-                this.a(0.0F, 0.0F, 0.0F, f, 1.0F, 1.0F);
-            }
-        }
+        return axisalignedbb;
     }
 
-    public void attack(World world, int i, int j, int k, EntityHuman entityhuman) {}
+    public boolean b(IBlockData iblockdata) {
+        return false;
+    }
 
-    public boolean interact(World world, int i, int j, int k, EntityHuman entityhuman, int l, float f, float f1, float f2) {
+    public boolean c(IBlockData iblockdata) {
+        return false;
+    }
+
+    public boolean b(IBlockAccess iblockaccess, BlockPosition blockposition) {
+        return !((Boolean) iblockaccess.getType(blockposition).get(BlockTrapdoor.OPEN)).booleanValue();
+    }
+
+    public boolean interact(World world, BlockPosition blockposition, IBlockData iblockdata, EntityHuman entityhuman, EnumHand enumhand, ItemStack itemstack, EnumDirection enumdirection, float f, float f1, float f2) {
         if (this.material == Material.ORE) {
             return true;
         } else {
-            int i1 = world.getData(i, j, k);
-
-            world.setData(i, j, k, i1 ^ 4, 2);
-            world.a(entityhuman, 1003, i, j, k, 0);
+            iblockdata = iblockdata.a((IBlockState) BlockTrapdoor.OPEN);
+            world.setTypeAndData(blockposition, iblockdata, 2);
+            this.a(entityhuman, world, blockposition, ((Boolean) iblockdata.get(BlockTrapdoor.OPEN)).booleanValue());
             return true;
         }
     }
 
-    public void setOpen(World world, int i, int j, int k, boolean flag) {
-        int l = world.getData(i, j, k);
-        boolean flag1 = (l & 4) > 0;
+    protected void a(EntityHuman entityhuman, World world, BlockPosition blockposition, boolean flag) {
+        int i;
 
-        if (flag1 != flag) {
-            world.setData(i, j, k, l ^ 4, 2);
-            world.a((EntityHuman) null, 1003, i, j, k, 0);
+        if (flag) {
+            i = this.material == Material.ORE ? 1037 : 1007;
+            world.a(entityhuman, i, blockposition, 0);
+        } else {
+            i = this.material == Material.ORE ? 1036 : 1013;
+            world.a(entityhuman, i, blockposition, 0);
         }
+
     }
 
-    public void doPhysics(World world, int i, int j, int k, Block block) {
-        if (!world.isStatic) {
-            int l = world.getData(i, j, k);
-            int i1 = i;
-            int j1 = k;
+    public void doPhysics(World world, BlockPosition blockposition, IBlockData iblockdata, Block block) {
+        if (!world.isClientSide) {
+            boolean flag = world.isBlockIndirectlyPowered(blockposition);
 
-            if ((l & 3) == 0) {
-                j1 = k + 1;
-            }
-
-            if ((l & 3) == 1) {
-                --j1;
-            }
-
-            if ((l & 3) == 2) {
-                i1 = i + 1;
-            }
-
-            if ((l & 3) == 3) {
-                --i1;
-            }
-
-            if (!a(world.getType(i1, j, j1))) {
-                world.setAir(i, j, k);
-                this.b(world, i, j, k, l, 0);
-            }
-
-            boolean flag = world.isBlockIndirectlyPowered(i, j, k);
-
-            if (flag || block.isPowerSource()) {
+            if (flag || block.getBlockData().m()) {
                 // CraftBukkit start
                 org.bukkit.World bworld = world.getWorld();
-                org.bukkit.block.Block bblock = bworld.getBlockAt(i, j, k);
+                org.bukkit.block.Block bblock = bworld.getBlockAt(blockposition.getX(), blockposition.getY(), blockposition.getZ());
 
                 int power = bblock.getBlockPower();
-                int oldPower = (world.getData(i, j, k) & 4) > 0 ? 15 : 0;
+                int oldPower = (Boolean) iblockdata.get(OPEN) ? 15 : 0;
 
-                if (oldPower == 0 ^ power == 0 || block.isPowerSource()) {
+                if (oldPower == 0 ^ power == 0 || block.getBlockData().n()) {
                     BlockRedstoneEvent eventRedstone = new BlockRedstoneEvent(bblock, oldPower, power);
                     world.getServer().getPluginManager().callEvent(eventRedstone);
                     flag = eventRedstone.getNewCurrent() > 0;
                 }
                 // CraftBukkit end
+                boolean flag1 = ((Boolean) iblockdata.get(BlockTrapdoor.OPEN)).booleanValue();
 
-                this.setOpen(world, i, j, k, flag);
+                if (flag1 != flag) {
+                    world.setTypeAndData(blockposition, iblockdata.set(BlockTrapdoor.OPEN, Boolean.valueOf(flag)), 2);
+                    this.a((EntityHuman) null, world, blockposition, flag);
+                }
             }
+
         }
     }
 
-    public MovingObjectPosition a(World world, int i, int j, int k, Vec3D vec3d, Vec3D vec3d1) {
-        this.updateShape(world, i, j, k);
-        return super.a(world, i, j, k, vec3d, vec3d1);
-    }
+    public IBlockData getPlacedState(World world, BlockPosition blockposition, EnumDirection enumdirection, float f, float f1, float f2, int i, EntityLiving entityliving) {
+        IBlockData iblockdata = this.getBlockData();
 
-    public int getPlacedData(World world, int i, int j, int k, int l, float f, float f1, float f2, int i1) {
-        int j1 = 0;
-
-        if (l == 2) {
-            j1 = 0;
-        }
-
-        if (l == 3) {
-            j1 = 1;
-        }
-
-        if (l == 4) {
-            j1 = 2;
-        }
-
-        if (l == 5) {
-            j1 = 3;
-        }
-
-        if (l != 1 && l != 0 && f1 > 0.5F) {
-            j1 |= 8;
-        }
-
-        return j1;
-    }
-
-    public boolean canPlace(World world, int i, int j, int k, int l) {
-        if (l == 0) {
-            return false;
-        } else if (l == 1) {
-            return false;
+        if (enumdirection.k().c()) {
+            iblockdata = iblockdata.set(BlockTrapdoor.FACING, enumdirection).set(BlockTrapdoor.OPEN, Boolean.valueOf(false));
+            iblockdata = iblockdata.set(BlockTrapdoor.HALF, f1 > 0.5F ? BlockTrapdoor.EnumTrapdoorHalf.TOP : BlockTrapdoor.EnumTrapdoorHalf.BOTTOM);
         } else {
-            if (l == 2) {
-                ++k;
-            }
+            iblockdata = iblockdata.set(BlockTrapdoor.FACING, entityliving.getDirection().opposite()).set(BlockTrapdoor.OPEN, Boolean.valueOf(false));
+            iblockdata = iblockdata.set(BlockTrapdoor.HALF, enumdirection == EnumDirection.UP ? BlockTrapdoor.EnumTrapdoorHalf.BOTTOM : BlockTrapdoor.EnumTrapdoorHalf.TOP);
+        }
 
-            if (l == 3) {
-                --k;
-            }
+        return iblockdata;
+    }
 
-            if (l == 4) {
-                ++i;
-            }
+    public boolean canPlace(World world, BlockPosition blockposition, EnumDirection enumdirection) {
+        return true;
+    }
 
-            if (l == 5) {
-                --i;
-            }
+    protected static EnumDirection e(int i) {
+        switch (i & 3) {
+        case 0:
+            return EnumDirection.NORTH;
 
-            return a(world.getType(i, j, k));
+        case 1:
+            return EnumDirection.SOUTH;
+
+        case 2:
+            return EnumDirection.WEST;
+
+        case 3:
+        default:
+            return EnumDirection.EAST;
         }
     }
 
-    public static boolean d(int i) {
-        return (i & 4) != 0;
+    protected static int a(EnumDirection enumdirection) {
+        switch (BlockTrapdoor.SyntheticClass_1.a[enumdirection.ordinal()]) {
+        case 1:
+            return 0;
+
+        case 2:
+            return 1;
+
+        case 3:
+            return 2;
+
+        case 4:
+        default:
+            return 3;
+        }
     }
 
-    private static boolean a(Block block) {
-        return block.material.k() && block.d() || block == Blocks.GLOWSTONE || block instanceof BlockStepAbstract || block instanceof BlockStairs;
+    public IBlockData fromLegacyData(int i) {
+        return this.getBlockData().set(BlockTrapdoor.FACING, e(i)).set(BlockTrapdoor.OPEN, Boolean.valueOf((i & 4) != 0)).set(BlockTrapdoor.HALF, (i & 8) == 0 ? BlockTrapdoor.EnumTrapdoorHalf.BOTTOM : BlockTrapdoor.EnumTrapdoorHalf.TOP);
+    }
+
+    public int toLegacyData(IBlockData iblockdata) {
+        byte b0 = 0;
+        int i = b0 | a((EnumDirection) iblockdata.get(BlockTrapdoor.FACING));
+
+        if (((Boolean) iblockdata.get(BlockTrapdoor.OPEN)).booleanValue()) {
+            i |= 4;
+        }
+
+        if (iblockdata.get(BlockTrapdoor.HALF) == BlockTrapdoor.EnumTrapdoorHalf.TOP) {
+            i |= 8;
+        }
+
+        return i;
+    }
+
+    public IBlockData a(IBlockData iblockdata, EnumBlockRotation enumblockrotation) {
+        return iblockdata.set(BlockTrapdoor.FACING, enumblockrotation.a((EnumDirection) iblockdata.get(BlockTrapdoor.FACING)));
+    }
+
+    public IBlockData a(IBlockData iblockdata, EnumBlockMirror enumblockmirror) {
+        return iblockdata.a(enumblockmirror.a((EnumDirection) iblockdata.get(BlockTrapdoor.FACING)));
+    }
+
+    protected BlockStateList getStateList() {
+        return new BlockStateList(this, new IBlockState[] { BlockTrapdoor.FACING, BlockTrapdoor.OPEN, BlockTrapdoor.HALF});
+    }
+
+    static class SyntheticClass_1 {
+
+        static final int[] a = new int[EnumDirection.values().length];
+
+        static {
+            try {
+                BlockTrapdoor.SyntheticClass_1.a[EnumDirection.NORTH.ordinal()] = 1;
+            } catch (NoSuchFieldError nosuchfielderror) {
+                ;
+            }
+
+            try {
+                BlockTrapdoor.SyntheticClass_1.a[EnumDirection.SOUTH.ordinal()] = 2;
+            } catch (NoSuchFieldError nosuchfielderror1) {
+                ;
+            }
+
+            try {
+                BlockTrapdoor.SyntheticClass_1.a[EnumDirection.WEST.ordinal()] = 3;
+            } catch (NoSuchFieldError nosuchfielderror2) {
+                ;
+            }
+
+            try {
+                BlockTrapdoor.SyntheticClass_1.a[EnumDirection.EAST.ordinal()] = 4;
+            } catch (NoSuchFieldError nosuchfielderror3) {
+                ;
+            }
+
+        }
+    }
+
+    public static enum EnumTrapdoorHalf implements INamable {
+
+        TOP("top"), BOTTOM("bottom");
+
+        private final String c;
+
+        private EnumTrapdoorHalf(String s) {
+            this.c = s;
+        }
+
+        public String toString() {
+            return this.c;
+        }
+
+        public String getName() {
+            return this.c;
+        }
     }
 }

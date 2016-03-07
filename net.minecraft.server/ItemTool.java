@@ -1,28 +1,34 @@
 package net.minecraft.server;
 
+import com.google.common.collect.Multimap;
 import java.util.Set;
-
-import net.minecraft.util.com.google.common.collect.Multimap;
 
 public class ItemTool extends Item {
 
-    private Set c;
-    protected float a = 4.0F;
-    private float d;
-    protected EnumToolMaterial b;
+    private Set<Block> e;
+    protected float a;
+    protected float b;
+    protected float c;
+    protected Item.EnumToolMaterial d;
 
-    protected ItemTool(float f, EnumToolMaterial enumtoolmaterial, Set set) {
-        this.b = enumtoolmaterial;
-        this.c = set;
+    protected ItemTool(float f, float f1, Item.EnumToolMaterial item_enumtoolmaterial, Set<Block> set) {
+        this.a = 4.0F;
+        this.d = item_enumtoolmaterial;
+        this.e = set;
         this.maxStackSize = 1;
-        this.setMaxDurability(enumtoolmaterial.a());
-        this.a = enumtoolmaterial.b();
-        this.d = f + enumtoolmaterial.c();
+        this.setMaxDurability(item_enumtoolmaterial.a());
+        this.a = item_enumtoolmaterial.b();
+        this.b = f + item_enumtoolmaterial.c();
+        this.c = f1;
         this.a(CreativeModeTab.i);
     }
 
-    public float getDestroySpeed(ItemStack itemstack, Block block) {
-        return this.c.contains(block) ? this.a : 1.0F;
+    protected ItemTool(Item.EnumToolMaterial item_enumtoolmaterial, Set<Block> set) {
+        this(0.0F, 0.0F, item_enumtoolmaterial, set);
+    }
+
+    public float getDestroySpeed(ItemStack itemstack, IBlockData iblockdata) {
+        return this.e.contains(iblockdata.getBlock()) ? this.a : 1.0F;
     }
 
     public boolean a(ItemStack itemstack, EntityLiving entityliving, EntityLiving entityliving1) {
@@ -30,34 +36,38 @@ public class ItemTool extends Item {
         return true;
     }
 
-    public boolean a(ItemStack itemstack, World world, Block block, int i, int j, int k, EntityLiving entityliving) {
-        if ((double) block.f(world, i, j, k) != 0.0D) {
+    public boolean a(ItemStack itemstack, World world, IBlockData iblockdata, BlockPosition blockposition, EntityLiving entityliving) {
+        if ((double) iblockdata.b(world, blockposition) != 0.0D) {
             itemstack.damage(1, entityliving);
         }
 
         return true;
     }
 
-    public EnumToolMaterial i() {
-        return this.b;
+    public Item.EnumToolMaterial g() {
+        return this.d;
     }
 
     public int c() {
-        return this.b.e();
+        return this.d.e();
     }
 
-    public String j() {
-        return this.b.toString();
+    public String h() {
+        return this.d.toString();
     }
 
     public boolean a(ItemStack itemstack, ItemStack itemstack1) {
-        return this.b.f() == itemstack1.getItem() ? true : super.a(itemstack, itemstack1);
+        return this.d.f() == itemstack1.getItem() ? true : super.a(itemstack, itemstack1);
     }
 
-    public Multimap k() {
-        Multimap multimap = super.k();
+    public Multimap<String, AttributeModifier> a(EnumItemSlot enumitemslot) {
+        Multimap multimap = super.a(enumitemslot);
 
-        multimap.put(GenericAttributes.e.getName(), new AttributeModifier(f, "Tool modifier", (double) this.d, 0));
+        if (enumitemslot == EnumItemSlot.MAINHAND) {
+            multimap.put(GenericAttributes.ATTACK_DAMAGE.getName(), new AttributeModifier(ItemTool.g, "Tool modifier", (double) this.b, 0));
+            multimap.put(GenericAttributes.f.getName(), new AttributeModifier(ItemTool.h, "Tool modifier", (double) this.c, 0));
+        }
+
         return multimap;
     }
 }

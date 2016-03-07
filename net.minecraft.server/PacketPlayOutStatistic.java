@@ -1,41 +1,42 @@
 package net.minecraft.server;
 
+import com.google.common.collect.Maps;
+import java.io.IOException;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import net.minecraft.util.com.google.common.collect.Maps;
+public class PacketPlayOutStatistic implements Packet<PacketListenerPlayOut> {
 
-public class PacketPlayOutStatistic extends Packet {
-
-    private Map a;
+    private Map<Statistic, Integer> a;
 
     public PacketPlayOutStatistic() {}
 
-    public PacketPlayOutStatistic(Map map) {
+    public PacketPlayOutStatistic(Map<Statistic, Integer> map) {
         this.a = map;
     }
 
-    public void a(PacketPlayOutListener packetplayoutlistener) {
-        packetplayoutlistener.a(this);
+    public void a(PacketListenerPlayOut packetlistenerplayout) {
+        packetlistenerplayout.a(this);
     }
 
-    public void a(PacketDataSerializer packetdataserializer) {
-        int i = packetdataserializer.a();
+    public void a(PacketDataSerializer packetdataserializer) throws IOException {
+        int i = packetdataserializer.g();
 
         this.a = Maps.newHashMap();
 
         for (int j = 0; j < i; ++j) {
             Statistic statistic = StatisticList.getStatistic(packetdataserializer.c(32767));
-            int k = packetdataserializer.a();
+            int k = packetdataserializer.g();
 
             if (statistic != null) {
                 this.a.put(statistic, Integer.valueOf(k));
             }
         }
+
     }
 
-    public void b(PacketDataSerializer packetdataserializer) {
+    public void b(PacketDataSerializer packetdataserializer) throws IOException {
         packetdataserializer.b(this.a.size());
         Iterator iterator = this.a.entrySet().iterator();
 
@@ -45,13 +46,6 @@ public class PacketPlayOutStatistic extends Packet {
             packetdataserializer.a(((Statistic) entry.getKey()).name);
             packetdataserializer.b(((Integer) entry.getValue()).intValue());
         }
-    }
 
-    public String b() {
-        return String.format("count=%d", new Object[] { Integer.valueOf(this.a.size())});
-    }
-
-    public void handle(PacketListener packetlistener) {
-        this.a((PacketPlayOutListener) packetlistener);
     }
 }

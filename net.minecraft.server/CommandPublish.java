@@ -8,17 +8,18 @@ public class CommandPublish extends CommandAbstract {
         return "publish";
     }
 
-    public String c(ICommandListener icommandlistener) {
+    public String getUsage(ICommandListener icommandlistener) {
         return "commands.publish.usage";
     }
 
-    public void execute(ICommandListener icommandlistener, String[] astring) {
-        String s = MinecraftServer.getServer().a(EnumGamemode.SURVIVAL, false);
+    public void execute(MinecraftServer minecraftserver, ICommandListener icommandlistener, String[] astring) throws CommandException {
+        String s = minecraftserver.a(WorldSettings.EnumGamemode.SURVIVAL, false);
 
         if (s != null) {
-            a(icommandlistener, this, "commands.publish.started", new Object[] { s});
+            a(icommandlistener, (ICommand) this, "commands.publish.started", new Object[] { s});
         } else {
-            a(icommandlistener, this, "commands.publish.failed", new Object[0]);
+            a(icommandlistener, (ICommand) this, "commands.publish.failed", new Object[0]);
         }
+
     }
 }

@@ -1,5 +1,6 @@
 package net.minecraft.server;
 
+import java.util.Collections;
 import java.util.List;
 
 public class CommandKick extends CommandAbstract {
@@ -11,16 +12,16 @@ public class CommandKick extends CommandAbstract {
     }
 
     public int a() {
-        return 2;
+        return 3;
     }
 
-    public String c(ICommandListener icommandlistener) {
+    public String getUsage(ICommandListener icommandlistener) {
         return "commands.kick.usage";
     }
 
-    public void execute(ICommandListener icommandlistener, String[] astring) {
+    public void execute(MinecraftServer minecraftserver, ICommandListener icommandlistener, String[] astring) throws CommandException {
         if (astring.length > 0 && astring[0].length() > 1) {
-            EntityPlayer entityplayer = MinecraftServer.getServer().getPlayerList().getPlayer(astring[0]);
+            EntityPlayer entityplayer = minecraftserver.getPlayerList().getPlayer(astring[0]);
             String s = "Kicked by an operator.";
             boolean flag = false;
 
@@ -28,23 +29,24 @@ public class CommandKick extends CommandAbstract {
                 throw new ExceptionPlayerNotFound();
             } else {
                 if (astring.length >= 2) {
-                    s = a(icommandlistener, astring, 1).c();
+                    s = a(icommandlistener, astring, 1).toPlainText();
                     flag = true;
                 }
 
                 entityplayer.playerConnection.disconnect(s);
                 if (flag) {
-                    a(icommandlistener, this, "commands.kick.success.reason", new Object[] { entityplayer.getName(), s});
+                    a(icommandlistener, (ICommand) this, "commands.kick.success.reason", new Object[] { entityplayer.getName(), s});
                 } else {
-                    a(icommandlistener, this, "commands.kick.success", new Object[] { entityplayer.getName()});
+                    a(icommandlistener, (ICommand) this, "commands.kick.success", new Object[] { entityplayer.getName()});
                 }
+
             }
         } else {
             throw new ExceptionUsage("commands.kick.usage", new Object[0]);
         }
     }
 
-    public List tabComplete(ICommandListener icommandlistener, String[] astring) {
-        return astring.length >= 1 ? a(astring, MinecraftServer.getServer().getPlayers()) : null;
+    public List<String> tabComplete(MinecraftServer minecraftserver, ICommandListener icommandlistener, String[] astring, BlockPosition blockposition) {
+        return astring.length >= 1 ? a(astring, minecraftserver.getPlayers()) : Collections.emptyList();
     }
 }

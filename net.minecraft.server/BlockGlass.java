@@ -5,7 +5,7 @@ import java.util.Random;
 public class BlockGlass extends BlockHalfTransparent {
 
     public BlockGlass(Material material, boolean flag) {
-        super("glass", material, flag);
+        super(material, flag);
         this.a(CreativeModeTab.b);
     }
 
@@ -13,11 +13,11 @@ public class BlockGlass extends BlockHalfTransparent {
         return 0;
     }
 
-    public boolean d() {
+    public boolean c(IBlockData iblockdata) {
         return false;
     }
 
-    protected boolean E() {
+    protected boolean o() {
         return true;
     }
 }

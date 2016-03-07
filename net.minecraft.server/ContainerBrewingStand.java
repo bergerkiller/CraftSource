@@ -7,21 +7,24 @@ import org.bukkit.craftbukkit.inventory.CraftInventoryView;
 
 public class ContainerBrewingStand extends Container {
 
-    private TileEntityBrewingStand brewingStand;
+    private IInventory brewingStand;
     private final Slot f;
     private int g;
+    private int h;
+
     // CraftBukkit start
     private CraftInventoryView bukkitEntity = null;
     private PlayerInventory player;
     // CraftBukkit end
 
-    public ContainerBrewingStand(PlayerInventory playerinventory, TileEntityBrewingStand tileentitybrewingstand) {
+    public ContainerBrewingStand(PlayerInventory playerinventory, IInventory iinventory) {
         player = playerinventory; // CraftBukkit
-        this.brewingStand = tileentitybrewingstand;
-        this.a(new SlotPotionBottle(playerinventory.player, tileentitybrewingstand, 0, 56, 46));
-        this.a(new SlotPotionBottle(playerinventory.player, tileentitybrewingstand, 1, 79, 53));
-        this.a(new SlotPotionBottle(playerinventory.player, tileentitybrewingstand, 2, 102, 46));
-        this.f = this.a(new SlotBrewing(this, tileentitybrewingstand, 3, 79, 17));
+        this.brewingStand = iinventory;
+        this.a((Slot) (new ContainerBrewingStand.SlotPotionBottle(playerinventory.player, iinventory, 0, 56, 51)));
+        this.a((Slot) (new ContainerBrewingStand.SlotPotionBottle(playerinventory.player, iinventory, 1, 79, 58)));
+        this.a((Slot) (new ContainerBrewingStand.SlotPotionBottle(playerinventory.player, iinventory, 2, 102, 51)));
+        this.f = this.a((Slot) (new ContainerBrewingStand.SlotBrewing(iinventory, 3, 79, 17)));
+        this.a((Slot) (new ContainerBrewingStand.a(iinventory, 4, 17, 17)));
 
         int i;
 
@@ -34,11 +37,12 @@ public class ContainerBrewingStand extends Container {
         for (i = 0; i < 9; ++i) {
             this.a(new Slot(playerinventory, i, 8 + i * 18, 142));
         }
+
     }
 
     public void addSlotListener(ICrafting icrafting) {
         super.addSlotListener(icrafting);
-        icrafting.setContainerData(this, 0, this.brewingStand.i());
+        icrafting.setContainerData(this, this.brewingStand);
     }
 
     public void b() {
@@ -47,12 +51,17 @@ public class ContainerBrewingStand extends Container {
         for (int i = 0; i < this.listeners.size(); ++i) {
             ICrafting icrafting = (ICrafting) this.listeners.get(i);
 
-            if (this.g != this.brewingStand.i()) {
-                icrafting.setContainerData(this, 0, this.brewingStand.i());
+            if (this.g != this.brewingStand.getProperty(0)) {
+                icrafting.setContainerData(this, 0, this.brewingStand.getProperty(0));
+            }
+
+            if (this.h != this.brewingStand.getProperty(1)) {
+                icrafting.setContainerData(this, 1, this.brewingStand.getProperty(1));
             }
         }
 
-        this.g = this.brewingStand.i();
+        this.g = this.brewingStand.getProperty(0);
+        this.h = this.brewingStand.getProperty(1);
     }
 
     public boolean a(EntityHuman entityhuman) {
@@ -68,28 +77,32 @@ public class ContainerBrewingStand extends Container {
             ItemStack itemstack1 = slot.getItem();
 
             itemstack = itemstack1.cloneItemStack();
-            if ((i < 0 || i > 2) && i != 3) {
+            if ((i < 0 || i > 2) && i != 3 && i != 4) {
                 if (!this.f.hasItem() && this.f.isAllowed(itemstack1)) {
                     if (!this.a(itemstack1, 3, 4, false)) {
                         return null;
                     }
-                } else if (SlotPotionBottle.b_(itemstack)) {
+                } else if (ContainerBrewingStand.SlotPotionBottle.c_(itemstack)) {
                     if (!this.a(itemstack1, 0, 3, false)) {
                         return null;
                     }
-                } else if (i >= 4 && i < 31) {
-                    if (!this.a(itemstack1, 31, 40, false)) {
+                } else if (ContainerBrewingStand.a.b_(itemstack)) {
+                    if (!this.a(itemstack1, 4, 5, false)) {
                         return null;
                     }
-                } else if (i >= 31 && i < 40) {
-                    if (!this.a(itemstack1, 4, 31, false)) {
+                } else if (i >= 5 && i < 32) {
+                    if (!this.a(itemstack1, 32, 41, false)) {
                         return null;
                     }
-                } else if (!this.a(itemstack1, 4, 40, false)) {
+                } else if (i >= 32 && i < 41) {
+                    if (!this.a(itemstack1, 5, 32, false)) {
+                        return null;
+                    }
+                } else if (!this.a(itemstack1, 5, 41, false)) {
                     return null;
                 }
             } else {
-                if (!this.a(itemstack1, 4, 40, true)) {
+                if (!this.a(itemstack1, 5, 41, true)) {
                     return null;
                 }
 
@@ -112,7 +125,78 @@ public class ContainerBrewingStand extends Container {
         return itemstack;
     }
 
+    static class a extends Slot {
+
+        public a(IInventory iinventory, int i, int j, int k) {
+            super(iinventory, i, j, k);
+        }
+
+        public boolean isAllowed(ItemStack itemstack) {
+            return b_(itemstack);
+        }
+
+        public static boolean b_(ItemStack itemstack) {
+            return itemstack != null && itemstack.getItem() == Items.BLAZE_POWDER;
+        }
+
+        public int getMaxStackSize() {
+            return 64;
+        }
+    }
+
+    static class SlotBrewing extends Slot {
+
+        public SlotBrewing(IInventory iinventory, int i, int j, int k) {
+            super(iinventory, i, j, k);
+        }
+
+        public boolean isAllowed(ItemStack itemstack) {
+            return itemstack != null && PotionBrewer.a(itemstack);
+        }
+
+        public int getMaxStackSize() {
+            return 64;
+        }
+    }
+
+    static class SlotPotionBottle extends Slot {
+
+        private EntityHuman a;
+
+        public SlotPotionBottle(EntityHuman entityhuman, IInventory iinventory, int i, int j, int k) {
+            super(iinventory, i, j, k);
+            this.a = entityhuman;
+        }
+
+        public boolean isAllowed(ItemStack itemstack) {
+            return c_(itemstack);
+        }
+
+        public int getMaxStackSize() {
+            return 1;
+        }
+
+        public void a(EntityHuman entityhuman, ItemStack itemstack) {
+            if (PotionUtil.c(itemstack) != Potions.b) {
+                this.a.b((Statistic) AchievementList.B);
+            }
+
+            super.a(entityhuman, itemstack);
+        }
+
+        public static boolean c_(ItemStack itemstack) {
+            if (itemstack == null) {
+                return false;
+            } else {
+                Item item = itemstack.getItem();
+
+                return item == Items.POTION || item == Items.GLASS_BOTTLE || item == Items.SPLASH_POTION || item == Items.LINGERING_POTION;
+            }
+        }
+    }
+
     // CraftBukkit start
+    @Override
     public CraftInventoryView getBukkitView() {
         if (bukkitEntity != null) {
             return bukkitEntity;

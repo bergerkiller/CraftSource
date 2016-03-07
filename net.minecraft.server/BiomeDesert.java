@@ -4,26 +4,28 @@ import java.util.Random;
 
 public class BiomeDesert extends BiomeBase {
 
-    public BiomeDesert(int i) {
-        super(i);
-        this.at.clear();
-        this.ai = Blocks.SAND;
-        this.ak = Blocks.SAND;
-        this.ar.x = -999;
-        this.ar.A = 2;
-        this.ar.C = 50;
-        this.ar.D = 10;
-        this.at.clear();
+    public BiomeDesert(BiomeBase.a biomebase_a) {
+        super(biomebase_a);
+        this.v.clear();
+        this.r = Blocks.SAND.getBlockData();
+        this.s = Blocks.SAND.getBlockData();
+        this.t.z = -999;
+        this.t.C = 2;
+        this.t.E = 50;
+        this.t.F = 10;
+        this.v.clear();
+        this.v.add(new BiomeBase.BiomeMeta(EntityRabbit.class, 4, 2, 3));
     }
 
-    public void a(World world, Random random, int i, int j) {
-        super.a(world, random, i, j);
+    public void a(World world, Random random, BlockPosition blockposition) {
+        super.a(world, random, blockposition);
         if (random.nextInt(1000) == 0) {
-            int k = i + random.nextInt(16) + 8;
-            int l = j + random.nextInt(16) + 8;
-            WorldGenDesertWell worldgendesertwell = new WorldGenDesertWell();
+            int i = random.nextInt(16) + 8;
+            int j = random.nextInt(16) + 8;
+            BlockPosition blockposition1 = world.getHighestBlockYAt(blockposition.a(i, 0, j)).up();
 
-            worldgendesertwell.generate(world, random, k, world.getHighestBlockYAt(k, l) + 1, l);
+            (new WorldGenDesertWell()).generate(world, random, blockposition1);
         }
+
     }
 }

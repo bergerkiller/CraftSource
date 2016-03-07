@@ -2,18 +2,18 @@ package net.minecraft.server;
 
 public class BlockSlowSand extends Block {
 
+    protected static final AxisAlignedBB a = new AxisAlignedBB(0.0D, 0.0D, 0.0D, 1.0D, 0.875D, 1.0D);
+
     public BlockSlowSand() {
-        super(Material.SAND);
+        super(Material.SAND, MaterialMapColor.B);
         this.a(CreativeModeTab.b);
     }
 
-    public AxisAlignedBB a(World world, int i, int j, int k) {
-        float f = 0.125F;
-
-        return AxisAlignedBB.a((double) i, (double) j, (double) k, (double) (i + 1), (double) ((float) (j + 1) - f), (double) (k + 1));
+    public AxisAlignedBB a(IBlockData iblockdata, World world, BlockPosition blockposition) {
+        return BlockSlowSand.a;
     }
 
-    public void a(World world, int i, int j, int k, Entity entity) {
+    public void a(World world, BlockPosition blockposition, IBlockData iblockdata, Entity entity) {
         entity.motX *= 0.4D;
         entity.motZ *= 0.4D;
     }

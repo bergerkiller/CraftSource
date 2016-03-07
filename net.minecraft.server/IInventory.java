@@ -2,7 +2,7 @@ package net.minecraft.server;
 
 import org.bukkit.craftbukkit.entity.CraftHumanEntity; // CraftBukkit
 
-public interface IInventory {
+public interface IInventory extends INamableTileEntity {
 
     int getSize();
 
@@ -14,21 +14,25 @@ public interface IInventory {
 
     void setItem(int i, ItemStack itemstack);
 
-    String getInventoryName();
-
-    boolean k_();
-
     int getMaxStackSize();
 
     void update();
 
     boolean a(EntityHuman entityhuman);
 
-    void startOpen();
+    void startOpen(EntityHuman entityhuman);
 
-    void closeContainer();
+    void closeContainer(EntityHuman entityhuman);
 
     boolean b(int i, ItemStack itemstack);
+
+    int getProperty(int i);
+
+    void setProperty(int i, int j);
+
+    int g();
+
+    void l();
 
     // CraftBukkit start
     ItemStack[] getContents();
@@ -42,6 +46,8 @@ public interface IInventory {
     org.bukkit.inventory.InventoryHolder getOwner();
 
     void setMaxStackSize(int size);
+
+    org.bukkit.Location getLocation();
 
     int MAX_STACK = 64;
     // CraftBukkit end

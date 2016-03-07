@@ -4,27 +4,43 @@ import java.util.Random;
 
 public class BlockDeadBush extends BlockPlant {
 
+    protected static final AxisAlignedBB a = new AxisAlignedBB(0.09999999403953552D, 0.0D, 0.09999999403953552D, 0.8999999761581421D, 0.800000011920929D, 0.8999999761581421D);
+
     protected BlockDeadBush() {
         super(Material.REPLACEABLE_PLANT);
-        float f = 0.4F;
-
-        this.a(0.5F - f, 0.0F, 0.5F - f, 0.5F + f, 0.8F, 0.5F + f);
     }
 
-    protected boolean a(Block block) {
-        return block == Blocks.SAND || block == Blocks.HARDENED_CLAY || block == Blocks.STAINED_HARDENED_CLAY || block == Blocks.DIRT;
+    public AxisAlignedBB a(IBlockData iblockdata, IBlockAccess iblockaccess, BlockPosition blockposition) {
+        return BlockDeadBush.a;
     }
 
-    public Item getDropType(int i, Random random, int j) {
-        return null;
+    public MaterialMapColor r(IBlockData iblockdata) {
+        return MaterialMapColor.o;
     }
 
-    public void a(World world, EntityHuman entityhuman, int i, int j, int k, int l) {
-        if (!world.isStatic && entityhuman.bF() != null && entityhuman.bF().getItem() == Items.SHEARS) {
-            entityhuman.a(StatisticList.MINE_BLOCK_COUNT[Block.getId(this)], 1);
-            this.a(world, i, j, k, new ItemStack(Blocks.DEAD_BUSH, 1, l));
+    protected boolean i(IBlockData iblockdata) {
+        return iblockdata.getBlock() == Blocks.SAND || iblockdata.getBlock() == Blocks.HARDENED_CLAY || iblockdata.getBlock() == Blocks.STAINED_HARDENED_CLAY || iblockdata.getBlock() == Blocks.DIRT;
+    }
+
+    public boolean a(IBlockAccess iblockaccess, BlockPosition blockposition) {
+        return true;
+    }
+
+    public int a(Random random) {
+        return random.nextInt(3);
+    }
+
+    public Item getDropType(IBlockData iblockdata, Random random, int i) {
+        return Items.STICK;
+    }
+
+    public void a(World world, EntityHuman entityhuman, BlockPosition blockposition, IBlockData iblockdata, TileEntity tileentity, ItemStack itemstack) {
+        if (!world.isClientSide && itemstack != null && itemstack.getItem() == Items.SHEARS) {
+            entityhuman.b(StatisticList.a((Block) this));
+            a(world, blockposition, new ItemStack(Blocks.DEADBUSH, 1, 0));
         } else {
-            super.a(world, entityhuman, i, j, k, l);
+            super.a(world, entityhuman, blockposition, iblockdata, tileentity, itemstack);
         }
+
     }
 }

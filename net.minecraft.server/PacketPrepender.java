@@ -1,14 +1,14 @@
 package net.minecraft.server;
 
-import net.minecraft.util.io.netty.buffer.ByteBuf;
-import net.minecraft.util.io.netty.channel.ChannelHandlerContext;
-import net.minecraft.util.io.netty.handler.codec.MessageToByteEncoder;
+import io.netty.buffer.ByteBuf;
+import io.netty.channel.ChannelHandlerContext;
+import io.netty.handler.codec.MessageToByteEncoder;
 
-public class PacketPrepender extends MessageToByteEncoder {
+public class PacketPrepender extends MessageToByteEncoder<ByteBuf> {
 
     public PacketPrepender() {}
 
-    protected void a(ChannelHandlerContext channelhandlercontext, ByteBuf bytebuf, ByteBuf bytebuf1) {
+    protected void a(ChannelHandlerContext channelhandlercontext, ByteBuf bytebuf, ByteBuf bytebuf1) throws Exception {
         int i = bytebuf.readableBytes();
         int j = PacketDataSerializer.a(i);
 
@@ -23,7 +23,7 @@ public class PacketPrepender extends MessageToByteEncoder {
         }
     }
 
-    protected void encode(ChannelHandlerContext channelhandlercontext, Object object, ByteBuf bytebuf) {
+    protected void encode(ChannelHandlerContext channelhandlercontext, Object object, ByteBuf bytebuf) throws Exception {
         this.a(channelhandlercontext, (ByteBuf) object, bytebuf);
     }
 }

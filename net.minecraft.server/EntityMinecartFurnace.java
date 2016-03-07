@@ -2,7 +2,8 @@ package net.minecraft.server;
 
 public class EntityMinecartFurnace extends EntityMinecartAbstract {
 
-    private int c;
+    private static final DataWatcherObject<Boolean> c = DataWatcher.a(EntityMinecartFurnace.class, DataWatcherRegistry.h);
+    private int d;
     public double a;
     public double b;
 
@@ -14,64 +15,73 @@ public class EntityMinecartFurnace extends EntityMinecartAbstract {
         super(world, d0, d1, d2);
     }
 
-    public int m() {
-        return 2;
+    public EntityMinecartAbstract.EnumMinecartType v() {
+        return EntityMinecartAbstract.EnumMinecartType.FURNACE;
     }
 
-    protected void c() {
-        super.c();
-        this.datawatcher.a(16, new Byte((byte) 0));
+    protected void i() {
+        super.i();
+        this.datawatcher.register(EntityMinecartFurnace.c, Boolean.valueOf(false));
     }
 
-    public void h() {
-        super.h();
-        if (this.c > 0) {
-            --this.c;
+    public void m() {
+        super.m();
+        if (this.d > 0) {
+            --this.d;
         }
 
-        if (this.c <= 0) {
+        if (this.d <= 0) {
             this.a = this.b = 0.0D;
         }
 
-        this.f(this.c > 0);
-        if (this.e() && this.random.nextInt(4) == 0) {
-            this.world.addParticle("largesmoke", this.locX, this.locY + 0.8D, this.locZ, 0.0D, 0.0D, 0.0D);
+        this.k(this.d > 0);
+        if (this.j() && this.random.nextInt(4) == 0) {
+            this.world.addParticle(EnumParticle.SMOKE_LARGE, this.locX, this.locY + 0.8D, this.locZ, 0.0D, 0.0D, 0.0D, new int[0]);
         }
+
+    }
+
+    protected double o() {
+        return 0.2D;
     }
 
     public void a(DamageSource damagesource) {
         super.a(damagesource);
-        if (!damagesource.isExplosion()) {
+        if (!damagesource.isExplosion() && this.world.getGameRules().getBoolean("doEntityDrops")) {
             this.a(new ItemStack(Blocks.FURNACE, 1), 0.0F);
         }
+
     }
 
-    protected void a(int i, int j, int k, double d0, double d1, Block block, int l) {
-        super.a(i, j, k, d0, d1, block, l);
-        double d2 = this.a * this.a + this.b * this.b;
+    protected void a(BlockPosition blockposition, IBlockData iblockdata) {
+        super.a(blockposition, iblockdata);
+        double d0 = this.a * this.a + this.b * this.b;
 
-        if (d2 > 1.0E-4D && this.motX * this.motX + this.motZ * this.motZ > 0.001D) {
-            d2 = (double) MathHelper.sqrt(d2);
-            this.a /= d2;
-            this.b /= d2;
+        if (d0 > 1.0E-4D && this.motX * this.motX + this.motZ * this.motZ > 0.001D) {
+            d0 = (double) MathHelper.sqrt(d0);
+            this.a /= d0;
+            this.b /= d0;
             if (this.a * this.motX + this.b * this.motZ < 0.0D) {
                 this.a = 0.0D;
                 this.b = 0.0D;
             } else {
-                this.a = this.motX;
-                this.b = this.motZ;
+                double d1 = d0 / this.o();
+
+                this.a *= d1;
+                this.b *= d1;
             }
         }
+
     }
 
-    protected void i() {
+    protected void r() {
         double d0 = this.a * this.a + this.b * this.b;
 
         if (d0 > 1.0E-4D) {
             d0 = (double) MathHelper.sqrt(d0);
             this.a /= d0;
             this.b /= d0;
-            double d1 = 0.05D;
+            double d1 = 1.0D;
 
             this.motX *= 0.800000011920929D;
             this.motY *= 0.0D;
@@ -84,18 +94,16 @@ public class EntityMinecartFurnace extends EntityMinecartAbstract {
             this.motZ *= 0.9800000190734863D;
         }
 
-        super.i();
+        super.r();
     }
 
-    public boolean c(EntityHuman entityhuman) {
-        ItemStack itemstack = entityhuman.inventory.getItemInHand();
-
-        if (itemstack != null && itemstack.getItem() == Items.COAL) {
-            if (!entityhuman.abilities.canInstantlyBuild && --itemstack.count == 0) {
-                entityhuman.inventory.setItem(entityhuman.inventory.itemInHandIndex, (ItemStack) null);
+    public boolean a(EntityHuman entityhuman, ItemStack itemstack, EnumHand enumhand) {
+        if (itemstack != null && itemstack.getItem() == Items.COAL && this.d + 3600 <= 32000) {
+            if (!entityhuman.abilities.canInstantlyBuild) {
+                --itemstack.count;
             }
 
-            this.c += 3600;
+            this.d += 3600;
         }
 
         this.a = this.locX - entityhuman.locX;
@@ -107,33 +115,25 @@ public class EntityMinecartFurnace extends EntityMinecartAbstract {
         super.b(nbttagcompound);
         nbttagcompound.setDouble("PushX", this.a);
         nbttagcompound.setDouble("PushZ", this.b);
-        nbttagcompound.setShort("Fuel", (short) this.c);
+        nbttagcompound.setShort("Fuel", (short) this.d);
     }
 
     protected void a(NBTTagCompound nbttagcompound) {
         super.a(nbttagcompound);
         this.a = nbttagcompound.getDouble("PushX");
         this.b = nbttagcompound.getDouble("PushZ");
-        this.c = nbttagcompound.getShort("Fuel");
+        this.d = nbttagcompound.getShort("Fuel");
     }
 
-    protected boolean e() {
-        return (this.datawatcher.getByte(16) & 1) != 0;
+    protected boolean j() {
+        return ((Boolean) this.datawatcher.get(EntityMinecartFurnace.c)).booleanValue();
     }
 
-    protected void f(boolean flag) {
-        if (flag) {
-            this.datawatcher.watch(16, Byte.valueOf((byte) (this.datawatcher.getByte(16) | 1)));
-        } else {
-            this.datawatcher.watch(16, Byte.valueOf((byte) (this.datawatcher.getByte(16) & -2)));
-        }
+    protected void k(boolean flag) {
+        this.datawatcher.set(EntityMinecartFurnace.c, Boolean.valueOf(flag));
     }
 
-    public Block o() {
-        return Blocks.BURNING_FURNACE;
-    }
-
-    public int q() {
-        return 2;
+    public IBlockData x() {
+        return (this.j() ? Blocks.LIT_FURNACE : Blocks.FURNACE).getBlockData().set(BlockFurnace.FACING, EnumDirection.NORTH);
     }
 }

@@ -4,83 +4,60 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
-import net.minecraft.server.Chunk;
-import net.minecraft.server.ChunkPosition;
-import net.minecraft.server.EnumCreatureType;
-import net.minecraft.server.IChunkProvider;
-import net.minecraft.server.IProgressUpdate;
-import net.minecraft.server.World;
+import net.minecraft.server.*;
 
 import org.bukkit.craftbukkit.CraftWorld;
 import org.bukkit.generator.BlockPopulator;
 
 public class NormalChunkGenerator extends InternalChunkGenerator {
-    private final IChunkProvider provider;
+    private final ChunkGenerator generator;
 
     public NormalChunkGenerator(World world, long seed) {
-        provider = world.worldProvider.getChunkProvider();
+        generator = world.worldProvider.getChunkGenerator();
     }
 
+    @Override
     public byte[] generate(org.bukkit.World world, Random random, int x, int z) {
         throw new UnsupportedOperationException("Not supported.");
     }
 
+    @Override
     public boolean canSpawn(org.bukkit.World world, int x, int z) {
         return ((CraftWorld) world).getHandle().worldProvider.canSpawn(x, z);
     }
 
+    @Override
     public List<BlockPopulator> getDefaultPopulators(org.bukkit.World world) {
         return new ArrayList<BlockPopulator>();
     }
 
-    public boolean isChunkLoaded(int i, int i1) {
-        return provider.isChunkLoaded(i, i1);
-    }
-
+    @Override
     public Chunk getOrCreateChunk(int i, int i1) {
-        return provider.getOrCreateChunk(i, i1);
+        return generator.getOrCreateChunk(i, i1);
     }
 
-    public Chunk getChunkAt(int i, int i1) {
-        return provider.getChunkAt(i, i1);
+    @Override
+    public void recreateStructures(int i, int i1) {
+        generator.recreateStructures(i, i1);
     }
 
-    public void getChunkAt(IChunkProvider icp, int i, int i1) {
-        provider.getChunkAt(icp, i, i1);
+    @Override
+    public boolean a(Chunk chunk, int i, int i1) {
+        return generator.a(chunk, i, i1);
     }
 
-    public boolean saveChunks(boolean bln, IProgressUpdate ipu) {
-        return provider.saveChunks(bln, ipu);
+    @Override
+    public List<BiomeBase.BiomeMeta> getMobsFor(EnumCreatureType enumCreatureType, BlockPosition blockPosition) {
+        return generator.getMobsFor(enumCreatureType, blockPosition);
     }
 
-    public boolean unloadChunks() {
-        return provider.unloadChunks();
+    @Override
+    public BlockPosition findNearestMapFeature(World world, String s, BlockPosition blockPosition) {
+        return generator.findNearestMapFeature(world, s, blockPosition);
     }
 
-    public boolean canSave() {
-        return provider.canSave();
+    @Override
+    public void recreateStructures(Chunk chunk, int i, int i1) {
+        generator.recreateStructures(chunk, i, i1);
     }
-
-    public List<?> getMobsFor(EnumCreatureType ect, int i, int i1, int i2) {
-        return provider.getMobsFor(ect, i, i1, i2);
-    }
-
-    public ChunkPosition findNearestMapFeature(World world, String string, int i, int i1, int i2) {
-        return provider.findNearestMapFeature(world, string, i, i1, i2);
-    }
-
-    public void recreateStructures(int i, int j) {
-        provider.recreateStructures(i, j);
-    }
-
-    // n.m.s implementations always return 0. (The true implementation is in ChunkProviderServer)
-    public int getLoadedChunks() {
-        return 0;
-    }
-
-    public String getName() {
-        return "NormalWorldGenerator";
-    }
-
-    public void c() {}
 }

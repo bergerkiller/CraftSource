@@ -1,35 +1,30 @@
 package net.minecraft.server;
 
-public class PacketPlayInArmAnimation extends Packet {
+import java.io.IOException;
 
-    private int a;
-    private int b;
+public class PacketPlayInArmAnimation implements Packet<PacketListenerPlayIn> {
+
+    private EnumHand a;
 
     public PacketPlayInArmAnimation() {}
 
-    public void a(PacketDataSerializer packetdataserializer) {
-        this.a = packetdataserializer.readInt();
-        this.b = packetdataserializer.readByte();
+    public PacketPlayInArmAnimation(EnumHand enumhand) {
+        this.a = enumhand;
     }
 
-    public void b(PacketDataSerializer packetdataserializer) {
-        packetdataserializer.writeInt(this.a);
-        packetdataserializer.writeByte(this.b);
+    public void a(PacketDataSerializer packetdataserializer) throws IOException {
+        this.a = (EnumHand) packetdataserializer.a(EnumHand.class);
     }
 
-    public void a(PacketPlayInListener packetplayinlistener) {
-        packetplayinlistener.a(this);
+    public void b(PacketDataSerializer packetdataserializer) throws IOException {
+        packetdataserializer.a((Enum) this.a);
     }
 
-    public String b() {
-        return String.format("id=%d, type=%d", new Object[] { Integer.valueOf(this.a), Integer.valueOf(this.b)});
+    public void a(PacketListenerPlayIn packetlistenerplayin) {
+        packetlistenerplayin.a(this);
     }
 
-    public int d() {
-        return this.b;
-    }
-
-    public void handle(PacketListener packetlistener) {
-        this.a((PacketPlayInListener) packetlistener);
+    public EnumHand a() {
+        return this.a;
     }
 }

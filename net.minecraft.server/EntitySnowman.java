@@ -8,82 +8,129 @@ import org.bukkit.event.block.EntityBlockFormEvent;
 
 public class EntitySnowman extends EntityGolem implements IRangedEntity {
 
+    private static final DataWatcherObject<Byte> a = DataWatcher.a(EntitySnowman.class, DataWatcherRegistry.a);
+
     public EntitySnowman(World world) {
         super(world);
-        this.a(0.4F, 1.8F);
-        this.getNavigation().a(true);
+        this.setSize(0.7F, 1.9F);
+    }
+
+    protected void r() {
         this.goalSelector.a(1, new PathfinderGoalArrowAttack(this, 1.25D, 20, 10.0F));
         this.goalSelector.a(2, new PathfinderGoalRandomStroll(this, 1.0D));
         this.goalSelector.a(3, new PathfinderGoalLookAtPlayer(this, EntityHuman.class, 6.0F));
         this.goalSelector.a(4, new PathfinderGoalRandomLookaround(this));
-        this.targetSelector.a(1, new PathfinderGoalNearestAttackableTarget(this, EntityInsentient.class, 0, true, false, IMonster.a));
+        this.targetSelector.a(1, new PathfinderGoalNearestAttackableTarget(this, EntityInsentient.class, 10, true, false, IMonster.d));
     }
 
-    public boolean bk() {
-        return true;
-    }
-
-    protected void aD() {
-        super.aD();
+    protected void initAttributes() {
+        super.initAttributes();
         this.getAttributeInstance(GenericAttributes.maxHealth).setValue(4.0D);
-        this.getAttributeInstance(GenericAttributes.d).setValue(0.20000000298023224D);
+        this.getAttributeInstance(GenericAttributes.MOVEMENT_SPEED).setValue(0.20000000298023224D);
     }
 
-    public void e() {
-        super.e();
-        int i = MathHelper.floor(this.locX);
-        int j = MathHelper.floor(this.locY);
-        int k = MathHelper.floor(this.locZ);
+    protected void i() {
+        super.i();
+        this.datawatcher.register(EntitySnowman.a, Byte.valueOf((byte) 0));
+    }
 
-        if (this.L()) {
-            this.damageEntity(DamageSource.DROWN, 1.0F);
-        }
+    public void n() {
+        super.n();
+        if (!this.world.isClientSide) {
+            int i = MathHelper.floor(this.locX);
+            int j = MathHelper.floor(this.locY);
+            int k = MathHelper.floor(this.locZ);
 
-        if (this.world.getBiome(i, k).a(i, j, k) > 1.0F) {
-            this.damageEntity(CraftEventFactory.MELTING, 1.0F); // CraftBukkit - DamageSource.BURN -> CraftEventFactory.MELTING
-        }
+            if (this.ah()) {
+                this.damageEntity(DamageSource.DROWN, 1.0F);
+            }
 
-        for (int l = 0; l < 4; ++l) {
-            i = MathHelper.floor(this.locX + (double) ((float) (l % 2 * 2 - 1) * 0.25F));
-            j = MathHelper.floor(this.locY);
-            k = MathHelper.floor(this.locZ + (double) ((float) (l / 2 % 2 * 2 - 1) * 0.25F));
-            if (this.world.getType(i, j, k).getMaterial() == Material.AIR && this.world.getBiome(i, k).a(i, j, k) < 0.8F && Blocks.SNOW.canPlace(this.world, i, j, k)) {
-                // CraftBukkit start
-                org.bukkit.block.BlockState blockState = this.world.getWorld().getBlockAt(i, j, k).getState();
-                blockState.setType(CraftMagicNumbers.getMaterial(Blocks.SNOW));
+            if (this.world.getBiome(new BlockPosition(i, 0, k)).a(new BlockPosition(i, j, k)) > 1.0F) {
+                this.damageEntity(CraftEventFactory.MELTING, 1.0F); // CraftBukkit - DamageSource.BURN -> CraftEventFactory.MELTING
+            }
 
-                EntityBlockFormEvent event = new EntityBlockFormEvent(this.getBukkitEntity(), blockState.getBlock(), blockState);
-                this.world.getServer().getPluginManager().callEvent(event);
+            if (!this.world.getGameRules().getBoolean("mobGriefing")) {
+                return;
+            }
 
-                if(!event.isCancelled()) {
-                    blockState.update(true);
+            for (int l = 0; l < 4; ++l) {
+                i = MathHelper.floor(this.locX + (double) ((float) (l % 2 * 2 - 1) * 0.25F));
+                j = MathHelper.floor(this.locY);
+                k = MathHelper.floor(this.locZ + (double) ((float) (l / 2 % 2 * 2 - 1) * 0.25F));
+                BlockPosition blockposition = new BlockPosition(i, j, k);
+
+                if (this.world.getType(blockposition).getMaterial() == Material.AIR && this.world.getBiome(new BlockPosition(i, 0, k)).a(blockposition) < 0.8F && Blocks.SNOW_LAYER.canPlace(this.world, blockposition)) {
+                    // CraftBukkit start
+                    org.bukkit.block.BlockState blockState = this.world.getWorld().getBlockAt(i, j, k).getState();
+                    blockState.setType(CraftMagicNumbers.getMaterial(Blocks.SNOW_LAYER));
+
+                    EntityBlockFormEvent event = new EntityBlockFormEvent(this.getBukkitEntity(), blockState.getBlock(), blockState);
+                    this.world.getServer().getPluginManager().callEvent(event);
+
+                    if(!event.isCancelled()) {
+                        blockState.update(true);
+                    }
+                    // CraftBukkit end
                 }
-                // CraftBukkit end
             }
         }
+
     }
 
-    protected Item getLoot() {
-        return Items.SNOW_BALL;
-    }
-
-    protected void dropDeathLoot(boolean flag, int i) {
-        int j = this.random.nextInt(16);
-
-        for (int k = 0; k < j; ++k) {
-            this.a(Items.SNOW_BALL, 1);
-        }
+    protected MinecraftKey J() {
+        return LootTables.z;
     }
 
     public void a(EntityLiving entityliving, float f) {
         EntitySnowball entitysnowball = new EntitySnowball(this.world, this);
-        double d0 = entityliving.locX - this.locX;
-        double d1 = entityliving.locY + (double) entityliving.getHeadHeight() - 1.100000023841858D - entitysnowball.locY;
-        double d2 = entityliving.locZ - this.locZ;
-        float f1 = MathHelper.sqrt(d0 * d0 + d2 * d2) * 0.2F;
+        double d0 = entityliving.locY + (double) entityliving.getHeadHeight() - 1.100000023841858D;
+        double d1 = entityliving.locX - this.locX;
+        double d2 = d0 - entitysnowball.locY;
+        double d3 = entityliving.locZ - this.locZ;
+        float f1 = MathHelper.sqrt(d1 * d1 + d3 * d3) * 0.2F;
 
-        entitysnowball.shoot(d0, d1 + (double) f1, d2, 1.6F, 12.0F);
-        this.makeSound("random.bow", 1.0F, 1.0F / (this.aI().nextFloat() * 0.4F + 0.8F));
+        entitysnowball.shoot(d1, d2 + (double) f1, d3, 1.6F, 12.0F);
+        this.a(SoundEffects.fK, 1.0F, 1.0F / (this.getRandom().nextFloat() * 0.4F + 0.8F));
         this.world.addEntity(entitysnowball);
+    }
+
+    public float getHeadHeight() {
+        return 1.7F;
+    }
+
+    protected boolean a(EntityHuman entityhuman, EnumHand enumhand, ItemStack itemstack) {
+        if (itemstack != null && itemstack.getItem() == Items.SHEARS && !this.o() && !this.world.isClientSide) {
+            this.a(true);
+            itemstack.damage(1, entityhuman);
+        }
+
+        return super.a(entityhuman, enumhand, itemstack);
+    }
+
+    public boolean o() {
+        return (((Byte) this.datawatcher.get(EntitySnowman.a)).byteValue() & 16) != 0;
+    }
+
+    public void a(boolean flag) {
+        byte b0 = ((Byte) this.datawatcher.get(EntitySnowman.a)).byteValue();
+
+        if (flag) {
+            this.datawatcher.set(EntitySnowman.a, Byte.valueOf((byte) (b0 | 16)));
+        } else {
+            this.datawatcher.set(EntitySnowman.a, Byte.valueOf((byte) (b0 & -17)));
+        }
+
+    }
+
+    protected SoundEffect G() {
+        return SoundEffects.fH;
+    }
+
+    protected SoundEffect bR() {
+        return SoundEffects.fJ;
+    }
+
+    protected SoundEffect bS() {
+        return SoundEffects.fI;
     }
 }

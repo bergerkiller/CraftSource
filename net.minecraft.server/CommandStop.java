@@ -8,15 +8,15 @@ public class CommandStop extends CommandAbstract {
         return "stop";
     }
 
-    public String c(ICommandListener icommandlistener) {
+    public String getUsage(ICommandListener icommandlistener) {
         return "commands.stop.usage";
     }
 
-    public void execute(ICommandListener icommandlistener, String[] astring) {
-        if (MinecraftServer.getServer().worldServer != null) {
-            a(icommandlistener, this, "commands.stop.start", new Object[0]);
+    public void execute(MinecraftServer minecraftserver, ICommandListener icommandlistener, String[] astring) throws CommandException {
+        if (minecraftserver.worldServer != null) {
+            a(icommandlistener, (ICommand) this, "commands.stop.start", new Object[0]);
         }
 
-        MinecraftServer.getServer().safeShutdown();
+        minecraftserver.safeShutdown();
     }
 }

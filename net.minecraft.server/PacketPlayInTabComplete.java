@@ -1,38 +1,52 @@
 package net.minecraft.server;
 
-import net.minecraft.util.org.apache.commons.lang3.StringUtils;
+import java.io.IOException;
+import org.apache.commons.lang3.StringUtils;
 
-public class PacketPlayInTabComplete extends Packet {
+public class PacketPlayInTabComplete implements Packet<PacketListenerPlayIn> {
 
     private String a;
+    private boolean b;
+    private BlockPosition c;
 
     public PacketPlayInTabComplete() {}
 
-    public PacketPlayInTabComplete(String s) {
-        this.a = s;
-    }
-
-    public void a(PacketDataSerializer packetdataserializer) {
+    public void a(PacketDataSerializer packetdataserializer) throws IOException {
         this.a = packetdataserializer.c(32767);
+        this.b = packetdataserializer.readBoolean();
+        boolean flag = packetdataserializer.readBoolean();
+
+        if (flag) {
+            this.c = packetdataserializer.e();
+        }
+
     }
 
-    public void b(PacketDataSerializer packetdataserializer) {
+    public void b(PacketDataSerializer packetdataserializer) throws IOException {
         packetdataserializer.a(StringUtils.substring(this.a, 0, 32767));
+        packetdataserializer.writeBoolean(this.b);
+        boolean flag = this.c != null;
+
+        packetdataserializer.writeBoolean(flag);
+        if (flag) {
+            packetdataserializer.a(this.c);
+        }
+
     }
 
-    public void a(PacketPlayInListener packetplayinlistener) {
-        packetplayinlistener.a(this);
+    public void a(PacketListenerPlayIn packetlistenerplayin) {
+        packetlistenerplayin.a(this);
     }
 
-    public String c() {
+    public String a() {
         return this.a;
     }
 
-    public String b() {
-        return String.format("message=\'%s\'", new Object[] { this.a});
+    public BlockPosition b() {
+        return this.c;
     }
 
-    public void handle(PacketListener packetlistener) {
-        this.a((PacketPlayInListener) packetlistener);
+    public boolean c() {
+        return this.b;
     }
 }

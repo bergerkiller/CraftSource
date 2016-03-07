@@ -2,78 +2,67 @@ package net.minecraft.server;
 
 public class ItemDoor extends Item {
 
-    private Material a;
+    private Block a;
 
-    public ItemDoor(Material material) {
-        this.a = material;
-        this.maxStackSize = 1;
+    public ItemDoor(Block block) {
+        this.a = block;
         this.a(CreativeModeTab.d);
     }
 
-    public boolean interactWith(ItemStack itemstack, EntityHuman entityhuman, World world, int i, int j, int k, int l, float f, float f1, float f2) {
-        if (l != 1) {
-            return false;
+    public EnumInteractionResult a(ItemStack itemstack, EntityHuman entityhuman, World world, BlockPosition blockposition, EnumHand enumhand, EnumDirection enumdirection, float f, float f1, float f2) {
+        if (enumdirection != EnumDirection.UP) {
+            return EnumInteractionResult.FAIL;
         } else {
-            ++j;
-            Block block;
+            IBlockData iblockdata = world.getType(blockposition);
+            Block block = iblockdata.getBlock();
 
-            if (this.a == Material.WOOD) {
-                block = Blocks.WOODEN_DOOR;
-            } else {
-                block = Blocks.IRON_DOOR_BLOCK;
+            if (!block.a((IBlockAccess) world, blockposition)) {
+                blockposition = blockposition.shift(enumdirection);
             }
 
-            if (entityhuman.a(i, j, k, l, itemstack) && entityhuman.a(i, j + 1, k, l, itemstack)) {
-                if (!block.canPlace(world, i, j, k)) {
-                    return false;
-                } else {
-                    int i1 = MathHelper.floor((double) ((entityhuman.yaw + 180.0F) * 4.0F / 360.0F) - 0.5D) & 3;
+            if (entityhuman.a(blockposition, enumdirection, itemstack) && this.a.canPlace(world, blockposition)) {
+                EnumDirection enumdirection1 = EnumDirection.fromAngle((double) entityhuman.yaw);
+                int i = enumdirection1.getAdjacentX();
+                int j = enumdirection1.getAdjacentZ();
+                boolean flag = i < 0 && f2 < 0.5F || i > 0 && f2 > 0.5F || j < 0 && f > 0.5F || j > 0 && f < 0.5F;
 
-                    place(world, i, j, k, i1, block);
-                    --itemstack.count;
-                    return true;
-                }
+                a(world, blockposition, enumdirection1, this.a, flag);
+                SoundEffectType soundeffecttype = this.a.w();
+
+                world.a(entityhuman, blockposition, soundeffecttype.e(), SoundCategory.BLOCKS, (soundeffecttype.a() + 1.0F) / 2.0F, soundeffecttype.b() * 0.8F);
+                --itemstack.count;
+                return EnumInteractionResult.SUCCESS;
             } else {
-                return false;
+                return EnumInteractionResult.FAIL;
             }
         }
     }
 
-    public static void place(World world, int i, int j, int k, int l, Block block) {
-        byte b0 = 0;
-        byte b1 = 0;
+    public static void a(World world, BlockPosition blockposition, EnumDirection enumdirection, Block block, boolean flag) {
+        BlockPosition blockposition1 = blockposition.shift(enumdirection.e());
+        BlockPosition blockposition2 = blockposition.shift(enumdirection.f());
+        int i = (world.getType(blockposition2).l() ? 1 : 0) + (world.getType(blockposition2.up()).l() ? 1 : 0);
+        int j = (world.getType(blockposition1).l() ? 1 : 0) + (world.getType(blockposition1.up()).l() ? 1 : 0);
+        boolean flag1 = world.getType(blockposition2).getBlock() == block || world.getType(blockposition2.up()).getBlock() == block;
+        boolean flag2 = world.getType(blockposition1).getBlock() == block || world.getType(blockposition1.up()).getBlock() == block;
 
-        if (l == 0) {
-            b1 = 1;
+        if ((!flag1 || flag2) && j <= i) {
+            if (flag2 && !flag1 || j < i) {
+                flag = false;
+            }
+        } else {
+            flag = true;
         }
 
-        if (l == 1) {
-            b0 = -1;
-        }
+        BlockPosition blockposition3 = blockposition.up();
+        boolean flag3 = world.isBlockIndirectlyPowered(blockposition) || world.isBlockIndirectlyPowered(blockposition3);
+        IBlockData iblockdata = block.getBlockData().set(BlockDoor.FACING, enumdirection).set(BlockDoor.HINGE, flag ? BlockDoor.EnumDoorHinge.RIGHT : BlockDoor.EnumDoorHinge.LEFT).set(BlockDoor.POWERED, Boolean.valueOf(flag3)).set(BlockDoor.OPEN, Boolean.valueOf(flag3));
 
-        if (l == 2) {
-            b1 = -1;
-        }
-
-        if (l == 3) {
-            b0 = 1;
-        }
-
-        int i1 = (world.getType(i - b0, j, k - b1).r() ? 1 : 0) + (world.getType(i - b0, j + 1, k - b1).r() ? 1 : 0);
-        int j1 = (world.getType(i + b0, j, k + b1).r() ? 1 : 0) + (world.getType(i + b0, j + 1, k + b1).r() ? 1 : 0);
-        boolean flag = world.getType(i - b0, j, k - b1) == block || world.getType(i - b0, j + 1, k - b1) == block;
-        boolean flag1 = world.getType(i + b0, j, k + b1) == block || world.getType(i + b0, j + 1, k + b1) == block;
-        boolean flag2 = false;
-
-        if (flag && !flag1) {
-            flag2 = true;
-        } else if (j1 > i1) {
-            flag2 = true;
-        }
-
-        world.setTypeAndData(i, j, k, block, l, 2);
-        world.setTypeAndData(i, j + 1, k, block, 8 | (flag2 ? 1 : 0), 2);
-        world.applyPhysics(i, j, k, block);
-        world.applyPhysics(i, j + 1, k, block);
+        // Spigot start - update physics after the block multi place event
+        world.setTypeAndData(blockposition, iblockdata.set(BlockDoor.HALF, BlockDoor.EnumDoorHalf.LOWER), 3);
+        world.setTypeAndData(blockposition3, iblockdata.set(BlockDoor.HALF, BlockDoor.EnumDoorHalf.UPPER), 3);
+        // world.applyPhysics(blockposition, block);
+        // world.applyPhysics(blockposition3, block);
+        // Spigot end
     }
 }

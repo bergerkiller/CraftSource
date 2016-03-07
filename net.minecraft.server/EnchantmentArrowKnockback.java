@@ -2,9 +2,9 @@ package net.minecraft.server;
 
 public class EnchantmentArrowKnockback extends Enchantment {
 
-    public EnchantmentArrowKnockback(int i, int j) {
-        super(i, j, EnchantmentSlotType.BOW);
-        this.b("arrowKnockback");
+    public EnchantmentArrowKnockback(Enchantment.Rarity enchantment_rarity, EnumItemSlot... aenumitemslot) {
+        super(enchantment_rarity, EnchantmentSlotType.BOW, aenumitemslot);
+        this.c("arrowKnockback");
     }
 
     public int a(int i) {

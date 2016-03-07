@@ -1,63 +1,133 @@
 package net.minecraft.server;
 
-public class BlockFlowers extends BlockPlant {
+import com.google.common.base.Predicate;
+import com.google.common.collect.Collections2;
+import com.google.common.collect.Lists;
+import java.util.Collection;
 
-    private static final String[][] M = new String[][] { { "flower_dandelion"}, { "flower_rose", "flower_blue_orchid", "flower_allium", "flower_houstonia", "flower_tulip_red", "flower_tulip_orange", "flower_tulip_white", "flower_tulip_pink", "flower_oxeye_daisy"}};
-    public static final String[] a = new String[] { "poppy", "blueOrchid", "allium", "houstonia", "tulipRed", "tulipOrange", "tulipWhite", "tulipPink", "oxeyeDaisy"};
-    public static final String[] b = new String[] { "dandelion"};
-    private int O;
+public abstract class BlockFlowers extends BlockPlant {
 
-    protected BlockFlowers(int i) {
-        super(Material.PLANT);
-        this.O = i;
+    protected BlockStateEnum<BlockFlowers.EnumFlowerVarient> TYPE;
+
+    protected BlockFlowers() {
+        this.w(this.blockStateList.getBlockData().set(this.g(), this.e() == BlockFlowers.EnumFlowerType.RED ? BlockFlowers.EnumFlowerVarient.POPPY : BlockFlowers.EnumFlowerVarient.DANDELION));
     }
 
-    public int getDropData(int i) {
-        return i;
+    public int getDropData(IBlockData iblockdata) {
+        return ((BlockFlowers.EnumFlowerVarient) iblockdata.get(this.g())).b();
     }
 
-    public static BlockFlowers e(String s) {
-        String[] astring = b;
-        int i = astring.length;
-
-        int j;
-        String s1;
-
-        for (j = 0; j < i; ++j) {
-            s1 = astring[j];
-            if (s1.equals(s)) {
-                return Blocks.YELLOW_FLOWER;
-            }
-        }
-
-        astring = a;
-        i = astring.length;
-
-        for (j = 0; j < i; ++j) {
-            s1 = astring[j];
-            if (s1.equals(s)) {
-                return Blocks.RED_ROSE;
-            }
-        }
-
-        return null;
+    public IBlockData fromLegacyData(int i) {
+        return this.getBlockData().set(this.g(), BlockFlowers.EnumFlowerVarient.a(this.e(), i));
     }
 
-    public static int f(String s) {
-        int i;
+    public abstract BlockFlowers.EnumFlowerType e();
 
-        for (i = 0; i < b.length; ++i) {
-            if (b[i].equals(s)) {
-                return i;
-            }
+    public IBlockState<BlockFlowers.EnumFlowerVarient> g() {
+        if (this.TYPE == null) {
+            this.TYPE = BlockStateEnum.a("type", BlockFlowers.EnumFlowerVarient.class, new Predicate() {
+                public boolean a(BlockFlowers.EnumFlowerVarient blockflowers_enumflowervarient) {
+                    return blockflowers_enumflowervarient.a() == BlockFlowers.this.e();
+                }
+
+                public boolean apply(Object object) {
+                    return this.a((BlockFlowers.EnumFlowerVarient) object);
+                }
+            });
         }
 
-        for (i = 0; i < a.length; ++i) {
-            if (a[i].equals(s)) {
-                return i;
-            }
+        return this.TYPE;
+    }
+
+    public int toLegacyData(IBlockData iblockdata) {
+        return ((BlockFlowers.EnumFlowerVarient) iblockdata.get(this.g())).b();
+    }
+
+    protected BlockStateList getStateList() {
+        return new BlockStateList(this, new IBlockState[] { this.g()});
+    }
+
+    public static enum EnumFlowerVarient implements INamable {
+
+        DANDELION(BlockFlowers.EnumFlowerType.YELLOW, 0, "dandelion"), POPPY(BlockFlowers.EnumFlowerType.RED, 0, "poppy"), BLUE_ORCHID(BlockFlowers.EnumFlowerType.RED, 1, "blue_orchid", "blueOrchid"), ALLIUM(BlockFlowers.EnumFlowerType.RED, 2, "allium"), HOUSTONIA(BlockFlowers.EnumFlowerType.RED, 3, "houstonia"), RED_TULIP(BlockFlowers.EnumFlowerType.RED, 4, "red_tulip", "tulipRed"), ORANGE_TULIP(BlockFlowers.EnumFlowerType.RED, 5, "orange_tulip", "tulipOrange"), WHITE_TULIP(BlockFlowers.EnumFlowerType.RED, 6, "white_tulip", "tulipWhite"), PINK_TULIP(BlockFlowers.EnumFlowerType.RED, 7, "pink_tulip", "tulipPink"), OXEYE_DAISY(BlockFlowers.EnumFlowerType.RED, 8, "oxeye_daisy", "oxeyeDaisy");
+
+        private static final BlockFlowers.EnumFlowerVarient[][] k = new BlockFlowers.EnumFlowerVarient[BlockFlowers.EnumFlowerType.values().length][];
+        private final BlockFlowers.EnumFlowerType l;
+        private final int m;
+        private final String n;
+        private final String o;
+
+        private EnumFlowerVarient(BlockFlowers.EnumFlowerType blockflowers_enumflowertype, int i, String s) {
+            this(blockflowers_enumflowertype, i, s, s);
         }
 
-        return 0;
+        private EnumFlowerVarient(BlockFlowers.EnumFlowerType blockflowers_enumflowertype, int i, String s, String s1) {
+            this.l = blockflowers_enumflowertype;
+            this.m = i;
+            this.n = s;
+            this.o = s1;
+        }
+
+        public BlockFlowers.EnumFlowerType a() {
+            return this.l;
+        }
+
+        public int b() {
+            return this.m;
+        }
+
+        public static BlockFlowers.EnumFlowerVarient a(BlockFlowers.EnumFlowerType blockflowers_enumflowertype, int i) {
+            BlockFlowers.EnumFlowerVarient[] ablockflowers_enumflowervarient = BlockFlowers.EnumFlowerVarient.k[blockflowers_enumflowertype.ordinal()];
+
+            if (i < 0 || i >= ablockflowers_enumflowervarient.length) {
+                i = 0;
+            }
+
+            return ablockflowers_enumflowervarient[i];
+        }
+
+        public String toString() {
+            return this.n;
+        }
+
+        public String getName() {
+            return this.n;
+        }
+
+        public String d() {
+            return this.o;
+        }
+
+        static {
+            BlockFlowers.EnumFlowerType[] ablockflowers_enumflowertype = BlockFlowers.EnumFlowerType.values();
+            int i = ablockflowers_enumflowertype.length;
+
+            for (int j = 0; j < i; ++j) {
+                final BlockFlowers.EnumFlowerType blockflowers_enumflowertype = ablockflowers_enumflowertype[j];
+                Collection collection = Collections2.filter(Lists.newArrayList(values()), new Predicate() {
+                    public boolean a(BlockFlowers.EnumFlowerVarient blockflowers_enumflowervarient) {
+                        return blockflowers_enumflowervarient.a() == blockflowers_enumflowertype;
+                    }
+
+                    public boolean apply(Object object) {
+                        return this.a((BlockFlowers.EnumFlowerVarient) object);
+                    }
+                });
+
+                BlockFlowers.EnumFlowerVarient.k[blockflowers_enumflowertype.ordinal()] = (BlockFlowers.EnumFlowerVarient[]) collection.toArray(new BlockFlowers.EnumFlowerVarient[collection.size()]);
+            }
+
+        }
+    }
+
+    public static enum EnumFlowerType {
+
+        YELLOW, RED;
+
+        private EnumFlowerType() {}
+
+        public BlockFlowers a() {
+            return this == BlockFlowers.EnumFlowerType.YELLOW ? Blocks.YELLOW_FLOWER : Blocks.RED_FLOWER;
+        }
     }
 }

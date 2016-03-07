@@ -1,7 +1,5 @@
 package net.minecraft.server;
 
-import org.bukkit.craftbukkit.TrigMath; // CraftBukkit
-
 public class ControllerLook {
 
     private EntityInsentient a;
@@ -21,7 +19,7 @@ public class ControllerLook {
         if (entity instanceof EntityLiving) {
             this.f = entity.locY + (double) entity.getHeadHeight();
         } else {
-            this.f = (entity.boundingBox.b + entity.boundingBox.e) / 2.0D;
+            this.f = (entity.getBoundingBox().b + entity.getBoundingBox().e) / 2.0D;
         }
 
         this.g = entity.locZ;
@@ -47,10 +45,8 @@ public class ControllerLook {
             double d1 = this.f - (this.a.locY + (double) this.a.getHeadHeight());
             double d2 = this.g - this.a.locZ;
             double d3 = (double) MathHelper.sqrt(d0 * d0 + d2 * d2);
-            // CraftBukkit start - Math -> TrigMath
-            float f = (float) (TrigMath.atan2(d2, d0) * 180.0D / 3.1415927410125732D) - 90.0F;
-            float f1 = (float) (-(TrigMath.atan2(d1, d3) * 180.0D / 3.1415927410125732D));
-            // CraftBukkit end
+            float f = (float) (MathHelper.b(d2, d0) * 57.2957763671875D) - 90.0F;
+            float f1 = (float) (-(MathHelper.b(d1, d3) * 57.2957763671875D));
 
             this.a.pitch = this.a(this.a.pitch, f1, this.c);
             this.a.aO = this.a(this.a.aO, f, this.b);
@@ -60,7 +56,7 @@ public class ControllerLook {
 
         float f2 = MathHelper.g(this.a.aO - this.a.aM);
 
-        if (!this.a.getNavigation().g()) {
+        if (!this.a.getNavigation().n()) {
             if (f2 < -75.0F) {
                 this.a.aO = this.a.aM - 75.0F;
             }
@@ -69,6 +65,7 @@ public class ControllerLook {
                 this.a.aO = this.a.aM + 75.0F;
             }
         }
+
     }
 
     private float a(float f, float f1, float f2) {
@@ -83,5 +80,21 @@ public class ControllerLook {
         }
 
         return f + f3;
+    }
+
+    public boolean b() {
+        return this.d;
+    }
+
+    public double e() {
+        return this.e;
+    }
+
+    public double f() {
+        return this.f;
+    }
+
+    public double g() {
+        return this.g;
     }
 }

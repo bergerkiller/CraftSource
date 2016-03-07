@@ -2,13 +2,11 @@ package net.minecraft.server;
 
 public class FoodMetaData {
 
-    // CraftBukkit start - All made public
     public int foodLevel = 20;
     public float saturationLevel = 5.0F;
     public float exhaustionLevel;
-    public int foodTickTimer;
-    private EntityHuman entityhuman;
-    // CraftBukkit end
+    private int foodTickTimer;
+    private EntityHuman entityhuman; // CraftBukkit
     private int e = 20;
 
     public FoodMetaData() { throw new AssertionError("Whoopsie, we missed the bukkit."); } // CraftBukkit start - throw an error
@@ -40,7 +38,7 @@ public class FoodMetaData {
     }
 
     public void a(EntityHuman entityhuman) {
-        EnumDifficulty enumdifficulty = entityhuman.world.difficulty;
+        EnumDifficulty enumdifficulty = entityhuman.world.getDifficulty();
 
         this.e = this.foodLevel;
         if (this.exhaustionLevel > 4.0F) {
@@ -60,12 +58,23 @@ public class FoodMetaData {
             }
         }
 
-        if (entityhuman.world.getGameRules().getBoolean("naturalRegeneration") && this.foodLevel >= 18 && entityhuman.bR()) {
+        boolean flag = entityhuman.world.getGameRules().getBoolean("naturalRegeneration");
+
+        if (flag && this.saturationLevel > 0.0F && entityhuman.cT() && this.foodLevel >= 20) {
+            ++this.foodTickTimer;
+            if (this.foodTickTimer >= 10) {
+                float f = Math.min(this.saturationLevel, 4.0F);
+
+                entityhuman.heal(f / 4.0F);
+                this.a(f);
+                this.foodTickTimer = 0;
+            }
+        } else if (flag && this.foodLevel >= 18 && entityhuman.cT()) {
             ++this.foodTickTimer;
             if (this.foodTickTimer >= 80) {
                 // CraftBukkit - added RegainReason
                 entityhuman.heal(1.0F, org.bukkit.event.entity.EntityRegainHealthEvent.RegainReason.SATIATED);
-                this.a(3.0F);
+                this.a(entityhuman.world.spigotConfig.regenExhaustion); // Spigot - Change to use configurable value
                 this.foodTickTimer = 0;
             }
         } else if (this.foodLevel <= 0) {
@@ -80,6 +89,7 @@ public class FoodMetaData {
         } else {
             this.foodTickTimer = 0;
         }
+
     }
 
     public void a(NBTTagCompound nbttagcompound) {
@@ -89,6 +99,7 @@ public class FoodMetaData {
             this.saturationLevel = nbttagcompound.getFloat("foodSaturationLevel");
             this.exhaustionLevel = nbttagcompound.getFloat("foodExhaustionLevel");
         }
+
     }
 
     public void b(NBTTagCompound nbttagcompound) {
@@ -112,5 +123,9 @@ public class FoodMetaData {
 
     public float getSaturationLevel() {
         return this.saturationLevel;
+    }
+
+    public void a(int i) {
+        this.foodLevel = i;
     }
 }

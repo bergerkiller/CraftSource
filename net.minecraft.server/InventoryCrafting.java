@@ -2,6 +2,7 @@ package net.minecraft.server;
 
 // CraftBukkit start
 import java.util.List;
+import org.bukkit.Location;
 
 import org.bukkit.craftbukkit.entity.CraftHumanEntity;
 import org.bukkit.entity.HumanEntity;
@@ -10,9 +11,10 @@ import org.bukkit.event.inventory.InventoryType;
 
 public class InventoryCrafting implements IInventory {
 
-    private ItemStack[] items;
-    private int b;
-    private Container c;
+    private final ItemStack[] items;
+    private final int b;
+    private final int c;
+    private final Container d;
 
     // CraftBukkit start - add fields
     public List<HumanEntity> transaction = new java.util.ArrayList<HumanEntity>();
@@ -42,12 +44,17 @@ public class InventoryCrafting implements IInventory {
     }
 
     public org.bukkit.inventory.InventoryHolder getOwner() {
-        return owner.getBukkitEntity();
+        return (owner == null) ? null : owner.getBukkitEntity();
     }
 
     public void setMaxStackSize(int size) {
         maxStack = size;
         resultInventory.setMaxStackSize(size);
+    }
+
+    @Override
+    public Location getLocation() {
+        return owner.getBukkitEntity().getLocation();
     }
 
     public InventoryCrafting(Container container, int i, int j, EntityHuman player) {
@@ -60,8 +67,9 @@ public class InventoryCrafting implements IInventory {
         int k = i * j;
 
         this.items = new ItemStack[k];
-        this.c = container;
+        this.d = container;
         this.b = i;
+        this.c = j;
     }
 
     public int getSize() {
@@ -72,65 +80,43 @@ public class InventoryCrafting implements IInventory {
         return i >= this.getSize() ? null : this.items[i];
     }
 
-    public ItemStack b(int i, int j) {
-        if (i >= 0 && i < this.b) {
-            int k = i + j * this.b;
-
-            return this.getItem(k);
-        } else {
-            return null;
-        }
+    public ItemStack c(int i, int j) {
+        return i >= 0 && i < this.b && j >= 0 && j <= this.c ? this.getItem(i + j * this.b) : null;
     }
 
-    public String getInventoryName() {
+    public String getName() {
         return "container.crafting";
     }
 
-    public boolean k_() {
+    public boolean hasCustomName() {
         return false;
     }
 
-    public ItemStack splitWithoutUpdate(int i) {
-        if (this.items[i] != null) {
-            ItemStack itemstack = this.items[i];
+    public IChatBaseComponent getScoreboardDisplayName() {
+        return (IChatBaseComponent) (this.hasCustomName() ? new ChatComponentText(this.getName()) : new ChatMessage(this.getName(), new Object[0]));
+    }
 
-            this.items[i] = null;
-            return itemstack;
-        } else {
-            return null;
-        }
+    public ItemStack splitWithoutUpdate(int i) {
+        return ContainerUtil.a(this.items, i);
     }
 
     public ItemStack splitStack(int i, int j) {
-        if (this.items[i] != null) {
-            ItemStack itemstack;
+        ItemStack itemstack = ContainerUtil.a(this.items, i, j);
 
-            if (this.items[i].count <= j) {
-                itemstack = this.items[i];
-                this.items[i] = null;
-                this.c.a((IInventory) this);
-                return itemstack;
-            } else {
-                itemstack = this.items[i].a(j);
-                if (this.items[i].count == 0) {
-                    this.items[i] = null;
-                }
-
-                this.c.a((IInventory) this);
-                return itemstack;
-            }
-        } else {
-            return null;
+        if (itemstack != null) {
+            this.d.a((IInventory) this);
         }
+
+        return itemstack;
     }
 
     public void setItem(int i, ItemStack itemstack) {
         this.items[i] = itemstack;
-        this.c.a((IInventory) this);
+        this.d.a((IInventory) this);
     }
 
     public int getMaxStackSize() {
-        return maxStack; // CraftBukkit
+        return 64;
     }
 
     public void update() {}
@@ -139,11 +125,36 @@ public class InventoryCrafting implements IInventory {
         return true;
     }
 
-    public void startOpen() {}
+    public void startOpen(EntityHuman entityhuman) {}
 
-    public void closeContainer() {}
+    public void closeContainer(EntityHuman entityhuman) {}
 
     public boolean b(int i, ItemStack itemstack) {
         return true;
+    }
+
+    public int getProperty(int i) {
+        return 0;
+    }
+
+    public void setProperty(int i, int j) {}
+
+    public int g() {
+        return 0;
+    }
+
+    public void l() {
+        for (int i = 0; i < this.items.length; ++i) {
+            this.items[i] = null;
+        }
+
+    }
+
+    public int h() {
+        return this.c;
+    }
+
+    public int i() {
+        return this.b;
     }
 }

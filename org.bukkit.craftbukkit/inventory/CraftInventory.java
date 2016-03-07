@@ -4,8 +4,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.ListIterator;
 
-import net.minecraft.server.ContainerAnvilInventory;
-import net.minecraft.server.ContainerEnchantTableInventory;
 import net.minecraft.server.IHopper;
 import net.minecraft.server.IInventory;
 import net.minecraft.server.InventoryCrafting;
@@ -19,6 +17,7 @@ import net.minecraft.server.TileEntityDropper;
 import net.minecraft.server.TileEntityFurnace;
 
 import org.apache.commons.lang.Validate;
+import org.bukkit.Location;
 import org.bukkit.entity.HumanEntity;
 import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.inventory.Inventory;
@@ -42,7 +41,7 @@ public class CraftInventory implements Inventory {
     }
 
     public String getName() {
-        return getInventory().getInventoryName();
+        return getInventory().getName();
     }
 
     public ItemStack getItem(int index) {
@@ -58,22 +57,19 @@ public class CraftInventory implements Inventory {
         for (int i = 0; i < size; i++) {
             items[i] = mcItems[i] == null ? null : CraftItemStack.asCraftMirror(mcItems[i]);
         }
-
         return items;
     }
 
     public void setContents(ItemStack[] items) {
-        if (getInventory().getContents().length < items.length) {
-            throw new IllegalArgumentException("Invalid inventory size; expected " + getInventory().getContents().length + " or less");
+        if (getSize() < items.length) {
+            throw new IllegalArgumentException("Invalid inventory size; expected " + getSize() + " or less");
         }
 
-        net.minecraft.server.ItemStack[] mcItems = getInventory().getContents();
-
-        for (int i = 0; i < mcItems.length; i++) {
+        for (int i = 0; i < getSize(); i++) {
             if (i >= items.length) {
-                mcItems[i] = null;
+                setItem(i, null);
             } else {
-                mcItems[i] = CraftItemStack.asNMSCopy(items[i]);
+                setItem(i, items[i]);
             }
         }
     }
@@ -313,11 +309,15 @@ public class CraftInventory implements Inventory {
                     // Check if it fully fits
                     if (amount + partialAmount <= maxAmount) {
                         partialItem.setAmount(amount + partialAmount);
+                        // To make sure the packet is sent to the client
+                        setItem(firstPartial, partialItem);
                         break;
                     }
 
                     // It fits partially
                     partialItem.setAmount(maxAmount);
+                    // To make sure the packet is sent to the client
+                    setItem(firstPartial, partialItem);
                     item.setAmount(amount + partialAmount - maxAmount);
                 }
             }
@@ -421,7 +421,7 @@ public class CraftInventory implements Inventory {
     }
 
     public String getTitle() {
-        return inventory.getInventoryName();
+        return inventory.getName();
     }
 
     public InventoryType getType() {
@@ -436,8 +436,8 @@ public class CraftInventory implements Inventory {
             return InventoryType.DISPENSER;
         } else if (inventory instanceof TileEntityFurnace) {
             return InventoryType.FURNACE;
-        } else if (inventory instanceof ContainerEnchantTableInventory) {
-            return InventoryType.ENCHANTING;
+        } else if (this instanceof CraftInventoryEnchanting) {
+           return InventoryType.ENCHANTING;
         } else if (inventory instanceof TileEntityBrewingStand) {
             return InventoryType.BREWING;
         } else if (inventory instanceof CraftInventoryCustom.MinecraftInventory) {
@@ -448,8 +448,8 @@ public class CraftInventory implements Inventory {
             return InventoryType.MERCHANT;
         } else if (inventory instanceof TileEntityBeacon) {
             return InventoryType.BEACON;
-        } else if (inventory instanceof ContainerAnvilInventory) {
-            return InventoryType.ANVIL;
+        } else if (this instanceof CraftInventoryAnvil) {
+           return InventoryType.ANVIL;
         } else if (inventory instanceof IHopper) {
             return InventoryType.HOPPER;
         } else {
@@ -477,5 +477,10 @@ public class CraftInventory implements Inventory {
     @Override
     public boolean equals(final Object obj) {
         return obj instanceof CraftInventory && ((CraftInventory) obj).inventory.equals(this.inventory);
+    }
+
+    @Override
+    public Location getLocation() {
+        return inventory.getLocation();
     }
 }

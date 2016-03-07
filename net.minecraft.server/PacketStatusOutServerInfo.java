@@ -1,11 +1,12 @@
 package net.minecraft.server;
 
-import net.minecraft.util.com.google.gson.Gson;
-import net.minecraft.util.com.google.gson.GsonBuilder;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import java.io.IOException;
 
-public class PacketStatusOutServerInfo extends Packet {
+public class PacketStatusOutServerInfo implements Packet<PacketStatusOutListener> {
 
-    private static final Gson a = (new GsonBuilder()).registerTypeAdapter(ServerPingServerData.class, new ServerPingServerDataSerializer()).registerTypeAdapter(ServerPingPlayerSample.class, new ServerPingPlayerSampleSerializer()).registerTypeAdapter(ServerPing.class, new ServerPingSerializer()).registerTypeHierarchyAdapter(IChatBaseComponent.class, new ChatSerializer()).registerTypeHierarchyAdapter(ChatModifier.class, new ChatModifierSerializer()).registerTypeAdapterFactory(new ChatTypeAdapterFactory()).create();
+    private static final Gson a = (new GsonBuilder()).registerTypeAdapter(ServerPing.ServerData.class, new ServerPing.ServerData.ServerData$Serializer()).registerTypeAdapter(ServerPing.ServerPingPlayerSample.class, new ServerPing.ServerPingPlayerSample.ServerPingPlayerSample$Serializer()).registerTypeAdapter(ServerPing.class, new ServerPing.Serializer()).registerTypeHierarchyAdapter(IChatBaseComponent.class, new IChatBaseComponent.ChatSerializer()).registerTypeHierarchyAdapter(ChatModifier.class, new ChatModifier.ChatModifierSerializer()).registerTypeAdapterFactory(new ChatTypeAdapterFactory()).create();
     private ServerPing b;
 
     public PacketStatusOutServerInfo() {}
@@ -14,23 +15,15 @@ public class PacketStatusOutServerInfo extends Packet {
         this.b = serverping;
     }
 
-    public void a(PacketDataSerializer packetdataserializer) {
-        this.b = (ServerPing) a.fromJson(packetdataserializer.c(32767), ServerPing.class);
+    public void a(PacketDataSerializer packetdataserializer) throws IOException {
+        this.b = (ServerPing) ChatDeserializer.a(PacketStatusOutServerInfo.a, packetdataserializer.c(32767), ServerPing.class);
     }
 
-    public void b(PacketDataSerializer packetdataserializer) {
-        packetdataserializer.a(a.toJson(this.b));
+    public void b(PacketDataSerializer packetdataserializer) throws IOException {
+        packetdataserializer.a(PacketStatusOutServerInfo.a.toJson(this.b));
     }
 
     public void a(PacketStatusOutListener packetstatusoutlistener) {
         packetstatusoutlistener.a(this);
-    }
-
-    public boolean a() {
-        return true;
-    }
-
-    public void handle(PacketListener packetlistener) {
-        this.a((PacketStatusOutListener) packetlistener);
     }
 }

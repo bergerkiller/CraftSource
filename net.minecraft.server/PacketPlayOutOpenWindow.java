@@ -1,56 +1,56 @@
 package net.minecraft.server;
 
-public class PacketPlayOutOpenWindow extends Packet {
+import java.io.IOException;
+
+public class PacketPlayOutOpenWindow implements Packet<PacketListenerPlayOut> {
 
     private int a;
-    private int b;
-    private String c;
+    private String b;
+    private IChatBaseComponent c;
     private int d;
-    private boolean e;
-    private int f;
+    private int e;
 
     public PacketPlayOutOpenWindow() {}
 
-    public PacketPlayOutOpenWindow(int i, int j, String s, int k, boolean flag) {
+    public PacketPlayOutOpenWindow(int i, String s, IChatBaseComponent ichatbasecomponent) {
+        this(i, s, ichatbasecomponent, 0);
+    }
+
+    public PacketPlayOutOpenWindow(int i, String s, IChatBaseComponent ichatbasecomponent, int j) {
         this.a = i;
-        this.b = j;
-        this.c = s;
-        this.d = k;
-        this.e = flag;
+        this.b = s;
+        this.c = ichatbasecomponent;
+        this.d = j;
     }
 
-    public PacketPlayOutOpenWindow(int i, int j, String s, int k, boolean flag, int l) {
-        this(i, j, s, k, flag);
-        this.f = l;
+    public PacketPlayOutOpenWindow(int i, String s, IChatBaseComponent ichatbasecomponent, int j, int k) {
+        this(i, s, ichatbasecomponent, j);
+        this.e = k;
     }
 
-    public void a(PacketPlayOutListener packetplayoutlistener) {
-        packetplayoutlistener.a(this);
+    public void a(PacketListenerPlayOut packetlistenerplayout) {
+        packetlistenerplayout.a(this);
     }
 
-    public void a(PacketDataSerializer packetdataserializer) {
+    public void a(PacketDataSerializer packetdataserializer) throws IOException {
         this.a = packetdataserializer.readUnsignedByte();
-        this.b = packetdataserializer.readUnsignedByte();
-        this.c = packetdataserializer.c(32);
+        this.b = packetdataserializer.c(32);
+        this.c = packetdataserializer.f();
         this.d = packetdataserializer.readUnsignedByte();
-        this.e = packetdataserializer.readBoolean();
-        if (this.b == 11) {
-            this.f = packetdataserializer.readInt();
+        if (this.b.equals("EntityHorse")) {
+            this.e = packetdataserializer.readInt();
         }
+
     }
 
-    public void b(PacketDataSerializer packetdataserializer) {
+    public void b(PacketDataSerializer packetdataserializer) throws IOException {
         packetdataserializer.writeByte(this.a);
-        packetdataserializer.writeByte(this.b);
+        packetdataserializer.a(this.b);
         packetdataserializer.a(this.c);
         packetdataserializer.writeByte(this.d);
-        packetdataserializer.writeBoolean(this.e);
-        if (this.b == 11) {
-            packetdataserializer.writeInt(this.f);
+        if (this.b.equals("EntityHorse")) {
+            packetdataserializer.writeInt(this.e);
         }
-    }
 
-    public void handle(PacketListener packetlistener) {
-        this.a((PacketPlayOutListener) packetlistener);
     }
 }

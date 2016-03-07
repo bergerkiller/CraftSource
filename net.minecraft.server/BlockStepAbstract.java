@@ -1,74 +1,73 @@
 package net.minecraft.server;
 
-import java.util.List;
 import java.util.Random;
 
 public abstract class BlockStepAbstract extends Block {
 
-    protected final boolean a;
+    public static final BlockStateEnum<BlockStepAbstract.EnumSlabHalf> HALF = BlockStateEnum.of("half", BlockStepAbstract.EnumSlabHalf.class);
+    protected static final AxisAlignedBB b = new AxisAlignedBB(0.0D, 0.0D, 0.0D, 1.0D, 0.5D, 1.0D);
+    protected static final AxisAlignedBB c = new AxisAlignedBB(0.0D, 0.5D, 0.0D, 1.0D, 1.0D, 1.0D);
 
-    public BlockStepAbstract(boolean flag, Material material) {
+    public BlockStepAbstract(Material material) {
         super(material);
-        this.a = flag;
-        if (flag) {
-            this.q = true;
-        } else {
-            this.a(0.0F, 0.0F, 0.0F, 1.0F, 0.5F, 1.0F);
-        }
-
-        this.g(255);
+        this.l = this.e();
+        this.d(255);
     }
 
-    public void updateShape(IBlockAccess iblockaccess, int i, int j, int k) {
-        if (this.a) {
-            this.a(0.0F, 0.0F, 0.0F, 1.0F, 1.0F, 1.0F);
-        } else {
-            boolean flag = (iblockaccess.getData(i, j, k) & 8) != 0;
-
-            if (flag) {
-                this.a(0.0F, 0.5F, 0.0F, 1.0F, 1.0F, 1.0F);
-            } else {
-                this.a(0.0F, 0.0F, 0.0F, 1.0F, 0.5F, 1.0F);
-            }
-        }
+    protected boolean o() {
+        return false;
     }
 
-    public void g() {
-        if (this.a) {
-            this.a(0.0F, 0.0F, 0.0F, 1.0F, 1.0F, 1.0F);
-        } else {
-            this.a(0.0F, 0.0F, 0.0F, 1.0F, 0.5F, 1.0F);
-        }
+    public AxisAlignedBB a(IBlockData iblockdata, IBlockAccess iblockaccess, BlockPosition blockposition) {
+        return this.e() ? BlockStepAbstract.j : (iblockdata.get(BlockStepAbstract.HALF) == BlockStepAbstract.EnumSlabHalf.TOP ? BlockStepAbstract.c : BlockStepAbstract.b);
     }
 
-    public void a(World world, int i, int j, int k, AxisAlignedBB axisalignedbb, List list, Entity entity) {
-        this.updateShape(world, i, j, k);
-        super.a(world, i, j, k, axisalignedbb, list, entity);
+    public boolean k(IBlockData iblockdata) {
+        return ((BlockStepAbstract) iblockdata.getBlock()).e() || iblockdata.get(BlockStepAbstract.HALF) == BlockStepAbstract.EnumSlabHalf.TOP;
     }
 
-    public boolean c() {
-        return this.a;
+    public boolean b(IBlockData iblockdata) {
+        return this.e();
     }
 
-    public int getPlacedData(World world, int i, int j, int k, int l, float f, float f1, float f2, int i1) {
-        return this.a ? i1 : (l != 0 && (l == 1 || (double) f1 <= 0.5D) ? i1 : i1 | 8);
+    public IBlockData getPlacedState(World world, BlockPosition blockposition, EnumDirection enumdirection, float f, float f1, float f2, int i, EntityLiving entityliving) {
+        IBlockData iblockdata = super.getPlacedState(world, blockposition, enumdirection, f, f1, f2, i, entityliving).set(BlockStepAbstract.HALF, BlockStepAbstract.EnumSlabHalf.BOTTOM);
+
+        return this.e() ? iblockdata : (enumdirection != EnumDirection.DOWN && (enumdirection == EnumDirection.UP || (double) f1 <= 0.5D) ? iblockdata : iblockdata.set(BlockStepAbstract.HALF, BlockStepAbstract.EnumSlabHalf.TOP));
     }
 
     public int a(Random random) {
-        return this.a ? 2 : 1;
+        return this.e() ? 2 : 1;
     }
 
-    public int getDropData(int i) {
-        return i & 7;
+    public boolean c(IBlockData iblockdata) {
+        return this.e();
     }
 
-    public boolean d() {
-        return this.a;
-    }
+    public abstract String e(int i);
 
-    public abstract String b(int i);
+    public abstract boolean e();
 
-    public int getDropData(World world, int i, int j, int k) {
-        return super.getDropData(world, i, j, k) & 7;
+    public abstract IBlockState<?> g();
+
+    public abstract Comparable<?> a(ItemStack itemstack);
+
+    public static enum EnumSlabHalf implements INamable {
+
+        TOP("top"), BOTTOM("bottom");
+
+        private final String c;
+
+        private EnumSlabHalf(String s) {
+            this.c = s;
+        }
+
+        public String toString() {
+            return this.c;
+        }
+
+        public String getName() {
+            return this.c;
+        }
     }
 }

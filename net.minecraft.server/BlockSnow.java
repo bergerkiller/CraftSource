@@ -4,90 +4,105 @@ import java.util.Random;
 
 public class BlockSnow extends Block {
 
+    public static final BlockStateInteger LAYERS = BlockStateInteger.of("layers", 1, 8);
+    protected static final AxisAlignedBB[] b = new AxisAlignedBB[] { new AxisAlignedBB(0.0D, 0.0D, 0.0D, 1.0D, 0.0D, 1.0D), new AxisAlignedBB(0.0D, 0.0D, 0.0D, 1.0D, 0.125D, 1.0D), new AxisAlignedBB(0.0D, 0.0D, 0.0D, 1.0D, 0.25D, 1.0D), new AxisAlignedBB(0.0D, 0.0D, 0.0D, 1.0D, 0.375D, 1.0D), new AxisAlignedBB(0.0D, 0.0D, 0.0D, 1.0D, 0.5D, 1.0D), new AxisAlignedBB(0.0D, 0.0D, 0.0D, 1.0D, 0.625D, 1.0D), new AxisAlignedBB(0.0D, 0.0D, 0.0D, 1.0D, 0.75D, 1.0D), new AxisAlignedBB(0.0D, 0.0D, 0.0D, 1.0D, 0.875D, 1.0D), new AxisAlignedBB(0.0D, 0.0D, 0.0D, 1.0D, 1.0D, 1.0D)};
+
     protected BlockSnow() {
         super(Material.PACKED_ICE);
-        this.a(0.0F, 0.0F, 0.0F, 1.0F, 0.125F, 1.0F);
+        this.w(this.blockStateList.getBlockData().set(BlockSnow.LAYERS, Integer.valueOf(1)));
         this.a(true);
         this.a(CreativeModeTab.c);
-        this.b(0);
     }
 
-    public AxisAlignedBB a(World world, int i, int j, int k) {
-        int l = world.getData(i, j, k) & 7;
+    public AxisAlignedBB a(IBlockData iblockdata, IBlockAccess iblockaccess, BlockPosition blockposition) {
+        return BlockSnow.b[((Integer) iblockdata.get(BlockSnow.LAYERS)).intValue()];
+    }
+
+    public boolean b(IBlockAccess iblockaccess, BlockPosition blockposition) {
+        return ((Integer) iblockaccess.getType(blockposition).get(BlockSnow.LAYERS)).intValue() < 5;
+    }
+
+    public boolean k(IBlockData iblockdata) {
+        return ((Integer) iblockdata.get(BlockSnow.LAYERS)).intValue() == 7;
+    }
+
+    public AxisAlignedBB a(IBlockData iblockdata, World world, BlockPosition blockposition) {
+        int i = ((Integer) iblockdata.get(BlockSnow.LAYERS)).intValue() - 1;
         float f = 0.125F;
+        AxisAlignedBB axisalignedbb = iblockdata.c(world, blockposition);
 
-        return AxisAlignedBB.a((double) i + this.minX, (double) j + this.minY, (double) k + this.minZ, (double) i + this.maxX, (double) ((float) j + (float) l * f), (double) k + this.maxZ);
+        return new AxisAlignedBB(axisalignedbb.a, axisalignedbb.b, axisalignedbb.c, axisalignedbb.d, (double) ((float) i * f), axisalignedbb.f);
     }
 
-    public boolean c() {
+    public boolean b(IBlockData iblockdata) {
         return false;
     }
 
-    public boolean d() {
+    public boolean c(IBlockData iblockdata) {
         return false;
     }
 
-    public void g() {
-        this.b(0);
+    public boolean canPlace(World world, BlockPosition blockposition) {
+        IBlockData iblockdata = world.getType(blockposition.down());
+        Block block = iblockdata.getBlock();
+
+        return block != Blocks.ICE && block != Blocks.PACKED_ICE ? (iblockdata.getMaterial() == Material.LEAVES ? true : (block == this && ((Integer) iblockdata.get(BlockSnow.LAYERS)).intValue() >= 7 ? true : iblockdata.p() && iblockdata.getMaterial().isSolid())) : false;
     }
 
-    public void updateShape(IBlockAccess iblockaccess, int i, int j, int k) {
-        this.b(iblockaccess.getData(i, j, k));
+    public void doPhysics(World world, BlockPosition blockposition, IBlockData iblockdata, Block block) {
+        this.e(world, blockposition, iblockdata);
     }
 
-    protected void b(int i) {
-        int j = i & 7;
-        float f = (float) (2 * (1 + j)) / 16.0F;
-
-        this.a(0.0F, 0.0F, 0.0F, 1.0F, f, 1.0F);
-    }
-
-    public boolean canPlace(World world, int i, int j, int k) {
-        Block block = world.getType(i, j - 1, k);
-
-        return block != Blocks.ICE && block != Blocks.PACKED_ICE ? (block.getMaterial() == Material.LEAVES ? true : (block == this && (world.getData(i, j - 1, k) & 7) == 7 ? true : block.c() && block.material.isSolid())) : false;
-    }
-
-    public void doPhysics(World world, int i, int j, int k, Block block) {
-        this.m(world, i, j, k);
-    }
-
-    private boolean m(World world, int i, int j, int k) {
-        if (!this.canPlace(world, i, j, k)) {
-            this.b(world, i, j, k, world.getData(i, j, k), 0);
-            world.setAir(i, j, k);
+    private boolean e(World world, BlockPosition blockposition, IBlockData iblockdata) {
+        if (!this.canPlace(world, blockposition)) {
+            this.b(world, blockposition, iblockdata, 0);
+            world.setAir(blockposition);
             return false;
         } else {
             return true;
         }
     }
 
-    public void a(World world, EntityHuman entityhuman, int i, int j, int k, int l) {
-        int i1 = l & 7;
-
-        this.a(world, i, j, k, new ItemStack(Items.SNOW_BALL, i1 + 1, 0));
-        world.setAir(i, j, k);
-        entityhuman.a(StatisticList.MINE_BLOCK_COUNT[Block.getId(this)], 1);
+    public void a(World world, EntityHuman entityhuman, BlockPosition blockposition, IBlockData iblockdata, TileEntity tileentity, ItemStack itemstack) {
+        a(world, blockposition, new ItemStack(Items.SNOWBALL, ((Integer) iblockdata.get(BlockSnow.LAYERS)).intValue() + 1, 0));
+        world.setAir(blockposition);
+        entityhuman.b(StatisticList.a((Block) this));
     }
 
-    public Item getDropType(int i, Random random, int j) {
-        return Items.SNOW_BALL;
+    public Item getDropType(IBlockData iblockdata, Random random, int i) {
+        return Items.SNOWBALL;
     }
 
     public int a(Random random) {
         return 0;
     }
 
-    public void a(World world, int i, int j, int k, Random random) {
-        if (world.b(EnumSkyBlock.BLOCK, i, j, k) > 11) {
+    public void b(World world, BlockPosition blockposition, IBlockData iblockdata, Random random) {
+        if (world.b(EnumSkyBlock.BLOCK, blockposition) > 11) {
             // CraftBukkit start
-            if (org.bukkit.craftbukkit.event.CraftEventFactory.callBlockFadeEvent(world.getWorld().getBlockAt(i, j, k), Blocks.AIR).isCancelled()) {
+            if (org.bukkit.craftbukkit.event.CraftEventFactory.callBlockFadeEvent(world.getWorld().getBlockAt(blockposition.getX(), blockposition.getY(), blockposition.getZ()), Blocks.AIR).isCancelled()) {
                 return;
             }
             // CraftBukkit end
-
-            this.b(world, i, j, k, world.getData(i, j, k), 0);
-            world.setAir(i, j, k);
+            this.b(world, blockposition, world.getType(blockposition), 0);
+            world.setAir(blockposition);
         }
+
+    }
+
+    public IBlockData fromLegacyData(int i) {
+        return this.getBlockData().set(BlockSnow.LAYERS, Integer.valueOf((i & 7) + 1));
+    }
+
+    public boolean a(IBlockAccess iblockaccess, BlockPosition blockposition) {
+        return ((Integer) iblockaccess.getType(blockposition).get(BlockSnow.LAYERS)).intValue() == 1;
+    }
+
+    public int toLegacyData(IBlockData iblockdata) {
+        return ((Integer) iblockdata.get(BlockSnow.LAYERS)).intValue() - 1;
+    }
+
+    protected BlockStateList getStateList() {
+        return new BlockStateList(this, new IBlockState[] { BlockSnow.LAYERS});
     }
 }

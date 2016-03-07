@@ -42,6 +42,7 @@ public final class CraftScoreboardManager implements ScoreboardManager {
     }
 
     public CraftScoreboard getNewScoreboard() {
+        org.spigotmc.AsyncCatcher.catchOp( "scoreboard creation"); // Spigot
         CraftScoreboard scoreboard = new CraftScoreboard(new ScoreboardServer(server));
         scoreboards.add(scoreboard);
         return scoreboard;
@@ -112,7 +113,7 @@ public final class CraftScoreboardManager implements ScoreboardManager {
     // CraftBukkit method
     public void updateAllScoresForList(IScoreboardCriteria criteria, String name, List<EntityPlayer> of) {
         for (ScoreboardScore score : getScoreboardScores(criteria, name, new ArrayList<ScoreboardScore>())) {
-            score.updateForList(of);
+            // PAIL: FIXME score.updateForList((List) of);
         }
     }
 }

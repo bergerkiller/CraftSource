@@ -97,6 +97,19 @@ public interface HumanEntity extends LivingEntity, AnimalTamer, Permissible, Inv
     public void openInventory(InventoryView inventory);
 
     /**
+     * Starts a trade between the player and the villager.
+     *
+     * Note that only one player may trade with a villager at once. You must use
+     * the force parameter for this.
+     *
+     * @param trader The merchant to trade with. Cannot be null.
+     * @param force whether to force the trade even if another player is trading
+     * @return The newly opened inventory view, or null if it could not be
+     * opened.
+     */
+    public InventoryView openMerchant(Villager trader, boolean force);
+
+    /**
      * Force-closes the currently open inventory view for this player, if any.
      */
     public void closeInventory();
@@ -105,7 +118,10 @@ public interface HumanEntity extends LivingEntity, AnimalTamer, Permissible, Inv
      * Returns the ItemStack currently in your hand, can be empty.
      *
      * @return The ItemStack of the item you are currently holding.
+     * @deprecated Humans may now dual wield in their off hand, use explicit
+     * methods in {@link PlayerInventory}.
      */
+    @Deprecated
     public ItemStack getItemInHand();
 
     /**
@@ -113,7 +129,10 @@ public interface HumanEntity extends LivingEntity, AnimalTamer, Permissible, Inv
      * user was holding.
      *
      * @param item The ItemStack which will end up in the hand
+     * @deprecated Humans may now dual wield in their off hand, use explicit
+     * methods in {@link PlayerInventory}.
      */
+    @Deprecated
     public void setItemInHand(ItemStack item);
 
     /**

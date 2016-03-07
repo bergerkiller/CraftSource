@@ -72,6 +72,11 @@ public abstract class JavaPlugin extends PluginBase {
      *     PluginDescriptionFile, File, File) constructor} cannot be used.
      *     <p>
      *     Its existence may be temporary.
+     * @param loader the plugin loader
+     * @param server the server instance
+     * @param description the plugin's description
+     * @param dataFolder the plugin's data folder
+     * @param file the location of the plugin
      */
     @Deprecated
     protected JavaPlugin(final PluginLoader loader, final Server server, final PluginDescriptionFile description, final File dataFolder, final File file) {
@@ -160,10 +165,9 @@ public abstract class JavaPlugin extends PluginBase {
     }
 
     /**
-     * Provides a reader for a text file located inside the jar. The behavior
-     * of this method adheres to {@link PluginAwareness.Flags#UTF8}, or if not
-     * defined, uses UTF8 if {@link FileConfiguration#UTF8_OVERRIDE} is
-     * specified, or system default otherwise.
+     * Provides a reader for a text file located inside the jar.
+     * <p>
+     * The returned reader will read text with the UTF-8 charset.
      *
      * @param file the filename of the resource to load
      * @return null if {@link #getResource(String)} returns null
@@ -174,7 +178,7 @@ public abstract class JavaPlugin extends PluginBase {
     protected final Reader getTextResource(String file) {
         final InputStream in = getResource(file);
 
-        return in == null ? null : new InputStreamReader(in, isStrictlyUTF8() || FileConfiguration.UTF8_OVERRIDE ? Charsets.UTF_8 : Charset.defaultCharset());
+        return in == null ? null : new InputStreamReader(in, Charsets.UTF_8);
     }
 
     @SuppressWarnings("deprecation")
@@ -187,36 +191,7 @@ public abstract class JavaPlugin extends PluginBase {
             return;
         }
 
-        final YamlConfiguration defConfig;
-        if (isStrictlyUTF8() || FileConfiguration.UTF8_OVERRIDE) {
-            defConfig = YamlConfiguration.loadConfiguration(new InputStreamReader(defConfigStream, Charsets.UTF_8));
-        } else {
-            final byte[] contents;
-            defConfig = new YamlConfiguration();
-            try {
-                contents = ByteStreams.toByteArray(defConfigStream);
-            } catch (final IOException e) {
-                getLogger().log(Level.SEVERE, "Unexpected failure reading config.yml", e);
-                return;
-            }
-
-            final String text = new String(contents, Charset.defaultCharset());
-            if (!text.equals(new String(contents, Charsets.UTF_8))) {
-                getLogger().warning("Default system encoding may have misread config.yml from plugin jar");
-            }
-
-            try {
-                defConfig.loadFromString(text);
-            } catch (final InvalidConfigurationException e) {
-                getLogger().log(Level.SEVERE, "Cannot load configuration from jar", e);
-            }
-        }
-
-        newConfig.setDefaults(defConfig);
-    }
-
-    private boolean isStrictlyUTF8() {
-        return getDescription().getAwareness().contains(PluginAwareness.Flags.UTF8);
+        newConfig.setDefaults(YamlConfiguration.loadConfiguration(new InputStreamReader(defConfigStream, Charsets.UTF_8)));
     }
 
     @Override
@@ -321,6 +296,12 @@ public abstract class JavaPlugin extends PluginBase {
     }
 
     /**
+     * @param loader the plugin loader
+     * @param server the server instance
+     * @param description the plugin's description
+     * @param dataFolder the plugin's data folder
+     * @param file the location of the plugin
+     * @param classLoader the class loader
      * @deprecated This method is legacy and will be removed - it must be
      *     replaced by the specially provided constructor(s).
      */
@@ -492,6 +473,7 @@ public abstract class JavaPlugin extends PluginBase {
      * does not extend the class, where the intended plugin would have
      * resided in a different jar / classloader.
      *
+     * @param <T> a class that extends JavaPlugin
      * @param clazz the class desired
      * @return the plugin that provides and implements said class
      * @throws IllegalArgumentException if clazz is null
@@ -525,6 +507,8 @@ public abstract class JavaPlugin extends PluginBase {
      * This method provides fast access to the plugin that has provided the
      * given class.
      *
+     * @param clazz a class belonging to a plugin
+     * @return the plugin that provided the class
      * @throws IllegalArgumentException if the class is not provided by a
      *     JavaPlugin
      * @throws IllegalArgumentException if class is null

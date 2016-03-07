@@ -7,7 +7,7 @@ public class CommandTell extends CommandAbstract {
 
     public CommandTell() {}
 
-    public List b() {
+    public List<String> b() {
         return Arrays.asList(new String[] { "w", "msg"});
     }
 
@@ -19,22 +19,20 @@ public class CommandTell extends CommandAbstract {
         return 0;
     }
 
-    public String c(ICommandListener icommandlistener) {
+    public String getUsage(ICommandListener icommandlistener) {
         return "commands.message.usage";
     }
 
-    public void execute(ICommandListener icommandlistener, String[] astring) {
+    public void execute(MinecraftServer minecraftserver, ICommandListener icommandlistener, String[] astring) throws CommandException {
         if (astring.length < 2) {
             throw new ExceptionUsage("commands.message.usage", new Object[0]);
         } else {
-            EntityPlayer entityplayer = d(icommandlistener, astring[0]);
+            EntityPlayer entityplayer = a(minecraftserver, icommandlistener, astring[0]);
 
-            if (entityplayer == null) {
-                throw new ExceptionPlayerNotFound();
-            } else if (entityplayer == icommandlistener) {
+            if (entityplayer == icommandlistener) {
                 throw new ExceptionPlayerNotFound("commands.message.sameTarget", new Object[0]);
             } else {
-                IChatBaseComponent ichatbasecomponent = a(icommandlistener, astring, 1, !(icommandlistener instanceof EntityHuman));
+                IChatBaseComponent ichatbasecomponent = b(icommandlistener, astring, 1, !(icommandlistener instanceof EntityHuman));
                 ChatMessage chatmessage = new ChatMessage("commands.message.display.incoming", new Object[] { icommandlistener.getScoreboardDisplayName(), ichatbasecomponent.f()});
                 ChatMessage chatmessage1 = new ChatMessage("commands.message.display.outgoing", new Object[] { entityplayer.getScoreboardDisplayName(), ichatbasecomponent.f()});
 
@@ -46,8 +44,8 @@ public class CommandTell extends CommandAbstract {
         }
     }
 
-    public List tabComplete(ICommandListener icommandlistener, String[] astring) {
-        return a(astring, MinecraftServer.getServer().getPlayers());
+    public List<String> tabComplete(MinecraftServer minecraftserver, ICommandListener icommandlistener, String[] astring, BlockPosition blockposition) {
+        return a(astring, minecraftserver.getPlayers());
     }
 
     public boolean isListStart(String[] astring, int i) {

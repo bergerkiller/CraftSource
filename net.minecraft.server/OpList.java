@@ -1,18 +1,17 @@
 package net.minecraft.server;
 
+import com.google.gson.JsonObject;
+import com.mojang.authlib.GameProfile;
 import java.io.File;
 import java.util.Iterator;
 
-import net.minecraft.util.com.google.gson.JsonObject;
-import net.minecraft.util.com.mojang.authlib.GameProfile;
+public class OpList extends JsonList<GameProfile, OpListEntry> {
 
-public class OpList extends JsonList {
-
-    public OpList(File file1) {
-        super(file1);
+    public OpList(File file) {
+        super(file);
     }
 
-    protected JsonListEntry a(JsonObject jsonobject) {
+    protected JsonListEntry<GameProfile> a(JsonObject jsonobject) {
         return new OpListEntry(jsonobject);
     }
 
@@ -29,7 +28,19 @@ public class OpList extends JsonList {
         return astring;
     }
 
-    protected String b(GameProfile gameprofile) {
+    public int a(GameProfile gameprofile) {
+        OpListEntry oplistentry = (OpListEntry) this.get(gameprofile);
+
+        return oplistentry != null ? oplistentry.a() : 0;
+    }
+
+    public boolean b(GameProfile gameprofile) {
+        OpListEntry oplistentry = (OpListEntry) this.get(gameprofile);
+
+        return oplistentry != null ? oplistentry.b() : false;
+    }
+
+    protected String c(GameProfile gameprofile) {
         return gameprofile.getId().toString();
     }
 
@@ -50,6 +61,6 @@ public class OpList extends JsonList {
     }
 
     protected String a(Object object) {
-        return this.b((GameProfile) object);
+        return this.c((GameProfile) object);
     }
 }

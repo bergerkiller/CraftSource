@@ -1,5 +1,7 @@
 package net.minecraft.server;
 
+import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 
 public class CommandGamerule extends CommandAbstract {
@@ -14,49 +16,81 @@ public class CommandGamerule extends CommandAbstract {
         return 2;
     }
 
-    public String c(ICommandListener icommandlistener) {
+    public String getUsage(ICommandListener icommandlistener) {
         return "commands.gamerule.usage";
     }
 
-    public void execute(ICommandListener icommandlistener, String[] astring) {
-        String s;
+    public void execute(MinecraftServer minecraftserver, ICommandListener icommandlistener, String[] astring) throws CommandException {
+        GameRules gamerules = icommandlistener.getWorld().getGameRules(); // CraftBukkit - Use current world
+        String s = astring.length > 0 ? astring[0] : "";
+        String s1 = astring.length > 1 ? a(astring, 1) : "";
 
-        if (astring.length == 2) {
-            s = astring[0];
-            String s1 = astring[1];
-            GameRules gamerules = this.d();
+        switch (astring.length) {
+        case 0:
+            icommandlistener.sendMessage(new ChatComponentText(a((Object[]) gamerules.getGameRules())));
+            break;
 
-            if (gamerules.contains(s)) {
-                gamerules.set(s, s1);
-                a(icommandlistener, this, "commands.gamerule.success", new Object[0]);
-            } else {
-                a(icommandlistener, this, "commands.gamerule.norule", new Object[] { s});
+        case 1:
+            if (!gamerules.contains(s)) {
+                throw new CommandException("commands.gamerule.norule", new Object[] { s});
             }
-        } else if (astring.length == 1) {
-            s = astring[0];
-            GameRules gamerules1 = this.d();
 
-            if (gamerules1.contains(s)) {
-                String s2 = gamerules1.get(s);
+            String s2 = gamerules.get(s);
 
-                icommandlistener.sendMessage((new ChatComponentText(s)).a(" = ").a(s2));
-            } else {
-                a(icommandlistener, this, "commands.gamerule.norule", new Object[] { s});
+            icommandlistener.sendMessage((new ChatComponentText(s)).a(" = ").a(s2));
+            icommandlistener.a(CommandObjectiveExecutor.EnumCommandResult.QUERY_RESULT, gamerules.c(s));
+            break;
+
+        default:
+            if (gamerules.a(s, GameRules.EnumGameRuleType.BOOLEAN_VALUE) && !"true".equals(s1) && !"false".equals(s1)) {
+                throw new CommandException("commands.generic.boolean.invalid", new Object[] { s1});
             }
-        } else if (astring.length == 0) {
-            GameRules gamerules2 = this.d();
 
-            icommandlistener.sendMessage(new ChatComponentText(a(gamerules2.getGameRules())));
+            gamerules.set(s, s1);
+            a(gamerules, s, minecraftserver);
+            a(icommandlistener, (ICommand) this, "commands.gamerule.success", new Object[] { s, s1});
+        }
+
+    }
+
+    public static void a(GameRules gamerules, String s, MinecraftServer minecraftserver) {
+        if ("reducedDebugInfo".equals(s)) {
+            int i = gamerules.getBoolean(s) ? 22 : 23;
+            Iterator iterator = minecraftserver.getPlayerList().v().iterator();
+
+            while (iterator.hasNext()) {
+                EntityPlayer entityplayer = (EntityPlayer) iterator.next();
+
+                entityplayer.playerConnection.sendPacket(new PacketPlayOutEntityStatus(entityplayer, (byte) i));
+            }
+        }
+
+    }
+
+    public List<String> tabComplete(MinecraftServer minecraftserver, ICommandListener icommandlistener, String[] astring, BlockPosition blockposition) {
+        if (astring.length == 1) {
+            return a(astring, this.a(minecraftserver).getGameRules());
         } else {
-            throw new ExceptionUsage("commands.gamerule.usage", new Object[0]);
+            if (astring.length == 2) {
+                GameRules gamerules = this.a(minecraftserver);
+
+                if (gamerules.a(astring[0], GameRules.EnumGameRuleType.BOOLEAN_VALUE)) {
+                    return a(astring, new String[] { "true", "false"});
+                }
+            }
+
+            return Collections.emptyList();
         }
     }
 
-    public List tabComplete(ICommandListener icommandlistener, String[] astring) {
-        return astring.length == 1 ? a(astring, this.d().getGameRules()) : (astring.length == 2 ? a(astring, new String[] { "true", "false"}) : null);
+    private GameRules a(MinecraftServer minecraftserver) {
+        return minecraftserver.getWorldServer(0).getGameRules();
     }
 
-    private GameRules d() {
-        return MinecraftServer.getServer().getWorldServer(0).getGameRules();
+    // CraftBukkit start - fix decompile error
+    @Override
+    public int compareTo(ICommand o) {
+        return a((ICommand) o);
     }
+    // CraftBukkit end
 }

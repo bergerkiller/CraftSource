@@ -1,16 +1,21 @@
 package net.minecraft.server;
 
+import com.google.common.base.Predicate;
+
 public class EntityIronGolem extends EntityGolem {
 
-    private int bq;
-    Village bp;
-    private int br;
-    private int bs;
+    protected static final DataWatcherObject<Byte> a = DataWatcher.a(EntityIronGolem.class, DataWatcherRegistry.a);
+    private int c;
+    Village b;
+    private int bv;
+    private int bw;
 
     public EntityIronGolem(World world) {
         super(world);
-        this.a(1.4F, 2.9F);
-        this.getNavigation().a(true);
+        this.setSize(1.4F, 2.7F);
+    }
+
+    protected void r() {
         this.goalSelector.a(1, new PathfinderGoalMeleeAttack(this, 1.0D, true));
         this.goalSelector.a(2, new PathfinderGoalMoveTowardsTarget(this, 0.9D, 32.0F));
         this.goalSelector.a(3, new PathfinderGoalMoveThroughVillage(this, 0.6D, true));
@@ -20,86 +25,83 @@ public class EntityIronGolem extends EntityGolem {
         this.goalSelector.a(7, new PathfinderGoalLookAtPlayer(this, EntityHuman.class, 6.0F));
         this.goalSelector.a(8, new PathfinderGoalRandomLookaround(this));
         this.targetSelector.a(1, new PathfinderGoalDefendVillage(this));
-        this.targetSelector.a(2, new PathfinderGoalHurtByTarget(this, false));
-        this.targetSelector.a(3, new PathfinderGoalNearestAttackableTarget(this, EntityInsentient.class, 0, false, true, IMonster.a));
+        this.targetSelector.a(2, new PathfinderGoalHurtByTarget(this, false, new Class[0]));
+        this.targetSelector.a(3, new PathfinderGoalNearestAttackableTarget(this, EntityInsentient.class, 10, false, true, new Predicate() {
+            public boolean a(EntityInsentient entityinsentient) {
+                return entityinsentient != null && IMonster.e.apply(entityinsentient) && !(entityinsentient instanceof EntityCreeper);
+            }
+
+            public boolean apply(Object object) {
+                return this.a((EntityInsentient) object);
+            }
+        }));
     }
 
-    protected void c() {
-        super.c();
-        this.datawatcher.a(16, Byte.valueOf((byte) 0));
+    protected void i() {
+        super.i();
+        this.datawatcher.register(EntityIronGolem.a, Byte.valueOf((byte) 0));
     }
 
-    public boolean bk() {
-        return true;
-    }
-
-    protected void bp() {
-        if (--this.bq <= 0) {
-            this.bq = 70 + this.random.nextInt(50);
-            this.bp = this.world.villages.getClosestVillage(MathHelper.floor(this.locX), MathHelper.floor(this.locY), MathHelper.floor(this.locZ), 32);
-            if (this.bp == null) {
-                this.bX();
+    protected void M() {
+        if (--this.c <= 0) {
+            this.c = 70 + this.random.nextInt(50);
+            this.b = this.world.ai().getClosestVillage(new BlockPosition(this), 32);
+            if (this.b == null) {
+                this.cX();
             } else {
-                ChunkCoordinates chunkcoordinates = this.bp.getCenter();
+                BlockPosition blockposition = this.b.a();
 
-                this.a(chunkcoordinates.x, chunkcoordinates.y, chunkcoordinates.z, (int) ((float) this.bp.getSize() * 0.6F));
+                this.a(blockposition, (int) ((float) this.b.b() * 0.6F));
             }
         }
 
-        super.bp();
+        super.M();
     }
 
-    protected void aD() {
-        super.aD();
+    protected void initAttributes() {
+        super.initAttributes();
         this.getAttributeInstance(GenericAttributes.maxHealth).setValue(100.0D);
-        this.getAttributeInstance(GenericAttributes.d).setValue(0.25D);
+        this.getAttributeInstance(GenericAttributes.MOVEMENT_SPEED).setValue(0.25D);
+        this.getAttributeInstance(GenericAttributes.c).setValue(1.0D);
     }
 
-    protected int j(int i) {
+    protected int d(int i) {
         return i;
     }
 
-    protected void o(Entity entity) {
-        if (entity instanceof IMonster && this.aI().nextInt(20) == 0) {
-            // CraftBukkit start
-            org.bukkit.event.entity.EntityTargetLivingEntityEvent event = org.bukkit.craftbukkit.event.CraftEventFactory.callEntityTargetLivingEvent(this, (EntityLiving) entity, org.bukkit.event.entity.EntityTargetEvent.TargetReason.COLLISION);
-            if (!event.isCancelled()) {
-                if (event.getTarget() == null) {
-                    this.setGoalTarget(null);
-                } else {
-                    this.setGoalTarget(((org.bukkit.craftbukkit.entity.CraftLivingEntity) event.getTarget()).getHandle());
-                }
-            }
-            // CraftBukkit end
+    protected void C(Entity entity) {
+        if (entity instanceof IMonster && !(entity instanceof EntityCreeper) && this.getRandom().nextInt(20) == 0) {
+            this.setGoalTarget((EntityLiving) entity, org.bukkit.event.entity.EntityTargetLivingEntityEvent.TargetReason.COLLISION, true); // CraftBukkit - set reason
         }
 
-        super.o(entity);
+        super.C(entity);
     }
 
-    public void e() {
-        super.e();
-        if (this.br > 0) {
-            --this.br;
+    public void n() {
+        super.n();
+        if (this.bv > 0) {
+            --this.bv;
         }
 
-        if (this.bs > 0) {
-            --this.bs;
+        if (this.bw > 0) {
+            --this.bw;
         }
 
         if (this.motX * this.motX + this.motZ * this.motZ > 2.500000277905201E-7D && this.random.nextInt(5) == 0) {
             int i = MathHelper.floor(this.locX);
-            int j = MathHelper.floor(this.locY - 0.20000000298023224D - (double) this.height);
+            int j = MathHelper.floor(this.locY - 0.20000000298023224D);
             int k = MathHelper.floor(this.locZ);
-            Block block = this.world.getType(i, j, k);
+            IBlockData iblockdata = this.world.getType(new BlockPosition(i, j, k));
 
-            if (block.getMaterial() != Material.AIR) {
-                this.world.addParticle("blockcrack_" + Block.getId(block) + "_" + this.world.getData(i, j, k), this.locX + ((double) this.random.nextFloat() - 0.5D) * (double) this.width, this.boundingBox.b + 0.1D, this.locZ + ((double) this.random.nextFloat() - 0.5D) * (double) this.width, 4.0D * ((double) this.random.nextFloat() - 0.5D), 0.5D, ((double) this.random.nextFloat() - 0.5D) * 4.0D);
+            if (iblockdata.getMaterial() != Material.AIR) {
+                this.world.addParticle(EnumParticle.BLOCK_CRACK, this.locX + ((double) this.random.nextFloat() - 0.5D) * (double) this.width, this.getBoundingBox().b + 0.1D, this.locZ + ((double) this.random.nextFloat() - 0.5D) * (double) this.width, 4.0D * ((double) this.random.nextFloat() - 0.5D), 0.5D, ((double) this.random.nextFloat() - 0.5D) * 4.0D, new int[] { Block.getCombinedId(iblockdata)});
             }
         }
+
     }
 
-    public boolean a(Class oclass) {
-        return this.isPlayerCreated() && EntityHuman.class.isAssignableFrom(oclass) ? false : super.a(oclass);
+    public boolean d(Class<? extends EntityLiving> oclass) {
+        return this.isPlayerCreated() && EntityHuman.class.isAssignableFrom(oclass) ? false : (oclass == EntityCreeper.class ? false : super.d(oclass));
     }
 
     public void b(NBTTagCompound nbttagcompound) {
@@ -112,77 +114,67 @@ public class EntityIronGolem extends EntityGolem {
         this.setPlayerCreated(nbttagcompound.getBoolean("PlayerCreated"));
     }
 
-    public boolean n(Entity entity) {
-        this.br = 10;
+    public boolean B(Entity entity) {
+        this.bv = 10;
         this.world.broadcastEntityEffect(this, (byte) 4);
         boolean flag = entity.damageEntity(DamageSource.mobAttack(this), (float) (7 + this.random.nextInt(15)));
 
         if (flag) {
             entity.motY += 0.4000000059604645D;
+            this.a((EntityLiving) this, entity);
         }
 
-        this.makeSound("mob.irongolem.throw", 1.0F, 1.0F);
+        this.a(SoundEffects.cG, 1.0F, 1.0F);
         return flag;
     }
 
-    public Village bZ() {
-        return this.bp;
+    public Village o() {
+        return this.b;
     }
 
     public void a(boolean flag) {
-        this.bs = flag ? 400 : 0;
+        this.bw = flag ? 400 : 0;
         this.world.broadcastEntityEffect(this, (byte) 11);
     }
 
-    protected String aT() {
-        return "mob.irongolem.hit";
+    protected SoundEffect bR() {
+        return SoundEffects.cI;
     }
 
-    protected String aU() {
-        return "mob.irongolem.death";
+    protected SoundEffect bS() {
+        return SoundEffects.cH;
     }
 
-    protected void a(int i, int j, int k, Block block) {
-        this.makeSound("mob.irongolem.walk", 1.0F, 1.0F);
+    protected void a(BlockPosition blockposition, Block block) {
+        this.a(SoundEffects.cJ, 1.0F, 1.0F);
     }
 
-    protected void dropDeathLoot(boolean flag, int i) {
-        int j = this.random.nextInt(3);
-
-        int k;
-
-        for (k = 0; k < j; ++k) {
-            this.a(Item.getItemOf(Blocks.RED_ROSE), 1, 0.0F);
-        }
-
-        k = 3 + this.random.nextInt(3);
-
-        for (int l = 0; l < k; ++l) {
-            this.a(Items.IRON_INGOT, 1);
-        }
+    protected MinecraftKey J() {
+        return LootTables.y;
     }
 
-    public int cb() {
-        return this.bs;
+    public int da() {
+        return this.bw;
     }
 
     public boolean isPlayerCreated() {
-        return (this.datawatcher.getByte(16) & 1) != 0;
+        return (((Byte) this.datawatcher.get(EntityIronGolem.a)).byteValue() & 1) != 0;
     }
 
     public void setPlayerCreated(boolean flag) {
-        byte b0 = this.datawatcher.getByte(16);
+        byte b0 = ((Byte) this.datawatcher.get(EntityIronGolem.a)).byteValue();
 
         if (flag) {
-            this.datawatcher.watch(16, Byte.valueOf((byte) (b0 | 1)));
+            this.datawatcher.set(EntityIronGolem.a, Byte.valueOf((byte) (b0 | 1)));
         } else {
-            this.datawatcher.watch(16, Byte.valueOf((byte) (b0 & -2)));
+            this.datawatcher.set(EntityIronGolem.a, Byte.valueOf((byte) (b0 & -2)));
         }
+
     }
 
     public void die(DamageSource damagesource) {
-        if (!this.isPlayerCreated() && this.killer != null && this.bp != null) {
-            this.bp.a(this.killer.getName(), -5);
+        if (!this.isPlayerCreated() && this.killer != null && this.b != null) {
+            this.b.a(this.killer.getName(), -5);
         }
 
         super.die(damagesource);

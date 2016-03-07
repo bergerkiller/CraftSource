@@ -1,166 +1,169 @@
 package net.minecraft.server;
 
+import com.google.common.base.Predicate;
 import java.util.List;
-import java.util.Random;
 
-public class BlockHopper extends BlockContainer {
+public class BlockHopper extends BlockTileEntity {
 
-    private final Random a = new Random();
-
-    public BlockHopper() {
-        super(Material.ORE);
-        this.a(CreativeModeTab.d);
-        this.a(0.0F, 0.0F, 0.0F, 1.0F, 1.0F, 1.0F);
-    }
-
-    public void updateShape(IBlockAccess iblockaccess, int i, int j, int k) {
-        this.a(0.0F, 0.0F, 0.0F, 1.0F, 1.0F, 1.0F);
-    }
-
-    public void a(World world, int i, int j, int k, AxisAlignedBB axisalignedbb, List list, Entity entity) {
-        this.a(0.0F, 0.0F, 0.0F, 1.0F, 0.625F, 1.0F);
-        super.a(world, i, j, k, axisalignedbb, list, entity);
-        float f = 0.125F;
-
-        this.a(0.0F, 0.0F, 0.0F, f, 1.0F, 1.0F);
-        super.a(world, i, j, k, axisalignedbb, list, entity);
-        this.a(0.0F, 0.0F, 0.0F, 1.0F, 1.0F, f);
-        super.a(world, i, j, k, axisalignedbb, list, entity);
-        this.a(1.0F - f, 0.0F, 0.0F, 1.0F, 1.0F, 1.0F);
-        super.a(world, i, j, k, axisalignedbb, list, entity);
-        this.a(0.0F, 0.0F, 1.0F - f, 1.0F, 1.0F, 1.0F);
-        super.a(world, i, j, k, axisalignedbb, list, entity);
-        this.a(0.0F, 0.0F, 0.0F, 1.0F, 1.0F, 1.0F);
-    }
-
-    public int getPlacedData(World world, int i, int j, int k, int l, float f, float f1, float f2, int i1) {
-        int j1 = Facing.OPPOSITE_FACING[l];
-
-        if (j1 == 1) {
-            j1 = 0;
+    public static final BlockStateDirection FACING = BlockStateDirection.of("facing", new Predicate() {
+        public boolean a(EnumDirection enumdirection) {
+            return enumdirection != EnumDirection.UP;
         }
 
-        return j1;
+        public boolean apply(Object object) {
+            return this.a((EnumDirection) object);
+        }
+    });
+    public static final BlockStateBoolean ENABLED = BlockStateBoolean.of("enabled");
+    protected static final AxisAlignedBB c = new AxisAlignedBB(0.0D, 0.0D, 0.0D, 1.0D, 0.625D, 1.0D);
+    protected static final AxisAlignedBB d = new AxisAlignedBB(0.0D, 0.0D, 0.0D, 1.0D, 1.0D, 0.125D);
+    protected static final AxisAlignedBB e = new AxisAlignedBB(0.0D, 0.0D, 0.875D, 1.0D, 1.0D, 1.0D);
+    protected static final AxisAlignedBB f = new AxisAlignedBB(0.875D, 0.0D, 0.0D, 1.0D, 1.0D, 1.0D);
+    protected static final AxisAlignedBB g = new AxisAlignedBB(0.0D, 0.0D, 0.0D, 0.125D, 1.0D, 1.0D);
+
+    public BlockHopper() {
+        super(Material.ORE, MaterialMapColor.m);
+        this.w(this.blockStateList.getBlockData().set(BlockHopper.FACING, EnumDirection.DOWN).set(BlockHopper.ENABLED, Boolean.valueOf(true)));
+        this.a(CreativeModeTab.d);
+    }
+
+    public AxisAlignedBB a(IBlockData iblockdata, IBlockAccess iblockaccess, BlockPosition blockposition) {
+        return BlockHopper.j;
+    }
+
+    public void a(IBlockData iblockdata, World world, BlockPosition blockposition, AxisAlignedBB axisalignedbb, List<AxisAlignedBB> list, Entity entity) {
+        a(blockposition, axisalignedbb, list, BlockHopper.c);
+        a(blockposition, axisalignedbb, list, BlockHopper.g);
+        a(blockposition, axisalignedbb, list, BlockHopper.f);
+        a(blockposition, axisalignedbb, list, BlockHopper.d);
+        a(blockposition, axisalignedbb, list, BlockHopper.e);
+    }
+
+    public IBlockData getPlacedState(World world, BlockPosition blockposition, EnumDirection enumdirection, float f, float f1, float f2, int i, EntityLiving entityliving) {
+        EnumDirection enumdirection1 = enumdirection.opposite();
+
+        if (enumdirection1 == EnumDirection.UP) {
+            enumdirection1 = EnumDirection.DOWN;
+        }
+
+        return this.getBlockData().set(BlockHopper.FACING, enumdirection1).set(BlockHopper.ENABLED, Boolean.valueOf(true));
     }
 
     public TileEntity a(World world, int i) {
         return new TileEntityHopper();
     }
 
-    public void postPlace(World world, int i, int j, int k, EntityLiving entityliving, ItemStack itemstack) {
-        super.postPlace(world, i, j, k, entityliving, itemstack);
+    public void postPlace(World world, BlockPosition blockposition, IBlockData iblockdata, EntityLiving entityliving, ItemStack itemstack) {
+        super.postPlace(world, blockposition, iblockdata, entityliving, itemstack);
         if (itemstack.hasName()) {
-            TileEntityHopper tileentityhopper = e((IBlockAccess) world, i, j, k);
+            TileEntity tileentity = world.getTileEntity(blockposition);
 
-            tileentityhopper.a(itemstack.getName());
-        }
-    }
-
-    public void onPlace(World world, int i, int j, int k) {
-        super.onPlace(world, i, j, k);
-        this.e(world, i, j, k);
-    }
-
-    public boolean interact(World world, int i, int j, int k, EntityHuman entityhuman, int l, float f, float f1, float f2) {
-        if (world.isStatic) {
-            return true;
-        } else {
-            TileEntityHopper tileentityhopper = e((IBlockAccess) world, i, j, k);
-
-            if (tileentityhopper != null) {
-                entityhuman.openHopper(tileentityhopper);
+            if (tileentity instanceof TileEntityHopper) {
+                ((TileEntityHopper) tileentity).a(itemstack.getName());
             }
-
-            return true;
-        }
-    }
-
-    public void doPhysics(World world, int i, int j, int k, Block block) {
-        this.e(world, i, j, k);
-    }
-
-    private void e(World world, int i, int j, int k) {
-        int l = world.getData(i, j, k);
-        int i1 = b(l);
-        boolean flag = !world.isBlockIndirectlyPowered(i, j, k);
-        boolean flag1 = c(l);
-
-        if (flag != flag1) {
-            world.setData(i, j, k, i1 | (flag ? 0 : 8), 4);
-        }
-    }
-
-    public void remove(World world, int i, int j, int k, Block block, int l) {
-        TileEntityHopper tileentityhopper = (TileEntityHopper) world.getTileEntity(i, j, k);
-
-        if (tileentityhopper != null) {
-            for (int i1 = 0; i1 < tileentityhopper.getSize(); ++i1) {
-                ItemStack itemstack = tileentityhopper.getItem(i1);
-
-                if (itemstack != null) {
-                    float f = this.a.nextFloat() * 0.8F + 0.1F;
-                    float f1 = this.a.nextFloat() * 0.8F + 0.1F;
-                    float f2 = this.a.nextFloat() * 0.8F + 0.1F;
-
-                    while (itemstack.count > 0) {
-                        int j1 = this.a.nextInt(21) + 10;
-
-                        if (j1 > itemstack.count) {
-                            j1 = itemstack.count;
-                        }
-
-                        itemstack.count -= j1;
-                        EntityItem entityitem = new EntityItem(world, (double) ((float) i + f), (double) ((float) j + f1), (double) ((float) k + f2), new ItemStack(itemstack.getItem(), j1, itemstack.getData()));
-
-                        if (itemstack.hasTag()) {
-                            entityitem.getItemStack().setTag((NBTTagCompound) itemstack.getTag().clone());
-                        }
-
-                        float f3 = 0.05F;
-
-                        entityitem.motX = (double) ((float) this.a.nextGaussian() * f3);
-                        entityitem.motY = (double) ((float) this.a.nextGaussian() * f3 + 0.2F);
-                        entityitem.motZ = (double) ((float) this.a.nextGaussian() * f3);
-                        world.addEntity(entityitem);
-                    }
-                }
-            }
-
-            world.updateAdjacentComparators(i, j, k, block);
         }
 
-        super.remove(world, i, j, k, block, l);
     }
 
-    public int b() {
-        return 38;
-    }
-
-    public boolean d() {
-        return false;
-    }
-
-    public boolean c() {
-        return false;
-    }
-
-    public static int b(int i) {
-        return Math.min(i & 7, 5); // CraftBukkit - Fix AIOOBE in callers
-    }
-
-    public static boolean c(int i) {
-        return (i & 8) != 8;
-    }
-
-    public boolean isComplexRedstone() {
+    public boolean k(IBlockData iblockdata) {
         return true;
     }
 
-    public int g(World world, int i, int j, int k, int l) {
-        return Container.b((IInventory) e((IBlockAccess) world, i, j, k));
+    public void onPlace(World world, BlockPosition blockposition, IBlockData iblockdata) {
+        this.e(world, blockposition, iblockdata);
     }
 
-    public static TileEntityHopper e(IBlockAccess iblockaccess, int i, int j, int k) {
-        return (TileEntityHopper) iblockaccess.getTileEntity(i, j, k);
+    public boolean interact(World world, BlockPosition blockposition, IBlockData iblockdata, EntityHuman entityhuman, EnumHand enumhand, ItemStack itemstack, EnumDirection enumdirection, float f, float f1, float f2) {
+        if (world.isClientSide) {
+            return true;
+        } else {
+            TileEntity tileentity = world.getTileEntity(blockposition);
+
+            if (tileentity instanceof TileEntityHopper) {
+                entityhuman.openContainer((TileEntityHopper) tileentity);
+                entityhuman.b(StatisticList.R);
+            }
+
+            return true;
+        }
+    }
+
+    public void doPhysics(World world, BlockPosition blockposition, IBlockData iblockdata, Block block) {
+        this.e(world, blockposition, iblockdata);
+    }
+
+    private void e(World world, BlockPosition blockposition, IBlockData iblockdata) {
+        boolean flag = !world.isBlockIndirectlyPowered(blockposition);
+
+        if (flag != ((Boolean) iblockdata.get(BlockHopper.ENABLED)).booleanValue()) {
+            world.setTypeAndData(blockposition, iblockdata.set(BlockHopper.ENABLED, Boolean.valueOf(flag)), 4);
+        }
+
+    }
+
+    public void remove(World world, BlockPosition blockposition, IBlockData iblockdata) {
+        TileEntity tileentity = world.getTileEntity(blockposition);
+
+        if (tileentity instanceof TileEntityHopper) {
+            InventoryUtils.dropInventory(world, blockposition, (TileEntityHopper) tileentity);
+            world.updateAdjacentComparators(blockposition, this);
+        }
+
+        super.remove(world, blockposition, iblockdata);
+    }
+
+    public EnumRenderType a(IBlockData iblockdata) {
+        return EnumRenderType.MODEL;
+    }
+
+    public boolean c(IBlockData iblockdata) {
+        return false;
+    }
+
+    public boolean b(IBlockData iblockdata) {
+        return false;
+    }
+
+    public static EnumDirection e(int i) {
+        return EnumDirection.fromType1(i & 7);
+    }
+
+    public static boolean f(int i) {
+        return (i & 8) != 8;
+    }
+
+    public boolean isComplexRedstone(IBlockData iblockdata) {
+        return true;
+    }
+
+    public int d(IBlockData iblockdata, World world, BlockPosition blockposition) {
+        return Container.a(world.getTileEntity(blockposition));
+    }
+
+    public IBlockData fromLegacyData(int i) {
+        return this.getBlockData().set(BlockHopper.FACING, e(i)).set(BlockHopper.ENABLED, Boolean.valueOf(f(i)));
+    }
+
+    public int toLegacyData(IBlockData iblockdata) {
+        byte b0 = 0;
+        int i = b0 | ((EnumDirection) iblockdata.get(BlockHopper.FACING)).a();
+
+        if (!((Boolean) iblockdata.get(BlockHopper.ENABLED)).booleanValue()) {
+            i |= 8;
+        }
+
+        return i;
+    }
+
+    public IBlockData a(IBlockData iblockdata, EnumBlockRotation enumblockrotation) {
+        return iblockdata.set(BlockHopper.FACING, enumblockrotation.a((EnumDirection) iblockdata.get(BlockHopper.FACING)));
+    }
+
+    public IBlockData a(IBlockData iblockdata, EnumBlockMirror enumblockmirror) {
+        return iblockdata.a(enumblockmirror.a((EnumDirection) iblockdata.get(BlockHopper.FACING)));
+    }
+
+    protected BlockStateList getStateList() {
+        return new BlockStateList(this, new IBlockState[] { BlockHopper.FACING, BlockHopper.ENABLED});
     }
 }

@@ -1,43 +1,45 @@
 package net.minecraft.server;
 
-import java.util.ArrayList;
+import com.google.common.collect.Lists;
+import java.io.IOException;
 import java.util.Iterator;
 import java.util.List;
 
-public class PacketPlayOutExplosion extends Packet {
+public class PacketPlayOutExplosion implements Packet<PacketListenerPlayOut> {
 
     private double a;
     private double b;
     private double c;
     private float d;
-    private List e;
+    private List<BlockPosition> e;
     private float f;
     private float g;
     private float h;
 
     public PacketPlayOutExplosion() {}
 
-    public PacketPlayOutExplosion(double d0, double d1, double d2, float f, List list, Vec3D vec3d) {
+    public PacketPlayOutExplosion(double d0, double d1, double d2, float f, List<BlockPosition> list, Vec3D vec3d) {
         this.a = d0;
         this.b = d1;
         this.c = d2;
         this.d = f;
-        this.e = new ArrayList(list);
+        this.e = Lists.newArrayList(list);
         if (vec3d != null) {
-            this.f = (float) vec3d.a;
-            this.g = (float) vec3d.b;
-            this.h = (float) vec3d.c;
+            this.f = (float) vec3d.x;
+            this.g = (float) vec3d.y;
+            this.h = (float) vec3d.z;
         }
+
     }
 
-    public void a(PacketDataSerializer packetdataserializer) {
+    public void a(PacketDataSerializer packetdataserializer) throws IOException {
         this.a = (double) packetdataserializer.readFloat();
         this.b = (double) packetdataserializer.readFloat();
         this.c = (double) packetdataserializer.readFloat();
         this.d = packetdataserializer.readFloat();
         int i = packetdataserializer.readInt();
 
-        this.e = new ArrayList(i);
+        this.e = Lists.newArrayListWithCapacity(i);
         int j = (int) this.a;
         int k = (int) this.b;
         int l = (int) this.c;
@@ -47,7 +49,7 @@ public class PacketPlayOutExplosion extends Packet {
             int k1 = packetdataserializer.readByte() + k;
             int l1 = packetdataserializer.readByte() + l;
 
-            this.e.add(new ChunkPosition(j1, k1, l1));
+            this.e.add(new BlockPosition(j1, k1, l1));
         }
 
         this.f = packetdataserializer.readFloat();
@@ -55,7 +57,7 @@ public class PacketPlayOutExplosion extends Packet {
         this.h = packetdataserializer.readFloat();
     }
 
-    public void b(PacketDataSerializer packetdataserializer) {
+    public void b(PacketDataSerializer packetdataserializer) throws IOException {
         packetdataserializer.writeFloat((float) this.a);
         packetdataserializer.writeFloat((float) this.b);
         packetdataserializer.writeFloat((float) this.c);
@@ -67,10 +69,10 @@ public class PacketPlayOutExplosion extends Packet {
         Iterator iterator = this.e.iterator();
 
         while (iterator.hasNext()) {
-            ChunkPosition chunkposition = (ChunkPosition) iterator.next();
-            int l = chunkposition.x - i;
-            int i1 = chunkposition.y - j;
-            int j1 = chunkposition.z - k;
+            BlockPosition blockposition = (BlockPosition) iterator.next();
+            int l = blockposition.getX() - i;
+            int i1 = blockposition.getY() - j;
+            int j1 = blockposition.getZ() - k;
 
             packetdataserializer.writeByte(l);
             packetdataserializer.writeByte(i1);
@@ -82,11 +84,7 @@ public class PacketPlayOutExplosion extends Packet {
         packetdataserializer.writeFloat(this.h);
     }
 
-    public void a(PacketPlayOutListener packetplayoutlistener) {
-        packetplayoutlistener.a(this);
-    }
-
-    public void handle(PacketListener packetlistener) {
-        this.a((PacketPlayOutListener) packetlistener);
+    public void a(PacketListenerPlayOut packetlistenerplayout) {
+        packetlistenerplayout.a(this);
     }
 }

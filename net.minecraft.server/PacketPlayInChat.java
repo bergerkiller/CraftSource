@@ -1,10 +1,10 @@
 package net.minecraft.server;
 
-import java.io.IOException; // CraftBukkit
+import java.io.IOException;
 
-public class PacketPlayInChat extends Packet {
+public class PacketPlayInChat implements Packet<PacketListenerPlayIn> {
 
-    private String message;
+    private String a;
 
     public PacketPlayInChat() {}
 
@@ -13,37 +13,39 @@ public class PacketPlayInChat extends Packet {
             s = s.substring(0, 100);
         }
 
-        this.message = s;
+        this.a = s;
     }
 
-    public void a(PacketDataSerializer packetdataserializer) throws IOException { // CraftBukkit - added throws
-        this.message = packetdataserializer.c(100);
+    public void a(PacketDataSerializer packetdataserializer) throws IOException {
+        this.a = packetdataserializer.c(100);
     }
 
-    public void b(PacketDataSerializer packetdataserializer) throws IOException { // CraftBukkit - added throws
-        packetdataserializer.a(this.message);
+    public void b(PacketDataSerializer packetdataserializer) throws IOException {
+        packetdataserializer.a(this.a);
     }
 
-    public void a(PacketPlayInListener packetplayinlistener) {
-        packetplayinlistener.a(this);
+    // Spigot Start
+    private static final java.util.concurrent.ExecutorService executors = java.util.concurrent.Executors.newCachedThreadPool(
+            new com.google.common.util.concurrent.ThreadFactoryBuilder().setDaemon( true ).setNameFormat( "Async Chat Thread - #%d" ).build() );
+    public void a(final PacketListenerPlayIn packetlistenerplayin) {
+        if ( !a.startsWith("/") )
+        {
+            executors.submit( new Runnable()
+            {
+
+                @Override
+                public void run()
+                {
+                    packetlistenerplayin.a( PacketPlayInChat.this );
+                }
+            } );
+            return;
+        }
+        // Spigot End
+        packetlistenerplayin.a(this);
     }
 
-    public String b() {
-        return String.format("message=\'%s\'", new Object[] { this.message});
-    }
-
-    public String c() {
-        return this.message;
-    }
-
-    // CraftBukkit start - make chat async
-    @Override
-    public boolean a() {
-        return !this.message.startsWith("/");
-    }
-    // CraftBukkit end
-
-    public void handle(PacketListener packetlistener) {
-        this.a((PacketPlayInListener) packetlistener);
+    public String a() {
+        return this.a;
     }
 }

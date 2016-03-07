@@ -3,8 +3,11 @@ package org.bukkit.entity;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.bukkit.Location;
+import org.bukkit.Material;
+import org.bukkit.attribute.Attributable;
 import org.bukkit.block.Block;
 import org.bukkit.inventory.EntityEquipment;
 import org.bukkit.potion.PotionEffect;
@@ -14,7 +17,7 @@ import org.bukkit.projectiles.ProjectileSource;
 /**
  * Represents a living entity, such as a monster or player
  */
-public interface LivingEntity extends Entity, Damageable, ProjectileSource {
+public interface LivingEntity extends Attributable, Entity, Damageable, ProjectileSource {
 
     /**
      * Gets the height of the living entity's eyes above its Location.
@@ -57,6 +60,21 @@ public interface LivingEntity extends Entity, Damageable, ProjectileSource {
     public List<Block> getLineOfSight(HashSet<Byte> transparent, int maxDistance);
 
     /**
+     * Gets all blocks along the living entity's line of sight.
+     * <p>
+     * This list contains all blocks from the living entity's eye position to
+     * target inclusive.
+     *
+     * @param transparent HashSet containing all transparent block Materials (set to
+     *     null for only air)
+     * @param maxDistance this is the maximum distance to scan (may be limited
+     *     by server by at least 100 blocks, no less)
+     * @return list containing all blocks along the living entity's line of
+     *     sight
+     */
+    public List<Block> getLineOfSight(Set<Material> transparent, int maxDistance);
+
+    /**
      * Gets the block that the living entity has targeted.
      *
      * @param transparent HashSet containing all transparent block IDs (set to
@@ -68,6 +86,17 @@ public interface LivingEntity extends Entity, Damageable, ProjectileSource {
      */
     @Deprecated
     public Block getTargetBlock(HashSet<Byte> transparent, int maxDistance);
+
+    /**
+     * Gets the block that the living entity has targeted.
+     *
+     * @param transparent HashSet containing all transparent block Materials (set to
+     *     null for only air)
+     * @param maxDistance this is the maximum distance to scan (may be limited
+     *     by server by at least 100 blocks, no less)
+     * @return block that the living entity has targeted
+     */
+    public Block getTargetBlock(Set<Material> transparent, int maxDistance);
 
     /**
      * Gets the last two blocks along the living entity's line of sight.
@@ -86,31 +115,18 @@ public interface LivingEntity extends Entity, Damageable, ProjectileSource {
     public List<Block> getLastTwoTargetBlocks(HashSet<Byte> transparent, int maxDistance);
 
     /**
-     * Throws an egg from the living entity.
+     * Gets the last two blocks along the living entity's line of sight.
+     * <p>
+     * The target block will be the last block in the list.
      *
-     * @deprecated use launchProjectile(Egg.class) instead
-     * @return the egg thrown
+     * @param transparent HashSet containing all transparent block Materials (set to
+     *     null for only air)
+     * @param maxDistance this is the maximum distance to scan. This may be
+     *     further limited by the server, but never to less than 100 blocks
+     * @return list containing the last 2 blocks along the living entity's
+     *     line of sight
      */
-    @Deprecated
-    public Egg throwEgg();
-
-    /**
-     * Throws a snowball from the living entity.
-     *
-     * @deprecated use launchProjectile(Snowball.class) instead
-     * @return the snowball thrown
-     */
-    @Deprecated
-    public Snowball throwSnowball();
-
-    /**
-     * Shoots an arrow from the living entity.
-     *
-     * @deprecated use launchProjectile(Arrow.class) instead
-     * @return the arrow shot
-     */
-    @Deprecated
-    public Arrow shootArrow();
+    public List<Block> getLastTwoTargetBlocks(Set<Material> transparent, int maxDistance);
 
     /**
      * Returns the amount of air that the living entity has remaining, in
@@ -173,6 +189,8 @@ public interface LivingEntity extends Entity, Damageable, ProjectileSource {
      * This method exists for legacy reasons to provide backwards
      * compatibility. It will not exist at runtime and should not be used
      * under any circumstances.
+     * 
+     * @return damage taken since the last no damage ticks time period
      */
     @Deprecated
     public int _INVALID_getLastDamage();
@@ -188,6 +206,8 @@ public interface LivingEntity extends Entity, Damageable, ProjectileSource {
      * This method exists for legacy reasons to provide backwards
      * compatibility. It will not exist at runtime and should not be used
      * under any circumstances.
+     * 
+     * @param damage amount of damage
      */
     @Deprecated
     public void _INVALID_setLastDamage(int damage);
@@ -319,51 +339,6 @@ public interface LivingEntity extends Entity, Damageable, ProjectileSource {
      * @return whether or not the living entity can pick up items
      */
     public boolean getCanPickupItems();
-
-    /**
-     * Sets a custom name on a mob. This name will be used in death messages
-     * and can be sent to the client as a nameplate over the mob.
-     * <p>
-     * Setting the name to null or an empty string will clear it.
-     * <p>
-     * This value has no effect on players, they will always use their real
-     * name.
-     *
-     * @param name the name to set
-     */
-    public void setCustomName(String name);
-
-    /**
-     * Gets the custom name on a mob. If there is no name this method will
-     * return null.
-     * <p>
-     * This value has no effect on players, they will always use their real
-     * name.
-     *
-     * @return name of the mob or null
-     */
-    public String getCustomName();
-
-    /**
-     * Sets whether or not to display the mob's custom name client side. The
-     * name will be displayed above the mob similarly to a player.
-     * <p>
-     * This value has no effect on players, they will always display their
-     * name.
-     *
-     * @param flag custom name or not
-     */
-    public void setCustomNameVisible(boolean flag);
-
-    /**
-     * Gets whether or not the mob's custom name is displayed client side.
-     * <p>
-     * This value has no effect on players, they will always display their
-     * name.
-     *
-     * @return if the custom name is displayed
-     */
-    public boolean isCustomNameVisible();
 
     /**
      * Returns whether the entity is currently leashed.

@@ -1,45 +1,147 @@
 package net.minecraft.server;
 
-import java.util.IdentityHashMap;
+import com.google.common.base.Predicates;
+import com.google.common.collect.Iterators;
 import java.util.Iterator;
-import java.util.List;
 
-import net.minecraft.util.com.google.common.base.Predicates;
-import net.minecraft.util.com.google.common.collect.Iterators;
-import net.minecraft.util.com.google.common.collect.Lists;
+public class RegistryID<K> implements Registry<K>, Iterable<K> {
 
-public class RegistryID implements Registry {
+    private static final Object a = null;
+    private K[] b;
+    private int[] c;
+    private K[] d;
+    private int e;
+    private int f;
 
-    private IdentityHashMap a = new IdentityHashMap(512);
-    private List b = Lists.newArrayList();
+    public RegistryID(int i) {
+        i = (int) ((float) i / 0.8F);
+        this.b = (Object[]) (new Object[i]);
+        this.c = new int[i];
+        this.d = (Object[]) (new Object[i]);
+    }
 
-    public RegistryID() {}
+    public int getId(K k0) {
+        return this.c(this.b(k0, this.d(k0)));
+    }
 
-    public void a(Object object, int i) {
-        this.a.put(object, Integer.valueOf(i));
+    public K fromId(int i) {
+        return i >= 0 && i < this.d.length ? this.d[i] : null;
+    }
 
-        while (this.b.size() <= i) {
-            this.b.add(null);
+    private int c(int i) {
+        return i == -1 ? -1 : this.c[i];
+    }
+
+    public int c(K k0) {
+        int i = this.c();
+
+        this.a(k0, i);
+        return i;
+    }
+
+    private int c() {
+        while (this.e < this.d.length && this.d[this.e] != null) {
+            ++this.e;
         }
 
-        this.b.set(i, object);
+        return this.e++;
     }
 
-    public int b(Object object) {
-        Integer integer = (Integer) this.a.get(object);
+    private void d(int i) {
+        Object[] aobject = this.b;
+        int[] aint = this.c;
 
-        return integer == null ? -1 : integer.intValue();
+        this.b = (Object[]) (new Object[i]);
+        this.c = new int[i];
+        this.d = (Object[]) (new Object[i]);
+        this.e = 0;
+        this.f = 0;
+
+        for (int j = 0; j < aobject.length; ++j) {
+            if (aobject[j] != null) {
+                this.a(aobject[j], aint[j]);
+            }
+        }
+
     }
 
-    public Object a(int i) {
-        return i >= 0 && i < this.b.size() ? this.b.get(i) : null;
+    public void a(K k0, int i) {
+        int j = Math.max(i, ++this.f);
+        int k;
+
+        if ((float) j >= (float) this.b.length * 0.8F) {
+            for (k = this.b.length << 1; k < i; k <<= 1) {
+                ;
+            }
+
+            this.d(k);
+        }
+
+        k = this.e(this.d(k0));
+        this.b[k] = k0;
+        this.c[k] = i;
+        this.d[i] = k0;
     }
 
-    public Iterator iterator() {
-        return Iterators.filter(this.b.iterator(), Predicates.notNull());
+    private int d(K k0) {
+        return (MathHelper.f(System.identityHashCode(k0)) & Integer.MAX_VALUE) % this.b.length;
     }
 
-    public boolean b(int i) {
-        return this.a(i) != null;
+    private int b(K k0, int i) {
+        int j;
+
+        for (j = i; j < this.b.length; ++j) {
+            if (this.b[j] == k0) {
+                return j;
+            }
+
+            if (this.b[j] == RegistryID.a) {
+                return -1;
+            }
+        }
+
+        for (j = 0; j < i; ++j) {
+            if (this.b[j] == k0) {
+                return j;
+            }
+
+            if (this.b[j] == RegistryID.a) {
+                return -1;
+            }
+        }
+
+        return -1;
+    }
+
+    private int e(int i) {
+        StringBuilder stringbuilder = new StringBuilder("");
+
+        int j;
+
+        for (j = i; j < this.b.length; ++j) {
+            if (this.b[j] == RegistryID.a) {
+                return j;
+            }
+
+            stringbuilder.append(j).append(' ');
+        }
+
+        for (j = 0; j < i; ++j) {
+            if (this.b[j] == RegistryID.a) {
+                return j;
+            }
+
+            stringbuilder.append(j).append(' ');
+        }
+
+        throw new RuntimeException("Overflowed :(");
+    }
+
+    public Iterator<K> iterator() {
+        return Iterators.filter(Iterators.forArray(this.d), Predicates.notNull());
+    }
+
+    public int b() {
+        return this.f + 1;
     }
 }

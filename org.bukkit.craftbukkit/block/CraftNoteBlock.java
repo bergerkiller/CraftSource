@@ -1,5 +1,6 @@
 package org.bukkit.craftbukkit.block;
 
+import net.minecraft.server.BlockPosition;
 import net.minecraft.server.TileEntityNote;
 
 import org.bukkit.Instrument;
@@ -19,6 +20,12 @@ public class CraftNoteBlock extends CraftBlockState implements NoteBlock {
 
         world = (CraftWorld) block.getWorld();
         note = (TileEntityNote) world.getTileEntityAt(getX(), getY(), getZ());
+    }
+
+    public CraftNoteBlock(final Material material, final TileEntityNote te) {
+        super(material);
+        world = null;
+        note = te;
     }
 
     public Note getNote() {
@@ -41,7 +48,7 @@ public class CraftNoteBlock extends CraftBlockState implements NoteBlock {
         Block block = getBlock();
 
         if (block.getType() == Material.NOTE_BLOCK) {
-            note.play(world.getHandle(), getX(), getY(), getZ());
+            note.play(world.getHandle(), new BlockPosition(getX(), getY(), getZ()));
             return true;
         } else {
             return false;
@@ -53,7 +60,7 @@ public class CraftNoteBlock extends CraftBlockState implements NoteBlock {
         Block block = getBlock();
 
         if (block.getType() == Material.NOTE_BLOCK) {
-            world.getHandle().playBlockAction(getX(), getY(), getZ(), CraftMagicNumbers.getBlock(block), instrument, note);
+            world.getHandle().playBlockAction(new BlockPosition(getX(), getY(), getZ()), CraftMagicNumbers.getBlock(block), instrument, note);
             return true;
         } else {
             return false;
@@ -65,10 +72,15 @@ public class CraftNoteBlock extends CraftBlockState implements NoteBlock {
         Block block = getBlock();
 
         if (block.getType() == Material.NOTE_BLOCK) {
-            world.getHandle().playBlockAction(getX(), getY(), getZ(), CraftMagicNumbers.getBlock(block), instrument.getType(), note.getId());
+            world.getHandle().playBlockAction(new BlockPosition(getX(), getY(), getZ()), CraftMagicNumbers.getBlock(block), instrument.getType(), note.getId());
             return true;
         } else {
             return false;
         }
+    }
+
+    @Override
+    public TileEntityNote getTileEntity() {
+        return note;
     }
 }

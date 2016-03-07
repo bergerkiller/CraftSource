@@ -1,6 +1,8 @@
 package net.minecraft.server;
 
-public class PacketPlayOutScoreboardDisplayObjective extends Packet {
+import java.io.IOException;
+
+public class PacketPlayOutScoreboardDisplayObjective implements Packet<PacketListenerPlayOut> {
 
     private int a;
     private String b;
@@ -14,23 +16,20 @@ public class PacketPlayOutScoreboardDisplayObjective extends Packet {
         } else {
             this.b = scoreboardobjective.getName();
         }
+
     }
 
-    public void a(PacketDataSerializer packetdataserializer) {
+    public void a(PacketDataSerializer packetdataserializer) throws IOException {
         this.a = packetdataserializer.readByte();
         this.b = packetdataserializer.c(16);
     }
 
-    public void b(PacketDataSerializer packetdataserializer) {
+    public void b(PacketDataSerializer packetdataserializer) throws IOException {
         packetdataserializer.writeByte(this.a);
         packetdataserializer.a(this.b);
     }
 
-    public void a(PacketPlayOutListener packetplayoutlistener) {
-        packetplayoutlistener.a(this);
-    }
-
-    public void handle(PacketListener packetlistener) {
-        this.a((PacketPlayOutListener) packetlistener);
+    public void a(PacketListenerPlayOut packetlistenerplayout) {
+        packetlistenerplayout.a(this);
     }
 }

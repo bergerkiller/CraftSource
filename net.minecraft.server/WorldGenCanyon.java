@@ -4,11 +4,13 @@ import java.util.Random;
 
 public class WorldGenCanyon extends WorldGenBase {
 
-    private float[] d = new float[1024];
+    protected static final IBlockData a = Blocks.FLOWING_LAVA.getBlockData();
+    protected static final IBlockData b = Blocks.AIR.getBlockData();
+    private float[] c = new float[1024];
 
     public WorldGenCanyon() {}
 
-    protected void a(long i, int j, int k, Block[] ablock, double d0, double d1, double d2, float f, float f1, float f2, int l, int i1, double d3) {
+    protected void a(long i, int j, int k, ChunkSnapshot chunksnapshot, double d0, double d1, double d2, float f, float f1, float f2, int l, int i1, double d3) {
         Random random = new Random(i);
         double d4 = (double) (j * 16 + 8);
         double d5 = (double) (k * 16 + 8);
@@ -16,7 +18,7 @@ public class WorldGenCanyon extends WorldGenBase {
         float f4 = 0.0F;
 
         if (i1 <= 0) {
-            int j1 = this.a * 16 - 16;
+            int j1 = this.e * 16 - 16;
 
             i1 = j1 - random.nextInt(j1 / 4);
         }
@@ -32,14 +34,14 @@ public class WorldGenCanyon extends WorldGenBase {
 
         for (int k1 = 0; k1 < 256; ++k1) {
             if (k1 == 0 || random.nextInt(3) == 0) {
-                f5 = 1.0F + random.nextFloat() * random.nextFloat() * 1.0F;
+                f5 = 1.0F + random.nextFloat() * random.nextFloat();
             }
 
-            this.d[k1] = f5 * f5;
+            this.c[k1] = f5 * f5;
         }
 
         for (; l < i1; ++l) {
-            double d6 = 1.5D + (double) (MathHelper.sin((float) l * 3.1415927F / (float) i1) * f * 1.0F);
+            double d6 = 1.5D + (double) (MathHelper.sin((float) l * 3.1415927F / (float) i1) * f);
             double d7 = d6 * d3;
 
             d6 *= (double) random.nextFloat() * 0.25D + 0.75D;
@@ -102,21 +104,19 @@ public class WorldGenCanyon extends WorldGenBase {
                     boolean flag1 = false;
 
                     int j3;
-                    int k3;
 
-                    for (j3 = l1; !flag1 && j3 < i2; ++j3) {
-                        for (int l3 = l2; !flag1 && l3 < i3; ++l3) {
-                            for (int i4 = k2 + 1; !flag1 && i4 >= j2 - 1; --i4) {
-                                k3 = (j3 * 16 + l3) * 256 + i4;
-                                if (i4 >= 0 && i4 < 256) {
-                                    Block block = ablock[k3];
+                    for (int k3 = l1; !flag1 && k3 < i2; ++k3) {
+                        for (j3 = l2; !flag1 && j3 < i3; ++j3) {
+                            for (int l3 = k2 + 1; !flag1 && l3 >= j2 - 1; --l3) {
+                                if (l3 >= 0 && l3 < 256) {
+                                    IBlockData iblockdata = chunksnapshot.a(k3, l3, j3);
 
-                                    if (block == Blocks.WATER || block == Blocks.STATIONARY_WATER) {
+                                    if (iblockdata.getBlock() == Blocks.FLOWING_WATER || iblockdata.getBlock() == Blocks.WATER) {
                                         flag1 = true;
                                     }
 
-                                    if (i4 != j2 - 1 && j3 != l1 && j3 != i2 - 1 && l3 != l2 && l3 != i3 - 1) {
-                                        i4 = j2;
+                                    if (l3 != j2 - 1 && k3 != l1 && k3 != i2 - 1 && j3 != l2 && j3 != i3 - 1) {
+                                        l3 = j2;
                                     }
                                 }
                             }
@@ -124,38 +124,38 @@ public class WorldGenCanyon extends WorldGenBase {
                     }
 
                     if (!flag1) {
+                        BlockPosition.MutableBlockPosition blockposition_mutableblockposition = new BlockPosition.MutableBlockPosition();
+
                         for (j3 = l1; j3 < i2; ++j3) {
                             double d12 = ((double) (j3 + j * 16) + 0.5D - d0) / d6;
 
-                            for (k3 = l2; k3 < i3; ++k3) {
-                                double d13 = ((double) (k3 + k * 16) + 0.5D - d2) / d6;
-                                int j4 = (j3 * 16 + k3) * 256 + k2;
+                            for (int i4 = l2; i4 < i3; ++i4) {
+                                double d13 = ((double) (i4 + k * 16) + 0.5D - d2) / d6;
                                 boolean flag2 = false;
 
                                 if (d12 * d12 + d13 * d13 < 1.0D) {
-                                    for (int k4 = k2 - 1; k4 >= j2; --k4) {
-                                        double d14 = ((double) k4 + 0.5D - d1) / d7;
+                                    for (int j4 = k2; j4 > j2; --j4) {
+                                        double d14 = ((double) (j4 - 1) + 0.5D - d1) / d7;
 
-                                        if ((d12 * d12 + d13 * d13) * (double) this.d[k4] + d14 * d14 / 6.0D < 1.0D) {
-                                            Block block1 = ablock[j4];
+                                        if ((d12 * d12 + d13 * d13) * (double) this.c[j4 - 1] + d14 * d14 / 6.0D < 1.0D) {
+                                            IBlockData iblockdata1 = chunksnapshot.a(j3, j4, i4);
 
-                                            if (block1 == Blocks.GRASS) {
+                                            if (iblockdata1.getBlock() == Blocks.GRASS) {
                                                 flag2 = true;
                                             }
 
-                                            if (block1 == Blocks.STONE || block1 == Blocks.DIRT || block1 == Blocks.GRASS) {
-                                                if (k4 < 10) {
-                                                    ablock[j4] = Blocks.LAVA;
+                                            if (iblockdata1.getBlock() == Blocks.STONE || iblockdata1.getBlock() == Blocks.DIRT || iblockdata1.getBlock() == Blocks.GRASS) {
+                                                if (j4 - 1 < 10) {
+                                                    chunksnapshot.a(j3, j4, i4, WorldGenCanyon.a);
                                                 } else {
-                                                    ablock[j4] = null;
-                                                    if (flag2 && ablock[j4 - 1] == Blocks.DIRT) {
-                                                        ablock[j4 - 1] = this.c.getBiome(j3 + j * 16, k3 + k * 16).ai;
+                                                    chunksnapshot.a(j3, j4, i4, WorldGenCanyon.b);
+                                                    if (flag2 && chunksnapshot.a(j3, j4 - 1, i4).getBlock() == Blocks.DIRT) {
+                                                        blockposition_mutableblockposition.c(j3 + j * 16, 0, i4 + k * 16);
+                                                        chunksnapshot.a(j3, j4 - 1, i4, this.g.getBiome(blockposition_mutableblockposition).r);
                                                     }
                                                 }
                                             }
                                         }
-
-                                        --j4;
                                     }
                                 }
                             }
@@ -168,22 +168,24 @@ public class WorldGenCanyon extends WorldGenBase {
                 }
             }
         }
+
     }
 
-    protected void a(World world, int i, int j, int k, int l, Block[] ablock) {
-        if (this.b.nextInt(50) == 0) {
-            double d0 = (double) (i * 16 + this.b.nextInt(16));
-            double d1 = (double) (this.b.nextInt(this.b.nextInt(40) + 8) + 20);
-            double d2 = (double) (j * 16 + this.b.nextInt(16));
+    protected void a(World world, int i, int j, int k, int l, ChunkSnapshot chunksnapshot) {
+        if (this.f.nextInt(50) == 0) {
+            double d0 = (double) (i * 16 + this.f.nextInt(16));
+            double d1 = (double) (this.f.nextInt(this.f.nextInt(40) + 8) + 20);
+            double d2 = (double) (j * 16 + this.f.nextInt(16));
             byte b0 = 1;
 
             for (int i1 = 0; i1 < b0; ++i1) {
-                float f = this.b.nextFloat() * 3.1415927F * 2.0F;
-                float f1 = (this.b.nextFloat() - 0.5F) * 2.0F / 8.0F;
-                float f2 = (this.b.nextFloat() * 2.0F + this.b.nextFloat()) * 2.0F;
+                float f = this.f.nextFloat() * 6.2831855F;
+                float f1 = (this.f.nextFloat() - 0.5F) * 2.0F / 8.0F;
+                float f2 = (this.f.nextFloat() * 2.0F + this.f.nextFloat()) * 2.0F;
 
-                this.a(this.b.nextLong(), k, l, ablock, d0, d1, d2, f2, f, f1, 0, 0, 3.0D);
+                this.a(this.f.nextLong(), k, l, chunksnapshot, d0, d1, d2, f2, f, f1, 0, 0, 3.0D);
             }
+
         }
     }
 }

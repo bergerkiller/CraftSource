@@ -1,34 +1,38 @@
 package net.minecraft.server;
 
+import java.io.IOException;
 import java.util.List;
+import java.util.UUID;
 
-public class PacketPlayOutSpawnEntityLiving extends Packet {
+public class PacketPlayOutSpawnEntityLiving implements Packet<PacketListenerPlayOut> {
 
     private int a;
-    private int b;
+    private UUID b;
     private int c;
-    private int d;
-    private int e;
-    private int f;
+    private double d;
+    private double e;
+    private double f;
     private int g;
     private int h;
-    private byte i;
+    private int i;
     private byte j;
     private byte k;
-    private DataWatcher l;
-    private List m;
+    private byte l;
+    private DataWatcher m;
+    private List<DataWatcher.Item<?>> n;
 
     public PacketPlayOutSpawnEntityLiving() {}
 
     public PacketPlayOutSpawnEntityLiving(EntityLiving entityliving) {
         this.a = entityliving.getId();
-        this.b = (byte) EntityTypes.a(entityliving);
-        this.c = entityliving.as.a(entityliving.locX);
-        this.d = MathHelper.floor(entityliving.locY * 32.0D);
-        this.e = entityliving.as.a(entityliving.locZ);
-        this.i = (byte) ((int) (entityliving.yaw * 256.0F / 360.0F));
-        this.j = (byte) ((int) (entityliving.pitch * 256.0F / 360.0F));
-        this.k = (byte) ((int) (entityliving.aO * 256.0F / 360.0F));
+        this.b = entityliving.getUniqueID();
+        this.c = (byte) EntityTypes.a((Entity) entityliving);
+        this.d = entityliving.locX;
+        this.e = entityliving.locY;
+        this.f = entityliving.locZ;
+        this.j = (byte) ((int) (entityliving.yaw * 256.0F / 360.0F));
+        this.k = (byte) ((int) (entityliving.pitch * 256.0F / 360.0F));
+        this.l = (byte) ((int) (entityliving.aO * 256.0F / 360.0F));
         double d0 = 3.9D;
         double d1 = entityliving.motX;
         double d2 = entityliving.motY;
@@ -58,51 +62,45 @@ public class PacketPlayOutSpawnEntityLiving extends Packet {
             d3 = d0;
         }
 
-        this.f = (int) (d1 * 8000.0D);
-        this.g = (int) (d2 * 8000.0D);
-        this.h = (int) (d3 * 8000.0D);
-        this.l = entityliving.getDataWatcher();
+        this.g = (int) (d1 * 8000.0D);
+        this.h = (int) (d2 * 8000.0D);
+        this.i = (int) (d3 * 8000.0D);
+        this.m = entityliving.getDataWatcher();
     }
 
-    public void a(PacketDataSerializer packetdataserializer) {
-        this.a = packetdataserializer.a();
-        this.b = packetdataserializer.readByte() & 255;
-        this.c = packetdataserializer.readInt();
-        this.d = packetdataserializer.readInt();
-        this.e = packetdataserializer.readInt();
-        this.i = packetdataserializer.readByte();
+    public void a(PacketDataSerializer packetdataserializer) throws IOException {
+        this.a = packetdataserializer.g();
+        this.b = packetdataserializer.i();
+        this.c = packetdataserializer.readByte() & 255;
+        this.d = packetdataserializer.readDouble();
+        this.e = packetdataserializer.readDouble();
+        this.f = packetdataserializer.readDouble();
         this.j = packetdataserializer.readByte();
         this.k = packetdataserializer.readByte();
-        this.f = packetdataserializer.readShort();
+        this.l = packetdataserializer.readByte();
         this.g = packetdataserializer.readShort();
         this.h = packetdataserializer.readShort();
-        this.m = DataWatcher.b(packetdataserializer);
+        this.i = packetdataserializer.readShort();
+        this.n = DataWatcher.b(packetdataserializer);
     }
 
-    public void b(PacketDataSerializer packetdataserializer) {
+    public void b(PacketDataSerializer packetdataserializer) throws IOException {
         packetdataserializer.b(this.a);
-        packetdataserializer.writeByte(this.b & 255);
-        packetdataserializer.writeInt(this.c);
-        packetdataserializer.writeInt(this.d);
-        packetdataserializer.writeInt(this.e);
-        packetdataserializer.writeByte(this.i);
+        packetdataserializer.a(this.b);
+        packetdataserializer.writeByte(this.c & 255);
+        packetdataserializer.writeDouble(this.d);
+        packetdataserializer.writeDouble(this.e);
+        packetdataserializer.writeDouble(this.f);
         packetdataserializer.writeByte(this.j);
         packetdataserializer.writeByte(this.k);
-        packetdataserializer.writeShort(this.f);
+        packetdataserializer.writeByte(this.l);
         packetdataserializer.writeShort(this.g);
         packetdataserializer.writeShort(this.h);
-        this.l.a(packetdataserializer);
+        packetdataserializer.writeShort(this.i);
+        this.m.a(packetdataserializer);
     }
 
-    public void a(PacketPlayOutListener packetplayoutlistener) {
-        packetplayoutlistener.a(this);
-    }
-
-    public String b() {
-        return String.format("id=%d, type=%d, x=%.2f, y=%.2f, z=%.2f, xd=%.2f, yd=%.2f, zd=%.2f", new Object[] { Integer.valueOf(this.a), Integer.valueOf(this.b), Float.valueOf((float) this.c / 32.0F), Float.valueOf((float) this.d / 32.0F), Float.valueOf((float) this.e / 32.0F), Float.valueOf((float) this.f / 8000.0F), Float.valueOf((float) this.g / 8000.0F), Float.valueOf((float) this.h / 8000.0F)});
-    }
-
-    public void handle(PacketListener packetlistener) {
-        this.a((PacketPlayOutListener) packetlistener);
+    public void a(PacketListenerPlayOut packetlistenerplayout) {
+        packetlistenerplayout.a(this);
     }
 }

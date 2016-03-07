@@ -4,56 +4,37 @@ import java.util.Random;
 
 public class BlockCake extends Block {
 
+    public static final BlockStateInteger BITES = BlockStateInteger.of("bites", 0, 6);
+    protected static final AxisAlignedBB[] b = new AxisAlignedBB[] { new AxisAlignedBB(0.0625D, 0.0D, 0.0625D, 0.9375D, 0.5D, 0.9375D), new AxisAlignedBB(0.1875D, 0.0D, 0.0625D, 0.9375D, 0.5D, 0.9375D), new AxisAlignedBB(0.3125D, 0.0D, 0.0625D, 0.9375D, 0.5D, 0.9375D), new AxisAlignedBB(0.4375D, 0.0D, 0.0625D, 0.9375D, 0.5D, 0.9375D), new AxisAlignedBB(0.5625D, 0.0D, 0.0625D, 0.9375D, 0.5D, 0.9375D), new AxisAlignedBB(0.6875D, 0.0D, 0.0625D, 0.9375D, 0.5D, 0.9375D), new AxisAlignedBB(0.8125D, 0.0D, 0.0625D, 0.9375D, 0.5D, 0.9375D)};
+
     protected BlockCake() {
         super(Material.CAKE);
+        this.w(this.blockStateList.getBlockData().set(BlockCake.BITES, Integer.valueOf(0)));
         this.a(true);
     }
 
-    public void updateShape(IBlockAccess iblockaccess, int i, int j, int k) {
-        int l = iblockaccess.getData(i, j, k);
-        float f = 0.0625F;
-        float f1 = (float) (1 + l * 2) / 16.0F;
-        float f2 = 0.5F;
-
-        this.a(f1, 0.0F, f, 1.0F - f, f2, 1.0F - f);
+    public AxisAlignedBB a(IBlockData iblockdata, IBlockAccess iblockaccess, BlockPosition blockposition) {
+        return BlockCake.b[((Integer) iblockdata.get(BlockCake.BITES)).intValue()];
     }
 
-    public void g() {
-        float f = 0.0625F;
-        float f1 = 0.5F;
-
-        this.a(f, 0.0F, f, 1.0F - f, f1, 1.0F - f);
-    }
-
-    public AxisAlignedBB a(World world, int i, int j, int k) {
-        int l = world.getData(i, j, k);
-        float f = 0.0625F;
-        float f1 = (float) (1 + l * 2) / 16.0F;
-        float f2 = 0.5F;
-
-        return AxisAlignedBB.a((double) ((float) i + f1), (double) j, (double) ((float) k + f), (double) ((float) (i + 1) - f), (double) ((float) j + f2 - f), (double) ((float) (k + 1) - f));
-    }
-
-    public boolean d() {
+    public boolean c(IBlockData iblockdata) {
         return false;
     }
 
-    public boolean c() {
+    public boolean b(IBlockData iblockdata) {
         return false;
     }
 
-    public boolean interact(World world, int i, int j, int k, EntityHuman entityhuman, int l, float f, float f1, float f2) {
-        this.b(world, i, j, k, entityhuman);
+    public boolean interact(World world, BlockPosition blockposition, IBlockData iblockdata, EntityHuman entityhuman, EnumHand enumhand, ItemStack itemstack, EnumDirection enumdirection, float f, float f1, float f2) {
+        this.b(world, blockposition, iblockdata, entityhuman);
         return true;
     }
 
-    public void attack(World world, int i, int j, int k, EntityHuman entityhuman) {
-        this.b(world, i, j, k, entityhuman);
-    }
-
-    private void b(World world, int i, int j, int k, EntityHuman entityhuman) {
-        if (entityhuman.g(false)) {
+    private void b(World world, BlockPosition blockposition, IBlockData iblockdata, EntityHuman entityhuman) {
+        if (entityhuman.l(false)) {
+            entityhuman.b(StatisticList.J);
             // CraftBukkit start
+            // entityhuman.getFoodData().eat(2, 0.1F);
             int oldFoodLevel = entityhuman.getFoodData().foodLevel;
 
             org.bukkit.event.entity.FoodLevelChangeEvent event = org.bukkit.craftbukkit.event.CraftEventFactory.callFoodLevelChangeEvent(entityhuman, 2 + oldFoodLevel);
@@ -64,35 +45,61 @@ public class BlockCake extends Block {
 
             ((EntityPlayer) entityhuman).playerConnection.sendPacket(new PacketPlayOutUpdateHealth(((EntityPlayer) entityhuman).getBukkitEntity().getScaledHealth(), entityhuman.getFoodData().foodLevel, entityhuman.getFoodData().saturationLevel));
             // CraftBukkit end
-            int l = world.getData(i, j, k) + 1;
+            int i = ((Integer) iblockdata.get(BlockCake.BITES)).intValue();
 
-            if (l >= 6) {
-                world.setAir(i, j, k);
+            if (i < 6) {
+                world.setTypeAndData(blockposition, iblockdata.set(BlockCake.BITES, Integer.valueOf(i + 1)), 3);
             } else {
-                world.setData(i, j, k, l, 2);
+                world.setAir(blockposition);
             }
+
         }
     }
 
-    public boolean canPlace(World world, int i, int j, int k) {
-        return !super.canPlace(world, i, j, k) ? false : this.j(world, i, j, k);
+    public boolean canPlace(World world, BlockPosition blockposition) {
+        return super.canPlace(world, blockposition) ? this.b(world, blockposition) : false;
     }
 
-    public void doPhysics(World world, int i, int j, int k, Block block) {
-        if (!this.j(world, i, j, k)) {
-            world.setAir(i, j, k);
+    public void doPhysics(World world, BlockPosition blockposition, IBlockData iblockdata, Block block) {
+        if (!this.b(world, blockposition)) {
+            world.setAir(blockposition);
         }
+
     }
 
-    public boolean j(World world, int i, int j, int k) {
-        return world.getType(i, j - 1, k).getMaterial().isBuildable();
+    private boolean b(World world, BlockPosition blockposition) {
+        return world.getType(blockposition.down()).getMaterial().isBuildable();
     }
 
     public int a(Random random) {
         return 0;
     }
 
-    public Item getDropType(int i, Random random, int j) {
+    public Item getDropType(IBlockData iblockdata, Random random, int i) {
         return null;
+    }
+
+    public ItemStack a(World world, BlockPosition blockposition, IBlockData iblockdata) {
+        return new ItemStack(Items.CAKE);
+    }
+
+    public IBlockData fromLegacyData(int i) {
+        return this.getBlockData().set(BlockCake.BITES, Integer.valueOf(i));
+    }
+
+    public int toLegacyData(IBlockData iblockdata) {
+        return ((Integer) iblockdata.get(BlockCake.BITES)).intValue();
+    }
+
+    protected BlockStateList getStateList() {
+        return new BlockStateList(this, new IBlockState[] { BlockCake.BITES});
+    }
+
+    public int d(IBlockData iblockdata, World world, BlockPosition blockposition) {
+        return (7 - ((Integer) iblockdata.get(BlockCake.BITES)).intValue()) * 2;
+    }
+
+    public boolean isComplexRedstone(IBlockData iblockdata) {
+        return true;
     }
 }

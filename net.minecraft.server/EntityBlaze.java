@@ -2,141 +2,113 @@ package net.minecraft.server;
 
 public class EntityBlaze extends EntityMonster {
 
-    private float bp = 0.5F;
-    private int bq;
-    private int br;
+    private float a = 0.5F;
+    private int b;
+    private static final DataWatcherObject<Byte> c = DataWatcher.a(EntityBlaze.class, DataWatcherRegistry.a);
 
     public EntityBlaze(World world) {
         super(world);
+        this.a(PathType.WATER, -1.0F);
+        this.a(PathType.LAVA, 8.0F);
+        this.a(PathType.DANGER_FIRE, 0.0F);
+        this.a(PathType.DAMAGE_FIRE, 0.0F);
         this.fireProof = true;
-        this.b = 10;
+        this.b_ = 10;
     }
 
-    protected void aD() {
-        super.aD();
-        this.getAttributeInstance(GenericAttributes.e).setValue(6.0D);
+    protected void r() {
+        this.goalSelector.a(4, new EntityBlaze.PathfinderGoalBlazeFireball(this));
+        this.goalSelector.a(5, new PathfinderGoalMoveTowardsRestriction(this, 1.0D));
+        this.goalSelector.a(7, new PathfinderGoalRandomStroll(this, 1.0D));
+        this.goalSelector.a(8, new PathfinderGoalLookAtPlayer(this, EntityHuman.class, 8.0F));
+        this.goalSelector.a(8, new PathfinderGoalRandomLookaround(this));
+        this.targetSelector.a(1, new PathfinderGoalHurtByTarget(this, true, new Class[0]));
+        this.targetSelector.a(2, new PathfinderGoalNearestAttackableTarget(this, EntityHuman.class, true));
     }
 
-    protected void c() {
-        super.c();
-        this.datawatcher.a(16, new Byte((byte) 0));
+    protected void initAttributes() {
+        super.initAttributes();
+        this.getAttributeInstance(GenericAttributes.ATTACK_DAMAGE).setValue(6.0D);
+        this.getAttributeInstance(GenericAttributes.MOVEMENT_SPEED).setValue(0.23000000417232513D);
+        this.getAttributeInstance(GenericAttributes.FOLLOW_RANGE).setValue(48.0D);
     }
 
-    protected String t() {
-        return "mob.blaze.breathe";
+    protected void i() {
+        super.i();
+        this.datawatcher.register(EntityBlaze.c, Byte.valueOf((byte) 0));
     }
 
-    protected String aT() {
-        return "mob.blaze.hit";
+    protected SoundEffect G() {
+        return SoundEffects.B;
     }
 
-    protected String aU() {
-        return "mob.blaze.death";
+    protected SoundEffect bR() {
+        return SoundEffects.E;
     }
 
-    public float d(float f) {
+    protected SoundEffect bS() {
+        return SoundEffects.D;
+    }
+
+    public float e(float f) {
         return 1.0F;
     }
 
-    public void e() {
-        if (!this.world.isStatic) {
-            if (this.L()) {
-                this.damageEntity(DamageSource.DROWN, 1.0F);
-            }
-
-            --this.bq;
-            if (this.bq <= 0) {
-                this.bq = 100;
-                this.bp = 0.5F + (float) this.random.nextGaussian() * 3.0F;
-            }
-
-            if (this.bT() != null && this.bT().locY + (double) this.bT().getHeadHeight() > this.locY + (double) this.getHeadHeight() + (double) this.bp) {
-                this.motY += (0.30000001192092896D - this.motY) * 0.30000001192092896D;
-            }
-        }
-
-        if (this.random.nextInt(24) == 0) {
-            this.world.makeSound(this.locX + 0.5D, this.locY + 0.5D, this.locZ + 0.5D, "fire.fire", 1.0F + this.random.nextFloat(), this.random.nextFloat() * 0.7F + 0.3F);
-        }
-
+    public void n() {
         if (!this.onGround && this.motY < 0.0D) {
             this.motY *= 0.6D;
         }
 
-        for (int i = 0; i < 2; ++i) {
-            this.world.addParticle("largesmoke", this.locX + (this.random.nextDouble() - 0.5D) * (double) this.width, this.locY + this.random.nextDouble() * (double) this.length, this.locZ + (this.random.nextDouble() - 0.5D) * (double) this.width, 0.0D, 0.0D, 0.0D);
-        }
-
-        super.e();
-    }
-
-    protected void a(Entity entity, float f) {
-        if (this.attackTicks <= 0 && f < 2.0F && entity.boundingBox.e > this.boundingBox.b && entity.boundingBox.b < this.boundingBox.e) {
-            this.attackTicks = 20;
-            this.n(entity);
-        } else if (f < 30.0F) {
-            double d0 = entity.locX - this.locX;
-            double d1 = entity.boundingBox.b + (double) (entity.length / 2.0F) - (this.locY + (double) (this.length / 2.0F));
-            double d2 = entity.locZ - this.locZ;
-
-            if (this.attackTicks == 0) {
-                ++this.br;
-                if (this.br == 1) {
-                    this.attackTicks = 60;
-                    this.a(true);
-                } else if (this.br <= 4) {
-                    this.attackTicks = 6;
-                } else {
-                    this.attackTicks = 100;
-                    this.br = 0;
-                    this.a(false);
-                }
-
-                if (this.br > 1) {
-                    float f1 = MathHelper.c(f) * 0.5F;
-
-                    this.world.a((EntityHuman) null, 1009, (int) this.locX, (int) this.locY, (int) this.locZ, 0);
-
-                    for (int i = 0; i < 1; ++i) {
-                        EntitySmallFireball entitysmallfireball = new EntitySmallFireball(this.world, this, d0 + this.random.nextGaussian() * (double) f1, d1, d2 + this.random.nextGaussian() * (double) f1);
-
-                        entitysmallfireball.locY = this.locY + (double) (this.length / 2.0F) + 0.5D;
-                        this.world.addEntity(entitysmallfireball);
-                    }
-                }
+        if (this.world.isClientSide) {
+            if (this.random.nextInt(24) == 0 && !this.ad()) {
+                this.world.a(this.locX + 0.5D, this.locY + 0.5D, this.locZ + 0.5D, SoundEffects.C, this.bz(), 1.0F + this.random.nextFloat(), this.random.nextFloat() * 0.7F + 0.3F, false);
             }
 
-            this.yaw = (float) (Math.atan2(d2, d0) * 180.0D / 3.1415927410125732D) - 90.0F;
-            this.bn = true;
+            for (int i = 0; i < 2; ++i) {
+                this.world.addParticle(EnumParticle.SMOKE_LARGE, this.locX + (this.random.nextDouble() - 0.5D) * (double) this.width, this.locY + this.random.nextDouble() * (double) this.length, this.locZ + (this.random.nextDouble() - 0.5D) * (double) this.width, 0.0D, 0.0D, 0.0D, new int[0]);
+            }
         }
+
+        super.n();
     }
 
-    protected void b(float f) {}
+    protected void M() {
+        if (this.ah()) {
+            this.damageEntity(DamageSource.DROWN, 1.0F);
+        }
 
-    protected Item getLoot() {
-        return Items.BLAZE_ROD;
+        --this.b;
+        if (this.b <= 0) {
+            this.b = 100;
+            this.a = 0.5F + (float) this.random.nextGaussian() * 3.0F;
+        }
+
+        EntityLiving entityliving = this.getGoalTarget();
+
+        if (entityliving != null && entityliving.locY + (double) entityliving.getHeadHeight() > this.locY + (double) this.getHeadHeight() + (double) this.a) {
+            this.motY += (0.30000001192092896D - this.motY) * 0.30000001192092896D;
+            this.impulse = true;
+        }
+
+        super.M();
     }
+
+    public void e(float f, float f1) {}
 
     public boolean isBurning() {
-        return this.bZ();
+        return this.o();
     }
 
-    protected void dropDeathLoot(boolean flag, int i) {
-        if (flag) {
-            int j = this.random.nextInt(2 + i);
-
-            for (int k = 0; k < j; ++k) {
-                this.a(Items.BLAZE_ROD, 1);
-            }
-        }
+    protected MinecraftKey J() {
+        return LootTables.o;
     }
 
-    public boolean bZ() {
-        return (this.datawatcher.getByte(16) & 1) != 0;
+    public boolean o() {
+        return (((Byte) this.datawatcher.get(EntityBlaze.c)).byteValue() & 1) != 0;
     }
 
     public void a(boolean flag) {
-        byte b0 = this.datawatcher.getByte(16);
+        byte b0 = ((Byte) this.datawatcher.get(EntityBlaze.c)).byteValue();
 
         if (flag) {
             b0 = (byte) (b0 | 1);
@@ -144,10 +116,89 @@ public class EntityBlaze extends EntityMonster {
             b0 &= -2;
         }
 
-        this.datawatcher.watch(16, Byte.valueOf(b0));
+        this.datawatcher.set(EntityBlaze.c, Byte.valueOf(b0));
     }
 
-    protected boolean j_() {
+    protected boolean s_() {
         return true;
+    }
+
+    static class PathfinderGoalBlazeFireball extends PathfinderGoal {
+
+        private EntityBlaze a;
+        private int b;
+        private int c;
+
+        public PathfinderGoalBlazeFireball(EntityBlaze entityblaze) {
+            this.a = entityblaze;
+            this.a(3);
+        }
+
+        public boolean a() {
+            EntityLiving entityliving = this.a.getGoalTarget();
+
+            return entityliving != null && entityliving.isAlive();
+        }
+
+        public void c() {
+            this.b = 0;
+        }
+
+        public void d() {
+            this.a.a(false);
+        }
+
+        public void e() {
+            --this.c;
+            EntityLiving entityliving = this.a.getGoalTarget();
+            double d0 = this.a.h(entityliving);
+
+            if (d0 < 4.0D) {
+                if (this.c <= 0) {
+                    this.c = 20;
+                    this.a.B(entityliving);
+                }
+
+                this.a.getControllerMove().a(entityliving.locX, entityliving.locY, entityliving.locZ, 1.0D);
+            } else if (d0 < 256.0D) {
+                double d1 = entityliving.locX - this.a.locX;
+                double d2 = entityliving.getBoundingBox().b + (double) (entityliving.length / 2.0F) - (this.a.locY + (double) (this.a.length / 2.0F));
+                double d3 = entityliving.locZ - this.a.locZ;
+
+                if (this.c <= 0) {
+                    ++this.b;
+                    if (this.b == 1) {
+                        this.c = 60;
+                        this.a.a(true);
+                    } else if (this.b <= 4) {
+                        this.c = 6;
+                    } else {
+                        this.c = 100;
+                        this.b = 0;
+                        this.a.a(false);
+                    }
+
+                    if (this.b > 1) {
+                        float f = MathHelper.c(MathHelper.sqrt(d0)) * 0.5F;
+
+                        this.a.world.a((EntityHuman) null, 1018, new BlockPosition((int) this.a.locX, (int) this.a.locY, (int) this.a.locZ), 0);
+
+                        for (int i = 0; i < 1; ++i) {
+                            EntitySmallFireball entitysmallfireball = new EntitySmallFireball(this.a.world, this.a, d1 + this.a.getRandom().nextGaussian() * (double) f, d2, d3 + this.a.getRandom().nextGaussian() * (double) f);
+
+                            entitysmallfireball.locY = this.a.locY + (double) (this.a.length / 2.0F) + 0.5D;
+                            this.a.world.addEntity(entitysmallfireball);
+                        }
+                    }
+                }
+
+                this.a.getControllerLook().a(entityliving, 10.0F, 10.0F);
+            } else {
+                this.a.getNavigation().o();
+                this.a.getControllerMove().a(entityliving.locX, entityliving.locY, entityliving.locZ, 1.0D);
+            }
+
+            super.e();
+        }
     }
 }

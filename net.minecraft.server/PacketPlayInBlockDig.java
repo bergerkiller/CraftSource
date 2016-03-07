@@ -1,56 +1,47 @@
 package net.minecraft.server;
 
-public class PacketPlayInBlockDig extends Packet {
+import java.io.IOException;
 
-    private int a;
-    private int b;
-    private int c;
-    private int face;
-    private int e;
+public class PacketPlayInBlockDig implements Packet<PacketListenerPlayIn> {
+
+    private BlockPosition a;
+    private EnumDirection b;
+    private PacketPlayInBlockDig.EnumPlayerDigType c;
 
     public PacketPlayInBlockDig() {}
 
-    public void a(PacketDataSerializer packetdataserializer) {
-        this.e = packetdataserializer.readUnsignedByte();
-        this.a = packetdataserializer.readInt();
-        this.b = packetdataserializer.readUnsignedByte();
-        this.c = packetdataserializer.readInt();
-        this.face = packetdataserializer.readUnsignedByte();
+    public void a(PacketDataSerializer packetdataserializer) throws IOException {
+        this.c = (PacketPlayInBlockDig.EnumPlayerDigType) packetdataserializer.a(PacketPlayInBlockDig.EnumPlayerDigType.class);
+        this.a = packetdataserializer.e();
+        this.b = EnumDirection.fromType1(packetdataserializer.readUnsignedByte());
     }
 
-    public void b(PacketDataSerializer packetdataserializer) {
-        packetdataserializer.writeByte(this.e);
-        packetdataserializer.writeInt(this.a);
-        packetdataserializer.writeByte(this.b);
-        packetdataserializer.writeInt(this.c);
-        packetdataserializer.writeByte(this.face);
+    public void b(PacketDataSerializer packetdataserializer) throws IOException {
+        packetdataserializer.a((Enum) this.c);
+        packetdataserializer.a(this.a);
+        packetdataserializer.writeByte(this.b.a());
     }
 
-    public void a(PacketPlayInListener packetplayinlistener) {
-        packetplayinlistener.a(this);
+    public void a(PacketListenerPlayIn packetlistenerplayin) {
+        packetlistenerplayin.a(this);
     }
 
-    public int c() {
+    public BlockPosition a() {
         return this.a;
     }
 
-    public int d() {
+    public EnumDirection b() {
         return this.b;
     }
 
-    public int e() {
+    public PacketPlayInBlockDig.EnumPlayerDigType c() {
         return this.c;
     }
 
-    public int f() {
-        return this.face;
-    }
+    public static enum EnumPlayerDigType {
 
-    public int g() {
-        return this.e;
-    }
+        START_DESTROY_BLOCK, ABORT_DESTROY_BLOCK, STOP_DESTROY_BLOCK, DROP_ALL_ITEMS, DROP_ITEM, RELEASE_USE_ITEM, SWAP_HELD_ITEMS;
 
-    public void handle(PacketListener packetlistener) {
-        this.a((PacketPlayInListener) packetlistener);
+        private EnumPlayerDigType() {}
     }
 }

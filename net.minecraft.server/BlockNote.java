@@ -1,47 +1,62 @@
 package net.minecraft.server;
 
-public class BlockNote extends BlockContainer {
+import com.google.common.collect.Lists;
+import java.util.List;
+
+public class BlockNote extends BlockTileEntity {
+
+    private static final List<SoundEffect> a = Lists.newArrayList(new SoundEffect[] { SoundEffects.dJ, SoundEffects.dH, SoundEffects.dM, SoundEffects.dK, SoundEffects.dI});
 
     public BlockNote() {
         super(Material.WOOD);
         this.a(CreativeModeTab.d);
     }
 
-    public void doPhysics(World world, int i, int j, int k, Block block) {
-        boolean flag = world.isBlockIndirectlyPowered(i, j, k);
-        TileEntityNote tileentitynote = (TileEntityNote) world.getTileEntity(i, j, k);
+    public void doPhysics(World world, BlockPosition blockposition, IBlockData iblockdata, Block block) {
+        boolean flag = world.isBlockIndirectlyPowered(blockposition);
+        TileEntity tileentity = world.getTileEntity(blockposition);
 
-        if (tileentitynote != null && tileentitynote.i != flag) {
-            if (flag) {
-                tileentitynote.play(world, i, j, k);
+        if (tileentity instanceof TileEntityNote) {
+            TileEntityNote tileentitynote = (TileEntityNote) tileentity;
+
+            if (tileentitynote.f != flag) {
+                if (flag) {
+                    tileentitynote.play(world, blockposition);
+                }
+
+                tileentitynote.f = flag;
             }
-
-            tileentitynote.i = flag;
         }
+
     }
 
-    public boolean interact(World world, int i, int j, int k, EntityHuman entityhuman, int l, float f, float f1, float f2) {
-        if (world.isStatic) {
+    public boolean interact(World world, BlockPosition blockposition, IBlockData iblockdata, EntityHuman entityhuman, EnumHand enumhand, ItemStack itemstack, EnumDirection enumdirection, float f, float f1, float f2) {
+        if (world.isClientSide) {
             return true;
         } else {
-            TileEntityNote tileentitynote = (TileEntityNote) world.getTileEntity(i, j, k);
+            TileEntity tileentity = world.getTileEntity(blockposition);
 
-            if (tileentitynote != null) {
-                tileentitynote.a();
-                tileentitynote.play(world, i, j, k);
+            if (tileentity instanceof TileEntityNote) {
+                TileEntityNote tileentitynote = (TileEntityNote) tileentity;
+
+                tileentitynote.b();
+                tileentitynote.play(world, blockposition);
+                entityhuman.b(StatisticList.U);
             }
 
             return true;
         }
     }
 
-    public void attack(World world, int i, int j, int k, EntityHuman entityhuman) {
-        if (!world.isStatic) {
-            TileEntityNote tileentitynote = (TileEntityNote) world.getTileEntity(i, j, k);
+    public void attack(World world, BlockPosition blockposition, EntityHuman entityhuman) {
+        if (!world.isClientSide) {
+            TileEntity tileentity = world.getTileEntity(blockposition);
 
-            if (tileentitynote != null) {
-                tileentitynote.play(world, i, j, k);
+            if (tileentity instanceof TileEntityNote) {
+                ((TileEntityNote) tileentity).play(world, blockposition);
+                entityhuman.b(StatisticList.T);
             }
+
         }
     }
 
@@ -49,28 +64,23 @@ public class BlockNote extends BlockContainer {
         return new TileEntityNote();
     }
 
-    public boolean a(World world, int i, int j, int k, int l, int i1) {
-        float f = (float) Math.pow(2.0D, (double) (i1 - 12) / 12.0D);
-        String s = "harp";
-
-        if (l == 1) {
-            s = "bd";
+    private SoundEffect e(int i) {
+        if (i < 0 || i >= BlockNote.a.size()) {
+            i = 0;
         }
 
-        if (l == 2) {
-            s = "snare";
-        }
+        return (SoundEffect) BlockNote.a.get(i);
+    }
 
-        if (l == 3) {
-            s = "hat";
-        }
+    public boolean a(World world, BlockPosition blockposition, IBlockData iblockdata, int i, int j) {
+        float f = (float) Math.pow(2.0D, (double) (j - 12) / 12.0D);
 
-        if (l == 4) {
-            s = "bassattack";
-        }
-
-        world.makeSound((double) i + 0.5D, (double) j + 0.5D, (double) k + 0.5D, "note." + s, 3.0F, f);
-        world.addParticle("note", (double) i + 0.5D, (double) j + 1.2D, (double) k + 0.5D, (double) i1 / 24.0D, 0.0D, 0.0D);
+        world.a((EntityHuman) null, blockposition, this.e(i), SoundCategory.BLOCKS, 3.0F, f);
+        world.addParticle(EnumParticle.NOTE, (double) blockposition.getX() + 0.5D, (double) blockposition.getY() + 1.2D, (double) blockposition.getZ() + 0.5D, (double) j / 24.0D, 0.0D, 0.0D, new int[0]);
         return true;
+    }
+
+    public EnumRenderType a(IBlockData iblockdata) {
+        return EnumRenderType.MODEL;
     }
 }

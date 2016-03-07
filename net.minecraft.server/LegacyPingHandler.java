@@ -1,13 +1,12 @@
 package net.minecraft.server;
 
+import com.google.common.base.Charsets;
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
+import io.netty.channel.ChannelFutureListener;
+import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.ChannelInboundHandlerAdapter;
 import java.net.InetSocketAddress;
-
-import net.minecraft.util.com.google.common.base.Charsets;
-import net.minecraft.util.io.netty.buffer.ByteBuf;
-import net.minecraft.util.io.netty.buffer.Unpooled;
-import net.minecraft.util.io.netty.channel.ChannelFutureListener;
-import net.minecraft.util.io.netty.channel.ChannelHandlerContext;
-import net.minecraft.util.io.netty.channel.ChannelInboundHandlerAdapter;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -20,7 +19,7 @@ public class LegacyPingHandler extends ChannelInboundHandlerAdapter {
         this.b = serverconnection;
     }
 
-    public void channelRead(ChannelHandlerContext channelhandlercontext, Object object) {
+    public void channelRead(ChannelHandlerContext channelhandlercontext, Object object) throws Exception {
         ByteBuf bytebuf = (ByteBuf) object;
 
         bytebuf.markReaderIndex();
@@ -35,8 +34,8 @@ public class LegacyPingHandler extends ChannelInboundHandlerAdapter {
 
                 switch (i) {
                 case 0:
-                    a.debug("Ping: (<1.3.x) from {}:{}", new Object[] { inetsocketaddress.getAddress(), Integer.valueOf(inetsocketaddress.getPort())});
-                    s = String.format("%s�%d�%d", new Object[] { minecraftserver.getMotd(), Integer.valueOf(minecraftserver.C()), Integer.valueOf(minecraftserver.D())});
+                    LegacyPingHandler.a.debug("Ping: (<1.3.x) from {}:{}", new Object[] { inetsocketaddress.getAddress(), Integer.valueOf(inetsocketaddress.getPort())});
+                    s = String.format("%s\u00a7%d\u00a7%d", new Object[] { minecraftserver.getMotd(), Integer.valueOf(minecraftserver.H()), Integer.valueOf(minecraftserver.I())});
                     this.a(channelhandlercontext, this.a(s));
                     break;
 
@@ -45,8 +44,8 @@ public class LegacyPingHandler extends ChannelInboundHandlerAdapter {
                         return;
                     }
 
-                    a.debug("Ping: (1.4-1.5.x) from {}:{}", new Object[] { inetsocketaddress.getAddress(), Integer.valueOf(inetsocketaddress.getPort())});
-                    s = String.format("�1, new Object[] { Integer.valueOf(127), minecraftserver.getVersion(), minecraftserver.getMotd(), Integer.valueOf(minecraftserver.C()), Integer.valueOf(minecraftserver.D())});
+                    LegacyPingHandler.a.debug("Ping: (1.4-1.5.x) from {}:{}", new Object[] { inetsocketaddress.getAddress(), Integer.valueOf(inetsocketaddress.getPort())});
+                    s = String.format("\u00a71\u0000%d\u0000%s\u0000%s\u0000%d\u0000%d", new Object[] { Integer.valueOf(127), minecraftserver.getVersion(), minecraftserver.getMotd(), Integer.valueOf(minecraftserver.H()), Integer.valueOf(minecraftserver.I())});
                     this.a(channelhandlercontext, this.a(s));
                     break;
 
@@ -65,8 +64,8 @@ public class LegacyPingHandler extends ChannelInboundHandlerAdapter {
                         return;
                     }
 
-                    a.debug("Ping: (1.6) from {}:{}", new Object[] { inetsocketaddress.getAddress(), Integer.valueOf(inetsocketaddress.getPort())});
-                    String s1 = String.format("�1, new Object[] { Integer.valueOf(127), minecraftserver.getVersion(), minecraftserver.getMotd(), Integer.valueOf(minecraftserver.C()), Integer.valueOf(minecraftserver.D())});
+                    LegacyPingHandler.a.debug("Ping: (1.6) from {}:{}", new Object[] { inetsocketaddress.getAddress(), Integer.valueOf(inetsocketaddress.getPort())});
+                    String s1 = String.format("\u00a71\u0000%d\u0000%s\u0000%s\u0000%d\u0000%d", new Object[] { Integer.valueOf(127), minecraftserver.getVersion(), minecraftserver.getMotd(), Integer.valueOf(minecraftserver.H()), Integer.valueOf(minecraftserver.I())});
                     ByteBuf bytebuf1 = this.a(s1);
 
                     try {
@@ -88,7 +87,9 @@ public class LegacyPingHandler extends ChannelInboundHandlerAdapter {
                 channelhandlercontext.channel().pipeline().remove("legacy_query");
                 channelhandlercontext.fireChannelRead(object);
             }
+
         }
+
     }
 
     private void a(ChannelHandlerContext channelhandlercontext, ByteBuf bytebuf) {

@@ -1,35 +1,33 @@
 package net.minecraft.server;
 
-public class PacketPlayInSetCreativeSlot extends Packet {
+import java.io.IOException;
+
+public class PacketPlayInSetCreativeSlot implements Packet<PacketListenerPlayIn> {
 
     private int slot;
     private ItemStack b;
 
     public PacketPlayInSetCreativeSlot() {}
 
-    public void a(PacketPlayInListener packetplayinlistener) {
-        packetplayinlistener.a(this);
+    public void a(PacketListenerPlayIn packetlistenerplayin) {
+        packetlistenerplayin.a(this);
     }
 
-    public void a(PacketDataSerializer packetdataserializer) {
+    public void a(PacketDataSerializer packetdataserializer) throws IOException {
         this.slot = packetdataserializer.readShort();
-        this.b = packetdataserializer.c();
+        this.b = packetdataserializer.k();
     }
 
-    public void b(PacketDataSerializer packetdataserializer) {
+    public void b(PacketDataSerializer packetdataserializer) throws IOException {
         packetdataserializer.writeShort(this.slot);
         packetdataserializer.a(this.b);
     }
 
-    public int c() {
+    public int a() {
         return this.slot;
     }
 
     public ItemStack getItemStack() {
         return this.b;
-    }
-
-    public void handle(PacketListener packetlistener) {
-        this.a((PacketPlayInListener) packetlistener);
     }
 }

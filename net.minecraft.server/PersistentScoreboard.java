@@ -2,15 +2,14 @@ package net.minecraft.server;
 
 import java.util.Collection;
 import java.util.Iterator;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 public class PersistentScoreboard extends PersistentBase {
 
-    private static final Logger a = LogManager.getLogger();
-    private Scoreboard b;
-    private NBTTagCompound c;
+    private static final Logger b = LogManager.getLogger();
+    private Scoreboard c;
+    private NBTTagCompound d;
 
     public PersistentScoreboard() {
         this("scoreboard");
@@ -21,15 +20,16 @@ public class PersistentScoreboard extends PersistentBase {
     }
 
     public void a(Scoreboard scoreboard) {
-        this.b = scoreboard;
-        if (this.c != null) {
-            this.a(this.c);
+        this.c = scoreboard;
+        if (this.d != null) {
+            this.a(this.d);
         }
+
     }
 
     public void a(NBTTagCompound nbttagcompound) {
-        if (this.b == null) {
-            this.c = nbttagcompound;
+        if (this.c == null) {
+            this.d = nbttagcompound;
         } else {
             this.b(nbttagcompound.getList("Objectives", 10));
             this.c(nbttagcompound.getList("PlayerScores", 10));
@@ -40,15 +40,31 @@ public class PersistentScoreboard extends PersistentBase {
             if (nbttagcompound.hasKeyOfType("Teams", 9)) {
                 this.a(nbttagcompound.getList("Teams", 10));
             }
+
         }
     }
 
     protected void a(NBTTagList nbttaglist) {
         for (int i = 0; i < nbttaglist.size(); ++i) {
             NBTTagCompound nbttagcompound = nbttaglist.get(i);
-            ScoreboardTeam scoreboardteam = this.b.createTeam(nbttagcompound.getString("Name"));
+            String s = nbttagcompound.getString("Name");
 
-            scoreboardteam.setDisplayName(nbttagcompound.getString("DisplayName"));
+            if (s.length() > 16) {
+                s = s.substring(0, 16);
+            }
+
+            ScoreboardTeam scoreboardteam = this.c.createTeam(s);
+            String s1 = nbttagcompound.getString("DisplayName");
+
+            if (s1.length() > 32) {
+                s1 = s1.substring(0, 32);
+            }
+
+            scoreboardteam.setDisplayName(s1);
+            if (nbttagcompound.hasKeyOfType("TeamColor", 8)) {
+                scoreboardteam.a(EnumChatFormat.b(nbttagcompound.getString("TeamColor")));
+            }
+
             scoreboardteam.setPrefix(nbttagcompound.getString("Prefix"));
             scoreboardteam.setSuffix(nbttagcompound.getString("Suffix"));
             if (nbttagcompound.hasKeyOfType("AllowFriendlyFire", 99)) {
@@ -59,50 +75,98 @@ public class PersistentScoreboard extends PersistentBase {
                 scoreboardteam.setCanSeeFriendlyInvisibles(nbttagcompound.getBoolean("SeeFriendlyInvisibles"));
             }
 
+            ScoreboardTeamBase.EnumNameTagVisibility scoreboardteambase_enumnametagvisibility;
+
+            if (nbttagcompound.hasKeyOfType("NameTagVisibility", 8)) {
+                scoreboardteambase_enumnametagvisibility = ScoreboardTeamBase.EnumNameTagVisibility.a(nbttagcompound.getString("NameTagVisibility"));
+                if (scoreboardteambase_enumnametagvisibility != null) {
+                    scoreboardteam.setNameTagVisibility(scoreboardteambase_enumnametagvisibility);
+                }
+            }
+
+            if (nbttagcompound.hasKeyOfType("DeathMessageVisibility", 8)) {
+                scoreboardteambase_enumnametagvisibility = ScoreboardTeamBase.EnumNameTagVisibility.a(nbttagcompound.getString("DeathMessageVisibility"));
+                if (scoreboardteambase_enumnametagvisibility != null) {
+                    scoreboardteam.b(scoreboardteambase_enumnametagvisibility);
+                }
+            }
+
+            if (nbttagcompound.hasKeyOfType("CollisionRule", 8)) {
+                ScoreboardTeamBase.EnumTeamPush scoreboardteambase_enumteampush = ScoreboardTeamBase.EnumTeamPush.a(nbttagcompound.getString("CollisionRule"));
+
+                if (scoreboardteambase_enumteampush != null) {
+                    scoreboardteam.a(scoreboardteambase_enumteampush);
+                }
+            }
+
             this.a(scoreboardteam, nbttagcompound.getList("Players", 8));
         }
+
     }
 
     protected void a(ScoreboardTeam scoreboardteam, NBTTagList nbttaglist) {
         for (int i = 0; i < nbttaglist.size(); ++i) {
-            this.b.addPlayerToTeam(nbttaglist.getString(i), scoreboardteam.getName());
+            this.c.addPlayerToTeam(nbttaglist.getString(i), scoreboardteam.getName());
         }
+
     }
 
     protected void c(NBTTagCompound nbttagcompound) {
-        for (int i = 0; i < 3; ++i) {
+        for (int i = 0; i < 19; ++i) {
             if (nbttagcompound.hasKeyOfType("slot_" + i, 8)) {
                 String s = nbttagcompound.getString("slot_" + i);
-                ScoreboardObjective scoreboardobjective = this.b.getObjective(s);
+                ScoreboardObjective scoreboardobjective = this.c.getObjective(s);
 
-                this.b.setDisplaySlot(i, scoreboardobjective);
+                this.c.setDisplaySlot(i, scoreboardobjective);
             }
         }
+
     }
 
     protected void b(NBTTagList nbttaglist) {
         for (int i = 0; i < nbttaglist.size(); ++i) {
             NBTTagCompound nbttagcompound = nbttaglist.get(i);
             IScoreboardCriteria iscoreboardcriteria = (IScoreboardCriteria) IScoreboardCriteria.criteria.get(nbttagcompound.getString("CriteriaName"));
-            ScoreboardObjective scoreboardobjective = this.b.registerObjective(nbttagcompound.getString("Name"), iscoreboardcriteria);
 
-            scoreboardobjective.setDisplayName(nbttagcompound.getString("DisplayName"));
+            if (iscoreboardcriteria != null) {
+                String s = nbttagcompound.getString("Name");
+
+                if (s.length() > 16) {
+                    s = s.substring(0, 16);
+                }
+
+                ScoreboardObjective scoreboardobjective = this.c.registerObjective(s, iscoreboardcriteria);
+
+                scoreboardobjective.setDisplayName(nbttagcompound.getString("DisplayName"));
+                scoreboardobjective.a(IScoreboardCriteria.EnumScoreboardHealthDisplay.a(nbttagcompound.getString("RenderType")));
+            }
         }
+
     }
 
     protected void c(NBTTagList nbttaglist) {
         for (int i = 0; i < nbttaglist.size(); ++i) {
             NBTTagCompound nbttagcompound = nbttaglist.get(i);
-            ScoreboardObjective scoreboardobjective = this.b.getObjective(nbttagcompound.getString("Objective"));
-            ScoreboardScore scoreboardscore = this.b.getPlayerScoreForObjective(nbttagcompound.getString("Name"), scoreboardobjective);
+            ScoreboardObjective scoreboardobjective = this.c.getObjective(nbttagcompound.getString("Objective"));
+            String s = nbttagcompound.getString("Name");
+
+            if (s.length() > 40) {
+                s = s.substring(0, 40);
+            }
+
+            ScoreboardScore scoreboardscore = this.c.getPlayerScoreForObjective(s, scoreboardobjective);
 
             scoreboardscore.setScore(nbttagcompound.getInt("Score"));
+            if (nbttagcompound.hasKey("Locked")) {
+                scoreboardscore.a(nbttagcompound.getBoolean("Locked"));
+            }
         }
+
     }
 
     public void b(NBTTagCompound nbttagcompound) {
-        if (this.b == null) {
-            a.warn("Tried to save scoreboard without having a scoreboard...");
+        if (this.c == null) {
+            PersistentScoreboard.b.warn("Tried to save scoreboard without having a scoreboard...");
         } else {
             nbttagcompound.set("Objectives", this.b());
             nbttagcompound.set("PlayerScores", this.e());
@@ -113,7 +177,7 @@ public class PersistentScoreboard extends PersistentBase {
 
     protected NBTTagList a() {
         NBTTagList nbttaglist = new NBTTagList();
-        Collection collection = this.b.getTeams();
+        Collection collection = this.c.getTeams();
         Iterator iterator = collection.iterator();
 
         while (iterator.hasNext()) {
@@ -122,10 +186,17 @@ public class PersistentScoreboard extends PersistentBase {
 
             nbttagcompound.setString("Name", scoreboardteam.getName());
             nbttagcompound.setString("DisplayName", scoreboardteam.getDisplayName());
+            if (scoreboardteam.m().b() >= 0) {
+                nbttagcompound.setString("TeamColor", scoreboardteam.m().e());
+            }
+
             nbttagcompound.setString("Prefix", scoreboardteam.getPrefix());
             nbttagcompound.setString("Suffix", scoreboardteam.getSuffix());
             nbttagcompound.setBoolean("AllowFriendlyFire", scoreboardteam.allowFriendlyFire());
             nbttagcompound.setBoolean("SeeFriendlyInvisibles", scoreboardteam.canSeeFriendlyInvisibles());
+            nbttagcompound.setString("NameTagVisibility", scoreboardteam.getNameTagVisibility().e);
+            nbttagcompound.setString("DeathMessageVisibility", scoreboardteam.j().e);
+            nbttagcompound.setString("CollisionRule", scoreboardteam.k().e);
             NBTTagList nbttaglist1 = new NBTTagList();
             Iterator iterator1 = scoreboardteam.getPlayerNameSet().iterator();
 
@@ -146,8 +217,8 @@ public class PersistentScoreboard extends PersistentBase {
         NBTTagCompound nbttagcompound1 = new NBTTagCompound();
         boolean flag = false;
 
-        for (int i = 0; i < 3; ++i) {
-            ScoreboardObjective scoreboardobjective = this.b.getObjectiveForSlot(i);
+        for (int i = 0; i < 19; ++i) {
+            ScoreboardObjective scoreboardobjective = this.c.getObjectiveForSlot(i);
 
             if (scoreboardobjective != null) {
                 nbttagcompound1.setString("slot_" + i, scoreboardobjective.getName());
@@ -158,21 +229,26 @@ public class PersistentScoreboard extends PersistentBase {
         if (flag) {
             nbttagcompound.set("DisplaySlots", nbttagcompound1);
         }
+
     }
 
     protected NBTTagList b() {
         NBTTagList nbttaglist = new NBTTagList();
-        Collection collection = this.b.getObjectives();
+        Collection collection = this.c.getObjectives();
         Iterator iterator = collection.iterator();
 
         while (iterator.hasNext()) {
             ScoreboardObjective scoreboardobjective = (ScoreboardObjective) iterator.next();
-            NBTTagCompound nbttagcompound = new NBTTagCompound();
 
-            nbttagcompound.setString("Name", scoreboardobjective.getName());
-            nbttagcompound.setString("CriteriaName", scoreboardobjective.getCriteria().getName());
-            nbttagcompound.setString("DisplayName", scoreboardobjective.getDisplayName());
-            nbttaglist.add(nbttagcompound);
+            if (scoreboardobjective.getCriteria() != null) {
+                NBTTagCompound nbttagcompound = new NBTTagCompound();
+
+                nbttagcompound.setString("Name", scoreboardobjective.getName());
+                nbttagcompound.setString("CriteriaName", scoreboardobjective.getCriteria().getName());
+                nbttagcompound.setString("DisplayName", scoreboardobjective.getDisplayName());
+                nbttagcompound.setString("RenderType", scoreboardobjective.e().a());
+                nbttaglist.add(nbttagcompound);
+            }
         }
 
         return nbttaglist;
@@ -180,17 +256,21 @@ public class PersistentScoreboard extends PersistentBase {
 
     protected NBTTagList e() {
         NBTTagList nbttaglist = new NBTTagList();
-        Collection collection = this.b.getScores();
+        Collection collection = this.c.getScores();
         Iterator iterator = collection.iterator();
 
         while (iterator.hasNext()) {
             ScoreboardScore scoreboardscore = (ScoreboardScore) iterator.next();
-            NBTTagCompound nbttagcompound = new NBTTagCompound();
 
-            nbttagcompound.setString("Name", scoreboardscore.getPlayerName());
-            nbttagcompound.setString("Objective", scoreboardscore.getObjective().getName());
-            nbttagcompound.setInt("Score", scoreboardscore.getScore());
-            nbttaglist.add(nbttagcompound);
+            if (scoreboardscore.getObjective() != null) {
+                NBTTagCompound nbttagcompound = new NBTTagCompound();
+
+                nbttagcompound.setString("Name", scoreboardscore.getPlayerName());
+                nbttagcompound.setString("Objective", scoreboardscore.getObjective().getName());
+                nbttagcompound.setInt("Score", scoreboardscore.getScore());
+                nbttagcompound.setBoolean("Locked", scoreboardscore.g());
+                nbttaglist.add(nbttagcompound);
+            }
         }
 
         return nbttaglist;

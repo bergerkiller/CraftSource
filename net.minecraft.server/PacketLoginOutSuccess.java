@@ -1,10 +1,10 @@
 package net.minecraft.server;
 
+import com.mojang.authlib.GameProfile;
+import java.io.IOException;
 import java.util.UUID;
 
-import net.minecraft.util.com.mojang.authlib.GameProfile;
-
-public class PacketLoginOutSuccess extends Packet {
+public class PacketLoginOutSuccess implements Packet<PacketLoginOutListener> {
 
     private GameProfile a;
 
@@ -14,7 +14,7 @@ public class PacketLoginOutSuccess extends Packet {
         this.a = gameprofile;
     }
 
-    public void a(PacketDataSerializer packetdataserializer) {
+    public void a(PacketDataSerializer packetdataserializer) throws IOException {
         String s = packetdataserializer.c(36);
         String s1 = packetdataserializer.c(16);
         UUID uuid = UUID.fromString(s);
@@ -22,7 +22,7 @@ public class PacketLoginOutSuccess extends Packet {
         this.a = new GameProfile(uuid, s1);
     }
 
-    public void b(PacketDataSerializer packetdataserializer) {
+    public void b(PacketDataSerializer packetdataserializer) throws IOException {
         UUID uuid = this.a.getId();
 
         packetdataserializer.a(uuid == null ? "" : uuid.toString());
@@ -31,13 +31,5 @@ public class PacketLoginOutSuccess extends Packet {
 
     public void a(PacketLoginOutListener packetloginoutlistener) {
         packetloginoutlistener.a(this);
-    }
-
-    public boolean a() {
-        return true;
-    }
-
-    public void handle(PacketListener packetlistener) {
-        this.a((PacketLoginOutListener) packetlistener);
     }
 }

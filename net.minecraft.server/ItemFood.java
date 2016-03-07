@@ -6,11 +6,9 @@ public class ItemFood extends Item {
     private final int b;
     private final float c;
     private final boolean d;
-    private boolean m;
-    private int n;
-    private int o;
-    private int p;
-    private float q;
+    private boolean e;
+    private MobEffect m;
+    private float n;
 
     public ItemFood(int i, float f, boolean flag) {
         this.a = 32;
@@ -24,34 +22,42 @@ public class ItemFood extends Item {
         this(i, 0.6F, flag);
     }
 
-    public ItemStack b(ItemStack itemstack, World world, EntityHuman entityhuman) {
+    public ItemStack a(ItemStack itemstack, World world, EntityLiving entityliving) {
         --itemstack.count;
-        entityhuman.getFoodData().a(this, itemstack);
-        world.makeSound(entityhuman, "random.burp", 0.5F, world.random.nextFloat() * 0.1F + 0.9F);
-        this.c(itemstack, world, entityhuman);
+        if (entityliving instanceof EntityHuman) {
+            EntityHuman entityhuman = (EntityHuman) entityliving;
+
+            entityhuman.getFoodData().a(this, itemstack);
+            world.a((EntityHuman) null, entityhuman.locX, entityhuman.locY, entityhuman.locZ, SoundEffects.ee, SoundCategory.PLAYERS, 0.5F, world.random.nextFloat() * 0.1F + 0.9F);
+            this.a(itemstack, world, entityhuman);
+            entityhuman.b(StatisticList.b((Item) this));
+        }
+
         return itemstack;
     }
 
-    protected void c(ItemStack itemstack, World world, EntityHuman entityhuman) {
-        if (!world.isStatic && this.n > 0 && world.random.nextFloat() < this.q) {
-            entityhuman.addEffect(new MobEffect(this.n, this.o * 20, this.p));
+    protected void a(ItemStack itemstack, World world, EntityHuman entityhuman) {
+        if (!world.isClientSide && this.m != null && world.random.nextFloat() < this.n) {
+            entityhuman.addEffect(new MobEffect(this.m));
         }
+
     }
 
-    public int d_(ItemStack itemstack) {
+    public int e(ItemStack itemstack) {
         return 32;
     }
 
-    public EnumAnimation d(ItemStack itemstack) {
+    public EnumAnimation f(ItemStack itemstack) {
         return EnumAnimation.EAT;
     }
 
-    public ItemStack a(ItemStack itemstack, World world, EntityHuman entityhuman) {
-        if (entityhuman.g(this.m)) {
-            entityhuman.a(itemstack, this.d_(itemstack));
+    public InteractionResultWrapper<ItemStack> a(ItemStack itemstack, World world, EntityHuman entityhuman, EnumHand enumhand) {
+        if (entityhuman.l(this.e)) {
+            entityhuman.c(enumhand);
+            return new InteractionResultWrapper(EnumInteractionResult.SUCCESS, itemstack);
+        } else {
+            return new InteractionResultWrapper(EnumInteractionResult.FAIL, itemstack);
         }
-
-        return itemstack;
     }
 
     public int getNutrition(ItemStack itemstack) {
@@ -62,20 +68,18 @@ public class ItemFood extends Item {
         return this.c;
     }
 
-    public boolean i() {
+    public boolean g() {
         return this.d;
     }
 
-    public ItemFood a(int i, int j, int k, float f) {
-        this.n = i;
-        this.o = j;
-        this.p = k;
-        this.q = f;
+    public ItemFood a(MobEffect mobeffect, float f) {
+        this.m = mobeffect;
+        this.n = f;
         return this;
     }
 
-    public ItemFood j() {
-        this.m = true;
+    public ItemFood h() {
+        this.e = true;
         return this;
     }
 }

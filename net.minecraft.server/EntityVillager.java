@@ -1,27 +1,34 @@
 package net.minecraft.server;
 
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.Iterator;
-import java.util.Map;
 import java.util.Random;
+import org.bukkit.Bukkit;
+import org.bukkit.craftbukkit.entity.CraftVillager; // CraftBukkit
+import org.bukkit.craftbukkit.inventory.CraftMerchantRecipe;
+import org.bukkit.entity.Villager;
+import org.bukkit.event.entity.VillagerAcquireTradeEvent;
+import org.bukkit.event.entity.VillagerReplenishTradeEvent;
 
 public class EntityVillager extends EntityAgeable implements IMerchant, NPC {
 
+    private static final DataWatcherObject<Integer> bw = DataWatcher.a(EntityVillager.class, DataWatcherRegistry.b);
     private int profession;
-    private boolean br;
-    private boolean bs;
+    private boolean by;
+    private boolean bz;
     Village village;
     private EntityHuman tradingPlayer;
-    private MerchantRecipeList bu;
-    private int bv;
-    private boolean bw;
-    private int riches;
-    private String by;
-    private boolean bz;
-    private float bA;
-    private static final Map bB = new HashMap();
-    private static final Map bC = new HashMap();
+    private MerchantRecipeList trades;
+    private int bC;
+    private boolean bD;
+    private boolean bE;
+    public int riches;
+    private String bG;
+    private int bH;
+    private int bI;
+    private boolean bJ;
+    private boolean bK;
+    public InventorySubcontainer inventory;
+    private static final EntityVillager.IMerchantRecipeOption[][][][] bM = new EntityVillager.IMerchantRecipeOption[][][][] { { { { new EntityVillager.MerchantRecipeOptionBuy(Items.WHEAT, new EntityVillager.MerchantOptionRandomRange(18, 22)), new EntityVillager.MerchantRecipeOptionBuy(Items.POTATO, new EntityVillager.MerchantOptionRandomRange(15, 19)), new EntityVillager.MerchantRecipeOptionBuy(Items.CARROT, new EntityVillager.MerchantOptionRandomRange(15, 19)), new EntityVillager.MerchantRecipeOptionSell(Items.BREAD, new EntityVillager.MerchantOptionRandomRange(-4, -2))}, { new EntityVillager.MerchantRecipeOptionBuy(Item.getItemOf(Blocks.PUMPKIN), new EntityVillager.MerchantOptionRandomRange(8, 13)), new EntityVillager.MerchantRecipeOptionSell(Items.PUMPKIN_PIE, new EntityVillager.MerchantOptionRandomRange(-3, -2))}, { new EntityVillager.MerchantRecipeOptionBuy(Item.getItemOf(Blocks.MELON_BLOCK), new EntityVillager.MerchantOptionRandomRange(7, 12)), new EntityVillager.MerchantRecipeOptionSell(Items.APPLE, new EntityVillager.MerchantOptionRandomRange(-5, -7))}, { new EntityVillager.MerchantRecipeOptionSell(Items.COOKIE, new EntityVillager.MerchantOptionRandomRange(-6, -10)), new EntityVillager.MerchantRecipeOptionSell(Items.CAKE, new EntityVillager.MerchantOptionRandomRange(1, 1))}}, { { new EntityVillager.MerchantRecipeOptionBuy(Items.STRING, new EntityVillager.MerchantOptionRandomRange(15, 20)), new EntityVillager.MerchantRecipeOptionBuy(Items.COAL, new EntityVillager.MerchantOptionRandomRange(16, 24)), new EntityVillager.MerchantRecipeOptionProcess(Items.FISH, new EntityVillager.MerchantOptionRandomRange(6, 6), Items.COOKED_FISH, new EntityVillager.MerchantOptionRandomRange(6, 6))}, { new EntityVillager.MerchantRecipeOptionEnchant(Items.FISHING_ROD, new EntityVillager.MerchantOptionRandomRange(7, 8))}}, { { new EntityVillager.MerchantRecipeOptionBuy(Item.getItemOf(Blocks.WOOL), new EntityVillager.MerchantOptionRandomRange(16, 22)), new EntityVillager.MerchantRecipeOptionSell(Items.SHEARS, new EntityVillager.MerchantOptionRandomRange(3, 4))}, { new EntityVillager.MerchantRecipeOptionSell(new ItemStack(Item.getItemOf(Blocks.WOOL)), new EntityVillager.MerchantOptionRandomRange(1, 2)), new EntityVillager.MerchantRecipeOptionSell(new ItemStack(Item.getItemOf(Blocks.WOOL), 1, 1), new EntityVillager.MerchantOptionRandomRange(1, 2)), new EntityVillager.MerchantRecipeOptionSell(new ItemStack(Item.getItemOf(Blocks.WOOL), 1, 2), new EntityVillager.MerchantOptionRandomRange(1, 2)), new EntityVillager.MerchantRecipeOptionSell(new ItemStack(Item.getItemOf(Blocks.WOOL), 1, 3), new EntityVillager.MerchantOptionRandomRange(1, 2)), new EntityVillager.MerchantRecipeOptionSell(new ItemStack(Item.getItemOf(Blocks.WOOL), 1, 4), new EntityVillager.MerchantOptionRandomRange(1, 2)), new EntityVillager.MerchantRecipeOptionSell(new ItemStack(Item.getItemOf(Blocks.WOOL), 1, 5), new EntityVillager.MerchantOptionRandomRange(1, 2)), new EntityVillager.MerchantRecipeOptionSell(new ItemStack(Item.getItemOf(Blocks.WOOL), 1, 6), new EntityVillager.MerchantOptionRandomRange(1, 2)), new EntityVillager.MerchantRecipeOptionSell(new ItemStack(Item.getItemOf(Blocks.WOOL), 1, 7), new EntityVillager.MerchantOptionRandomRange(1, 2)), new EntityVillager.MerchantRecipeOptionSell(new ItemStack(Item.getItemOf(Blocks.WOOL), 1, 8), new EntityVillager.MerchantOptionRandomRange(1, 2)), new EntityVillager.MerchantRecipeOptionSell(new ItemStack(Item.getItemOf(Blocks.WOOL), 1, 9), new EntityVillager.MerchantOptionRandomRange(1, 2)), new EntityVillager.MerchantRecipeOptionSell(new ItemStack(Item.getItemOf(Blocks.WOOL), 1, 10), new EntityVillager.MerchantOptionRandomRange(1, 2)), new EntityVillager.MerchantRecipeOptionSell(new ItemStack(Item.getItemOf(Blocks.WOOL), 1, 11), new EntityVillager.MerchantOptionRandomRange(1, 2)), new EntityVillager.MerchantRecipeOptionSell(new ItemStack(Item.getItemOf(Blocks.WOOL), 1, 12), new EntityVillager.MerchantOptionRandomRange(1, 2)), new EntityVillager.MerchantRecipeOptionSell(new ItemStack(Item.getItemOf(Blocks.WOOL), 1, 13), new EntityVillager.MerchantOptionRandomRange(1, 2)), new EntityVillager.MerchantRecipeOptionSell(new ItemStack(Item.getItemOf(Blocks.WOOL), 1, 14), new EntityVillager.MerchantOptionRandomRange(1, 2)), new EntityVillager.MerchantRecipeOptionSell(new ItemStack(Item.getItemOf(Blocks.WOOL), 1, 15), new EntityVillager.MerchantOptionRandomRange(1, 2))}}, { { new EntityVillager.MerchantRecipeOptionBuy(Items.STRING, new EntityVillager.MerchantOptionRandomRange(15, 20)), new EntityVillager.MerchantRecipeOptionSell(Items.ARROW, new EntityVillager.MerchantOptionRandomRange(-12, -8))}, { new EntityVillager.MerchantRecipeOptionSell(Items.BOW, new EntityVillager.MerchantOptionRandomRange(2, 3)), new EntityVillager.MerchantRecipeOptionProcess(Item.getItemOf(Blocks.GRAVEL), new EntityVillager.MerchantOptionRandomRange(10, 10), Items.FLINT, new EntityVillager.MerchantOptionRandomRange(6, 10))}}}, { { { new EntityVillager.MerchantRecipeOptionBuy(Items.PAPER, new EntityVillager.MerchantOptionRandomRange(24, 36)), new EntityVillager.MerchantRecipeOptionBook()}, { new EntityVillager.MerchantRecipeOptionBuy(Items.BOOK, new EntityVillager.MerchantOptionRandomRange(8, 10)), new EntityVillager.MerchantRecipeOptionSell(Items.COMPASS, new EntityVillager.MerchantOptionRandomRange(10, 12)), new EntityVillager.MerchantRecipeOptionSell(Item.getItemOf(Blocks.BOOKSHELF), new EntityVillager.MerchantOptionRandomRange(3, 4))}, { new EntityVillager.MerchantRecipeOptionBuy(Items.WRITTEN_BOOK, new EntityVillager.MerchantOptionRandomRange(2, 2)), new EntityVillager.MerchantRecipeOptionSell(Items.CLOCK, new EntityVillager.MerchantOptionRandomRange(10, 12)), new EntityVillager.MerchantRecipeOptionSell(Item.getItemOf(Blocks.GLASS), new EntityVillager.MerchantOptionRandomRange(-5, -3))}, { new EntityVillager.MerchantRecipeOptionBook()}, { new EntityVillager.MerchantRecipeOptionBook()}, { new EntityVillager.MerchantRecipeOptionSell(Items.NAME_TAG, new EntityVillager.MerchantOptionRandomRange(20, 22))}}}, { { { new EntityVillager.MerchantRecipeOptionBuy(Items.ROTTEN_FLESH, new EntityVillager.MerchantOptionRandomRange(36, 40)), new EntityVillager.MerchantRecipeOptionBuy(Items.GOLD_INGOT, new EntityVillager.MerchantOptionRandomRange(8, 10))}, { new EntityVillager.MerchantRecipeOptionSell(Items.REDSTONE, new EntityVillager.MerchantOptionRandomRange(-4, -1)), new EntityVillager.MerchantRecipeOptionSell(new ItemStack(Items.DYE, 1, EnumColor.BLUE.getInvColorIndex()), new EntityVillager.MerchantOptionRandomRange(-2, -1))}, { new EntityVillager.MerchantRecipeOptionSell(Items.ENDER_PEARL, new EntityVillager.MerchantOptionRandomRange(4, 7)), new EntityVillager.MerchantRecipeOptionSell(Item.getItemOf(Blocks.GLOWSTONE), new EntityVillager.MerchantOptionRandomRange(-3, -1))}, { new EntityVillager.MerchantRecipeOptionSell(Items.EXPERIENCE_BOTTLE, new EntityVillager.MerchantOptionRandomRange(3, 11))}}}, { { { new EntityVillager.MerchantRecipeOptionBuy(Items.COAL, new EntityVillager.MerchantOptionRandomRange(16, 24)), new EntityVillager.MerchantRecipeOptionSell(Items.IRON_HELMET, new EntityVillager.MerchantOptionRandomRange(4, 6))}, { new EntityVillager.MerchantRecipeOptionBuy(Items.IRON_INGOT, new EntityVillager.MerchantOptionRandomRange(7, 9)), new EntityVillager.MerchantRecipeOptionSell(Items.IRON_CHESTPLATE, new EntityVillager.MerchantOptionRandomRange(10, 14))}, { new EntityVillager.MerchantRecipeOptionBuy(Items.DIAMOND, new EntityVillager.MerchantOptionRandomRange(3, 4)), new EntityVillager.MerchantRecipeOptionEnchant(Items.DIAMOND_CHESTPLATE, new EntityVillager.MerchantOptionRandomRange(16, 19))}, { new EntityVillager.MerchantRecipeOptionSell(Items.CHAINMAIL_BOOTS, new EntityVillager.MerchantOptionRandomRange(5, 7)), new EntityVillager.MerchantRecipeOptionSell(Items.CHAINMAIL_LEGGINGS, new EntityVillager.MerchantOptionRandomRange(9, 11)), new EntityVillager.MerchantRecipeOptionSell(Items.CHAINMAIL_HELMET, new EntityVillager.MerchantOptionRandomRange(5, 7)), new EntityVillager.MerchantRecipeOptionSell(Items.CHAINMAIL_CHESTPLATE, new EntityVillager.MerchantOptionRandomRange(11, 15))}}, { { new EntityVillager.MerchantRecipeOptionBuy(Items.COAL, new EntityVillager.MerchantOptionRandomRange(16, 24)), new EntityVillager.MerchantRecipeOptionSell(Items.IRON_AXE, new EntityVillager.MerchantOptionRandomRange(6, 8))}, { new EntityVillager.MerchantRecipeOptionBuy(Items.IRON_INGOT, new EntityVillager.MerchantOptionRandomRange(7, 9)), new EntityVillager.MerchantRecipeOptionEnchant(Items.IRON_SWORD, new EntityVillager.MerchantOptionRandomRange(9, 10))}, { new EntityVillager.MerchantRecipeOptionBuy(Items.DIAMOND, new EntityVillager.MerchantOptionRandomRange(3, 4)), new EntityVillager.MerchantRecipeOptionEnchant(Items.DIAMOND_SWORD, new EntityVillager.MerchantOptionRandomRange(12, 15)), new EntityVillager.MerchantRecipeOptionEnchant(Items.DIAMOND_AXE, new EntityVillager.MerchantOptionRandomRange(9, 12))}}, { { new EntityVillager.MerchantRecipeOptionBuy(Items.COAL, new EntityVillager.MerchantOptionRandomRange(16, 24)), new EntityVillager.MerchantRecipeOptionEnchant(Items.IRON_SHOVEL, new EntityVillager.MerchantOptionRandomRange(5, 7))}, { new EntityVillager.MerchantRecipeOptionBuy(Items.IRON_INGOT, new EntityVillager.MerchantOptionRandomRange(7, 9)), new EntityVillager.MerchantRecipeOptionEnchant(Items.IRON_PICKAXE, new EntityVillager.MerchantOptionRandomRange(9, 11))}, { new EntityVillager.MerchantRecipeOptionBuy(Items.DIAMOND, new EntityVillager.MerchantOptionRandomRange(3, 4)), new EntityVillager.MerchantRecipeOptionEnchant(Items.DIAMOND_PICKAXE, new EntityVillager.MerchantOptionRandomRange(12, 15))}}}, { { { new EntityVillager.MerchantRecipeOptionBuy(Items.PORKCHOP, new EntityVillager.MerchantOptionRandomRange(14, 18)), new EntityVillager.MerchantRecipeOptionBuy(Items.CHICKEN, new EntityVillager.MerchantOptionRandomRange(14, 18))}, { new EntityVillager.MerchantRecipeOptionBuy(Items.COAL, new EntityVillager.MerchantOptionRandomRange(16, 24)), new EntityVillager.MerchantRecipeOptionSell(Items.COOKED_PORKCHOP, new EntityVillager.MerchantOptionRandomRange(-7, -5)), new EntityVillager.MerchantRecipeOptionSell(Items.COOKED_CHICKEN, new EntityVillager.MerchantOptionRandomRange(-8, -6))}}, { { new EntityVillager.MerchantRecipeOptionBuy(Items.LEATHER, new EntityVillager.MerchantOptionRandomRange(9, 12)), new EntityVillager.MerchantRecipeOptionSell(Items.LEATHER_LEGGINGS, new EntityVillager.MerchantOptionRandomRange(2, 4))}, { new EntityVillager.MerchantRecipeOptionEnchant(Items.LEATHER_CHESTPLATE, new EntityVillager.MerchantOptionRandomRange(7, 12))}, { new EntityVillager.MerchantRecipeOptionSell(Items.SADDLE, new EntityVillager.MerchantOptionRandomRange(8, 10))}}}};
 
     public EntityVillager(World world) {
         this(world, 0);
@@ -29,12 +36,16 @@ public class EntityVillager extends EntityAgeable implements IMerchant, NPC {
 
     public EntityVillager(World world, int i) {
         super(world);
+        this.inventory = new InventorySubcontainer("Items", false, 8, (CraftVillager) this.getBukkitEntity()); // CraftBukkit add argument
         this.setProfession(i);
-        this.a(0.6F, 1.8F);
-        this.getNavigation().b(true);
-        this.getNavigation().a(true);
+        this.setSize(0.6F, 1.95F);
+        ((Navigation) this.getNavigation()).a(true);
+        this.l(true);
+    }
+
+    protected void r() {
         this.goalSelector.a(0, new PathfinderGoalFloat(this));
-        this.goalSelector.a(1, new PathfinderGoalAvoidPlayer(this, EntityZombie.class, 8.0F, 0.6D, 0.6D));
+        this.goalSelector.a(1, new PathfinderGoalAvoidTarget(this, EntityZombie.class, 8.0F, 0.6D, 0.6D));
         this.goalSelector.a(1, new PathfinderGoalTradeWithPlayer(this));
         this.goalSelector.a(1, new PathfinderGoalLookAtTradingPlayer(this));
         this.goalSelector.a(2, new PathfinderGoalMoveIndoors(this));
@@ -43,154 +54,207 @@ public class EntityVillager extends EntityAgeable implements IMerchant, NPC {
         this.goalSelector.a(5, new PathfinderGoalMoveTowardsRestriction(this, 0.6D));
         this.goalSelector.a(6, new PathfinderGoalMakeLove(this));
         this.goalSelector.a(7, new PathfinderGoalTakeFlower(this));
-        this.goalSelector.a(8, new PathfinderGoalPlay(this, 0.32D));
         this.goalSelector.a(9, new PathfinderGoalInteract(this, EntityHuman.class, 3.0F, 1.0F));
-        this.goalSelector.a(9, new PathfinderGoalInteract(this, EntityVillager.class, 5.0F, 0.02F));
+        this.goalSelector.a(9, new PathfinderGoalInteractVillagers(this));
         this.goalSelector.a(9, new PathfinderGoalRandomStroll(this, 0.6D));
         this.goalSelector.a(10, new PathfinderGoalLookAtPlayer(this, EntityInsentient.class, 8.0F));
     }
 
-    protected void aD() {
-        super.aD();
-        this.getAttributeInstance(GenericAttributes.d).setValue(0.5D);
+    private void dj() {
+        if (!this.bK) {
+            this.bK = true;
+            if (this.isBaby()) {
+                this.goalSelector.a(8, new PathfinderGoalPlay(this, 0.32D));
+            } else if (this.getProfession() == 0) {
+                this.goalSelector.a(6, new PathfinderGoalVillagerFarm(this, 0.6D));
+            }
+
+        }
     }
 
-    public boolean bk() {
-        return true;
+    protected void o() {
+        if (this.getProfession() == 0) {
+            this.goalSelector.a(8, new PathfinderGoalVillagerFarm(this, 0.6D));
+        }
+
+        super.o();
     }
 
-    protected void bp() {
+    protected void initAttributes() {
+        super.initAttributes();
+        this.getAttributeInstance(GenericAttributes.MOVEMENT_SPEED).setValue(0.5D);
+    }
+
+    protected void M() {
         if (--this.profession <= 0) {
-            this.world.villages.a(MathHelper.floor(this.locX), MathHelper.floor(this.locY), MathHelper.floor(this.locZ));
-            this.profession = 70 + this.random.nextInt(50);
-            this.village = this.world.villages.getClosestVillage(MathHelper.floor(this.locX), MathHelper.floor(this.locY), MathHelper.floor(this.locZ), 32);
-            if (this.village == null) {
-                this.bX();
-            } else {
-                ChunkCoordinates chunkcoordinates = this.village.getCenter();
+            BlockPosition blockposition = new BlockPosition(this);
 
-                this.a(chunkcoordinates.x, chunkcoordinates.y, chunkcoordinates.z, (int) ((float) this.village.getSize() * 0.6F));
-                if (this.bz) {
-                    this.bz = false;
+            this.world.ai().a(blockposition);
+            this.profession = 70 + this.random.nextInt(50);
+            this.village = this.world.ai().getClosestVillage(blockposition, 32);
+            if (this.village == null) {
+                this.cX();
+            } else {
+                BlockPosition blockposition1 = this.village.a();
+
+                this.a(blockposition1, this.village.b());
+                if (this.bJ) {
+                    this.bJ = false;
                     this.village.b(5);
                 }
             }
         }
 
-        if (!this.cc() && this.bv > 0) {
-            --this.bv;
-            if (this.bv <= 0) {
-                if (this.bw) {
-                    if (this.bu.size() > 1) {
-                        Iterator iterator = this.bu.iterator();
+        if (!this.dc() && this.bC > 0) {
+            --this.bC;
+            if (this.bC <= 0) {
+                if (this.bD) {
+                    Iterator iterator = this.trades.iterator();
 
-                        while (iterator.hasNext()) {
-                            MerchantRecipe merchantrecipe = (MerchantRecipe) iterator.next();
+                    while (iterator.hasNext()) {
+                        MerchantRecipe merchantrecipe = (MerchantRecipe) iterator.next();
 
-                            if (merchantrecipe.g()) {
-                                merchantrecipe.a(this.random.nextInt(6) + this.random.nextInt(6) + 2);
+                        if (merchantrecipe.h()) {
+                            // CraftBukkit start
+                            int bonus = this.random.nextInt(6) + this.random.nextInt(6) + 2;
+                            VillagerReplenishTradeEvent event = new VillagerReplenishTradeEvent((Villager) this.getBukkitEntity(), merchantrecipe.asBukkit(), bonus);
+                            Bukkit.getPluginManager().callEvent(event);
+                            if (!event.isCancelled()) {
+                                merchantrecipe.a(event.getBonus());
                             }
+                            // CraftBukkit end
                         }
                     }
 
-                    this.t(1);
-                    this.bw = false;
-                    if (this.village != null && this.by != null) {
+                    this.dk();
+                    this.bD = false;
+                    if (this.village != null && this.bG != null) {
                         this.world.broadcastEntityEffect(this, (byte) 14);
-                        this.village.a(this.by, 1);
+                        this.village.a(this.bG, 1);
                     }
                 }
 
-                this.addEffect(new MobEffect(MobEffectList.REGENERATION.id, 200, 0));
+                this.addEffect(new MobEffect(MobEffects.REGENERATION, 200, 0));
             }
         }
 
-        super.bp();
+        super.M();
     }
 
-    public boolean a(EntityHuman entityhuman) {
-        ItemStack itemstack = entityhuman.inventory.getItemInHand();
-        boolean flag = itemstack != null && itemstack.getItem() == Items.MONSTER_EGG;
+    public boolean a(EntityHuman entityhuman, EnumHand enumhand, ItemStack itemstack) {
+        boolean flag = itemstack != null && itemstack.getItem() == Items.SPAWN_EGG;
 
-        if (!flag && this.isAlive() && !this.cc() && !this.isBaby()) {
-            if (!this.world.isStatic) {
-                this.a_(entityhuman);
-                entityhuman.openTrade(this, this.getCustomName());
+        if (!flag && this.isAlive() && !this.dc() && !this.isBaby()) {
+            if (!this.world.isClientSide && (this.trades == null || !this.trades.isEmpty())) {
+                this.setTradingPlayer(entityhuman);
+                entityhuman.openTrade(this);
             }
 
+            entityhuman.b(StatisticList.H);
             return true;
         } else {
-            return super.a(entityhuman);
+            return super.a(entityhuman, enumhand, itemstack);
         }
     }
 
-    protected void c() {
-        super.c();
-        this.datawatcher.a(16, Integer.valueOf(0));
+    protected void i() {
+        super.i();
+        this.datawatcher.register(EntityVillager.bw, Integer.valueOf(0));
     }
 
     public void b(NBTTagCompound nbttagcompound) {
         super.b(nbttagcompound);
         nbttagcompound.setInt("Profession", this.getProfession());
         nbttagcompound.setInt("Riches", this.riches);
-        if (this.bu != null) {
-            nbttagcompound.set("Offers", this.bu.a());
+        nbttagcompound.setInt("Career", this.bH);
+        nbttagcompound.setInt("CareerLevel", this.bI);
+        nbttagcompound.setBoolean("Willing", this.bE);
+        if (this.trades != null) {
+            nbttagcompound.set("Offers", this.trades.a());
         }
+
+        NBTTagList nbttaglist = new NBTTagList();
+
+        for (int i = 0; i < this.inventory.getSize(); ++i) {
+            ItemStack itemstack = this.inventory.getItem(i);
+
+            if (itemstack != null) {
+                nbttaglist.add(itemstack.save(new NBTTagCompound()));
+            }
+        }
+
+        nbttagcompound.set("Inventory", nbttaglist);
     }
 
     public void a(NBTTagCompound nbttagcompound) {
         super.a(nbttagcompound);
         this.setProfession(nbttagcompound.getInt("Profession"));
         this.riches = nbttagcompound.getInt("Riches");
+        this.bH = nbttagcompound.getInt("Career");
+        this.bI = nbttagcompound.getInt("CareerLevel");
+        this.bE = nbttagcompound.getBoolean("Willing");
         if (nbttagcompound.hasKeyOfType("Offers", 10)) {
             NBTTagCompound nbttagcompound1 = nbttagcompound.getCompound("Offers");
 
-            this.bu = new MerchantRecipeList(nbttagcompound1);
+            this.trades = new MerchantRecipeList(nbttagcompound1);
         }
+
+        NBTTagList nbttaglist = nbttagcompound.getList("Inventory", 10);
+
+        for (int i = 0; i < nbttaglist.size(); ++i) {
+            ItemStack itemstack = ItemStack.createStack(nbttaglist.get(i));
+
+            if (itemstack != null) {
+                this.inventory.a(itemstack);
+            }
+        }
+
+        this.l(true);
+        this.dj();
     }
 
     protected boolean isTypeNotPersistent() {
         return false;
     }
 
-    protected String t() {
-        return this.cc() ? "mob.villager.haggle" : "mob.villager.idle";
+    protected SoundEffect G() {
+        return this.dc() ? SoundEffects.gt : SoundEffects.gp;
     }
 
-    protected String aT() {
-        return "mob.villager.hit";
+    protected SoundEffect bR() {
+        return SoundEffects.gr;
     }
 
-    protected String aU() {
-        return "mob.villager.death";
+    protected SoundEffect bS() {
+        return SoundEffects.gq;
     }
 
     public void setProfession(int i) {
-        this.datawatcher.watch(16, Integer.valueOf(i));
+        this.datawatcher.set(EntityVillager.bw, Integer.valueOf(i));
     }
 
     public int getProfession() {
-        return this.datawatcher.getInt(16);
+        return Math.max(((Integer) this.datawatcher.get(EntityVillager.bw)).intValue() % 5, 0);
     }
 
-    public boolean ca() {
-        return this.br;
+    public boolean da() {
+        return this.by;
     }
 
-    public void i(boolean flag) {
-        this.br = flag;
+    public void o(boolean flag) {
+        this.by = flag;
     }
 
-    public void j(boolean flag) {
-        this.bs = flag;
+    public void p(boolean flag) {
+        this.bz = flag;
     }
 
-    public boolean cb() {
-        return this.bs;
+    public boolean db() {
+        return this.bz;
     }
 
-    public void b(EntityLiving entityliving) {
-        super.b(entityliving);
+    public void a(EntityLiving entityliving) {
+        super.a(entityliving);
         if (this.village != null && entityliving != null) {
             this.village.a(entityliving);
             if (entityliving instanceof EntityHuman) {
@@ -206,6 +270,7 @@ public class EntityVillager extends EntityAgeable implements IMerchant, NPC {
                 }
             }
         }
+
     }
 
     public void die(DamageSource damagesource) {
@@ -218,7 +283,7 @@ public class EntityVillager extends EntityAgeable implements IMerchant, NPC {
                 } else if (entity instanceof IMonster) {
                     this.village.h();
                 }
-            } else if (entity == null) {
+            } else {
                 EntityHuman entityhuman = this.world.findNearbyPlayer(this, 16.0D);
 
                 if (entityhuman != null) {
@@ -230,322 +295,497 @@ public class EntityVillager extends EntityAgeable implements IMerchant, NPC {
         super.die(damagesource);
     }
 
-    public void a_(EntityHuman entityhuman) {
+    public void setTradingPlayer(EntityHuman entityhuman) {
         this.tradingPlayer = entityhuman;
     }
 
-    public EntityHuman b() {
+    public EntityHuman t_() {
         return this.tradingPlayer;
     }
 
-    public boolean cc() {
+    public boolean dc() {
         return this.tradingPlayer != null;
     }
 
-    public void a(MerchantRecipe merchantrecipe) {
-        merchantrecipe.f();
-        this.a_ = -this.q();
-        this.makeSound("mob.villager.yes", this.bf(), this.bg());
-        if (merchantrecipe.a((MerchantRecipe) this.bu.get(this.bu.size() - 1))) {
-            this.bv = 40;
-            this.bw = true;
-            if (this.tradingPlayer != null) {
-                this.by = this.tradingPlayer.getName();
-            } else {
-                this.by = null;
+    public boolean q(boolean flag) {
+        if (!this.bE && flag && this.df()) {
+            boolean flag1 = false;
+
+            for (int i = 0; i < this.inventory.getSize(); ++i) {
+                ItemStack itemstack = this.inventory.getItem(i);
+
+                if (itemstack != null) {
+                    if (itemstack.getItem() == Items.BREAD && itemstack.count >= 3) {
+                        flag1 = true;
+                        this.inventory.splitStack(i, 3);
+                    } else if ((itemstack.getItem() == Items.POTATO || itemstack.getItem() == Items.CARROT) && itemstack.count >= 12) {
+                        flag1 = true;
+                        this.inventory.splitStack(i, 12);
+                    }
+                }
+
+                if (flag1) {
+                    this.world.broadcastEntityEffect(this, (byte) 18);
+                    this.bE = true;
+                    break;
+                }
             }
+        }
+
+        return this.bE;
+    }
+
+    public void r(boolean flag) {
+        this.bE = flag;
+    }
+
+    public void a(MerchantRecipe merchantrecipe) {
+        merchantrecipe.g();
+        this.a_ = -this.C();
+        this.a(SoundEffects.gu, this.cd(), this.ce());
+        int i = 3 + this.random.nextInt(4);
+
+        if (merchantrecipe.e() == 1 || this.random.nextInt(5) == 0) {
+            this.bC = 40;
+            this.bD = true;
+            this.bE = true;
+            if (this.tradingPlayer != null) {
+                this.bG = this.tradingPlayer.getName();
+            } else {
+                this.bG = null;
+            }
+
+            i += 5;
         }
 
         if (merchantrecipe.getBuyItem1().getItem() == Items.EMERALD) {
             this.riches += merchantrecipe.getBuyItem1().count;
         }
+
+        if (merchantrecipe.j()) {
+            this.world.addEntity(new EntityExperienceOrb(this.world, this.locX, this.locY + 0.5D, this.locZ, i));
+        }
+
     }
 
-    public void a_(ItemStack itemstack) {
-        if (!this.world.isStatic && this.a_ > -this.q() + 20) {
-            this.a_ = -this.q();
+    public void a(ItemStack itemstack) {
+        if (!this.world.isClientSide && this.a_ > -this.C() + 20) {
+            this.a_ = -this.C();
             if (itemstack != null) {
-                this.makeSound("mob.villager.yes", this.bf(), this.bg());
+                this.a(SoundEffects.gu, this.cd(), this.ce());
             } else {
-                this.makeSound("mob.villager.no", this.bf(), this.bg());
+                this.a(SoundEffects.gs, this.cd(), this.ce());
             }
         }
+
     }
 
     public MerchantRecipeList getOffers(EntityHuman entityhuman) {
-        if (this.bu == null) {
-            this.t(1);
+        if (this.trades == null) {
+            this.dk();
         }
 
-        return this.bu;
+        return this.trades;
     }
 
-    private float p(float f) {
-        float f1 = f + this.bA;
+    private void dk() {
+        EntityVillager.IMerchantRecipeOption[][][] aentityvillager_imerchantrecipeoption = EntityVillager.bM[this.getProfession()];
 
-        return f1 > 0.9F ? 0.9F - (f1 - 0.9F) : f1;
-    }
-
-    private void t(int i) {
-        if (this.bu != null) {
-            this.bA = MathHelper.c((float) this.bu.size()) * 0.2F;
+        if (this.bH != 0 && this.bI != 0) {
+            ++this.bI;
         } else {
-            this.bA = 0.0F;
+            this.bH = this.random.nextInt(aentityvillager_imerchantrecipeoption.length) + 1;
+            this.bI = 1;
         }
 
-        MerchantRecipeList merchantrecipelist;
+        if (this.trades == null) {
+            this.trades = new MerchantRecipeList();
+        }
 
-        merchantrecipelist = new MerchantRecipeList();
-        int j;
+        int i = this.bH - 1;
+        int j = this.bI - 1;
+        EntityVillager.IMerchantRecipeOption[][] aentityvillager_imerchantrecipeoption1 = aentityvillager_imerchantrecipeoption[i];
 
-        label50:
-        switch (this.getProfession()) {
-        case 0:
-            a(merchantrecipelist, Items.WHEAT, this.random, this.p(0.9F));
-            a(merchantrecipelist, Item.getItemOf(Blocks.WOOL), this.random, this.p(0.5F));
-            a(merchantrecipelist, Items.RAW_CHICKEN, this.random, this.p(0.5F));
-            a(merchantrecipelist, Items.COOKED_FISH, this.random, this.p(0.4F));
-            b(merchantrecipelist, Items.BREAD, this.random, this.p(0.9F));
-            b(merchantrecipelist, Items.MELON, this.random, this.p(0.3F));
-            b(merchantrecipelist, Items.APPLE, this.random, this.p(0.3F));
-            b(merchantrecipelist, Items.COOKIE, this.random, this.p(0.3F));
-            b(merchantrecipelist, Items.SHEARS, this.random, this.p(0.3F));
-            b(merchantrecipelist, Items.FLINT_AND_STEEL, this.random, this.p(0.3F));
-            b(merchantrecipelist, Items.COOKED_CHICKEN, this.random, this.p(0.3F));
-            b(merchantrecipelist, Items.ARROW, this.random, this.p(0.5F));
-            if (this.random.nextFloat() < this.p(0.5F)) {
-                merchantrecipelist.add(new MerchantRecipe(new ItemStack(Blocks.GRAVEL, 10), new ItemStack(Items.EMERALD), new ItemStack(Items.FLINT, 4 + this.random.nextInt(2), 0)));
+        if (j >= 0 && j < aentityvillager_imerchantrecipeoption1.length) {
+            EntityVillager.IMerchantRecipeOption[] aentityvillager_imerchantrecipeoption2 = aentityvillager_imerchantrecipeoption1[j];
+            EntityVillager.IMerchantRecipeOption[] aentityvillager_imerchantrecipeoption3 = aentityvillager_imerchantrecipeoption2;
+            int k = aentityvillager_imerchantrecipeoption2.length;
+
+            for (int l = 0; l < k; ++l) {
+                EntityVillager.IMerchantRecipeOption entityvillager_imerchantrecipeoption = aentityvillager_imerchantrecipeoption3[l];
+
+                // CraftBukkit start
+                // this is a hack. this must be done because otherwise, if
+                // mojang adds a new type of villager merchant option, it will need to
+                // have event handling added manually. this is better than having to do that.
+                MerchantRecipeList list = new MerchantRecipeList();
+                entityvillager_imerchantrecipeoption.a(list, this.random);
+                for (MerchantRecipe recipe : list) {
+                    VillagerAcquireTradeEvent event = new VillagerAcquireTradeEvent((Villager) getBukkitEntity(), recipe.asBukkit());
+                    Bukkit.getPluginManager().callEvent(event);
+                    if (!event.isCancelled()) {
+                        this.trades.add(CraftMerchantRecipe.fromBukkit(event.getRecipe()).toMinecraft());
+                    }
+                }
+                // CraftBukkit end
             }
-            break;
+        }
 
-        case 1:
-            a(merchantrecipelist, Items.PAPER, this.random, this.p(0.8F));
-            a(merchantrecipelist, Items.BOOK, this.random, this.p(0.8F));
-            a(merchantrecipelist, Items.WRITTEN_BOOK, this.random, this.p(0.3F));
-            b(merchantrecipelist, Item.getItemOf(Blocks.BOOKSHELF), this.random, this.p(0.8F));
-            b(merchantrecipelist, Item.getItemOf(Blocks.GLASS), this.random, this.p(0.2F));
-            b(merchantrecipelist, Items.COMPASS, this.random, this.p(0.2F));
-            b(merchantrecipelist, Items.WATCH, this.random, this.p(0.2F));
-            if (this.random.nextFloat() < this.p(0.07F)) {
-                Enchantment enchantment = Enchantment.c[this.random.nextInt(Enchantment.c.length)];
-                int k = MathHelper.nextInt(this.random, enchantment.getStartLevel(), enchantment.getMaxLevel());
-                ItemStack itemstack = Items.ENCHANTED_BOOK.a(new EnchantmentInstance(enchantment, k));
+    }
 
-                j = 2 + this.random.nextInt(5 + k * 10) + 3 * k;
-                merchantrecipelist.add(new MerchantRecipe(new ItemStack(Items.BOOK), new ItemStack(Items.EMERALD, j), itemstack));
+    public IChatBaseComponent getScoreboardDisplayName() {
+        ScoreboardTeamBase scoreboardteambase = this.aO();
+        String s = this.getCustomName();
+
+        if (s != null && !s.isEmpty()) {
+            ChatComponentText chatcomponenttext = new ChatComponentText(ScoreboardTeam.getPlayerDisplayName(scoreboardteambase, s));
+
+            chatcomponenttext.getChatModifier().setChatHoverable(this.bk());
+            chatcomponenttext.getChatModifier().setInsertion(this.getUniqueID().toString());
+            return chatcomponenttext;
+        } else {
+            if (this.trades == null) {
+                this.dk();
             }
-            break;
 
-        case 2:
-            b(merchantrecipelist, Items.EYE_OF_ENDER, this.random, this.p(0.3F));
-            b(merchantrecipelist, Items.EXP_BOTTLE, this.random, this.p(0.2F));
-            b(merchantrecipelist, Items.REDSTONE, this.random, this.p(0.4F));
-            b(merchantrecipelist, Item.getItemOf(Blocks.GLOWSTONE), this.random, this.p(0.3F));
-            Item[] aitem = new Item[] { Items.IRON_SWORD, Items.DIAMOND_SWORD, Items.IRON_CHESTPLATE, Items.DIAMOND_CHESTPLATE, Items.IRON_AXE, Items.DIAMOND_AXE, Items.IRON_PICKAXE, Items.DIAMOND_PICKAXE};
-            Item[] aitem1 = aitem;
-            int l = aitem.length;
+            String s1 = null;
 
-            j = 0;
+            switch (this.getProfession()) {
+            case 0:
+                if (this.bH == 1) {
+                    s1 = "farmer";
+                } else if (this.bH == 2) {
+                    s1 = "fisherman";
+                } else if (this.bH == 3) {
+                    s1 = "shepherd";
+                } else if (this.bH == 4) {
+                    s1 = "fletcher";
+                }
+                break;
 
-            while (true) {
-                if (j >= l) {
-                    break label50;
+            case 1:
+                s1 = "librarian";
+                break;
+
+            case 2:
+                s1 = "cleric";
+                break;
+
+            case 3:
+                if (this.bH == 1) {
+                    s1 = "armor";
+                } else if (this.bH == 2) {
+                    s1 = "weapon";
+                } else if (this.bH == 3) {
+                    s1 = "tool";
+                }
+                break;
+
+            case 4:
+                if (this.bH == 1) {
+                    s1 = "butcher";
+                } else if (this.bH == 2) {
+                    s1 = "leather";
+                }
+            }
+
+            if (s1 != null) {
+                ChatMessage chatmessage = new ChatMessage("entity.Villager." + s1, new Object[0]);
+
+                chatmessage.getChatModifier().setChatHoverable(this.bk());
+                chatmessage.getChatModifier().setInsertion(this.getUniqueID().toString());
+                if (scoreboardteambase != null) {
+                    chatmessage.getChatModifier().setColor(scoreboardteambase.m());
                 }
 
-                Item item = aitem1[j];
-
-                if (this.random.nextFloat() < this.p(0.05F)) {
-                    merchantrecipelist.add(new MerchantRecipe(new ItemStack(item, 1, 0), new ItemStack(Items.EMERALD, 2 + this.random.nextInt(3), 0), EnchantmentManager.a(this.random, new ItemStack(item, 1, 0), 5 + this.random.nextInt(15))));
-                }
-
-                ++j;
-            }
-
-        case 3:
-            a(merchantrecipelist, Items.COAL, this.random, this.p(0.7F));
-            a(merchantrecipelist, Items.IRON_INGOT, this.random, this.p(0.5F));
-            a(merchantrecipelist, Items.GOLD_INGOT, this.random, this.p(0.5F));
-            a(merchantrecipelist, Items.DIAMOND, this.random, this.p(0.5F));
-            b(merchantrecipelist, Items.IRON_SWORD, this.random, this.p(0.5F));
-            b(merchantrecipelist, Items.DIAMOND_SWORD, this.random, this.p(0.5F));
-            b(merchantrecipelist, Items.IRON_AXE, this.random, this.p(0.3F));
-            b(merchantrecipelist, Items.DIAMOND_AXE, this.random, this.p(0.3F));
-            b(merchantrecipelist, Items.IRON_PICKAXE, this.random, this.p(0.5F));
-            b(merchantrecipelist, Items.DIAMOND_PICKAXE, this.random, this.p(0.5F));
-            b(merchantrecipelist, Items.IRON_SPADE, this.random, this.p(0.2F));
-            b(merchantrecipelist, Items.DIAMOND_SPADE, this.random, this.p(0.2F));
-            b(merchantrecipelist, Items.IRON_HOE, this.random, this.p(0.2F));
-            b(merchantrecipelist, Items.DIAMOND_HOE, this.random, this.p(0.2F));
-            b(merchantrecipelist, Items.IRON_BOOTS, this.random, this.p(0.2F));
-            b(merchantrecipelist, Items.DIAMOND_BOOTS, this.random, this.p(0.2F));
-            b(merchantrecipelist, Items.IRON_HELMET, this.random, this.p(0.2F));
-            b(merchantrecipelist, Items.DIAMOND_HELMET, this.random, this.p(0.2F));
-            b(merchantrecipelist, Items.IRON_CHESTPLATE, this.random, this.p(0.2F));
-            b(merchantrecipelist, Items.DIAMOND_CHESTPLATE, this.random, this.p(0.2F));
-            b(merchantrecipelist, Items.IRON_LEGGINGS, this.random, this.p(0.2F));
-            b(merchantrecipelist, Items.DIAMOND_LEGGINGS, this.random, this.p(0.2F));
-            b(merchantrecipelist, Items.CHAINMAIL_BOOTS, this.random, this.p(0.1F));
-            b(merchantrecipelist, Items.CHAINMAIL_HELMET, this.random, this.p(0.1F));
-            b(merchantrecipelist, Items.CHAINMAIL_CHESTPLATE, this.random, this.p(0.1F));
-            b(merchantrecipelist, Items.CHAINMAIL_LEGGINGS, this.random, this.p(0.1F));
-            break;
-
-        case 4:
-            a(merchantrecipelist, Items.COAL, this.random, this.p(0.7F));
-            a(merchantrecipelist, Items.PORK, this.random, this.p(0.5F));
-            a(merchantrecipelist, Items.RAW_BEEF, this.random, this.p(0.5F));
-            b(merchantrecipelist, Items.SADDLE, this.random, this.p(0.1F));
-            b(merchantrecipelist, Items.LEATHER_CHESTPLATE, this.random, this.p(0.3F));
-            b(merchantrecipelist, Items.LEATHER_BOOTS, this.random, this.p(0.3F));
-            b(merchantrecipelist, Items.LEATHER_HELMET, this.random, this.p(0.3F));
-            b(merchantrecipelist, Items.LEATHER_LEGGINGS, this.random, this.p(0.3F));
-            b(merchantrecipelist, Items.GRILLED_PORK, this.random, this.p(0.3F));
-            b(merchantrecipelist, Items.COOKED_BEEF, this.random, this.p(0.3F));
-        }
-
-        if (merchantrecipelist.isEmpty()) {
-            a(merchantrecipelist, Items.GOLD_INGOT, this.random, 1.0F);
-        }
-
-        Collections.shuffle(merchantrecipelist);
-        if (this.bu == null) {
-            this.bu = new MerchantRecipeList();
-        }
-
-        for (int i1 = 0; i1 < i && i1 < merchantrecipelist.size(); ++i1) {
-            this.bu.a((MerchantRecipe) merchantrecipelist.get(i1));
-        }
-    }
-
-    private static void a(MerchantRecipeList merchantrecipelist, Item item, Random random, float f) {
-        if (random.nextFloat() < f) {
-            merchantrecipelist.add(new MerchantRecipe(a(item, random), Items.EMERALD));
-        }
-    }
-
-    private static ItemStack a(Item item, Random random) {
-        return new ItemStack(item, b(item, random), 0);
-    }
-
-    private static int b(Item item, Random random) {
-        Tuple tuple = (Tuple) bB.get(item);
-
-        return tuple == null ? 1 : (((Integer) tuple.a()).intValue() >= ((Integer) tuple.b()).intValue() ? ((Integer) tuple.a()).intValue() : ((Integer) tuple.a()).intValue() + random.nextInt(((Integer) tuple.b()).intValue() - ((Integer) tuple.a()).intValue()));
-    }
-
-    private static void b(MerchantRecipeList merchantrecipelist, Item item, Random random, float f) {
-        if (random.nextFloat() < f) {
-            int i = c(item, random);
-            ItemStack itemstack;
-            ItemStack itemstack1;
-
-            if (i < 0) {
-                itemstack = new ItemStack(Items.EMERALD, 1, 0);
-                itemstack1 = new ItemStack(item, -i, 0);
+                return chatmessage;
             } else {
-                itemstack = new ItemStack(Items.EMERALD, i, 0);
-                itemstack1 = new ItemStack(item, 1, 0);
+                return super.getScoreboardDisplayName();
             }
-
-            merchantrecipelist.add(new MerchantRecipe(itemstack, itemstack1));
         }
     }
 
-    private static int c(Item item, Random random) {
-        Tuple tuple = (Tuple) bC.get(item);
-
-        return tuple == null ? 1 : (((Integer) tuple.a()).intValue() >= ((Integer) tuple.b()).intValue() ? ((Integer) tuple.a()).intValue() : ((Integer) tuple.a()).intValue() + random.nextInt(((Integer) tuple.b()).intValue() - ((Integer) tuple.a()).intValue()));
+    public float getHeadHeight() {
+        return this.isBaby() ? 0.81F : 1.62F;
     }
 
-    public GroupDataEntity prepare(GroupDataEntity groupdataentity) {
-        groupdataentity = super.prepare(groupdataentity);
+    public GroupDataEntity prepare(DifficultyDamageScaler difficultydamagescaler, GroupDataEntity groupdataentity) {
+        groupdataentity = super.prepare(difficultydamagescaler, groupdataentity);
         this.setProfession(this.world.random.nextInt(5));
+        this.dj();
         return groupdataentity;
     }
 
-    public void cd() {
-        this.bz = true;
+    public void dd() {
+        this.bJ = true;
     }
 
     public EntityVillager b(EntityAgeable entityageable) {
         EntityVillager entityvillager = new EntityVillager(this.world);
 
-        entityvillager.prepare((GroupDataEntity) null);
+        entityvillager.prepare(this.world.D(new BlockPosition(entityvillager)), (GroupDataEntity) null);
         return entityvillager;
     }
 
-    public boolean bM() {
+    public boolean a(EntityHuman entityhuman) {
         return false;
+    }
+
+    public void onLightningStrike(EntityLightning entitylightning) {
+        if (!this.world.isClientSide && !this.dead) {
+            EntityWitch entitywitch = new EntityWitch(this.world);
+
+            entitywitch.setPositionRotation(this.locX, this.locY, this.locZ, this.yaw, this.pitch);
+            entitywitch.prepare(this.world.D(new BlockPosition(entitywitch)), (GroupDataEntity) null);
+            entitywitch.m(this.cR());
+            if (this.hasCustomName()) {
+                entitywitch.setCustomName(this.getCustomName());
+                entitywitch.setCustomNameVisible(this.getCustomNameVisible());
+            }
+
+            this.world.addEntity(entitywitch);
+            this.die();
+        }
+    }
+
+    public InventorySubcontainer de() {
+        return this.inventory;
+    }
+
+    protected void a(EntityItem entityitem) {
+        ItemStack itemstack = entityitem.getItemStack();
+        Item item = itemstack.getItem();
+
+        if (this.a(item)) {
+            ItemStack itemstack1 = this.inventory.a(itemstack);
+
+            if (itemstack1 == null) {
+                entityitem.die();
+            } else {
+                itemstack.count = itemstack1.count;
+            }
+        }
+
+    }
+
+    private boolean a(Item item) {
+        return item == Items.BREAD || item == Items.POTATO || item == Items.CARROT || item == Items.WHEAT || item == Items.WHEAT_SEEDS || item == Items.BEETROOT || item == Items.BEETROOT_SEEDS;
+    }
+
+    public boolean df() {
+        return this.m(1);
+    }
+
+    public boolean dg() {
+        return this.m(2);
+    }
+
+    public boolean dh() {
+        boolean flag = this.getProfession() == 0;
+
+        return flag ? !this.m(5) : !this.m(1);
+    }
+
+    private boolean m(int i) {
+        boolean flag = this.getProfession() == 0;
+
+        for (int j = 0; j < this.inventory.getSize(); ++j) {
+            ItemStack itemstack = this.inventory.getItem(j);
+
+            if (itemstack != null) {
+                if (itemstack.getItem() == Items.BREAD && itemstack.count >= 3 * i || itemstack.getItem() == Items.POTATO && itemstack.count >= 12 * i || itemstack.getItem() == Items.CARROT && itemstack.count >= 12 * i || itemstack.getItem() == Items.BEETROOT && itemstack.count >= 12 * i) {
+                    return true;
+                }
+
+                if (flag && itemstack.getItem() == Items.WHEAT && itemstack.count >= 9 * i) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    public boolean di() {
+        for (int i = 0; i < this.inventory.getSize(); ++i) {
+            ItemStack itemstack = this.inventory.getItem(i);
+
+            if (itemstack != null && (itemstack.getItem() == Items.WHEAT_SEEDS || itemstack.getItem() == Items.POTATO || itemstack.getItem() == Items.CARROT || itemstack.getItem() == Items.BEETROOT_SEEDS)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    public boolean c(int i, ItemStack itemstack) {
+        if (super.c(i, itemstack)) {
+            return true;
+        } else {
+            int j = i - 300;
+
+            if (j >= 0 && j < this.inventory.getSize()) {
+                this.inventory.setItem(j, itemstack);
+                return true;
+            } else {
+                return false;
+            }
+        }
     }
 
     public EntityAgeable createChild(EntityAgeable entityageable) {
         return this.b(entityageable);
     }
 
-    static {
-        bB.put(Items.COAL, new Tuple(Integer.valueOf(16), Integer.valueOf(24)));
-        bB.put(Items.IRON_INGOT, new Tuple(Integer.valueOf(8), Integer.valueOf(10)));
-        bB.put(Items.GOLD_INGOT, new Tuple(Integer.valueOf(8), Integer.valueOf(10)));
-        bB.put(Items.DIAMOND, new Tuple(Integer.valueOf(4), Integer.valueOf(6)));
-        bB.put(Items.PAPER, new Tuple(Integer.valueOf(24), Integer.valueOf(36)));
-        bB.put(Items.BOOK, new Tuple(Integer.valueOf(11), Integer.valueOf(13)));
-        bB.put(Items.WRITTEN_BOOK, new Tuple(Integer.valueOf(1), Integer.valueOf(1)));
-        bB.put(Items.ENDER_PEARL, new Tuple(Integer.valueOf(3), Integer.valueOf(4)));
-        bB.put(Items.EYE_OF_ENDER, new Tuple(Integer.valueOf(2), Integer.valueOf(3)));
-        bB.put(Items.PORK, new Tuple(Integer.valueOf(14), Integer.valueOf(18)));
-        bB.put(Items.RAW_BEEF, new Tuple(Integer.valueOf(14), Integer.valueOf(18)));
-        bB.put(Items.RAW_CHICKEN, new Tuple(Integer.valueOf(14), Integer.valueOf(18)));
-        bB.put(Items.COOKED_FISH, new Tuple(Integer.valueOf(9), Integer.valueOf(13)));
-        bB.put(Items.SEEDS, new Tuple(Integer.valueOf(34), Integer.valueOf(48)));
-        bB.put(Items.MELON_SEEDS, new Tuple(Integer.valueOf(30), Integer.valueOf(38)));
-        bB.put(Items.PUMPKIN_SEEDS, new Tuple(Integer.valueOf(30), Integer.valueOf(38)));
-        bB.put(Items.WHEAT, new Tuple(Integer.valueOf(18), Integer.valueOf(22)));
-        bB.put(Item.getItemOf(Blocks.WOOL), new Tuple(Integer.valueOf(14), Integer.valueOf(22)));
-        bB.put(Items.ROTTEN_FLESH, new Tuple(Integer.valueOf(36), Integer.valueOf(64)));
-        bC.put(Items.FLINT_AND_STEEL, new Tuple(Integer.valueOf(3), Integer.valueOf(4)));
-        bC.put(Items.SHEARS, new Tuple(Integer.valueOf(3), Integer.valueOf(4)));
-        bC.put(Items.IRON_SWORD, new Tuple(Integer.valueOf(7), Integer.valueOf(11)));
-        bC.put(Items.DIAMOND_SWORD, new Tuple(Integer.valueOf(12), Integer.valueOf(14)));
-        bC.put(Items.IRON_AXE, new Tuple(Integer.valueOf(6), Integer.valueOf(8)));
-        bC.put(Items.DIAMOND_AXE, new Tuple(Integer.valueOf(9), Integer.valueOf(12)));
-        bC.put(Items.IRON_PICKAXE, new Tuple(Integer.valueOf(7), Integer.valueOf(9)));
-        bC.put(Items.DIAMOND_PICKAXE, new Tuple(Integer.valueOf(10), Integer.valueOf(12)));
-        bC.put(Items.IRON_SPADE, new Tuple(Integer.valueOf(4), Integer.valueOf(6)));
-        bC.put(Items.DIAMOND_SPADE, new Tuple(Integer.valueOf(7), Integer.valueOf(8)));
-        bC.put(Items.IRON_HOE, new Tuple(Integer.valueOf(4), Integer.valueOf(6)));
-        bC.put(Items.DIAMOND_HOE, new Tuple(Integer.valueOf(7), Integer.valueOf(8)));
-        bC.put(Items.IRON_BOOTS, new Tuple(Integer.valueOf(4), Integer.valueOf(6)));
-        bC.put(Items.DIAMOND_BOOTS, new Tuple(Integer.valueOf(7), Integer.valueOf(8)));
-        bC.put(Items.IRON_HELMET, new Tuple(Integer.valueOf(4), Integer.valueOf(6)));
-        bC.put(Items.DIAMOND_HELMET, new Tuple(Integer.valueOf(7), Integer.valueOf(8)));
-        bC.put(Items.IRON_CHESTPLATE, new Tuple(Integer.valueOf(10), Integer.valueOf(14)));
-        bC.put(Items.DIAMOND_CHESTPLATE, new Tuple(Integer.valueOf(16), Integer.valueOf(19)));
-        bC.put(Items.IRON_LEGGINGS, new Tuple(Integer.valueOf(8), Integer.valueOf(10)));
-        bC.put(Items.DIAMOND_LEGGINGS, new Tuple(Integer.valueOf(11), Integer.valueOf(14)));
-        bC.put(Items.CHAINMAIL_BOOTS, new Tuple(Integer.valueOf(5), Integer.valueOf(7)));
-        bC.put(Items.CHAINMAIL_HELMET, new Tuple(Integer.valueOf(5), Integer.valueOf(7)));
-        bC.put(Items.CHAINMAIL_CHESTPLATE, new Tuple(Integer.valueOf(11), Integer.valueOf(15)));
-        bC.put(Items.CHAINMAIL_LEGGINGS, new Tuple(Integer.valueOf(9), Integer.valueOf(11)));
-        bC.put(Items.BREAD, new Tuple(Integer.valueOf(-4), Integer.valueOf(-2)));
-        bC.put(Items.MELON, new Tuple(Integer.valueOf(-8), Integer.valueOf(-4)));
-        bC.put(Items.APPLE, new Tuple(Integer.valueOf(-8), Integer.valueOf(-4)));
-        bC.put(Items.COOKIE, new Tuple(Integer.valueOf(-10), Integer.valueOf(-7)));
-        bC.put(Item.getItemOf(Blocks.GLASS), new Tuple(Integer.valueOf(-5), Integer.valueOf(-3)));
-        bC.put(Item.getItemOf(Blocks.BOOKSHELF), new Tuple(Integer.valueOf(3), Integer.valueOf(4)));
-        bC.put(Items.LEATHER_CHESTPLATE, new Tuple(Integer.valueOf(4), Integer.valueOf(5)));
-        bC.put(Items.LEATHER_BOOTS, new Tuple(Integer.valueOf(2), Integer.valueOf(4)));
-        bC.put(Items.LEATHER_HELMET, new Tuple(Integer.valueOf(2), Integer.valueOf(4)));
-        bC.put(Items.LEATHER_LEGGINGS, new Tuple(Integer.valueOf(2), Integer.valueOf(4)));
-        bC.put(Items.SADDLE, new Tuple(Integer.valueOf(6), Integer.valueOf(8)));
-        bC.put(Items.EXP_BOTTLE, new Tuple(Integer.valueOf(-4), Integer.valueOf(-1)));
-        bC.put(Items.REDSTONE, new Tuple(Integer.valueOf(-4), Integer.valueOf(-1)));
-        bC.put(Items.COMPASS, new Tuple(Integer.valueOf(10), Integer.valueOf(12)));
-        bC.put(Items.WATCH, new Tuple(Integer.valueOf(10), Integer.valueOf(12)));
-        bC.put(Item.getItemOf(Blocks.GLOWSTONE), new Tuple(Integer.valueOf(-3), Integer.valueOf(-1)));
-        bC.put(Items.GRILLED_PORK, new Tuple(Integer.valueOf(-7), Integer.valueOf(-5)));
-        bC.put(Items.COOKED_BEEF, new Tuple(Integer.valueOf(-7), Integer.valueOf(-5)));
-        bC.put(Items.COOKED_CHICKEN, new Tuple(Integer.valueOf(-8), Integer.valueOf(-6)));
-        bC.put(Items.EYE_OF_ENDER, new Tuple(Integer.valueOf(7), Integer.valueOf(11)));
-        bC.put(Items.ARROW, new Tuple(Integer.valueOf(-12), Integer.valueOf(-8)));
+    static class MerchantRecipeOptionProcess implements EntityVillager.IMerchantRecipeOption {
+
+        public ItemStack a;
+        public EntityVillager.MerchantOptionRandomRange b;
+        public ItemStack c;
+        public EntityVillager.MerchantOptionRandomRange d;
+
+        public MerchantRecipeOptionProcess(Item item, EntityVillager.MerchantOptionRandomRange entityvillager_merchantoptionrandomrange, Item item1, EntityVillager.MerchantOptionRandomRange entityvillager_merchantoptionrandomrange1) {
+            this.a = new ItemStack(item);
+            this.b = entityvillager_merchantoptionrandomrange;
+            this.c = new ItemStack(item1);
+            this.d = entityvillager_merchantoptionrandomrange1;
+        }
+
+        public void a(MerchantRecipeList merchantrecipelist, Random random) {
+            int i = 1;
+
+            if (this.b != null) {
+                i = this.b.a(random);
+            }
+
+            int j = 1;
+
+            if (this.d != null) {
+                j = this.d.a(random);
+            }
+
+            merchantrecipelist.add(new MerchantRecipe(new ItemStack(this.a.getItem(), i, this.a.getData()), new ItemStack(Items.EMERALD), new ItemStack(this.c.getItem(), j, this.c.getData())));
+        }
+    }
+
+    static class MerchantRecipeOptionBook implements EntityVillager.IMerchantRecipeOption {
+
+        public MerchantRecipeOptionBook() {}
+
+        public void a(MerchantRecipeList merchantrecipelist, Random random) {
+            Enchantment enchantment = (Enchantment) Enchantment.enchantments.a(random);
+            int i = MathHelper.nextInt(random, enchantment.getStartLevel(), enchantment.getMaxLevel());
+            ItemStack itemstack = Items.ENCHANTED_BOOK.a(new WeightedRandomEnchant(enchantment, i));
+            int j = 2 + random.nextInt(5 + i * 10) + 3 * i;
+
+            if (enchantment.e()) {
+                j *= 2;
+            }
+
+            if (j > 64) {
+                j = 64;
+            }
+
+            merchantrecipelist.add(new MerchantRecipe(new ItemStack(Items.BOOK), new ItemStack(Items.EMERALD, j), itemstack));
+        }
+    }
+
+    static class MerchantRecipeOptionEnchant implements EntityVillager.IMerchantRecipeOption {
+
+        public ItemStack a;
+        public EntityVillager.MerchantOptionRandomRange b;
+
+        public MerchantRecipeOptionEnchant(Item item, EntityVillager.MerchantOptionRandomRange entityvillager_merchantoptionrandomrange) {
+            this.a = new ItemStack(item);
+            this.b = entityvillager_merchantoptionrandomrange;
+        }
+
+        public void a(MerchantRecipeList merchantrecipelist, Random random) {
+            int i = 1;
+
+            if (this.b != null) {
+                i = this.b.a(random);
+            }
+
+            ItemStack itemstack = new ItemStack(Items.EMERALD, i, 0);
+            ItemStack itemstack1 = new ItemStack(this.a.getItem(), 1, this.a.getData());
+
+            itemstack1 = EnchantmentManager.a(random, itemstack1, 5 + random.nextInt(15), false);
+            merchantrecipelist.add(new MerchantRecipe(itemstack, itemstack1));
+        }
+    }
+
+    static class MerchantRecipeOptionSell implements EntityVillager.IMerchantRecipeOption {
+
+        public ItemStack a;
+        public EntityVillager.MerchantOptionRandomRange b;
+
+        public MerchantRecipeOptionSell(Item item, EntityVillager.MerchantOptionRandomRange entityvillager_merchantoptionrandomrange) {
+            this.a = new ItemStack(item);
+            this.b = entityvillager_merchantoptionrandomrange;
+        }
+
+        public MerchantRecipeOptionSell(ItemStack itemstack, EntityVillager.MerchantOptionRandomRange entityvillager_merchantoptionrandomrange) {
+            this.a = itemstack;
+            this.b = entityvillager_merchantoptionrandomrange;
+        }
+
+        public void a(MerchantRecipeList merchantrecipelist, Random random) {
+            int i = 1;
+
+            if (this.b != null) {
+                i = this.b.a(random);
+            }
+
+            ItemStack itemstack;
+            ItemStack itemstack1;
+
+            if (i < 0) {
+                itemstack = new ItemStack(Items.EMERALD);
+                itemstack1 = new ItemStack(this.a.getItem(), -i, this.a.getData());
+            } else {
+                itemstack = new ItemStack(Items.EMERALD, i, 0);
+                itemstack1 = new ItemStack(this.a.getItem(), 1, this.a.getData());
+            }
+
+            merchantrecipelist.add(new MerchantRecipe(itemstack, itemstack1));
+        }
+    }
+
+    static class MerchantRecipeOptionBuy implements EntityVillager.IMerchantRecipeOption {
+
+        public Item a;
+        public EntityVillager.MerchantOptionRandomRange b;
+
+        public MerchantRecipeOptionBuy(Item item, EntityVillager.MerchantOptionRandomRange entityvillager_merchantoptionrandomrange) {
+            this.a = item;
+            this.b = entityvillager_merchantoptionrandomrange;
+        }
+
+        public void a(MerchantRecipeList merchantrecipelist, Random random) {
+            int i = 1;
+
+            if (this.b != null) {
+                i = this.b.a(random);
+            }
+
+            merchantrecipelist.add(new MerchantRecipe(new ItemStack(this.a, i, 0), Items.EMERALD));
+        }
+    }
+
+    interface IMerchantRecipeOption {
+
+        void a(MerchantRecipeList merchantrecipelist, Random random);
+    }
+
+    static class MerchantOptionRandomRange extends Tuple<Integer, Integer> {
+
+        public MerchantOptionRandomRange(int i, int j) {
+            super(Integer.valueOf(i), Integer.valueOf(j));
+        }
+
+        public int a(Random random) {
+            return ((Integer) this.a()).intValue() >= ((Integer) this.b()).intValue() ? ((Integer) this.a()).intValue() : ((Integer) this.a()).intValue() + random.nextInt(((Integer) this.b()).intValue() - ((Integer) this.a()).intValue() + 1);
+        }
     }
 }

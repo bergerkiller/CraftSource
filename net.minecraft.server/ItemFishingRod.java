@@ -6,16 +6,18 @@ public class ItemFishingRod extends Item {
 
     public ItemFishingRod() {
         this.setMaxDurability(64);
-        this.e(1);
+        this.d(1);
         this.a(CreativeModeTab.i);
+        this.a(new MinecraftKey("cast"), new IDynamicTexture() {
+        });
     }
 
-    public ItemStack a(ItemStack itemstack, World world, EntityHuman entityhuman) {
+    public InteractionResultWrapper<ItemStack> a(ItemStack itemstack, World world, EntityHuman entityhuman, EnumHand enumhand) {
         if (entityhuman.hookedFish != null) {
-            int i = entityhuman.hookedFish.e();
+            int i = entityhuman.hookedFish.j();
 
             itemstack.damage(i, entityhuman);
-            entityhuman.ba();
+            entityhuman.a(enumhand);
         } else {
             // CraftBukkit start
             EntityFishingHook hook = new EntityFishingHook(world, entityhuman);
@@ -23,22 +25,24 @@ public class ItemFishingRod extends Item {
             world.getServer().getPluginManager().callEvent(playerFishEvent);
 
             if (playerFishEvent.isCancelled()) {
-                return itemstack;
+                entityhuman.hookedFish = null;
+                return new InteractionResultWrapper(EnumInteractionResult.PASS, itemstack);
             }
             // CraftBukkit end
-            world.makeSound(entityhuman, "random.bow", 0.5F, 0.4F / (g.nextFloat() * 0.4F + 0.8F));
-            if (!world.isStatic) {
+            world.a((EntityHuman) null, entityhuman.locX, entityhuman.locY, entityhuman.locZ, SoundEffects.H, SoundCategory.NEUTRAL, 0.5F, 0.4F / (ItemFishingRod.i.nextFloat() * 0.4F + 0.8F));
+            if (!world.isClientSide) {
                 world.addEntity(hook); // CraftBukkit - moved creation up
             }
 
-            entityhuman.ba();
+            entityhuman.a(enumhand);
+            entityhuman.b(StatisticList.b((Item) this));
         }
 
-        return itemstack;
+        return new InteractionResultWrapper(EnumInteractionResult.SUCCESS, itemstack);
     }
 
-    public boolean e_(ItemStack itemstack) {
-        return super.e_(itemstack);
+    public boolean g_(ItemStack itemstack) {
+        return super.g_(itemstack);
     }
 
     public int c() {

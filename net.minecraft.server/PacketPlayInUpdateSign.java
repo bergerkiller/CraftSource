@@ -1,56 +1,42 @@
 package net.minecraft.server;
 
-public class PacketPlayInUpdateSign extends Packet {
+import java.io.IOException;
 
-    private int a;
-    private int b;
-    private int c;
-    private String[] d;
+public class PacketPlayInUpdateSign implements Packet<PacketListenerPlayIn> {
+
+    private BlockPosition a;
+    private String[] b;
 
     public PacketPlayInUpdateSign() {}
 
-    public void a(PacketDataSerializer packetdataserializer) {
-        this.a = packetdataserializer.readInt();
-        this.b = packetdataserializer.readShort();
-        this.c = packetdataserializer.readInt();
-        this.d = new String[4];
+    public void a(PacketDataSerializer packetdataserializer) throws IOException {
+        this.a = packetdataserializer.e();
+        this.b = new String[4];
 
         for (int i = 0; i < 4; ++i) {
-            this.d[i] = packetdataserializer.c(15);
+            this.b[i] = packetdataserializer.c(384);
         }
+
     }
 
-    public void b(PacketDataSerializer packetdataserializer) {
-        packetdataserializer.writeInt(this.a);
-        packetdataserializer.writeShort(this.b);
-        packetdataserializer.writeInt(this.c);
+    public void b(PacketDataSerializer packetdataserializer) throws IOException {
+        packetdataserializer.a(this.a);
 
         for (int i = 0; i < 4; ++i) {
-            packetdataserializer.a(this.d[i]);
+            packetdataserializer.a(this.b[i]);
         }
+
     }
 
-    public void a(PacketPlayInListener packetplayinlistener) {
-        packetplayinlistener.a(this);
+    public void a(PacketListenerPlayIn packetlistenerplayin) {
+        packetlistenerplayin.a(this);
     }
 
-    public int c() {
+    public BlockPosition a() {
         return this.a;
     }
 
-    public int d() {
+    public String[] b() {
         return this.b;
-    }
-
-    public int e() {
-        return this.c;
-    }
-
-    public String[] f() {
-        return this.d;
-    }
-
-    public void handle(PacketListener packetlistener) {
-        this.a((PacketPlayInListener) packetlistener);
     }
 }

@@ -1,80 +1,47 @@
 package net.minecraft.server;
 
-import java.util.ArrayList;
+import com.google.common.collect.Lists;
 import java.util.List;
 import java.util.Random;
 
 public class WorldChunkManager {
 
-    private GenLayer c;
-    private GenLayer d;
-    private BiomeCache e;
-    private List f;
+    private GenLayer a;
+    private GenLayer b;
+    private final BiomeCache c;
+    private final List<BiomeBase> d;
 
     protected WorldChunkManager() {
-        this.e = new BiomeCache(this);
-        this.f = new ArrayList();
-        this.f.add(BiomeBase.FOREST);
-        this.f.add(BiomeBase.PLAINS);
-        this.f.add(BiomeBase.TAIGA);
-        this.f.add(BiomeBase.TAIGA_HILLS);
-        this.f.add(BiomeBase.FOREST_HILLS);
-        this.f.add(BiomeBase.JUNGLE);
-        this.f.add(BiomeBase.JUNGLE_HILLS);
+        this.c = new BiomeCache(this);
+        this.d = Lists.newArrayList(new BiomeBase[] { Biomes.f, Biomes.c, Biomes.g, Biomes.u, Biomes.t, Biomes.w, Biomes.x});
     }
 
-    public WorldChunkManager(long i, WorldType worldtype) {
+    private WorldChunkManager(long i, WorldType worldtype, String s) {
         this();
-        GenLayer[] agenlayer = GenLayer.a(i, worldtype);
+        GenLayer[] agenlayer = GenLayer.a(i, worldtype, s);
 
-        this.c = agenlayer[0];
-        this.d = agenlayer[1];
+        this.a = agenlayer[0];
+        this.b = agenlayer[1];
     }
 
-    public WorldChunkManager(World world) {
-        this(world.getSeed(), world.getWorldData().getType());
+    public WorldChunkManager(WorldData worlddata) {
+        this(worlddata.getSeed(), worlddata.getType(), worlddata.getGeneratorOptions());
     }
 
-    public List a() {
-        return this.f;
+    public List<BiomeBase> a() {
+        return this.d;
     }
 
-    public BiomeBase getBiome(int i, int j) {
-        return this.e.b(i, j);
+    public BiomeBase getBiome(BlockPosition blockposition) {
+        return this.getBiome(blockposition, (BiomeBase) null);
     }
 
-    public float[] getWetness(float[] afloat, int i, int j, int k, int l) {
-        IntCache.a();
-        if (afloat == null || afloat.length < k * l) {
-            afloat = new float[k * l];
-        }
+    public BiomeBase getBiome(BlockPosition blockposition, BiomeBase biomebase) {
+        return this.c.a(blockposition.getX(), blockposition.getZ(), biomebase);
+    }
 
-        int[] aint = this.d.a(i, j, k, l);
-
-        for (int i1 = 0; i1 < k * l; ++i1) {
-            try {
-                float f = (float) BiomeBase.getBiome(aint[i1]).h() / 65536.0F;
-
-                if (f > 1.0F) {
-                    f = 1.0F;
-                }
-
-                afloat[i1] = f;
-            } catch (Throwable throwable) {
-                CrashReport crashreport = CrashReport.a(throwable, "Invalid Biome id");
-                CrashReportSystemDetails crashreportsystemdetails = crashreport.a("DownfallBlock");
-
-                crashreportsystemdetails.a("biome id", Integer.valueOf(i1));
-                crashreportsystemdetails.a("downfalls[] size", Integer.valueOf(afloat.length));
-                crashreportsystemdetails.a("x", Integer.valueOf(i));
-                crashreportsystemdetails.a("z", Integer.valueOf(j));
-                crashreportsystemdetails.a("w", Integer.valueOf(k));
-                crashreportsystemdetails.a("h", Integer.valueOf(l));
-                throw new ReportedException(crashreport);
-            }
-        }
-
-        return afloat;
+    public float a(float f, int i) {
+        return f;
     }
 
     public BiomeBase[] getBiomes(BiomeBase[] abiomebase, int i, int j, int k, int l) {
@@ -83,11 +50,11 @@ public class WorldChunkManager {
             abiomebase = new BiomeBase[k * l];
         }
 
-        int[] aint = this.c.a(i, j, k, l);
+        int[] aint = this.a.a(i, j, k, l);
 
         try {
             for (int i1 = 0; i1 < k * l; ++i1) {
-                abiomebase[i1] = BiomeBase.getBiome(aint[i1]);
+                abiomebase[i1] = BiomeBase.getBiome(aint[i1], Biomes.b);
             }
 
             return abiomebase;
@@ -95,11 +62,11 @@ public class WorldChunkManager {
             CrashReport crashreport = CrashReport.a(throwable, "Invalid Biome id");
             CrashReportSystemDetails crashreportsystemdetails = crashreport.a("RawBiomeBlock");
 
-            crashreportsystemdetails.a("biomes[] size", Integer.valueOf(abiomebase.length));
-            crashreportsystemdetails.a("x", Integer.valueOf(i));
-            crashreportsystemdetails.a("z", Integer.valueOf(j));
-            crashreportsystemdetails.a("w", Integer.valueOf(k));
-            crashreportsystemdetails.a("h", Integer.valueOf(l));
+            crashreportsystemdetails.a("biomes[] size", (Object) Integer.valueOf(abiomebase.length));
+            crashreportsystemdetails.a("x", (Object) Integer.valueOf(i));
+            crashreportsystemdetails.a("z", (Object) Integer.valueOf(j));
+            crashreportsystemdetails.a("w", (Object) Integer.valueOf(k));
+            crashreportsystemdetails.a("h", (Object) Integer.valueOf(l));
             throw new ReportedException(crashreport);
         }
     }
@@ -115,22 +82,22 @@ public class WorldChunkManager {
         }
 
         if (flag && k == 16 && l == 16 && (i & 15) == 0 && (j & 15) == 0) {
-            BiomeBase[] abiomebase1 = this.e.d(i, j);
+            BiomeBase[] abiomebase1 = this.c.b(i, j);
 
             System.arraycopy(abiomebase1, 0, abiomebase, 0, k * l);
             return abiomebase;
         } else {
-            int[] aint = this.d.a(i, j, k, l);
+            int[] aint = this.b.a(i, j, k, l);
 
             for (int i1 = 0; i1 < k * l; ++i1) {
-                abiomebase[i1] = BiomeBase.getBiome(aint[i1]);
+                abiomebase[i1] = BiomeBase.getBiome(aint[i1], Biomes.b);
             }
 
             return abiomebase;
         }
     }
 
-    public boolean a(int i, int j, int k, List list) {
+    public boolean a(int i, int j, int k, List<BiomeBase> list) {
         IntCache.a();
         int l = i - k >> 2;
         int i1 = j - k >> 2;
@@ -138,7 +105,7 @@ public class WorldChunkManager {
         int k1 = j + k >> 2;
         int l1 = j1 - l + 1;
         int i2 = k1 - i1 + 1;
-        int[] aint = this.c.a(l, i1, l1, i2);
+        int[] aint = this.a.a(l, i1, l1, i2);
 
         try {
             for (int j2 = 0; j2 < l1 * i2; ++j2) {
@@ -154,16 +121,16 @@ public class WorldChunkManager {
             CrashReport crashreport = CrashReport.a(throwable, "Invalid Biome id");
             CrashReportSystemDetails crashreportsystemdetails = crashreport.a("Layer");
 
-            crashreportsystemdetails.a("Layer", this.c.toString());
-            crashreportsystemdetails.a("x", Integer.valueOf(i));
-            crashreportsystemdetails.a("z", Integer.valueOf(j));
-            crashreportsystemdetails.a("radius", Integer.valueOf(k));
-            crashreportsystemdetails.a("allowed", list);
+            crashreportsystemdetails.a("Layer", (Object) this.a.toString());
+            crashreportsystemdetails.a("x", (Object) Integer.valueOf(i));
+            crashreportsystemdetails.a("z", (Object) Integer.valueOf(j));
+            crashreportsystemdetails.a("radius", (Object) Integer.valueOf(k));
+            crashreportsystemdetails.a("allowed", (Object) list);
             throw new ReportedException(crashreport);
         }
     }
 
-    public ChunkPosition a(int i, int j, int k, List list, Random random) {
+    public BlockPosition a(int i, int j, int k, List<BiomeBase> list, Random random) {
         IntCache.a();
         int l = i - k >> 2;
         int i1 = j - k >> 2;
@@ -171,8 +138,8 @@ public class WorldChunkManager {
         int k1 = j + k >> 2;
         int l1 = j1 - l + 1;
         int i2 = k1 - i1 + 1;
-        int[] aint = this.c.a(l, i1, l1, i2);
-        ChunkPosition chunkposition = null;
+        int[] aint = this.a.a(l, i1, l1, i2);
+        BlockPosition blockposition = null;
         int j2 = 0;
 
         for (int k2 = 0; k2 < l1 * i2; ++k2) {
@@ -180,16 +147,16 @@ public class WorldChunkManager {
             int i3 = i1 + k2 / l1 << 2;
             BiomeBase biomebase = BiomeBase.getBiome(aint[k2]);
 
-            if (list.contains(biomebase) && (chunkposition == null || random.nextInt(j2 + 1) == 0)) {
-                chunkposition = new ChunkPosition(l2, 0, i3);
+            if (list.contains(biomebase) && (blockposition == null || random.nextInt(j2 + 1) == 0)) {
+                blockposition = new BlockPosition(l2, 0, i3);
                 ++j2;
             }
         }
 
-        return chunkposition;
+        return blockposition;
     }
 
     public void b() {
-        this.e.a();
+        this.c.a();
     }
 }

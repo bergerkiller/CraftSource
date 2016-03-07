@@ -1,67 +1,57 @@
 package net.minecraft.server;
 
-public class PacketPlayInSettings extends Packet {
+import java.io.IOException;
+
+public class PacketPlayInSettings implements Packet<PacketListenerPlayIn> {
 
     private String a;
     private int b;
-    private EnumChatVisibility c;
+    private EntityHuman.EnumChatVisibility c;
     private boolean d;
-    private EnumDifficulty e;
-    private boolean f;
+    private int e;
+    private EnumMainHand f;
 
     public PacketPlayInSettings() {}
 
-    public void a(PacketDataSerializer packetdataserializer) {
+    public void a(PacketDataSerializer packetdataserializer) throws IOException {
         this.a = packetdataserializer.c(7);
         this.b = packetdataserializer.readByte();
-        this.c = EnumChatVisibility.a(packetdataserializer.readByte());
+        this.c = (EntityHuman.EnumChatVisibility) packetdataserializer.a(EntityHuman.EnumChatVisibility.class);
         this.d = packetdataserializer.readBoolean();
-        this.e = EnumDifficulty.getById(packetdataserializer.readByte());
-        this.f = packetdataserializer.readBoolean();
+        this.e = packetdataserializer.readUnsignedByte();
+        this.f = (EnumMainHand) packetdataserializer.a(EnumMainHand.class);
     }
 
-    public void b(PacketDataSerializer packetdataserializer) {
+    public void b(PacketDataSerializer packetdataserializer) throws IOException {
         packetdataserializer.a(this.a);
         packetdataserializer.writeByte(this.b);
-        packetdataserializer.writeByte(this.c.a());
+        packetdataserializer.a((Enum) this.c);
         packetdataserializer.writeBoolean(this.d);
-        packetdataserializer.writeByte(this.e.a());
-        packetdataserializer.writeBoolean(this.f);
+        packetdataserializer.writeByte(this.e);
+        packetdataserializer.a((Enum) this.f);
     }
 
-    public void a(PacketPlayInListener packetplayinlistener) {
-        packetplayinlistener.a(this);
+    public void a(PacketListenerPlayIn packetlistenerplayin) {
+        packetlistenerplayin.a(this);
     }
 
-    public String c() {
+    public String a() {
         return this.a;
     }
 
-    public int d() {
-        return this.b;
-    }
-
-    public EnumChatVisibility e() {
+    public EntityHuman.EnumChatVisibility c() {
         return this.c;
     }
 
-    public boolean f() {
+    public boolean d() {
         return this.d;
     }
 
-    public EnumDifficulty g() {
+    public int e() {
         return this.e;
     }
 
-    public boolean h() {
+    public EnumMainHand f() {
         return this.f;
-    }
-
-    public String b() {
-        return String.format("lang=\'%s\', view=%d, chat=%s, col=%b, difficulty=%s, cape=%b", new Object[] { this.a, Integer.valueOf(this.b), this.c, Boolean.valueOf(this.d), this.e, Boolean.valueOf(this.f)});
-    }
-
-    public void handle(PacketListener packetlistener) {
-        this.a((PacketPlayInListener) packetlistener);
     }
 }

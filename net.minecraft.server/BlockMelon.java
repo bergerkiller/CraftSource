@@ -5,11 +5,11 @@ import java.util.Random;
 public class BlockMelon extends Block {
 
     protected BlockMelon() {
-        super(Material.PUMPKIN);
+        super(Material.PUMPKIN, MaterialMapColor.u);
         this.a(CreativeModeTab.b);
     }
 
-    public Item getDropType(int i, Random random, int j) {
+    public Item getDropType(IBlockData iblockdata, Random random, int i) {
         return Items.MELON;
     }
 
@@ -18,12 +18,6 @@ public class BlockMelon extends Block {
     }
 
     public int getDropCount(int i, Random random) {
-        int j = this.a(random) + random.nextInt(1 + i);
-
-        if (j > 9) {
-            j = 9;
-        }
-
-        return j;
+        return Math.min(9, this.a(random) + random.nextInt(1 + i));
     }
 }

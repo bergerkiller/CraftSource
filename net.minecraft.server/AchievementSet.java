@@ -1,17 +1,16 @@
 package net.minecraft.server;
 
+import com.google.common.collect.ForwardingSet;
+import com.google.common.collect.Sets;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonPrimitive;
 import java.util.Iterator;
 import java.util.Set;
 
-import net.minecraft.util.com.google.common.collect.ForwardingSet;
-import net.minecraft.util.com.google.common.collect.Sets;
-import net.minecraft.util.com.google.gson.JsonArray;
-import net.minecraft.util.com.google.gson.JsonElement;
-import net.minecraft.util.com.google.gson.JsonPrimitive;
+public class AchievementSet extends ForwardingSet<String> implements IJsonStatistic {
 
-public class AchievementSet extends ForwardingSet implements IJsonStatistic {
-
-    private final Set a = Sets.newHashSet();
+    private final Set<String> a = Sets.newHashSet();
 
     public AchievementSet() {}
 
@@ -25,6 +24,7 @@ public class AchievementSet extends ForwardingSet implements IJsonStatistic {
                 this.add(jsonelement1.getAsString());
             }
         }
+
     }
 
     public JsonElement a() {
@@ -40,7 +40,7 @@ public class AchievementSet extends ForwardingSet implements IJsonStatistic {
         return jsonarray;
     }
 
-    protected Set delegate() {
+    protected Set<String> delegate() {
         return this.a;
     }
 }

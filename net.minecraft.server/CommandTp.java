@@ -1,5 +1,7 @@
 package net.minecraft.server;
 
+import java.util.Collections;
+import java.util.EnumSet;
 import java.util.List;
 
 public class CommandTp extends CommandAbstract {
@@ -14,60 +16,109 @@ public class CommandTp extends CommandAbstract {
         return 2;
     }
 
-    public String c(ICommandListener icommandlistener) {
+    public String getUsage(ICommandListener icommandlistener) {
         return "commands.tp.usage";
     }
 
-    public void execute(ICommandListener icommandlistener, String[] astring) {
+    public void execute(MinecraftServer minecraftserver, ICommandListener icommandlistener, String[] astring) throws CommandException {
         if (astring.length < 1) {
             throw new ExceptionUsage("commands.tp.usage", new Object[0]);
         } else {
-            EntityPlayer entityplayer;
+            byte b0 = 0;
+            Object object;
 
-            if (astring.length != 2 && astring.length != 4) {
-                entityplayer = b(icommandlistener);
+            if (astring.length != 2 && astring.length != 4 && astring.length != 6) {
+                object = a(icommandlistener);
             } else {
-                entityplayer = d(icommandlistener, astring[0]);
-                if (entityplayer == null) {
-                    throw new ExceptionPlayerNotFound();
-                }
+                object = b(minecraftserver, icommandlistener, astring[0]);
+                b0 = 1;
             }
 
-            if (astring.length != 3 && astring.length != 4) {
-                if (astring.length == 1 || astring.length == 2) {
-                    EntityPlayer entityplayer1 = d(icommandlistener, astring[astring.length - 1]);
+            if (astring.length != 1 && astring.length != 2) {
+                if (astring.length < b0 + 3) {
+                    throw new ExceptionUsage("commands.tp.usage", new Object[0]);
+                } else if (((Entity) object).world != null) {
+                    int i = b0 + 1;
+                    CommandAbstract.CommandNumber commandabstract_commandnumber = a(((Entity) object).locX, astring[b0], true);
+                    CommandAbstract.CommandNumber commandabstract_commandnumber1 = a(((Entity) object).locY, astring[i++], 0, 0, false);
+                    CommandAbstract.CommandNumber commandabstract_commandnumber2 = a(((Entity) object).locZ, astring[i++], true);
+                    CommandAbstract.CommandNumber commandabstract_commandnumber3 = a((double) ((Entity) object).yaw, astring.length > i ? astring[i++] : "~", false);
+                    CommandAbstract.CommandNumber commandabstract_commandnumber4 = a((double) ((Entity) object).pitch, astring.length > i ? astring[i] : "~", false);
+                    float f;
 
-                    if (entityplayer1 == null) {
-                        throw new ExceptionPlayerNotFound();
+                    if (object instanceof EntityPlayer) {
+                        EnumSet enumset = EnumSet.noneOf(PacketPlayOutPosition.EnumPlayerTeleportFlags.class);
+
+                        if (commandabstract_commandnumber.c()) {
+                            enumset.add(PacketPlayOutPosition.EnumPlayerTeleportFlags.X);
+                        }
+
+                        if (commandabstract_commandnumber1.c()) {
+                            enumset.add(PacketPlayOutPosition.EnumPlayerTeleportFlags.Y);
+                        }
+
+                        if (commandabstract_commandnumber2.c()) {
+                            enumset.add(PacketPlayOutPosition.EnumPlayerTeleportFlags.Z);
+                        }
+
+                        if (commandabstract_commandnumber4.c()) {
+                            enumset.add(PacketPlayOutPosition.EnumPlayerTeleportFlags.X_ROT);
+                        }
+
+                        if (commandabstract_commandnumber3.c()) {
+                            enumset.add(PacketPlayOutPosition.EnumPlayerTeleportFlags.Y_ROT);
+                        }
+
+                        f = (float) commandabstract_commandnumber3.b();
+                        if (!commandabstract_commandnumber3.c()) {
+                            f = MathHelper.g(f);
+                        }
+
+                        float f1 = (float) commandabstract_commandnumber4.b();
+
+                        if (!commandabstract_commandnumber4.c()) {
+                            f1 = MathHelper.g(f1);
+                        }
+
+                        ((Entity) object).stopRiding();
+                        ((EntityPlayer) object).playerConnection.a(commandabstract_commandnumber.b(), commandabstract_commandnumber1.b(), commandabstract_commandnumber2.b(), f, f1, enumset);
+                        ((Entity) object).h(f);
+                    } else {
+                        float f2 = (float) MathHelper.g(commandabstract_commandnumber3.a());
+
+                        f = (float) MathHelper.g(commandabstract_commandnumber4.a());
+                        f = MathHelper.a(f, -90.0F, 90.0F);
+                        ((Entity) object).setPositionRotation(commandabstract_commandnumber.a(), commandabstract_commandnumber1.a(), commandabstract_commandnumber2.a(), f2, f);
+                        ((Entity) object).h(f2);
                     }
 
-                    if (entityplayer1.world != entityplayer.world) {
-                        a(icommandlistener, this, "commands.tp.notSameDimension", new Object[0]);
-                        return;
-                    }
-
-                    entityplayer.mount((Entity) null);
-                    entityplayer.playerConnection.a(entityplayer1.locX, entityplayer1.locY, entityplayer1.locZ, entityplayer1.yaw, entityplayer1.pitch);
-                    a(icommandlistener, this, "commands.tp.success", new Object[] { entityplayer.getName(), entityplayer1.getName()});
+                    a(icommandlistener, (ICommand) this, "commands.tp.success.coordinates", new Object[] { ((Entity) object).getName(), Double.valueOf(commandabstract_commandnumber.a()), Double.valueOf(commandabstract_commandnumber1.a()), Double.valueOf(commandabstract_commandnumber2.a())});
                 }
-            } else if (entityplayer.world != null) {
-                int i = astring.length - 3;
-                double d0 = a(icommandlistener, entityplayer.locX, astring[i++]);
-                double d1 = a(icommandlistener, entityplayer.locY, astring[i++], 0, 0);
-                double d2 = a(icommandlistener, entityplayer.locZ, astring[i++]);
+            } else {
+                Entity entity = b(minecraftserver, icommandlistener, astring[astring.length - 1]);
 
-                entityplayer.mount((Entity) null);
-                entityplayer.enderTeleportTo(d0, d1, d2);
-                a(icommandlistener, this, "commands.tp.success.coordinates", new Object[] { entityplayer.getName(), Double.valueOf(d0), Double.valueOf(d1), Double.valueOf(d2)});
+                // CraftBukkit Start
+                // Use Bukkit teleport method in all cases. It has cross dimensional handling, events
+                if (((Entity) object).getBukkitEntity().teleport(entity.getBukkitEntity(), org.bukkit.event.player.PlayerTeleportEvent.TeleportCause.COMMAND)) {
+                    a(icommandlistener, (ICommand) this, "commands.tp.success", new Object[] { ((Entity) object).getName(), entity.getName()});
+                    // CraftBukkit End
+                }
             }
         }
     }
 
-    public List tabComplete(ICommandListener icommandlistener, String[] astring) {
-        return astring.length != 1 && astring.length != 2 ? null : a(astring, MinecraftServer.getServer().getPlayers());
+    public List<String> tabComplete(MinecraftServer minecraftserver, ICommandListener icommandlistener, String[] astring, BlockPosition blockposition) {
+        return astring.length != 1 && astring.length != 2 ? Collections.<String>emptyList() : a(astring, minecraftserver.getPlayers()); // CraftBukkit - decompile error
     }
 
     public boolean isListStart(String[] astring, int i) {
         return i == 0;
     }
+
+    // CraftBukkit start - fix decompile error
+    @Override
+    public int compareTo(ICommand o) {
+        return a((ICommand) o);
+    }
+    // CraftBukkit end
 }

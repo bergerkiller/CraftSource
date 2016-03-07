@@ -1,66 +1,49 @@
 package net.minecraft.server;
 
+import com.google.common.collect.BiMap;
+import com.google.common.collect.HashBiMap;
 import java.util.Iterator;
 import java.util.Map;
 
-import net.minecraft.util.com.google.common.collect.BiMap;
-import net.minecraft.util.com.google.common.collect.HashBiMap;
+public class RegistryMaterials<K, V> extends RegistrySimple<K, V> implements Registry<V> {
 
-public class RegistryMaterials extends RegistrySimple implements Registry {
-
-    protected final RegistryID a = new RegistryID();
-    protected final Map b;
+    protected final RegistryID<V> a = new RegistryID(256);
+    protected final Map<V, K> b;
 
     public RegistryMaterials() {
         this.b = ((BiMap) this.c).inverse();
     }
 
-    public void a(int i, String s, Object object) {
-        this.a.a(object, i);
-        this.a(c(s), object);
+    public void a(int i, K k0, V v0) {
+        this.a.a(v0, i);
+        this.a(k0, v0);
     }
 
-    protected Map a() {
+    protected Map<K, V> b() {
         return HashBiMap.create();
     }
 
-    public Object get(String s) {
-        return super.get(c(s));
+    public V get(K k0) {
+        return super.get(k0);
     }
 
-    public String c(Object object) {
-        return (String) this.b.get(object);
+    public K b(V v0) {
+        return this.b.get(v0);
     }
 
-    public boolean b(String s) {
-        return super.d(c(s));
+    public boolean d(K k0) {
+        return super.d(k0);
     }
 
-    public int b(Object object) {
-        return this.a.b(object);
+    public int a(V v0) {
+        return this.a.getId(v0);
     }
 
-    public Object a(int i) {
-        return this.a.a(i);
+    public V getId(int i) {
+        return this.a.fromId(i);
     }
 
-    public Iterator iterator() {
+    public Iterator<V> iterator() {
         return this.a.iterator();
-    }
-
-    public boolean b(int i) {
-        return this.a.b(i);
-    }
-
-    private static String c(String s) {
-        return s.indexOf(58) == -1 ? "minecraft:" + s : s;
-    }
-
-    public boolean d(Object object) {
-        return this.b((String) object);
-    }
-
-    public Object get(Object object) {
-        return this.get((String) object);
     }
 }

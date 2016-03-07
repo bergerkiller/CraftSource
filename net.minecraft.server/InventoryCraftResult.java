@@ -1,6 +1,7 @@
 package net.minecraft.server;
 
 // CraftBukkit start
+import org.bukkit.Location;
 import org.bukkit.craftbukkit.entity.CraftHumanEntity;
 import org.bukkit.entity.HumanEntity;
 // CraftBukkit end
@@ -30,6 +31,11 @@ public class InventoryCraftResult implements IInventory {
     public void setMaxStackSize(int size) {
         maxStack = size;
     }
+
+    @Override
+    public Location getLocation() {
+        return null;
+    }
     // CraftBukkit end
 
     public InventoryCraftResult() {}
@@ -42,34 +48,24 @@ public class InventoryCraftResult implements IInventory {
         return this.items[0];
     }
 
-    public String getInventoryName() {
+    public String getName() {
         return "Result";
     }
 
-    public boolean k_() {
+    public boolean hasCustomName() {
         return false;
     }
 
-    public ItemStack splitStack(int i, int j) {
-        if (this.items[0] != null) {
-            ItemStack itemstack = this.items[0];
+    public IChatBaseComponent getScoreboardDisplayName() {
+        return (IChatBaseComponent) (this.hasCustomName() ? new ChatComponentText(this.getName()) : new ChatMessage(this.getName(), new Object[0]));
+    }
 
-            this.items[0] = null;
-            return itemstack;
-        } else {
-            return null;
-        }
+    public ItemStack splitStack(int i, int j) {
+        return ContainerUtil.a(this.items, 0);
     }
 
     public ItemStack splitWithoutUpdate(int i) {
-        if (this.items[0] != null) {
-            ItemStack itemstack = this.items[0];
-
-            this.items[0] = null;
-            return itemstack;
-        } else {
-            return null;
-        }
+        return ContainerUtil.a(this.items, 0);
     }
 
     public void setItem(int i, ItemStack itemstack) {
@@ -86,11 +82,28 @@ public class InventoryCraftResult implements IInventory {
         return true;
     }
 
-    public void startOpen() {}
+    public void startOpen(EntityHuman entityhuman) {}
 
-    public void closeContainer() {}
+    public void closeContainer(EntityHuman entityhuman) {}
 
     public boolean b(int i, ItemStack itemstack) {
         return true;
+    }
+
+    public int getProperty(int i) {
+        return 0;
+    }
+
+    public void setProperty(int i, int j) {}
+
+    public int g() {
+        return 0;
+    }
+
+    public void l() {
+        for (int i = 0; i < this.items.length; ++i) {
+            this.items[i] = null;
+        }
+
     }
 }

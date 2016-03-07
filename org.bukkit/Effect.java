@@ -34,7 +34,7 @@ public enum Effect {
     /**
      * A song from a record. Needs the record item ID as additional info
      */
-    RECORD_PLAY(1005, Type.SOUND, Material.class),
+    RECORD_PLAY(1010, Type.SOUND, Material.class),
     /**
      * Sound of ghast shrieking.
      */
@@ -50,7 +50,7 @@ public enum Effect {
     /**
      * Sound of zombies chewing on wooden doors.
      */
-    ZOMBIE_CHEW_WOODEN_DOOR(1010, Type.SOUND),
+    ZOMBIE_CHEW_WOODEN_DOOR(1012, Type.SOUND),
     /**
      * Sound of zombies chewing on iron doors.
      */
@@ -58,7 +58,7 @@ public enum Effect {
     /**
      * Sound of zombies destroying a door.
      */
-    ZOMBIE_DESTROY_DOOR(1012, Type.SOUND),
+    ZOMBIE_DESTROY_DOOR(1021, Type.SOUND),
     /**
      * A visual smoke effect. Needs direction as additional info.
      */

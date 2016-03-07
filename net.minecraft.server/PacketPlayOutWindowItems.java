@@ -1,15 +1,16 @@
 package net.minecraft.server;
 
+import java.io.IOException;
 import java.util.List;
 
-public class PacketPlayOutWindowItems extends Packet {
+public class PacketPlayOutWindowItems implements Packet<PacketListenerPlayOut> {
 
     private int a;
     private ItemStack[] b;
 
     public PacketPlayOutWindowItems() {}
 
-    public PacketPlayOutWindowItems(int i, List list) {
+    public PacketPlayOutWindowItems(int i, List<ItemStack> list) {
         this.a = i;
         this.b = new ItemStack[list.size()];
 
@@ -18,20 +19,22 @@ public class PacketPlayOutWindowItems extends Packet {
 
             this.b[j] = itemstack == null ? null : itemstack.cloneItemStack();
         }
+
     }
 
-    public void a(PacketDataSerializer packetdataserializer) {
+    public void a(PacketDataSerializer packetdataserializer) throws IOException {
         this.a = packetdataserializer.readUnsignedByte();
-        short short1 = packetdataserializer.readShort();
+        short short0 = packetdataserializer.readShort();
 
-        this.b = new ItemStack[short1];
+        this.b = new ItemStack[short0];
 
-        for (int i = 0; i < short1; ++i) {
-            this.b[i] = packetdataserializer.c();
+        for (int i = 0; i < short0; ++i) {
+            this.b[i] = packetdataserializer.k();
         }
+
     }
 
-    public void b(PacketDataSerializer packetdataserializer) {
+    public void b(PacketDataSerializer packetdataserializer) throws IOException {
         packetdataserializer.writeByte(this.a);
         packetdataserializer.writeShort(this.b.length);
         ItemStack[] aitemstack = this.b;
@@ -42,13 +45,10 @@ public class PacketPlayOutWindowItems extends Packet {
 
             packetdataserializer.a(itemstack);
         }
+
     }
 
-    public void a(PacketPlayOutListener packetplayoutlistener) {
-        packetplayoutlistener.a(this);
-    }
-
-    public void handle(PacketListener packetlistener) {
-        this.a((PacketPlayOutListener) packetlistener);
+    public void a(PacketListenerPlayOut packetlistenerplayout) {
+        packetlistenerplayout.a(this);
     }
 }

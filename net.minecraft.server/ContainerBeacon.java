@@ -4,54 +4,58 @@ import org.bukkit.craftbukkit.inventory.CraftInventoryView; // CraftBukkit
 
 public class ContainerBeacon extends Container {
 
-    private TileEntityBeacon a;
-    private final SlotBeacon f;
-    private int g;
-    private int h;
-    private int i;
+    private IInventory beacon;
+    private final ContainerBeacon.SlotBeacon f;
     // CraftBukkit start
     private CraftInventoryView bukkitEntity = null;
     private PlayerInventory player;
     // CraftBukkit end
 
-    public ContainerBeacon(PlayerInventory playerinventory, TileEntityBeacon tileentitybeacon) {
-        player = playerinventory; // CraftBukkit
-        this.a = tileentitybeacon;
-        this.a(this.f = new SlotBeacon(this, tileentitybeacon, 0, 136, 110));
+    public ContainerBeacon(IInventory iinventory, IInventory iinventory1) {
+        player = (PlayerInventory) iinventory; // CraftBukkit - TODO: check this
+        this.beacon = iinventory1;
+        this.a((Slot) (this.f = new ContainerBeacon.SlotBeacon(iinventory1, 0, 136, 110)));
         byte b0 = 36;
-        short short1 = 137;
+        short short0 = 137;
 
         int i;
 
         for (i = 0; i < 3; ++i) {
             for (int j = 0; j < 9; ++j) {
-                this.a(new Slot(playerinventory, j + i * 9 + 9, b0 + j * 18, short1 + i * 18));
+                this.a(new Slot(iinventory, j + i * 9 + 9, b0 + j * 18, short0 + i * 18));
             }
         }
 
         for (i = 0; i < 9; ++i) {
-            this.a(new Slot(playerinventory, i, b0 + i * 18, 58 + short1));
+            this.a(new Slot(iinventory, i, b0 + i * 18, 58 + short0));
         }
 
-        this.g = tileentitybeacon.l();
-        this.h = tileentitybeacon.j();
-        this.i = tileentitybeacon.k();
     }
 
     public void addSlotListener(ICrafting icrafting) {
         super.addSlotListener(icrafting);
-        icrafting.setContainerData(this, 0, this.g);
-        icrafting.setContainerData(this, 1, this.h);
-        icrafting.setContainerData(this, 2, this.i);
+        icrafting.setContainerData(this, this.beacon);
     }
 
-    public TileEntityBeacon e() {
-        return this.a;
+    public IInventory e() {
+        return this.beacon;
+    }
+
+    public void b(EntityHuman entityhuman) {
+        super.b(entityhuman);
+        if (entityhuman != null && !entityhuman.world.isClientSide) {
+            ItemStack itemstack = this.f.a(this.f.getMaxStackSize());
+
+            if (itemstack != null) {
+                entityhuman.drop(itemstack, false);
+            }
+
+        }
     }
 
     public boolean a(EntityHuman entityhuman) {
         if (!this.checkReachable) return true; // CraftBukkit
-        return this.a.a(entityhuman);
+        return this.beacon.a(entityhuman);
     }
 
     public ItemStack b(EntityHuman entityhuman, int i) {
@@ -100,13 +104,29 @@ public class ContainerBeacon extends Container {
         return itemstack;
     }
 
+    class SlotBeacon extends Slot {
+
+        public SlotBeacon(IInventory iinventory, int i, int j, int k) {
+            super(iinventory, i, j, k);
+        }
+
+        public boolean isAllowed(ItemStack itemstack) {
+            return itemstack == null ? false : itemstack.getItem() == Items.EMERALD || itemstack.getItem() == Items.DIAMOND || itemstack.getItem() == Items.GOLD_INGOT || itemstack.getItem() == Items.IRON_INGOT;
+        }
+
+        public int getMaxStackSize() {
+            return 1;
+        }
+    }
+
     // CraftBukkit start
+    @Override
     public CraftInventoryView getBukkitView() {
         if (bukkitEntity != null) {
             return bukkitEntity;
         }
 
-        org.bukkit.craftbukkit.inventory.CraftInventory inventory = new org.bukkit.craftbukkit.inventory.CraftInventoryBeacon(this.a);
+        org.bukkit.craftbukkit.inventory.CraftInventory inventory = new org.bukkit.craftbukkit.inventory.CraftInventoryBeacon((TileEntityBeacon) this.beacon); // TODO - check this
         bukkitEntity = new CraftInventoryView(this.player.player.getBukkitEntity(), inventory, this);
         return bukkitEntity;
     }

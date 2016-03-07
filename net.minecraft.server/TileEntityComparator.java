@@ -6,8 +6,8 @@ public class TileEntityComparator extends TileEntity {
 
     public TileEntityComparator() {}
 
-    public void b(NBTTagCompound nbttagcompound) {
-        super.b(nbttagcompound);
+    public void save(NBTTagCompound nbttagcompound) {
+        super.save(nbttagcompound);
         nbttagcompound.setInt("OutputSignal", this.a);
     }
 
@@ -16,7 +16,7 @@ public class TileEntityComparator extends TileEntity {
         this.a = nbttagcompound.getInt("OutputSignal");
     }
 
-    public int a() {
+    public int b() {
         return this.a;
     }
 

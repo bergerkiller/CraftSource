@@ -1,40 +1,34 @@
 package net.minecraft.server;
 
-public class PacketPlayOutEntityEquipment extends Packet {
+import java.io.IOException;
+
+public class PacketPlayOutEntityEquipment implements Packet<PacketListenerPlayOut> {
 
     private int a;
-    private int b;
+    private EnumItemSlot b;
     private ItemStack c;
 
     public PacketPlayOutEntityEquipment() {}
 
-    public PacketPlayOutEntityEquipment(int i, int j, ItemStack itemstack) {
+    public PacketPlayOutEntityEquipment(int i, EnumItemSlot enumitemslot, ItemStack itemstack) {
         this.a = i;
-        this.b = j;
+        this.b = enumitemslot;
         this.c = itemstack == null ? null : itemstack.cloneItemStack();
     }
 
-    public void a(PacketDataSerializer packetdataserializer) {
-        this.a = packetdataserializer.readInt();
-        this.b = packetdataserializer.readShort();
-        this.c = packetdataserializer.c();
+    public void a(PacketDataSerializer packetdataserializer) throws IOException {
+        this.a = packetdataserializer.g();
+        this.b = (EnumItemSlot) packetdataserializer.a(EnumItemSlot.class);
+        this.c = packetdataserializer.k();
     }
 
-    public void b(PacketDataSerializer packetdataserializer) {
-        packetdataserializer.writeInt(this.a);
-        packetdataserializer.writeShort(this.b);
+    public void b(PacketDataSerializer packetdataserializer) throws IOException {
+        packetdataserializer.b(this.a);
+        packetdataserializer.a((Enum) this.b);
         packetdataserializer.a(this.c);
     }
 
-    public void a(PacketPlayOutListener packetplayoutlistener) {
-        packetplayoutlistener.a(this);
-    }
-
-    public String b() {
-        return String.format("entity=%d, slot=%d, item=%s", new Object[] { Integer.valueOf(this.a), Integer.valueOf(this.b), this.c});
-    }
-
-    public void handle(PacketListener packetlistener) {
-        this.a((PacketPlayOutListener) packetlistener);
+    public void a(PacketListenerPlayOut packetlistenerplayout) {
+        packetlistenerplayout.a(this);
     }
 }

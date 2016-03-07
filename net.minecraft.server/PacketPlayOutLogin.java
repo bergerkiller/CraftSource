@@ -1,35 +1,39 @@
 package net.minecraft.server;
 
-public class PacketPlayOutLogin extends Packet {
+import java.io.IOException;
+
+public class PacketPlayOutLogin implements Packet<PacketListenerPlayOut> {
 
     private int a;
     private boolean b;
-    private EnumGamemode c;
+    private WorldSettings.EnumGamemode c;
     private int d;
     private EnumDifficulty e;
     private int f;
     private WorldType g;
+    private boolean h;
 
     public PacketPlayOutLogin() {}
 
-    public PacketPlayOutLogin(int i, EnumGamemode enumgamemode, boolean flag, int j, EnumDifficulty enumdifficulty, int k, WorldType worldtype) {
+    public PacketPlayOutLogin(int i, WorldSettings.EnumGamemode worldsettings_enumgamemode, boolean flag, int j, EnumDifficulty enumdifficulty, int k, WorldType worldtype, boolean flag1) {
         this.a = i;
         this.d = j;
         this.e = enumdifficulty;
-        this.c = enumgamemode;
+        this.c = worldsettings_enumgamemode;
         this.f = k;
         this.b = flag;
         this.g = worldtype;
+        this.h = flag1;
     }
 
-    public void a(PacketDataSerializer packetdataserializer) {
+    public void a(PacketDataSerializer packetdataserializer) throws IOException {
         this.a = packetdataserializer.readInt();
-        short short1 = packetdataserializer.readUnsignedByte();
+        short short0 = packetdataserializer.readUnsignedByte();
 
-        this.b = (short1 & 8) == 8;
-        int i = short1 & -9;
+        this.b = (short0 & 8) == 8;
+        int i = short0 & -9;
 
-        this.c = EnumGamemode.getById(i);
+        this.c = WorldSettings.EnumGamemode.getById(i);
         this.d = packetdataserializer.readByte();
         this.e = EnumDifficulty.getById(packetdataserializer.readUnsignedByte());
         this.f = packetdataserializer.readUnsignedByte();
@@ -37,9 +41,11 @@ public class PacketPlayOutLogin extends Packet {
         if (this.g == null) {
             this.g = WorldType.NORMAL;
         }
+
+        this.h = packetdataserializer.readBoolean();
     }
 
-    public void b(PacketDataSerializer packetdataserializer) {
+    public void b(PacketDataSerializer packetdataserializer) throws IOException {
         packetdataserializer.writeInt(this.a);
         int i = this.c.getId();
 
@@ -52,17 +58,10 @@ public class PacketPlayOutLogin extends Packet {
         packetdataserializer.writeByte(this.e.a());
         packetdataserializer.writeByte(this.f);
         packetdataserializer.a(this.g.name());
+        packetdataserializer.writeBoolean(this.h);
     }
 
-    public void a(PacketPlayOutListener packetplayoutlistener) {
-        packetplayoutlistener.a(this);
-    }
-
-    public String b() {
-        return String.format("eid=%d, gameType=%d, hardcore=%b, dimension=%d, difficulty=%s, maxplayers=%d", new Object[] { Integer.valueOf(this.a), Integer.valueOf(this.c.getId()), Boolean.valueOf(this.b), Integer.valueOf(this.d), this.e, Integer.valueOf(this.f)});
-    }
-
-    public void handle(PacketListener packetlistener) {
-        this.a((PacketPlayOutListener) packetlistener);
+    public void a(PacketListenerPlayOut packetlistenerplayout) {
+        packetlistenerplayout.a(this);
     }
 }

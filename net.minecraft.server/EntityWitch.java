@@ -6,67 +6,67 @@ import java.util.UUID;
 
 public class EntityWitch extends EntityMonster implements IRangedEntity {
 
-    private static final UUID bp = UUID.fromString("5CD17E52-A79A-43D3-A529-90FDE04B181E");
-    private static final AttributeModifier bq = (new AttributeModifier(bp, "Drinking speed penalty", -0.25D, 0)).a(false);
-    private static final Item[] br = new Item[] { Items.GLOWSTONE_DUST, Items.SUGAR, Items.REDSTONE, Items.SPIDER_EYE, Items.GLASS_BOTTLE, Items.SULPHUR, Items.STICK, Items.STICK};
-    private int bs;
+    private static final UUID a = UUID.fromString("5CD17E52-A79A-43D3-A529-90FDE04B181E");
+    private static final AttributeModifier b = (new AttributeModifier(EntityWitch.a, "Drinking speed penalty", -0.25D, 0)).a(false);
+    private static final DataWatcherObject<Boolean> c = DataWatcher.a(EntityWitch.class, DataWatcherRegistry.h);
+    private int bv;
 
     public EntityWitch(World world) {
         super(world);
+        this.setSize(0.6F, 1.95F);
+    }
+
+    protected void r() {
         this.goalSelector.a(1, new PathfinderGoalFloat(this));
         this.goalSelector.a(2, new PathfinderGoalArrowAttack(this, 1.0D, 60, 10.0F));
         this.goalSelector.a(2, new PathfinderGoalRandomStroll(this, 1.0D));
         this.goalSelector.a(3, new PathfinderGoalLookAtPlayer(this, EntityHuman.class, 8.0F));
         this.goalSelector.a(3, new PathfinderGoalRandomLookaround(this));
-        this.targetSelector.a(1, new PathfinderGoalHurtByTarget(this, false));
-        this.targetSelector.a(2, new PathfinderGoalNearestAttackableTarget(this, EntityHuman.class, 0, true));
+        this.targetSelector.a(1, new PathfinderGoalHurtByTarget(this, false, new Class[0]));
+        this.targetSelector.a(2, new PathfinderGoalNearestAttackableTarget(this, EntityHuman.class, true));
     }
 
-    protected void c() {
-        super.c();
-        this.getDataWatcher().a(21, Byte.valueOf((byte) 0));
+    protected void i() {
+        super.i();
+        this.getDataWatcher().register(EntityWitch.c, Boolean.valueOf(false));
     }
 
-    protected String t() {
-        return "mob.witch.idle";
+    protected SoundEffect G() {
+        return SoundEffects.gz;
     }
 
-    protected String aT() {
-        return "mob.witch.hurt";
+    protected SoundEffect bR() {
+        return SoundEffects.gC;
     }
 
-    protected String aU() {
-        return "mob.witch.death";
+    protected SoundEffect bS() {
+        return SoundEffects.gA;
     }
 
     public void a(boolean flag) {
-        this.getDataWatcher().watch(21, Byte.valueOf((byte) (flag ? 1 : 0)));
+        this.getDataWatcher().set(EntityWitch.c, Boolean.valueOf(flag));
     }
 
-    public boolean bZ() {
-        return this.getDataWatcher().getByte(21) == 1;
+    public boolean o() {
+        return ((Boolean) this.getDataWatcher().get(EntityWitch.c)).booleanValue();
     }
 
-    protected void aD() {
-        super.aD();
+    protected void initAttributes() {
+        super.initAttributes();
         this.getAttributeInstance(GenericAttributes.maxHealth).setValue(26.0D);
-        this.getAttributeInstance(GenericAttributes.d).setValue(0.25D);
+        this.getAttributeInstance(GenericAttributes.MOVEMENT_SPEED).setValue(0.25D);
     }
 
-    public boolean bk() {
-        return true;
-    }
-
-    public void e() {
-        if (!this.world.isStatic) {
-            if (this.bZ()) {
-                if (this.bs-- <= 0) {
+    public void n() {
+        if (!this.world.isClientSide) {
+            if (this.o()) {
+                if (this.bv-- <= 0) {
                     this.a(false);
-                    ItemStack itemstack = this.be();
+                    ItemStack itemstack = this.getItemInMainHand();
 
-                    this.setEquipment(0, (ItemStack) null);
+                    this.setSlot(EnumItemSlot.MAINHAND, (ItemStack) null);
                     if (itemstack != null && itemstack.getItem() == Items.POTION) {
-                        List list = Items.POTION.g(itemstack);
+                        List list = PotionUtil.getEffects(itemstack);
 
                         if (list != null) {
                             Iterator iterator = list.iterator();
@@ -79,31 +79,30 @@ public class EntityWitch extends EntityMonster implements IRangedEntity {
                         }
                     }
 
-                    this.getAttributeInstance(GenericAttributes.d).b(bq);
+                    this.getAttributeInstance(GenericAttributes.MOVEMENT_SPEED).c(EntityWitch.b);
                 }
             } else {
-                short short1 = -1;
+                PotionRegistry potionregistry = null;
 
-                if (this.random.nextFloat() < 0.15F && this.a(Material.WATER) && !this.hasEffect(MobEffectList.WATER_BREATHING)) {
-                    short1 = 8237;
-                } else if (this.random.nextFloat() < 0.15F && this.isBurning() && !this.hasEffect(MobEffectList.FIRE_RESISTANCE)) {
-                    short1 = 16307;
+                if (this.random.nextFloat() < 0.15F && this.a(Material.WATER) && !this.hasEffect(MobEffects.WATER_BREATHING)) {
+                    potionregistry = Potions.t;
+                } else if (this.random.nextFloat() < 0.15F && this.isBurning() && !this.hasEffect(MobEffects.FIRE_RESISTANCE)) {
+                    potionregistry = Potions.m;
                 } else if (this.random.nextFloat() < 0.05F && this.getHealth() < this.getMaxHealth()) {
-                    short1 = 16341;
-                } else if (this.random.nextFloat() < 0.25F && this.getGoalTarget() != null && !this.hasEffect(MobEffectList.FASTER_MOVEMENT) && this.getGoalTarget().f(this) > 121.0D) {
-                    short1 = 16274;
-                } else if (this.random.nextFloat() < 0.25F && this.getGoalTarget() != null && !this.hasEffect(MobEffectList.FASTER_MOVEMENT) && this.getGoalTarget().f(this) > 121.0D) {
-                    short1 = 16274;
+                    potionregistry = Potions.v;
+                } else if (this.random.nextFloat() < 0.5F && this.getGoalTarget() != null && !this.hasEffect(MobEffects.FASTER_MOVEMENT) && this.getGoalTarget().h(this) > 121.0D) {
+                    potionregistry = Potions.o;
                 }
 
-                if (short1 > -1) {
-                    this.setEquipment(0, new ItemStack(Items.POTION, 1, short1));
-                    this.bs = this.be().n();
+                if (potionregistry != null) {
+                    this.setSlot(EnumItemSlot.MAINHAND, PotionUtil.a(new ItemStack(Items.POTION), potionregistry));
+                    this.bv = this.getItemInMainHand().l();
                     this.a(true);
-                    AttributeInstance attributeinstance = this.getAttributeInstance(GenericAttributes.d);
+                    this.world.a((EntityHuman) null, this.locX, this.locY, this.locZ, SoundEffects.gB, this.bz(), 1.0F, 0.8F + this.random.nextFloat() * 0.4F);
+                    AttributeInstance attributeinstance = this.getAttributeInstance(GenericAttributes.MOVEMENT_SPEED);
 
-                    attributeinstance.b(bq);
-                    attributeinstance.a(bq);
+                    attributeinstance.c(EntityWitch.b);
+                    attributeinstance.b(EntityWitch.b);
                 }
             }
 
@@ -112,7 +111,7 @@ public class EntityWitch extends EntityMonster implements IRangedEntity {
             }
         }
 
-        super.e();
+        super.n();
     }
 
     protected float applyMagicModifier(DamageSource damagesource, float f) {
@@ -128,43 +127,37 @@ public class EntityWitch extends EntityMonster implements IRangedEntity {
         return f;
     }
 
-    protected void dropDeathLoot(boolean flag, int i) {
-        int j = this.random.nextInt(3) + 1;
-
-        for (int k = 0; k < j; ++k) {
-            int l = this.random.nextInt(3);
-            Item item = br[this.random.nextInt(br.length)];
-
-            if (i > 0) {
-                l += this.random.nextInt(i + 1);
-            }
-
-            for (int i1 = 0; i1 < l; ++i1) {
-                this.a(item, 1);
-            }
-        }
+    protected MinecraftKey J() {
+        return LootTables.n;
     }
 
     public void a(EntityLiving entityliving, float f) {
-        if (!this.bZ()) {
-            EntityPotion entitypotion = new EntityPotion(this.world, this, 32732);
+        if (!this.o()) {
+            double d0 = entityliving.locY + (double) entityliving.getHeadHeight() - 1.100000023841858D;
+            double d1 = entityliving.locX + entityliving.motX - this.locX;
+            double d2 = d0 - this.locY;
+            double d3 = entityliving.locZ + entityliving.motZ - this.locZ;
+            float f1 = MathHelper.sqrt(d1 * d1 + d3 * d3);
+            PotionRegistry potionregistry = Potions.x;
 
-            entitypotion.pitch -= -20.0F;
-            double d0 = entityliving.locX + entityliving.motX - this.locX;
-            double d1 = entityliving.locY + (double) entityliving.getHeadHeight() - 1.100000023841858D - this.locY;
-            double d2 = entityliving.locZ + entityliving.motZ - this.locZ;
-            float f1 = MathHelper.sqrt(d0 * d0 + d2 * d2);
-
-            if (f1 >= 8.0F && !entityliving.hasEffect(MobEffectList.SLOWER_MOVEMENT)) {
-                entitypotion.setPotionValue(32698);
-            } else if (entityliving.getHealth() >= 8.0F && !entityliving.hasEffect(MobEffectList.POISON)) {
-                entitypotion.setPotionValue(32660);
-            } else if (f1 <= 3.0F && !entityliving.hasEffect(MobEffectList.WEAKNESS) && this.random.nextFloat() < 0.25F) {
-                entitypotion.setPotionValue(32696);
+            if (f1 >= 8.0F && !entityliving.hasEffect(MobEffects.SLOWER_MOVEMENT)) {
+                potionregistry = Potions.r;
+            } else if (entityliving.getHealth() >= 8.0F && !entityliving.hasEffect(MobEffects.POISON)) {
+                potionregistry = Potions.z;
+            } else if (f1 <= 3.0F && !entityliving.hasEffect(MobEffects.WEAKNESS) && this.random.nextFloat() < 0.25F) {
+                potionregistry = Potions.I;
             }
 
-            entitypotion.shoot(d0, d1 + (double) (f1 * 0.2F), d2, 0.75F, 8.0F);
+            EntityPotion entitypotion = new EntityPotion(this.world, this, PotionUtil.a(new ItemStack(Items.SPLASH_POTION), potionregistry));
+
+            entitypotion.pitch -= -20.0F;
+            entitypotion.shoot(d1, d2 + (double) (f1 * 0.2F), d3, 0.75F, 8.0F);
+            this.world.a((EntityHuman) null, this.locX, this.locY, this.locZ, SoundEffects.gD, this.bz(), 1.0F, 0.8F + this.random.nextFloat() * 0.4F);
             this.world.addEntity(entitypotion);
         }
+    }
+
+    public float getHeadHeight() {
+        return 1.62F;
     }
 }

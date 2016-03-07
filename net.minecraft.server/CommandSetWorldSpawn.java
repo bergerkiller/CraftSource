@@ -1,5 +1,8 @@
 package net.minecraft.server;
 
+import java.util.Collections;
+import java.util.List;
+
 public class CommandSetWorldSpawn extends CommandAbstract {
 
     public CommandSetWorldSpawn() {}
@@ -12,33 +15,29 @@ public class CommandSetWorldSpawn extends CommandAbstract {
         return 2;
     }
 
-    public String c(ICommandListener icommandlistener) {
+    public String getUsage(ICommandListener icommandlistener) {
         return "commands.setworldspawn.usage";
     }
 
-    public void execute(ICommandListener icommandlistener, String[] astring) {
-        if (astring.length == 3) {
-            if (icommandlistener.getWorld() == null) {
-                throw new ExceptionUsage("commands.setworldspawn.usage", new Object[0]);
-            }
+    public void execute(MinecraftServer minecraftserver, ICommandListener icommandlistener, String[] astring) throws CommandException {
+        BlockPosition blockposition;
 
-            byte b0 = 0;
-            int i = b0 + 1;
-            int j = a(icommandlistener, astring[b0], -30000000, 30000000);
-            int k = a(icommandlistener, astring[i++], 0, 256);
-            int l = a(icommandlistener, astring[i++], -30000000, 30000000);
-
-            icommandlistener.getWorld().x(j, k, l);
-            a(icommandlistener, this, "commands.setworldspawn.success", new Object[] { Integer.valueOf(j), Integer.valueOf(k), Integer.valueOf(l)});
+        if (astring.length == 0) {
+            blockposition = a(icommandlistener).getChunkCoordinates();
         } else {
-            if (astring.length != 0) {
+            if (astring.length != 3 || icommandlistener.getWorld() == null) {
                 throw new ExceptionUsage("commands.setworldspawn.usage", new Object[0]);
             }
 
-            ChunkCoordinates chunkcoordinates = b(icommandlistener).getChunkCoordinates();
-
-            icommandlistener.getWorld().x(chunkcoordinates.x, chunkcoordinates.y, chunkcoordinates.z);
-            a(icommandlistener, this, "commands.setworldspawn.success", new Object[] { Integer.valueOf(chunkcoordinates.x), Integer.valueOf(chunkcoordinates.y), Integer.valueOf(chunkcoordinates.z)});
+            blockposition = a(icommandlistener, astring, 0, true);
         }
+
+        icommandlistener.getWorld().A(blockposition);
+        minecraftserver.getPlayerList().sendAll(new PacketPlayOutSpawnPosition(blockposition));
+        a(icommandlistener, (ICommand) this, "commands.setworldspawn.success", new Object[] { Integer.valueOf(blockposition.getX()), Integer.valueOf(blockposition.getY()), Integer.valueOf(blockposition.getZ())});
+    }
+
+    public List<String> tabComplete(MinecraftServer minecraftserver, ICommandListener icommandlistener, String[] astring, BlockPosition blockposition) {
+        return astring.length > 0 && astring.length <= 3 ? a(astring, 0, blockposition) : Collections.emptyList();
     }
 }

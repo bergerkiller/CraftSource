@@ -1,5 +1,8 @@
 package net.minecraft.server;
 
+import java.util.Collections;
+import java.util.List;
+
 public class CommandKill extends CommandAbstract {
 
     public CommandKill() {}
@@ -9,17 +12,32 @@ public class CommandKill extends CommandAbstract {
     }
 
     public int a() {
-        return 0;
+        return 2;
     }
 
-    public String c(ICommandListener icommandlistener) {
+    public String getUsage(ICommandListener icommandlistener) {
         return "commands.kill.usage";
     }
 
-    public void execute(ICommandListener icommandlistener, String[] astring) {
-        EntityPlayer entityplayer = b(icommandlistener);
+    public void execute(MinecraftServer minecraftserver, ICommandListener icommandlistener, String[] astring) throws CommandException {
+        if (astring.length == 0) {
+            EntityPlayer entityplayer = a(icommandlistener);
 
-        entityplayer.damageEntity(DamageSource.OUT_OF_WORLD, Float.MAX_VALUE);
-        icommandlistener.sendMessage(new ChatMessage("commands.kill.success", new Object[0]));
+            entityplayer.Q();
+            a(icommandlistener, (ICommand) this, "commands.kill.successful", new Object[] { entityplayer.getScoreboardDisplayName()});
+        } else {
+            Entity entity = b(minecraftserver, icommandlistener, astring[0]);
+
+            entity.Q();
+            a(icommandlistener, (ICommand) this, "commands.kill.successful", new Object[] { entity.getScoreboardDisplayName()});
+        }
+    }
+
+    public boolean isListStart(String[] astring, int i) {
+        return i == 0;
+    }
+
+    public List<String> tabComplete(MinecraftServer minecraftserver, ICommandListener icommandlistener, String[] astring, BlockPosition blockposition) {
+        return astring.length == 1 ? a(astring, minecraftserver.getPlayers()) : Collections.emptyList();
     }
 }

@@ -10,12 +10,13 @@ import org.bukkit.util.Vector;
 
 import java.util.List;
 import java.util.UUID;
+import org.bukkit.command.CommandSender;
 import org.bukkit.event.player.PlayerTeleportEvent.TeleportCause;
 
 /**
  * Represents a base entity in the world
  */
-public interface Entity extends Metadatable {
+public interface Entity extends Metadatable, CommandSender {
 
     /**
      * Gets the entity's current position
@@ -30,6 +31,7 @@ public interface Entity extends Metadatable {
      * If the provided Location is null this method does nothing and returns
      * null.
      *
+     * @param loc the location to copy into
      * @return The Location object provided or null
      */
     public Location getLocation(Location loc);
@@ -109,7 +111,7 @@ public interface Entity extends Metadatable {
      * @param x 1/2 the size of the box along x axis
      * @param y 1/2 the size of the box along y axis
      * @param z 1/2 the size of the box along z axis
-     * @return List<Entity> List of entities nearby
+     * @return {@code List<Entity>} List of entities nearby
      */
     public List<org.bukkit.entity.Entity> getNearbyEntities(double x, double y, double z);
 
@@ -295,4 +297,63 @@ public interface Entity extends Metadatable {
      * @return The current vehicle.
      */
     public Entity getVehicle();
+
+    /**
+     * Sets a custom name on a mob. This name will be used in death messages
+     * and can be sent to the client as a nameplate over the mob.
+     * <p>
+     * Setting the name to null or an empty string will clear it.
+     * <p>
+     * This value has no effect on players, they will always use their real
+     * name.
+     *
+     * @param name the name to set
+     */
+    public void setCustomName(String name);
+
+    /**
+     * Gets the custom name on a mob. If there is no name this method will
+     * return null.
+     * <p>
+     * This value has no effect on players, they will always use their real
+     * name.
+     *
+     * @return name of the mob or null
+     */
+    public String getCustomName();
+
+    /**
+     * Sets whether or not to display the mob's custom name client side. The
+     * name will be displayed above the mob similarly to a player.
+     * <p>
+     * This value has no effect on players, they will always display their
+     * name.
+     *
+     * @param flag custom name or not
+     */
+    public void setCustomNameVisible(boolean flag);
+
+    /**
+     * Gets whether or not the mob's custom name is displayed client side.
+     * <p>
+     * This value has no effect on players, they will always display their
+     * name.
+     *
+     * @return if the custom name is displayed
+     */
+    public boolean isCustomNameVisible();
+
+    /**
+     * Sets whether the entity has a team colored (default: white) glow.
+     *
+     * @param flag if the entity is glowing
+     */
+    void setGlowing(boolean flag);
+
+    /**
+     * Gets whether the entity is glowing or not.
+     *
+     * @return whether the entity is glowing
+     */
+    boolean isGlowing();
 }

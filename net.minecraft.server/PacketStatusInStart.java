@@ -1,22 +1,16 @@
 package net.minecraft.server;
 
-public class PacketStatusInStart extends Packet {
+import java.io.IOException;
+
+public class PacketStatusInStart implements Packet<PacketStatusInListener> {
 
     public PacketStatusInStart() {}
 
-    public void a(PacketDataSerializer packetdataserializer) {}
+    public void a(PacketDataSerializer packetdataserializer) throws IOException {}
 
-    public void b(PacketDataSerializer packetdataserializer) {}
+    public void b(PacketDataSerializer packetdataserializer) throws IOException {}
 
     public void a(PacketStatusInListener packetstatusinlistener) {
         packetstatusinlistener.a(this);
-    }
-
-    public boolean a() {
-        return true;
-    }
-
-    public void handle(PacketListener packetlistener) {
-        this.a((PacketStatusInListener) packetlistener);
     }
 }

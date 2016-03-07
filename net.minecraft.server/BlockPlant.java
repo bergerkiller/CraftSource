@@ -1,63 +1,80 @@
 package net.minecraft.server;
 
 import java.util.Random;
+// CraftBukkit start
+import org.bukkit.craftbukkit.util.CraftMagicNumbers;
+import org.bukkit.event.block.BlockPhysicsEvent;
+// CraftBukkit end
 
 public class BlockPlant extends Block {
 
-    protected BlockPlant(Material material) {
-        super(material);
-        this.a(true);
-        float f = 0.2F;
-
-        this.a(0.5F - f, 0.0F, 0.5F - f, 0.5F + f, f * 3.0F, 0.5F + f);
-        this.a(CreativeModeTab.c);
-    }
+    protected static final AxisAlignedBB b = new AxisAlignedBB(0.30000001192092896D, 0.0D, 0.30000001192092896D, 0.699999988079071D, 0.6000000238418579D, 0.699999988079071D);
 
     protected BlockPlant() {
         this(Material.PLANT);
     }
 
-    public boolean canPlace(World world, int i, int j, int k) {
-        return super.canPlace(world, i, j, k) && this.a(world.getType(i, j - 1, k));
+    protected BlockPlant(Material material) {
+        this(material, material.r());
     }
 
-    protected boolean a(Block block) {
-        return block == Blocks.GRASS || block == Blocks.DIRT || block == Blocks.SOIL;
+    protected BlockPlant(Material material, MaterialMapColor materialmapcolor) {
+        super(material, materialmapcolor);
+        this.a(true);
+        this.a(CreativeModeTab.c);
     }
 
-    public void doPhysics(World world, int i, int j, int k, Block block) {
-        super.doPhysics(world, i, j, k, block);
-        this.e(world, i, j, k);
+    public boolean canPlace(World world, BlockPosition blockposition) {
+        return super.canPlace(world, blockposition) && this.i(world.getType(blockposition.down()));
     }
 
-    public void a(World world, int i, int j, int k, Random random) {
-        this.e(world, i, j, k);
+    protected boolean i(IBlockData iblockdata) {
+        return iblockdata.getBlock() == Blocks.GRASS || iblockdata.getBlock() == Blocks.DIRT || iblockdata.getBlock() == Blocks.FARMLAND;
     }
 
-    protected void e(World world, int i, int j, int k) {
-        if (!this.j(world, i, j, k)) {
-            this.b(world, i, j, k, world.getData(i, j, k), 0);
-            world.setTypeAndData(i, j, k, getById(0), 0, 2);
+    public void doPhysics(World world, BlockPosition blockposition, IBlockData iblockdata, Block block) {
+        super.doPhysics(world, blockposition, iblockdata, block);
+        this.e(world, blockposition, iblockdata);
+    }
+
+    public void b(World world, BlockPosition blockposition, IBlockData iblockdata, Random random) {
+        this.e(world, blockposition, iblockdata);
+    }
+
+    protected void e(World world, BlockPosition blockposition, IBlockData iblockdata) {
+        if (!this.f(world, blockposition, iblockdata)) {
+            // CraftBukkit Start
+            org.bukkit.block.Block block = world.getWorld().getBlockAt(blockposition.getX(), blockposition.getY(), blockposition.getZ());
+            BlockPhysicsEvent event = new BlockPhysicsEvent(block, block.getTypeId());
+            world.getServer().getPluginManager().callEvent(event);
+
+            if (event.isCancelled()) {
+                return;
+            }
+            // CraftBukkit end
+            this.b(world, blockposition, iblockdata, 0);
+            world.setTypeAndData(blockposition, Blocks.AIR.getBlockData(), 3);
         }
+
     }
 
-    public boolean j(World world, int i, int j, int k) {
-        return this.a(world.getType(i, j - 1, k));
+    public boolean f(World world, BlockPosition blockposition, IBlockData iblockdata) {
+        return this.i(world.getType(blockposition.down()));
     }
 
-    public AxisAlignedBB a(World world, int i, int j, int k) {
-        return null;
+    public AxisAlignedBB a(IBlockData iblockdata, IBlockAccess iblockaccess, BlockPosition blockposition) {
+        return BlockPlant.b;
     }
 
-    public boolean c() {
+    public AxisAlignedBB a(IBlockData iblockdata, World world, BlockPosition blockposition) {
+        return BlockPlant.k;
+    }
+
+    public boolean b(IBlockData iblockdata) {
         return false;
     }
 
-    public boolean d() {
+    public boolean c(IBlockData iblockdata) {
         return false;
-    }
-
-    public int b() {
-        return 1;
     }
 }

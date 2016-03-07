@@ -2,17 +2,17 @@ package net.minecraft.server;
 
 public class BiomeMushrooms extends BiomeBase {
 
-    public BiomeMushrooms(int i) {
-        super(i);
-        this.ar.x = -100;
-        this.ar.y = -100;
-        this.ar.z = -100;
-        this.ar.B = 1;
-        this.ar.H = 1;
-        this.ai = Blocks.MYCEL;
-        this.as.clear();
-        this.at.clear();
-        this.au.clear();
-        this.at.add(new BiomeMeta(EntityMushroomCow.class, 8, 4, 8));
+    public BiomeMushrooms(BiomeBase.a biomebase_a) {
+        super(biomebase_a);
+        this.t.z = -100;
+        this.t.A = -100;
+        this.t.B = -100;
+        this.t.D = 1;
+        this.t.J = 1;
+        this.r = Blocks.MYCELIUM.getBlockData();
+        this.u.clear();
+        this.v.clear();
+        this.w.clear();
+        this.v.add(new BiomeBase.BiomeMeta(EntityMushroomCow.class, 8, 4, 8));
     }
 }

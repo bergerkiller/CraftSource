@@ -9,8 +9,17 @@ public abstract class WorldGenTreeAbstract extends WorldGenerator {
     }
 
     protected boolean a(Block block) {
-        return block.getMaterial() == Material.AIR || block.getMaterial() == Material.LEAVES || block == Blocks.GRASS || block == Blocks.DIRT || block == Blocks.LOG || block == Blocks.LOG2 || block == Blocks.SAPLING || block == Blocks.VINE;
+        Material material = block.getBlockData().getMaterial();
+
+        return material == Material.AIR || material == Material.LEAVES || block == Blocks.GRASS || block == Blocks.DIRT || block == Blocks.LOG || block == Blocks.LOG2 || block == Blocks.SAPLING || block == Blocks.VINE;
     }
 
-    public void b(World world, Random random, int i, int j, int k) {}
+    public void a(World world, Random random, BlockPosition blockposition) {}
+
+    protected void a(World world, BlockPosition blockposition) {
+        if (world.getType(blockposition).getBlock() != Blocks.DIRT) {
+            this.a(world, blockposition, Blocks.DIRT.getBlockData());
+        }
+
+    }
 }

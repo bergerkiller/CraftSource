@@ -4,11 +4,11 @@ import java.util.Random;
 
 public class BiomeDecorator {
 
-    protected World a;
-    protected Random b;
-    protected int c;
-    protected int d;
-    protected WorldGenerator e = new WorldGenClay(4);
+    protected boolean a;
+    protected BlockPosition b;
+    protected CustomWorldSettingsFinal c;
+    protected WorldGenerator d = new WorldGenClay(4);
+    protected WorldGenerator e;
     protected WorldGenerator f;
     protected WorldGenerator g;
     protected WorldGenerator h;
@@ -19,15 +19,15 @@ public class BiomeDecorator {
     protected WorldGenerator m;
     protected WorldGenerator n;
     protected WorldGenerator o;
-    protected WorldGenFlowers p;
+    protected WorldGenerator p;
     protected WorldGenerator q;
-    protected WorldGenerator r;
+    protected WorldGenFlowers r;
     protected WorldGenerator s;
     protected WorldGenerator t;
     protected WorldGenerator u;
     protected WorldGenerator v;
-    protected int w;
-    protected int x;
+    protected WorldGenerator w;
+    protected WorldGenerator x;
     protected int y;
     protected int z;
     protected int A;
@@ -38,242 +38,309 @@ public class BiomeDecorator {
     protected int F;
     protected int G;
     protected int H;
-    public boolean I;
+    protected int I;
+    protected int J;
+    public boolean K;
 
     public BiomeDecorator() {
-        this.f = new WorldGenSand(Blocks.SAND, 7);
-        this.g = new WorldGenSand(Blocks.GRAVEL, 6);
-        this.h = new WorldGenMinable(Blocks.DIRT, 32);
-        this.i = new WorldGenMinable(Blocks.GRAVEL, 32);
-        this.j = new WorldGenMinable(Blocks.COAL_ORE, 16);
-        this.k = new WorldGenMinable(Blocks.IRON_ORE, 8);
-        this.l = new WorldGenMinable(Blocks.GOLD_ORE, 8);
-        this.m = new WorldGenMinable(Blocks.REDSTONE_ORE, 7);
-        this.n = new WorldGenMinable(Blocks.DIAMOND_ORE, 7);
-        this.o = new WorldGenMinable(Blocks.LAPIS_ORE, 6);
-        this.p = new WorldGenFlowers(Blocks.YELLOW_FLOWER);
-        this.q = new WorldGenFlowers(Blocks.BROWN_MUSHROOM);
-        this.r = new WorldGenFlowers(Blocks.RED_MUSHROOM);
-        this.s = new WorldGenHugeMushroom();
-        this.t = new WorldGenReed();
-        this.u = new WorldGenCactus();
-        this.v = new WorldGenWaterLily();
-        this.y = 2;
-        this.z = 1;
-        this.E = 1;
-        this.F = 3;
+        this.e = new WorldGenSand(Blocks.SAND, 7);
+        this.f = new WorldGenSand(Blocks.GRAVEL, 6);
+        this.r = new WorldGenFlowers(Blocks.YELLOW_FLOWER, BlockFlowers.EnumFlowerVarient.DANDELION);
+        this.s = new WorldGenMushrooms(Blocks.BROWN_MUSHROOM);
+        this.t = new WorldGenMushrooms(Blocks.RED_MUSHROOM);
+        this.u = new WorldGenHugeMushroom();
+        this.v = new WorldGenReed();
+        this.w = new WorldGenCactus();
+        this.x = new WorldGenWaterLily();
+        this.A = 2;
+        this.B = 1;
         this.G = 1;
-        this.I = true;
+        this.H = 3;
+        this.I = 1;
+        this.K = true;
     }
 
-    public void a(World world, Random random, BiomeBase biomebase, int i, int j) {
-        if (this.a != null) {
-            throw new RuntimeException("Already decorating!!");
+    public void a(World world, Random random, BiomeBase biomebase, BlockPosition blockposition) {
+        if (this.a) {
+            throw new RuntimeException("Already decorating");
         } else {
-            this.a = world;
-            this.b = random;
-            this.c = i;
-            this.d = j;
-            this.a(biomebase);
-            this.a = null;
-            this.b = null;
+            this.c = CustomWorldSettingsFinal.CustomWorldSettings.a(world.getWorldData().getGeneratorOptions()).b();
+            this.b = blockposition;
+            this.g = new WorldGenMinable(Blocks.DIRT.getBlockData(), this.c.I);
+            this.h = new WorldGenMinable(Blocks.GRAVEL.getBlockData(), this.c.M);
+            this.i = new WorldGenMinable(Blocks.STONE.getBlockData().set(BlockStone.VARIANT, BlockStone.EnumStoneVariant.GRANITE), this.c.Q);
+            this.j = new WorldGenMinable(Blocks.STONE.getBlockData().set(BlockStone.VARIANT, BlockStone.EnumStoneVariant.DIORITE), this.c.U);
+            this.k = new WorldGenMinable(Blocks.STONE.getBlockData().set(BlockStone.VARIANT, BlockStone.EnumStoneVariant.ANDESITE), this.c.Y);
+            this.l = new WorldGenMinable(Blocks.COAL_ORE.getBlockData(), this.c.ac);
+            this.m = new WorldGenMinable(Blocks.IRON_ORE.getBlockData(), this.c.ag);
+            this.n = new WorldGenMinable(Blocks.GOLD_ORE.getBlockData(), this.c.ak);
+            this.o = new WorldGenMinable(Blocks.REDSTONE_ORE.getBlockData(), this.c.ao);
+            this.p = new WorldGenMinable(Blocks.DIAMOND_ORE.getBlockData(), this.c.as);
+            this.q = new WorldGenMinable(Blocks.LAPIS_ORE.getBlockData(), this.c.aw);
+            this.a(biomebase, world, random);
+            this.a = false;
         }
     }
 
-    protected void a(BiomeBase biomebase) {
-        this.a();
+    protected void a(BiomeBase biomebase, World world, Random random) {
+        this.a(world, random);
 
         int i;
         int j;
         int k;
 
-        for (i = 0; i < this.F; ++i) {
-            j = this.c + this.b.nextInt(16) + 8;
-            k = this.d + this.b.nextInt(16) + 8;
-            this.f.generate(this.a, this.b, j, this.a.i(j, k), k);
+        for (i = 0; i < this.H; ++i) {
+            j = random.nextInt(16) + 8;
+            k = random.nextInt(16) + 8;
+            this.e.generate(world, random, world.q(this.b.a(j, 0, k)));
+        }
+
+        for (i = 0; i < this.I; ++i) {
+            j = random.nextInt(16) + 8;
+            k = random.nextInt(16) + 8;
+            this.d.generate(world, random, world.q(this.b.a(j, 0, k)));
         }
 
         for (i = 0; i < this.G; ++i) {
-            j = this.c + this.b.nextInt(16) + 8;
-            k = this.d + this.b.nextInt(16) + 8;
-            this.e.generate(this.a, this.b, j, this.a.i(j, k), k);
+            j = random.nextInt(16) + 8;
+            k = random.nextInt(16) + 8;
+            this.f.generate(world, random, world.q(this.b.a(j, 0, k)));
         }
 
-        for (i = 0; i < this.E; ++i) {
-            j = this.c + this.b.nextInt(16) + 8;
-            k = this.d + this.b.nextInt(16) + 8;
-            this.g.generate(this.a, this.b, j, this.a.i(j, k), k);
-        }
-
-        i = this.x;
-        if (this.b.nextInt(10) == 0) {
+        i = this.z;
+        if (random.nextInt(10) == 0) {
             ++i;
         }
 
         int l;
-        int i1;
+        BlockPosition blockposition;
 
         for (j = 0; j < i; ++j) {
-            k = this.c + this.b.nextInt(16) + 8;
-            l = this.d + this.b.nextInt(16) + 8;
-            i1 = this.a.getHighestBlockYAt(k, l);
-            WorldGenTreeAbstract worldgentreeabstract = biomebase.a(this.b);
+            k = random.nextInt(16) + 8;
+            l = random.nextInt(16) + 8;
+            WorldGenTreeAbstract worldgentreeabstract = biomebase.a(random);
 
-            worldgentreeabstract.a(1.0D, 1.0D, 1.0D);
-            if (worldgentreeabstract.generate(this.a, this.b, k, i1, l)) {
-                worldgentreeabstract.b(this.a, this.b, k, i1, l);
+            worldgentreeabstract.e();
+            blockposition = world.getHighestBlockYAt(this.b.a(k, 0, l));
+            if (worldgentreeabstract.generate(world, random, blockposition)) {
+                worldgentreeabstract.a(world, random, blockposition);
             }
         }
 
-        for (j = 0; j < this.H; ++j) {
-            k = this.c + this.b.nextInt(16) + 8;
-            l = this.d + this.b.nextInt(16) + 8;
-            this.s.generate(this.a, this.b, k, this.a.getHighestBlockYAt(k, l), l);
+        for (j = 0; j < this.J; ++j) {
+            k = random.nextInt(16) + 8;
+            l = random.nextInt(16) + 8;
+            this.u.generate(world, random, world.getHighestBlockYAt(this.b.a(k, 0, l)));
         }
 
-        for (j = 0; j < this.y; ++j) {
-            k = this.c + this.b.nextInt(16) + 8;
-            l = this.d + this.b.nextInt(16) + 8;
-            i1 = this.b.nextInt(this.a.getHighestBlockYAt(k, l) + 32);
-            String s = biomebase.a(this.b, k, i1, l);
-            BlockFlowers blockflowers = BlockFlowers.e(s);
-
-            if (blockflowers.getMaterial() != Material.AIR) {
-                this.p.a(blockflowers, BlockFlowers.f(s));
-                this.p.generate(this.a, this.b, k, i1, l);
-            }
-        }
-
-        for (j = 0; j < this.z; ++j) {
-            k = this.c + this.b.nextInt(16) + 8;
-            l = this.d + this.b.nextInt(16) + 8;
-            i1 = this.b.nextInt(this.a.getHighestBlockYAt(k, l) * 2);
-            WorldGenerator worldgenerator = biomebase.b(this.b);
-
-            worldgenerator.generate(this.a, this.b, k, i1, l);
-        }
+        BlockPosition blockposition1;
+        int i1;
+        int j1;
 
         for (j = 0; j < this.A; ++j) {
-            k = this.c + this.b.nextInt(16) + 8;
-            l = this.d + this.b.nextInt(16) + 8;
-            i1 = this.b.nextInt(this.a.getHighestBlockYAt(k, l) * 2);
-            (new WorldGenDeadBush(Blocks.DEAD_BUSH)).generate(this.a, this.b, k, i1, l);
-        }
+            k = random.nextInt(16) + 8;
+            l = random.nextInt(16) + 8;
+            i1 = world.getHighestBlockYAt(this.b.a(k, 0, l)).getY() + 32;
+            if (i1 > 0) {
+                j1 = random.nextInt(i1);
+                blockposition1 = this.b.a(k, j1, l);
+                BlockFlowers.EnumFlowerVarient blockflowers_enumflowervarient = biomebase.a(random, blockposition1);
+                BlockFlowers blockflowers = blockflowers_enumflowervarient.a().a();
 
-        for (j = 0; j < this.w; ++j) {
-            k = this.c + this.b.nextInt(16) + 8;
-            l = this.d + this.b.nextInt(16) + 8;
-
-            for (i1 = this.b.nextInt(this.a.getHighestBlockYAt(k, l) * 2); i1 > 0 && this.a.isEmpty(k, i1 - 1, l); --i1) {
-                ;
+                if (blockflowers.getBlockData().getMaterial() != Material.AIR) {
+                    this.r.a(blockflowers, blockflowers_enumflowervarient);
+                    this.r.generate(world, random, blockposition1);
+                }
             }
-
-            this.v.generate(this.a, this.b, k, i1, l);
         }
 
         for (j = 0; j < this.B; ++j) {
-            if (this.b.nextInt(4) == 0) {
-                k = this.c + this.b.nextInt(16) + 8;
-                l = this.d + this.b.nextInt(16) + 8;
-                i1 = this.a.getHighestBlockYAt(k, l);
-                this.q.generate(this.a, this.b, k, i1, l);
+            k = random.nextInt(16) + 8;
+            l = random.nextInt(16) + 8;
+            i1 = world.getHighestBlockYAt(this.b.a(k, 0, l)).getY() * 2;
+            if (i1 > 0) {
+                j1 = random.nextInt(i1);
+                biomebase.b(random).generate(world, random, this.b.a(k, j1, l));
             }
-
-            if (this.b.nextInt(8) == 0) {
-                k = this.c + this.b.nextInt(16) + 8;
-                l = this.d + this.b.nextInt(16) + 8;
-                i1 = this.b.nextInt(this.a.getHighestBlockYAt(k, l) * 2);
-                this.r.generate(this.a, this.b, k, i1, l);
-            }
-        }
-
-        if (this.b.nextInt(4) == 0) {
-            j = this.c + this.b.nextInt(16) + 8;
-            k = this.d + this.b.nextInt(16) + 8;
-            l = this.b.nextInt(this.a.getHighestBlockYAt(j, k) * 2);
-            this.q.generate(this.a, this.b, j, l, k);
-        }
-
-        if (this.b.nextInt(8) == 0) {
-            j = this.c + this.b.nextInt(16) + 8;
-            k = this.d + this.b.nextInt(16) + 8;
-            l = this.b.nextInt(this.a.getHighestBlockYAt(j, k) * 2);
-            this.r.generate(this.a, this.b, j, l, k);
         }
 
         for (j = 0; j < this.C; ++j) {
-            k = this.c + this.b.nextInt(16) + 8;
-            l = this.d + this.b.nextInt(16) + 8;
-            i1 = this.b.nextInt(this.a.getHighestBlockYAt(k, l) * 2);
-            this.t.generate(this.a, this.b, k, i1, l);
+            k = random.nextInt(16) + 8;
+            l = random.nextInt(16) + 8;
+            i1 = world.getHighestBlockYAt(this.b.a(k, 0, l)).getY() * 2;
+            if (i1 > 0) {
+                j1 = random.nextInt(i1);
+                (new WorldGenDeadBush()).generate(world, random, this.b.a(k, j1, l));
+            }
         }
 
-        for (j = 0; j < 10; ++j) {
-            k = this.c + this.b.nextInt(16) + 8;
-            l = this.d + this.b.nextInt(16) + 8;
-            i1 = this.b.nextInt(this.a.getHighestBlockYAt(k, l) * 2);
-            this.t.generate(this.a, this.b, k, i1, l);
-        }
+        for (j = 0; j < this.y; ++j) {
+            k = random.nextInt(16) + 8;
+            l = random.nextInt(16) + 8;
+            i1 = world.getHighestBlockYAt(this.b.a(k, 0, l)).getY() * 2;
+            if (i1 > 0) {
+                j1 = random.nextInt(i1);
 
-        if (this.b.nextInt(32) == 0) {
-            j = this.c + this.b.nextInt(16) + 8;
-            k = this.d + this.b.nextInt(16) + 8;
-            l = this.b.nextInt(this.a.getHighestBlockYAt(j, k) * 2);
-            (new WorldGenPumpkin()).generate(this.a, this.b, j, l, k);
+                BlockPosition blockposition2;
+
+                for (blockposition1 = this.b.a(k, j1, l); blockposition1.getY() > 0; blockposition1 = blockposition2) {
+                    blockposition2 = blockposition1.down();
+                    if (!world.isEmpty(blockposition2)) {
+                        break;
+                    }
+                }
+
+                this.x.generate(world, random, blockposition1);
+            }
         }
 
         for (j = 0; j < this.D; ++j) {
-            k = this.c + this.b.nextInt(16) + 8;
-            l = this.d + this.b.nextInt(16) + 8;
-            i1 = this.b.nextInt(this.a.getHighestBlockYAt(k, l) * 2);
-            this.u.generate(this.a, this.b, k, i1, l);
+            if (random.nextInt(4) == 0) {
+                k = random.nextInt(16) + 8;
+                l = random.nextInt(16) + 8;
+                BlockPosition blockposition3 = world.getHighestBlockYAt(this.b.a(k, 0, l));
+
+                this.s.generate(world, random, blockposition3);
+            }
+
+            if (random.nextInt(8) == 0) {
+                k = random.nextInt(16) + 8;
+                l = random.nextInt(16) + 8;
+                i1 = world.getHighestBlockYAt(this.b.a(k, 0, l)).getY() * 2;
+                if (i1 > 0) {
+                    j1 = random.nextInt(i1);
+                    blockposition1 = this.b.a(k, j1, l);
+                    this.t.generate(world, random, blockposition1);
+                }
+            }
         }
 
-        if (this.I) {
+        if (random.nextInt(4) == 0) {
+            j = random.nextInt(16) + 8;
+            k = random.nextInt(16) + 8;
+            l = world.getHighestBlockYAt(this.b.a(j, 0, k)).getY() * 2;
+            if (l > 0) {
+                i1 = random.nextInt(l);
+                this.s.generate(world, random, this.b.a(j, i1, k));
+            }
+        }
+
+        if (random.nextInt(8) == 0) {
+            j = random.nextInt(16) + 8;
+            k = random.nextInt(16) + 8;
+            l = world.getHighestBlockYAt(this.b.a(j, 0, k)).getY() * 2;
+            if (l > 0) {
+                i1 = random.nextInt(l);
+                this.t.generate(world, random, this.b.a(j, i1, k));
+            }
+        }
+
+        for (j = 0; j < this.E; ++j) {
+            k = random.nextInt(16) + 8;
+            l = random.nextInt(16) + 8;
+            i1 = world.getHighestBlockYAt(this.b.a(k, 0, l)).getY() * 2;
+            if (i1 > 0) {
+                j1 = random.nextInt(i1);
+                this.v.generate(world, random, this.b.a(k, j1, l));
+            }
+        }
+
+        for (j = 0; j < 10; ++j) {
+            k = random.nextInt(16) + 8;
+            l = random.nextInt(16) + 8;
+            i1 = world.getHighestBlockYAt(this.b.a(k, 0, l)).getY() * 2;
+            if (i1 > 0) {
+                j1 = random.nextInt(i1);
+                this.v.generate(world, random, this.b.a(k, j1, l));
+            }
+        }
+
+        if (random.nextInt(32) == 0) {
+            j = random.nextInt(16) + 8;
+            k = random.nextInt(16) + 8;
+            l = world.getHighestBlockYAt(this.b.a(j, 0, k)).getY() * 2;
+            if (l > 0) {
+                i1 = random.nextInt(l);
+                (new WorldGenPumpkin()).generate(world, random, this.b.a(j, i1, k));
+            }
+        }
+
+        for (j = 0; j < this.F; ++j) {
+            k = random.nextInt(16) + 8;
+            l = random.nextInt(16) + 8;
+            i1 = world.getHighestBlockYAt(this.b.a(k, 0, l)).getY() * 2;
+            if (i1 > 0) {
+                j1 = random.nextInt(i1);
+                this.w.generate(world, random, this.b.a(k, j1, l));
+            }
+        }
+
+        if (this.K) {
             for (j = 0; j < 50; ++j) {
-                k = this.c + this.b.nextInt(16) + 8;
-                l = this.b.nextInt(this.b.nextInt(248) + 8);
-                i1 = this.d + this.b.nextInt(16) + 8;
-                (new WorldGenLiquids(Blocks.WATER)).generate(this.a, this.b, k, l, i1);
+                k = random.nextInt(16) + 8;
+                l = random.nextInt(16) + 8;
+                i1 = random.nextInt(248) + 8;
+                if (i1 > 0) {
+                    j1 = random.nextInt(i1);
+                    blockposition1 = this.b.a(k, j1, l);
+                    (new WorldGenLiquids(Blocks.FLOWING_WATER)).generate(world, random, blockposition1);
+                }
             }
 
             for (j = 0; j < 20; ++j) {
-                k = this.c + this.b.nextInt(16) + 8;
-                l = this.b.nextInt(this.b.nextInt(this.b.nextInt(240) + 8) + 8);
-                i1 = this.d + this.b.nextInt(16) + 8;
-                (new WorldGenLiquids(Blocks.LAVA)).generate(this.a, this.b, k, l, i1);
+                k = random.nextInt(16) + 8;
+                l = random.nextInt(16) + 8;
+                i1 = random.nextInt(random.nextInt(random.nextInt(240) + 8) + 8);
+                blockposition = this.b.a(k, i1, l);
+                (new WorldGenLiquids(Blocks.FLOWING_LAVA)).generate(world, random, blockposition);
             }
         }
+
     }
 
-    protected void a(int i, WorldGenerator worldgenerator, int j, int k) {
-        for (int l = 0; l < i; ++l) {
-            int i1 = this.c + this.b.nextInt(16);
-            int j1 = this.b.nextInt(k - j) + j;
-            int k1 = this.d + this.b.nextInt(16);
+    protected void a(World world, Random random) {
+        this.a(world, random, this.c.J, this.g, this.c.K, this.c.L);
+        this.a(world, random, this.c.N, this.h, this.c.O, this.c.P);
+        this.a(world, random, this.c.V, this.j, this.c.W, this.c.X);
+        this.a(world, random, this.c.R, this.i, this.c.S, this.c.T);
+        this.a(world, random, this.c.Z, this.k, this.c.aa, this.c.ab);
+        this.a(world, random, this.c.ad, this.l, this.c.ae, this.c.af);
+        this.a(world, random, this.c.ah, this.m, this.c.ai, this.c.aj);
+        this.a(world, random, this.c.al, this.n, this.c.am, this.c.an);
+        this.a(world, random, this.c.ap, this.o, this.c.aq, this.c.ar);
+        this.a(world, random, this.c.at, this.p, this.c.au, this.c.av);
+        this.b(world, random, this.c.ax, this.q, this.c.ay, this.c.az);
+    }
 
-            worldgenerator.generate(this.a, this.b, i1, j1, k1);
+    protected void a(World world, Random random, int i, WorldGenerator worldgenerator, int j, int k) {
+        int l;
+
+        if (k < j) {
+            l = j;
+            j = k;
+            k = l;
+        } else if (k == j) {
+            if (j < 255) {
+                ++k;
+            } else {
+                --j;
+            }
         }
-    }
 
-    protected void b(int i, WorldGenerator worldgenerator, int j, int k) {
-        for (int l = 0; l < i; ++l) {
-            int i1 = this.c + this.b.nextInt(16);
-            int j1 = this.b.nextInt(k) + this.b.nextInt(k) + (j - k);
-            int k1 = this.d + this.b.nextInt(16);
+        for (l = 0; l < i; ++l) {
+            BlockPosition blockposition = this.b.a(random.nextInt(16), random.nextInt(k - j) + j, random.nextInt(16));
 
-            worldgenerator.generate(this.a, this.b, i1, j1, k1);
+            worldgenerator.generate(world, random, blockposition);
         }
+
     }
 
-    protected void a() {
-        this.a(20, this.h, 0, 256);
-        this.a(10, this.i, 0, 256);
-        this.a(20, this.j, 0, 128);
-        this.a(20, this.k, 0, 64);
-        this.a(2, this.l, 0, 32);
-        this.a(8, this.m, 0, 16);
-        this.a(1, this.n, 0, 16);
-        this.b(1, this.o, 16, 16);
+    protected void b(World world, Random random, int i, WorldGenerator worldgenerator, int j, int k) {
+        for (int l = 0; l < i; ++l) {
+            BlockPosition blockposition = this.b.a(random.nextInt(16), random.nextInt(k) + random.nextInt(k) + j - k, random.nextInt(16));
+
+            worldgenerator.generate(world, random, blockposition);
+        }
+
     }
 }

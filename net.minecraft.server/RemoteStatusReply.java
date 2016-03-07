@@ -2,39 +2,40 @@ package net.minecraft.server;
 
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
+import java.io.IOException;
 
 public class RemoteStatusReply {
 
-    private ByteArrayOutputStream buffer;
-    private DataOutputStream stream;
+    private ByteArrayOutputStream a;
+    private DataOutputStream b;
 
     public RemoteStatusReply(int i) {
-        this.buffer = new ByteArrayOutputStream(i);
-        this.stream = new DataOutputStream(this.buffer);
+        this.a = new ByteArrayOutputStream(i);
+        this.b = new DataOutputStream(this.a);
     }
 
-    public void write(byte[] abyte) {
-        this.stream.write(abyte, 0, abyte.length);
+    public void a(byte[] abyte) throws IOException {
+        this.b.write(abyte, 0, abyte.length);
     }
 
-    public void write(String s) {
-        this.stream.writeBytes(s);
-        this.stream.write(0);
+    public void a(String s) throws IOException {
+        this.b.writeBytes(s);
+        this.b.write(0);
     }
 
-    public void write(int i) {
-        this.stream.write(i);
+    public void a(int i) throws IOException {
+        this.b.write(i);
     }
 
-    public void write(short short1) {
-        this.stream.writeShort(Short.reverseBytes(short1));
+    public void a(short short0) throws IOException {
+        this.b.writeShort(Short.reverseBytes(short0));
     }
 
-    public byte[] getBytes() {
-        return this.buffer.toByteArray();
+    public byte[] a() {
+        return this.a.toByteArray();
     }
 
-    public void reset() {
-        this.buffer.reset();
+    public void b() {
+        this.a.reset();
     }
 }

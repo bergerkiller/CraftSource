@@ -1,21 +1,29 @@
 package net.minecraft.server;
 
+import com.google.common.collect.Sets;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.Set;
 
 public class ScoreboardTeam extends ScoreboardTeamBase {
 
     private final Scoreboard a;
     private final String b;
-    private final Set c = new HashSet();
+    private final Set<String> c = Sets.newHashSet();
     private String d;
     private String e = "";
     private String f = "";
     private boolean g = true;
     private boolean h = true;
+    private ScoreboardTeamBase.EnumNameTagVisibility i;
+    private ScoreboardTeamBase.EnumNameTagVisibility j;
+    private EnumChatFormat k;
+    private ScoreboardTeamBase.EnumTeamPush l;
 
     public ScoreboardTeam(Scoreboard scoreboard, String s) {
+        this.i = ScoreboardTeamBase.EnumNameTagVisibility.ALWAYS;
+        this.j = ScoreboardTeamBase.EnumNameTagVisibility.ALWAYS;
+        this.k = EnumChatFormat.RESET;
+        this.l = ScoreboardTeamBase.EnumTeamPush.ALWAYS;
         this.a = scoreboard;
         this.b = s;
         this.d = s;
@@ -38,7 +46,7 @@ public class ScoreboardTeam extends ScoreboardTeamBase {
         }
     }
 
-    public Collection getPlayerNameSet() {
+    public Collection<String> getPlayerNameSet() {
         return this.c;
     }
 
@@ -60,12 +68,8 @@ public class ScoreboardTeam extends ScoreboardTeamBase {
     }
 
     public void setSuffix(String s) {
-        if (s == null) {
-            throw new IllegalArgumentException("Suffix cannot be null");
-        } else {
-            this.f = s;
-            this.a.handleTeamChanged(this);
-        }
+        this.f = s;
+        this.a.handleTeamChanged(this);
     }
 
     public String getFormattedName(String s) {
@@ -94,6 +98,33 @@ public class ScoreboardTeam extends ScoreboardTeamBase {
         this.a.handleTeamChanged(this);
     }
 
+    public ScoreboardTeamBase.EnumNameTagVisibility getNameTagVisibility() {
+        return this.i;
+    }
+
+    public ScoreboardTeamBase.EnumNameTagVisibility j() {
+        return this.j;
+    }
+
+    public void setNameTagVisibility(ScoreboardTeamBase.EnumNameTagVisibility scoreboardteambase_enumnametagvisibility) {
+        this.i = scoreboardteambase_enumnametagvisibility;
+        this.a.handleTeamChanged(this);
+    }
+
+    public void b(ScoreboardTeamBase.EnumNameTagVisibility scoreboardteambase_enumnametagvisibility) {
+        this.j = scoreboardteambase_enumnametagvisibility;
+        this.a.handleTeamChanged(this);
+    }
+
+    public ScoreboardTeamBase.EnumTeamPush k() {
+        return this.l;
+    }
+
+    public void a(ScoreboardTeamBase.EnumTeamPush scoreboardteambase_enumteampush) {
+        this.l = scoreboardteambase_enumteampush;
+        this.a.handleTeamChanged(this);
+    }
+
     public int packOptionData() {
         int i = 0;
 
@@ -106,5 +137,13 @@ public class ScoreboardTeam extends ScoreboardTeamBase {
         }
 
         return i;
+    }
+
+    public void a(EnumChatFormat enumchatformat) {
+        this.k = enumchatformat;
+    }
+
+    public EnumChatFormat m() {
+        return this.k;
     }
 }

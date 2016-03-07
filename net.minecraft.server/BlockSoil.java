@@ -1,5 +1,6 @@
 package net.minecraft.server;
 
+import java.util.Iterator;
 import java.util.Random;
 
 // CraftBukkit start
@@ -9,58 +10,63 @@ import org.bukkit.craftbukkit.event.CraftEventFactory;
 
 public class BlockSoil extends Block {
 
+    public static final BlockStateInteger MOISTURE = BlockStateInteger.of("moisture", 0, 7);
+    protected static final AxisAlignedBB b = new AxisAlignedBB(0.0D, 0.0D, 0.0D, 1.0D, 0.9375D, 1.0D);
+
     protected BlockSoil() {
         super(Material.EARTH);
+        this.w(this.blockStateList.getBlockData().set(BlockSoil.MOISTURE, Integer.valueOf(0)));
         this.a(true);
-        this.a(0.0F, 0.0F, 0.0F, 1.0F, 0.9375F, 1.0F);
-        this.g(255);
+        this.d(255);
     }
 
-    public AxisAlignedBB a(World world, int i, int j, int k) {
-        return AxisAlignedBB.a((double) (i + 0), (double) (j + 0), (double) (k + 0), (double) (i + 1), (double) (j + 1), (double) (k + 1));
+    public AxisAlignedBB a(IBlockData iblockdata, IBlockAccess iblockaccess, BlockPosition blockposition) {
+        return BlockSoil.b;
     }
 
-    public boolean c() {
+    public AxisAlignedBB a(IBlockData iblockdata, World world, BlockPosition blockposition) {
+        return BlockSoil.j;
+    }
+
+    public boolean b(IBlockData iblockdata) {
         return false;
     }
 
-    public boolean d() {
+    public boolean c(IBlockData iblockdata) {
         return false;
     }
 
-    public void a(World world, int i, int j, int k, Random random) {
-        if (!this.m(world, i, j, k) && !world.isRainingAt(i, j + 1, k)) {
-            int l = world.getData(i, j, k);
+    public void b(World world, BlockPosition blockposition, IBlockData iblockdata, Random random) {
+        int i = ((Integer) iblockdata.get(BlockSoil.MOISTURE)).intValue();
 
-            if (l > 0) {
-                world.setData(i, j, k, l - 1, 2);
-            } else if (!this.e(world, i, j, k)) {
+        if (!this.c(world, blockposition) && !world.isRainingAt(blockposition.up())) {
+            if (i > 0) {
+                world.setTypeAndData(blockposition, iblockdata.set(BlockSoil.MOISTURE, Integer.valueOf(i - 1)), 2);
+            } else if (!this.b(world, blockposition)) {
                 // CraftBukkit start
-                org.bukkit.block.Block block = world.getWorld().getBlockAt(i, j, k);
+                org.bukkit.block.Block block = world.getWorld().getBlockAt(blockposition.getX(), blockposition.getY(), blockposition.getZ());
                 if (CraftEventFactory.callBlockFadeEvent(block, Blocks.DIRT).isCancelled()) {
                     return;
                 }
                 // CraftBukkit end
-
-                world.setTypeUpdate(i, j, k, Blocks.DIRT);
+                world.setTypeUpdate(blockposition, Blocks.DIRT.getBlockData());
             }
-        } else {
-            world.setData(i, j, k, 7, 2);
+        } else if (i < 7) {
+            world.setTypeAndData(blockposition, iblockdata.set(BlockSoil.MOISTURE, Integer.valueOf(7)), 2);
         }
+
     }
 
-    public void a(World world, int i, int j, int k, Entity entity, float f) {
-        if (!world.isStatic && world.random.nextFloat() < f - 0.5F) {
-            if (!(entity instanceof EntityHuman) && !world.getGameRules().getBoolean("mobGriefing")) {
-                return;
-            }
+    public void fallOn(World world, BlockPosition blockposition, Entity entity, float f) {
+        super.fallOn(world, blockposition, entity, f); // CraftBukkit - moved here as game rules / events shouldn't affect fall damage.
+        if (!world.isClientSide && world.random.nextFloat() < f - 0.5F && entity instanceof EntityLiving && (entity instanceof EntityHuman || world.getGameRules().getBoolean("mobGriefing")) && entity.width * entity.width * entity.length > 0.512F) {
 
             // CraftBukkit start - Interact soil
             org.bukkit.event.Cancellable cancellable;
             if (entity instanceof EntityHuman) {
-                cancellable = CraftEventFactory.callPlayerInteractEvent((EntityHuman) entity, org.bukkit.event.block.Action.PHYSICAL, i, j, k, -1, null);
+                cancellable = CraftEventFactory.callPlayerInteractEvent((EntityHuman) entity, org.bukkit.event.block.Action.PHYSICAL, blockposition, null, null, null);
             } else {
-                cancellable = new EntityInteractEvent(entity.getBukkitEntity(), world.getWorld().getBlockAt(i, j, k));
+                cancellable = new EntityInteractEvent(entity.getBukkitEntity(), world.getWorld().getBlockAt(blockposition.getX(), blockposition.getY(), blockposition.getZ()));
                 world.getServer().getPluginManager().callEvent((EntityInteractEvent) cancellable);
             }
 
@@ -68,54 +74,64 @@ public class BlockSoil extends Block {
                 return;
             }
 
-            if (CraftEventFactory.callEntityChangeBlockEvent(entity, i, j, k, Blocks.DIRT, 0).isCancelled()) {
+            if (CraftEventFactory.callEntityChangeBlockEvent(entity, blockposition.getX(), blockposition.getY(), blockposition.getZ(), Blocks.DIRT, 0).isCancelled()) {
                 return;
             }
             // CraftBukkit end
-            world.setTypeUpdate(i, j, k, Blocks.DIRT);
+
+            world.setTypeUpdate(blockposition, Blocks.DIRT.getBlockData());
         }
+
+        // super.fallOn(world, blockposition, entity, f); // CraftBukkit - moved up
     }
 
-    private boolean e(World world, int i, int j, int k) {
-        byte b0 = 0;
+    private boolean b(World world, BlockPosition blockposition) {
+        Block block = world.getType(blockposition.up()).getBlock();
 
-        for (int l = i - b0; l <= i + b0; ++l) {
-            for (int i1 = k - b0; i1 <= k + b0; ++i1) {
-                Block block = world.getType(l, j + 1, i1);
+        return block instanceof BlockCrops || block instanceof BlockStem;
+    }
 
-                if (block == Blocks.CROPS || block == Blocks.MELON_STEM || block == Blocks.PUMPKIN_STEM || block == Blocks.POTATOES || block == Blocks.CARROTS) {
-                    return true;
-                }
+    private boolean c(World world, BlockPosition blockposition) {
+        Iterator iterator = BlockPosition.b(blockposition.a(-4, 0, -4), blockposition.a(4, 1, 4)).iterator();
+
+        BlockPosition.MutableBlockPosition blockposition_mutableblockposition;
+
+        do {
+            if (!iterator.hasNext()) {
+                return false;
             }
-        }
 
-        return false;
+            blockposition_mutableblockposition = (BlockPosition.MutableBlockPosition) iterator.next();
+        } while (world.getType(blockposition_mutableblockposition).getMaterial() != Material.WATER);
+
+        return true;
     }
 
-    private boolean m(World world, int i, int j, int k) {
-        for (int l = i - 4; l <= i + 4; ++l) {
-            for (int i1 = j; i1 <= j + 1; ++i1) {
-                for (int j1 = k - 4; j1 <= k + 4; ++j1) {
-                    if (world.getType(l, i1, j1).getMaterial() == Material.WATER) {
-                        return true;
-                    }
-                }
-            }
+    public void doPhysics(World world, BlockPosition blockposition, IBlockData iblockdata, Block block) {
+        super.doPhysics(world, blockposition, iblockdata, block);
+        if (world.getType(blockposition.up()).getMaterial().isBuildable()) {
+            world.setTypeUpdate(blockposition, Blocks.DIRT.getBlockData());
         }
 
-        return false;
     }
 
-    public void doPhysics(World world, int i, int j, int k, Block block) {
-        super.doPhysics(world, i, j, k, block);
-        Material material = world.getType(i, j + 1, k).getMaterial();
-
-        if (material.isBuildable()) {
-            world.setTypeUpdate(i, j, k, Blocks.DIRT);
-        }
+    public Item getDropType(IBlockData iblockdata, Random random, int i) {
+        return Blocks.DIRT.getDropType(Blocks.DIRT.getBlockData().set(BlockDirt.VARIANT, BlockDirt.EnumDirtVariant.DIRT), random, i);
     }
 
-    public Item getDropType(int i, Random random, int j) {
-        return Blocks.DIRT.getDropType(0, random, j);
+    public ItemStack a(World world, BlockPosition blockposition, IBlockData iblockdata) {
+        return new ItemStack(Blocks.DIRT);
+    }
+
+    public IBlockData fromLegacyData(int i) {
+        return this.getBlockData().set(BlockSoil.MOISTURE, Integer.valueOf(i & 7));
+    }
+
+    public int toLegacyData(IBlockData iblockdata) {
+        return ((Integer) iblockdata.get(BlockSoil.MOISTURE)).intValue();
+    }
+
+    protected BlockStateList getStateList() {
+        return new BlockStateList(this, new IBlockState[] { BlockSoil.MOISTURE});
     }
 }

@@ -2,8 +2,6 @@ package net.minecraft.server;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.DataInput;
 import java.io.DataInputStream;
 import java.io.DataOutput;
@@ -16,7 +14,7 @@ import java.util.zip.GZIPOutputStream;
 
 public class NBTCompressedStreamTools {
 
-    public static NBTTagCompound a(InputStream inputstream) {
+    public static NBTTagCompound a(InputStream inputstream) throws IOException {
         DataInputStream datainputstream = new DataInputStream(new BufferedInputStream(new GZIPInputStream(inputstream)));
 
         NBTTagCompound nbttagcompound;
@@ -30,7 +28,7 @@ public class NBTCompressedStreamTools {
         return nbttagcompound;
     }
 
-    public static void a(NBTTagCompound nbttagcompound, OutputStream outputstream) {
+    public static void a(NBTTagCompound nbttagcompound, OutputStream outputstream) throws IOException {
         DataOutputStream dataoutputstream = new DataOutputStream(new BufferedOutputStream(new GZIPOutputStream(outputstream)));
 
         try {
@@ -38,40 +36,20 @@ public class NBTCompressedStreamTools {
         } finally {
             dataoutputstream.close();
         }
+
     }
 
-    public static NBTTagCompound a(byte[] abyte, NBTReadLimiter nbtreadlimiter) {
-        DataInputStream datainputstream = new DataInputStream(new BufferedInputStream(new GZIPInputStream(new ByteArrayInputStream(abyte))));
-
-        NBTTagCompound nbttagcompound;
-
-        try {
-            nbttagcompound = a((DataInput) datainputstream, nbtreadlimiter);
-        } finally {
-            datainputstream.close();
-        }
-
-        return nbttagcompound;
-    }
-
-    public static byte[] a(NBTTagCompound nbttagcompound) {
-        ByteArrayOutputStream bytearrayoutputstream = new ByteArrayOutputStream();
-        DataOutputStream dataoutputstream = new DataOutputStream(new GZIPOutputStream(bytearrayoutputstream));
-
-        try {
-            a(nbttagcompound, (DataOutput) dataoutputstream);
-        } finally {
-            dataoutputstream.close();
-        }
-
-        return bytearrayoutputstream.toByteArray();
-    }
-
-    public static NBTTagCompound a(DataInputStream datainputstream) {
+    public static NBTTagCompound a(DataInputStream datainputstream) throws IOException {
         return a((DataInput) datainputstream, NBTReadLimiter.a);
     }
 
-    public static NBTTagCompound a(DataInput datainput, NBTReadLimiter nbtreadlimiter) {
+    public static NBTTagCompound a(DataInput datainput, NBTReadLimiter nbtreadlimiter) throws IOException {
+        // Spigot start
+        if ( datainput instanceof io.netty.buffer.ByteBufInputStream )
+        {
+            datainput = new DataInputStream(new org.spigotmc.LimitStream((InputStream) datainput, nbtreadlimiter));
+        }
+        // Spigot end
         NBTBase nbtbase = a(datainput, 0, nbtreadlimiter);
 
         if (nbtbase instanceof NBTTagCompound) {
@@ -81,11 +59,11 @@ public class NBTCompressedStreamTools {
         }
     }
 
-    public static void a(NBTTagCompound nbttagcompound, DataOutput dataoutput) {
+    public static void a(NBTTagCompound nbttagcompound, DataOutput dataoutput) throws IOException {
         a((NBTBase) nbttagcompound, dataoutput);
     }
 
-    private static void a(NBTBase nbtbase, DataOutput dataoutput) {
+    private static void a(NBTBase nbtbase, DataOutput dataoutput) throws IOException {
         dataoutput.writeByte(nbtbase.getTypeId());
         if (nbtbase.getTypeId() != 0) {
             dataoutput.writeUTF("");
@@ -93,7 +71,7 @@ public class NBTCompressedStreamTools {
         }
     }
 
-    private static NBTBase a(DataInput datainput, int i, NBTReadLimiter nbtreadlimiter) {
+    private static NBTBase a(DataInput datainput, int i, NBTReadLimiter nbtreadlimiter) throws IOException {
         byte b0 = datainput.readByte();
 
         if (b0 == 0) {
@@ -109,8 +87,8 @@ public class NBTCompressedStreamTools {
                 CrashReport crashreport = CrashReport.a(ioexception, "Loading NBT data");
                 CrashReportSystemDetails crashreportsystemdetails = crashreport.a("NBT Tag");
 
-                crashreportsystemdetails.a("Tag name", "[UNNAMED TAG]");
-                crashreportsystemdetails.a("Tag type", Byte.valueOf(b0));
+                crashreportsystemdetails.a("Tag name", (Object) "[UNNAMED TAG]");
+                crashreportsystemdetails.a("Tag type", (Object) Byte.valueOf(b0));
                 throw new ReportedException(crashreport);
             }
         }

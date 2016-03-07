@@ -1,6 +1,8 @@
 package net.minecraft.server;
 
-public class PacketPlayInSteerVehicle extends Packet {
+import java.io.IOException;
+
+public class PacketPlayInSteerVehicle implements Packet<PacketListenerPlayIn> {
 
     private float a;
     private float b;
@@ -9,41 +11,48 @@ public class PacketPlayInSteerVehicle extends Packet {
 
     public PacketPlayInSteerVehicle() {}
 
-    public void a(PacketDataSerializer packetdataserializer) {
+    public void a(PacketDataSerializer packetdataserializer) throws IOException {
         this.a = packetdataserializer.readFloat();
         this.b = packetdataserializer.readFloat();
-        this.c = packetdataserializer.readBoolean();
-        this.d = packetdataserializer.readBoolean();
+        byte b0 = packetdataserializer.readByte();
+
+        this.c = (b0 & 1) > 0;
+        this.d = (b0 & 2) > 0;
     }
 
-    public void b(PacketDataSerializer packetdataserializer) {
+    public void b(PacketDataSerializer packetdataserializer) throws IOException {
         packetdataserializer.writeFloat(this.a);
         packetdataserializer.writeFloat(this.b);
-        packetdataserializer.writeBoolean(this.c);
-        packetdataserializer.writeBoolean(this.d);
+        byte b0 = 0;
+
+        if (this.c) {
+            b0 = (byte) (b0 | 1);
+        }
+
+        if (this.d) {
+            b0 = (byte) (b0 | 2);
+        }
+
+        packetdataserializer.writeByte(b0);
     }
 
-    public void a(PacketPlayInListener packetplayinlistener) {
-        packetplayinlistener.a(this);
+    public void a(PacketListenerPlayIn packetlistenerplayin) {
+        packetlistenerplayin.a(this);
     }
 
-    public float c() {
+    public float a() {
         return this.a;
     }
 
-    public float d() {
+    public float b() {
         return this.b;
     }
 
-    public boolean e() {
+    public boolean c() {
         return this.c;
     }
 
-    public boolean f() {
+    public boolean d() {
         return this.d;
-    }
-
-    public void handle(PacketListener packetlistener) {
-        this.a((PacketPlayInListener) packetlistener);
     }
 }

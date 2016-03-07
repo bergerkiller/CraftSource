@@ -1,107 +1,75 @@
 package net.minecraft.server;
 
-import org.bukkit.event.entity.EntityCombustByEntityEvent;
-import org.bukkit.event.entity.EntityTargetEvent; // CraftBukkit
+import org.bukkit.event.entity.EntityCombustByEntityEvent; // CraftBukkit
 
 public abstract class EntityMonster extends EntityCreature implements IMonster {
 
     public EntityMonster(World world) {
         super(world);
-        this.b = 5;
+        this.b_ = 5;
     }
 
-    public void e() {
-        this.bb();
-        float f = this.d(1.0F);
+    public SoundCategory bz() {
+        return SoundCategory.HOSTILE;
+    }
+
+    public void n() {
+        this.bY();
+        float f = this.e(1.0F);
 
         if (f > 0.5F) {
-            this.aU += 2;
+            this.ticksFarFromPlayer += 2;
         }
 
-        super.e();
+        super.n();
     }
 
-    public void h() {
-        super.h();
-        if (!this.world.isStatic && this.world.difficulty == EnumDifficulty.PEACEFUL) {
+    public void m() {
+        super.m();
+        if (!this.world.isClientSide && this.world.getDifficulty() == EnumDifficulty.PEACEFUL) {
             this.die();
         }
+
     }
 
-    protected String H() {
-        return "game.hostile.swim";
+    protected SoundEffect aa() {
+        return SoundEffects.cF;
     }
 
-    protected String O() {
-        return "game.hostile.swim.splash";
-    }
-
-    protected Entity findTarget() {
-        EntityHuman entityhuman = this.world.findNearbyVulnerablePlayer(this, 16.0D);
-
-        return entityhuman != null && this.hasLineOfSight(entityhuman) ? entityhuman : null;
+    protected SoundEffect ab() {
+        return SoundEffects.cE;
     }
 
     public boolean damageEntity(DamageSource damagesource, float f) {
-        if (this.isInvulnerable()) {
-            return false;
-        } else if (super.damageEntity(damagesource, f)) {
-            Entity entity = damagesource.getEntity();
-
-            if (this.passenger != entity && this.vehicle != entity) {
-                if (entity != this) {
-                    // CraftBukkit start - We still need to call events for entities without goals
-                    if (entity != this.target && (this instanceof EntityBlaze || this instanceof EntityEnderman || this instanceof EntitySpider || this instanceof EntityGiantZombie || this instanceof EntitySilverfish)) {
-                        EntityTargetEvent event = org.bukkit.craftbukkit.event.CraftEventFactory.callEntityTargetEvent(this, entity, EntityTargetEvent.TargetReason.TARGET_ATTACKED_ENTITY);
-
-                        if (!event.isCancelled()) {
-                            if (event.getTarget() == null) {
-                                this.target = null;
-                            } else {
-                                this.target = ((org.bukkit.craftbukkit.entity.CraftEntity) event.getTarget()).getHandle();
-                            }
-                        }
-                    } else {
-                        this.target = entity;
-                    }
-                    // CraftBukkit end
-                }
-
-                return true;
-            } else {
-                return true;
-            }
-        } else {
-            return false;
-        }
+        return this.isInvulnerable(damagesource) ? false : super.damageEntity(damagesource, f);
     }
 
-    protected String aT() {
-        return "game.hostile.hurt";
+    protected SoundEffect bR() {
+        return SoundEffects.cC;
     }
 
-    protected String aU() {
-        return "game.hostile.die";
+    protected SoundEffect bS() {
+        return SoundEffects.cB;
     }
 
-    protected String o(int i) {
-        return i > 4 ? "game.hostile.hurt.fall.big" : "game.hostile.hurt.fall.small";
+    protected SoundEffect e(int i) {
+        return i > 4 ? SoundEffects.cA : SoundEffects.cD;
     }
 
-    public boolean n(Entity entity) {
-        float f = (float) this.getAttributeInstance(GenericAttributes.e).getValue();
+    public boolean B(Entity entity) {
+        float f = (float) this.getAttributeInstance(GenericAttributes.ATTACK_DAMAGE).getValue();
         int i = 0;
 
         if (entity instanceof EntityLiving) {
-            f += EnchantmentManager.a((EntityLiving) this, (EntityLiving) entity);
-            i += EnchantmentManager.getKnockbackEnchantmentLevel(this, (EntityLiving) entity);
+            f += EnchantmentManager.a(this.getItemInMainHand(), ((EntityLiving) entity).getMonsterType());
+            i += EnchantmentManager.a((EntityLiving) this);
         }
 
         boolean flag = entity.damageEntity(DamageSource.mobAttack(this), f);
 
         if (flag) {
-            if (i > 0) {
-                entity.g((double) (-MathHelper.sin(this.yaw * 3.1415927F / 180.0F) * (float) i * 0.5F), 0.1D, (double) (MathHelper.cos(this.yaw * 3.1415927F / 180.0F) * (float) i * 0.5F));
+            if (i > 0 && entity instanceof EntityLiving) {
+                ((EntityLiving) entity).a(this, (float) i * 0.5F, (double) MathHelper.sin(this.yaw * 0.017453292F), (double) (-MathHelper.cos(this.yaw * 0.017453292F)));
                 this.motX *= 0.6D;
                 this.motZ *= 0.6D;
             }
@@ -119,59 +87,61 @@ public abstract class EntityMonster extends EntityCreature implements IMonster {
                 // CraftBukkit end
             }
 
-            if (entity instanceof EntityLiving) {
-                EnchantmentManager.a((EntityLiving) entity, (Entity) this);
+            if (entity instanceof EntityHuman) {
+                EntityHuman entityhuman = (EntityHuman) entity;
+                ItemStack itemstack = this.getItemInMainHand();
+                ItemStack itemstack1 = entityhuman.cs() ? entityhuman.cv() : null;
+
+                if (itemstack != null && itemstack1 != null && itemstack.getItem() instanceof ItemAxe && itemstack1.getItem() == Items.SHIELD) {
+                    float f1 = 0.25F + (float) EnchantmentManager.getDigSpeedEnchantmentLevel(this) * 0.05F;
+
+                    if (this.random.nextFloat() < f1) {
+                        entityhuman.da().a(Items.SHIELD, 100);
+                        this.world.broadcastEntityEffect(entityhuman, (byte) 30);
+                    }
+                }
             }
 
-            EnchantmentManager.b(this, entity);
+            this.a((EntityLiving) this, entity);
         }
 
         return flag;
     }
 
-    protected void a(Entity entity, float f) {
-        if (this.attackTicks <= 0 && f < 2.0F && entity.boundingBox.e > this.boundingBox.b && entity.boundingBox.b < this.boundingBox.e) {
-            this.attackTicks = 20;
-            this.n(entity);
-        }
+    public float a(BlockPosition blockposition) {
+        return 0.5F - this.world.n(blockposition);
     }
 
-    public float a(int i, int j, int k) {
-        return 0.5F - this.world.n(i, j, k);
-    }
+    protected boolean s_() {
+        BlockPosition blockposition = new BlockPosition(this.locX, this.getBoundingBox().b, this.locZ);
 
-    protected boolean j_() {
-        int i = MathHelper.floor(this.locX);
-        int j = MathHelper.floor(this.boundingBox.b);
-        int k = MathHelper.floor(this.locZ);
-
-        if (this.world.b(EnumSkyBlock.SKY, i, j, k) > this.random.nextInt(32)) {
+        if (this.world.b(EnumSkyBlock.SKY, blockposition) > this.random.nextInt(32)) {
             return false;
         } else {
-            int l = this.world.getLightLevel(i, j, k);
+            int i = this.world.getLightLevel(blockposition);
 
-            if (this.world.P()) {
-                int i1 = this.world.j;
+            if (this.world.V()) {
+                int j = this.world.af();
 
-                this.world.j = 10;
-                l = this.world.getLightLevel(i, j, k);
-                this.world.j = i1;
+                this.world.c(10);
+                i = this.world.getLightLevel(blockposition);
+                this.world.c(j);
             }
 
-            return l <= this.random.nextInt(8);
+            return i <= this.random.nextInt(8);
         }
     }
 
-    public boolean canSpawn() {
-        return this.world.difficulty != EnumDifficulty.PEACEFUL && this.j_() && super.canSpawn();
+    public boolean cF() {
+        return this.world.getDifficulty() != EnumDifficulty.PEACEFUL && this.s_() && super.cF();
     }
 
-    protected void aD() {
-        super.aD();
-        this.getAttributeMap().b(GenericAttributes.e);
+    protected void initAttributes() {
+        super.initAttributes();
+        this.getAttributeMap().b(GenericAttributes.ATTACK_DAMAGE);
     }
 
-    protected boolean aG() {
+    protected boolean isDropExperience() {
         return true;
     }
 }

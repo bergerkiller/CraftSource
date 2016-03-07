@@ -1,8 +1,8 @@
 package net.minecraft.server;
 
-import net.minecraft.util.org.apache.commons.lang3.ArrayUtils;
+import java.io.IOException;
 
-public class PacketPlayOutTabComplete extends Packet {
+public class PacketPlayOutTabComplete implements Packet<PacketListenerPlayOut> {
 
     private String[] a;
 
@@ -12,15 +12,16 @@ public class PacketPlayOutTabComplete extends Packet {
         this.a = astring;
     }
 
-    public void a(PacketDataSerializer packetdataserializer) {
-        this.a = new String[packetdataserializer.a()];
+    public void a(PacketDataSerializer packetdataserializer) throws IOException {
+        this.a = new String[packetdataserializer.g()];
 
         for (int i = 0; i < this.a.length; ++i) {
             this.a[i] = packetdataserializer.c(32767);
         }
+
     }
 
-    public void b(PacketDataSerializer packetdataserializer) {
+    public void b(PacketDataSerializer packetdataserializer) throws IOException {
         packetdataserializer.b(this.a.length);
         String[] astring = this.a;
         int i = astring.length;
@@ -30,17 +31,10 @@ public class PacketPlayOutTabComplete extends Packet {
 
             packetdataserializer.a(s);
         }
+
     }
 
-    public void a(PacketPlayOutListener packetplayoutlistener) {
-        packetplayoutlistener.a(this);
-    }
-
-    public String b() {
-        return String.format("candidates=\'%s\'", new Object[] { ArrayUtils.toString(this.a)});
-    }
-
-    public void handle(PacketListener packetlistener) {
-        this.a((PacketPlayOutListener) packetlistener);
+    public void a(PacketListenerPlayOut packetlistenerplayout) {
+        packetlistenerplayout.a(this);
     }
 }

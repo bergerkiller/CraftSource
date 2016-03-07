@@ -1,5 +1,7 @@
 package net.minecraft.server;
 
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
 public class CommandSummon extends CommandAbstract {
@@ -14,29 +16,35 @@ public class CommandSummon extends CommandAbstract {
         return 2;
     }
 
-    public String c(ICommandListener icommandlistener) {
+    public String getUsage(ICommandListener icommandlistener) {
         return "commands.summon.usage";
     }
 
-    public void execute(ICommandListener icommandlistener, String[] astring) {
+    public void execute(MinecraftServer minecraftserver, ICommandListener icommandlistener, String[] astring) throws CommandException {
         if (astring.length < 1) {
             throw new ExceptionUsage("commands.summon.usage", new Object[0]);
         } else {
             String s = astring[0];
-            double d0 = (double) icommandlistener.getChunkCoordinates().x + 0.5D;
-            double d1 = (double) icommandlistener.getChunkCoordinates().y;
-            double d2 = (double) icommandlistener.getChunkCoordinates().z + 0.5D;
+            BlockPosition blockposition = icommandlistener.getChunkCoordinates();
+            Vec3D vec3d = icommandlistener.d();
+            double d0 = vec3d.x;
+            double d1 = vec3d.y;
+            double d2 = vec3d.z;
 
             if (astring.length >= 4) {
-                d0 = a(icommandlistener, d0, astring[1]);
-                d1 = a(icommandlistener, d1, astring[2]);
-                d2 = a(icommandlistener, d2, astring[3]);
+                d0 = b(d0, astring[1], true);
+                d1 = b(d1, astring[2], false);
+                d2 = b(d2, astring[3], true);
+                blockposition = new BlockPosition(d0, d1, d2);
             }
 
             World world = icommandlistener.getWorld();
 
-            if (!world.isLoaded((int) d0, (int) d1, (int) d2)) {
-                a(icommandlistener, this, "commands.summon.outOfWorld", new Object[0]);
+            if (!world.isLoaded(blockposition)) {
+                throw new CommandException("commands.summon.outOfWorld", new Object[0]);
+            } else if ("LightningBolt".equals(s)) {
+                world.strikeLightning(new EntityLightning(world, d0, d1, d2, false));
+                a(icommandlistener, (ICommand) this, "commands.summon.success", new Object[0]);
             } else {
                 NBTTagCompound nbttagcompound = new NBTTagCompound();
                 boolean flag = false;
@@ -45,58 +53,31 @@ public class CommandSummon extends CommandAbstract {
                     IChatBaseComponent ichatbasecomponent = a(icommandlistener, astring, 4);
 
                     try {
-                        NBTBase nbtbase = MojangsonParser.parse(ichatbasecomponent.c());
-
-                        if (!(nbtbase instanceof NBTTagCompound)) {
-                            a(icommandlistener, this, "commands.summon.tagError", new Object[] { "Not a valid tag"});
-                            return;
-                        }
-
-                        nbttagcompound = (NBTTagCompound) nbtbase;
+                        nbttagcompound = MojangsonParser.parse(ichatbasecomponent.toPlainText());
                         flag = true;
                     } catch (MojangsonParseException mojangsonparseexception) {
-                        a(icommandlistener, this, "commands.summon.tagError", new Object[] { mojangsonparseexception.getMessage()});
-                        return;
+                        throw new CommandException("commands.summon.tagError", new Object[] { mojangsonparseexception.getMessage()});
                     }
                 }
 
                 nbttagcompound.setString("id", s);
-                Entity entity = EntityTypes.a(nbttagcompound, world);
+                Entity entity = ChunkRegionLoader.a(nbttagcompound, world, d0, d1, d2, true);
 
                 if (entity == null) {
-                    a(icommandlistener, this, "commands.summon.failed", new Object[0]);
+                    throw new CommandException("commands.summon.failed", new Object[0]);
                 } else {
                     entity.setPositionRotation(d0, d1, d2, entity.yaw, entity.pitch);
                     if (!flag && entity instanceof EntityInsentient) {
-                        ((EntityInsentient) entity).prepare((GroupDataEntity) null);
+                        ((EntityInsentient) entity).prepare(world.D(new BlockPosition(entity)), (GroupDataEntity) null);
                     }
 
-                    world.addEntity(entity);
-                    Entity entity1 = entity;
-
-                    for (NBTTagCompound nbttagcompound1 = nbttagcompound; entity1 != null && nbttagcompound1.hasKeyOfType("Riding", 10); nbttagcompound1 = nbttagcompound1.getCompound("Riding")) {
-                        Entity entity2 = EntityTypes.a(nbttagcompound1.getCompound("Riding"), world);
-
-                        if (entity2 != null) {
-                            entity2.setPositionRotation(d0, d1, d2, entity2.yaw, entity2.pitch);
-                            world.addEntity(entity2);
-                            entity1.mount(entity2);
-                        }
-
-                        entity1 = entity2;
-                    }
-
-                    a(icommandlistener, this, "commands.summon.success", new Object[0]);
+                    a(icommandlistener, (ICommand) this, "commands.summon.success", new Object[0]);
                 }
             }
         }
     }
 
-    public List tabComplete(ICommandListener icommandlistener, String[] astring) {
-        return astring.length == 1 ? a(astring, this.d()) : null;
-    }
-
-    protected String[] d() {
-        return (String[]) EntityTypes.b().toArray(new String[0]);
+    public List<String> tabComplete(MinecraftServer minecraftserver, ICommandListener icommandlistener, String[] astring, BlockPosition blockposition) {
+        return astring.length == 1 ? a(astring, (Collection) EntityTypes.b()) : (astring.length > 1 && astring.length <= 4 ? a(astring, 1, blockposition) : Collections.emptyList());
     }
 }

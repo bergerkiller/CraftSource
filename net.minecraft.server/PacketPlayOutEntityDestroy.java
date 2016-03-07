@@ -1,6 +1,8 @@
 package net.minecraft.server;
 
-public class PacketPlayOutEntityDestroy extends Packet {
+import java.io.IOException;
+
+public class PacketPlayOutEntityDestroy implements Packet<PacketListenerPlayOut> {
 
     private int[] a;
 
@@ -10,41 +12,25 @@ public class PacketPlayOutEntityDestroy extends Packet {
         this.a = aint;
     }
 
-    public void a(PacketDataSerializer packetdataserializer) {
-        this.a = new int[packetdataserializer.readByte()];
+    public void a(PacketDataSerializer packetdataserializer) throws IOException {
+        this.a = new int[packetdataserializer.g()];
 
         for (int i = 0; i < this.a.length; ++i) {
-            this.a[i] = packetdataserializer.readInt();
+            this.a[i] = packetdataserializer.g();
         }
+
     }
 
-    public void b(PacketDataSerializer packetdataserializer) {
-        packetdataserializer.writeByte(this.a.length);
+    public void b(PacketDataSerializer packetdataserializer) throws IOException {
+        packetdataserializer.b(this.a.length);
 
         for (int i = 0; i < this.a.length; ++i) {
-            packetdataserializer.writeInt(this.a[i]);
-        }
-    }
-
-    public void a(PacketPlayOutListener packetplayoutlistener) {
-        packetplayoutlistener.a(this);
-    }
-
-    public String b() {
-        StringBuilder stringbuilder = new StringBuilder();
-
-        for (int i = 0; i < this.a.length; ++i) {
-            if (i > 0) {
-                stringbuilder.append(", ");
-            }
-
-            stringbuilder.append(this.a[i]);
+            packetdataserializer.b(this.a[i]);
         }
 
-        return String.format("entities=%d[%s]", new Object[] { Integer.valueOf(this.a.length), stringbuilder});
     }
 
-    public void handle(PacketListener packetlistener) {
-        this.a((PacketPlayOutListener) packetlistener);
+    public void a(PacketListenerPlayOut packetlistenerplayout) {
+        packetlistenerplayout.a(this);
     }
 }

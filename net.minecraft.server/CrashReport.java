@@ -1,18 +1,19 @@
 package net.minecraft.server;
 
+import com.google.common.collect.Lists;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.lang.management.ManagementFactory;
+import java.lang.management.RuntimeMXBean;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.Callable;
-
-import net.minecraft.util.org.apache.commons.io.IOUtils;
-import net.minecraft.util.org.apache.commons.lang3.ArrayUtils;
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.ArrayUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -22,7 +23,7 @@ public class CrashReport {
     private final String b;
     private final Throwable c;
     private final CrashReportSystemDetails d = new CrashReportSystemDetails(this, "System Details");
-    private final List e = new ArrayList();
+    private final List<CrashReportSystemDetails> e = Lists.newArrayList();
     private File f;
     private boolean g = true;
     private StackTraceElement[] h = new StackTraceElement[0];
@@ -34,14 +35,95 @@ public class CrashReport {
     }
 
     private void h() {
-        this.d.a("Minecraft Version", (Callable) (new CrashReportVersion(this)));
-        this.d.a("Operating System", (Callable) (new CrashReportOperatingSystem(this)));
-        this.d.a("Java Version", (Callable) (new CrashReportJavaVersion(this)));
-        this.d.a("Java VM Version", (Callable) (new CrashReportJavaVMVersion(this)));
-        this.d.a("Memory", (Callable) (new CrashReportMemory(this)));
-        this.d.a("JVM Flags", (Callable) (new CrashReportJVMFlags(this)));
-        this.d.a("AABB Pool Size", (Callable) (new CrashReportAABBPoolSize(this)));
-        this.d.a("IntCache", (Callable) (new CrashReportIntCacheSize(this)));
+        this.d.a("Minecraft Version", new Callable() {
+            public String a() {
+                return "1.9";
+            }
+
+            public Object call() throws Exception {
+                return this.a();
+            }
+        });
+        this.d.a("Operating System", new Callable() {
+            public String a() {
+                return System.getProperty("os.name") + " (" + System.getProperty("os.arch") + ") version " + System.getProperty("os.version");
+            }
+
+            public Object call() throws Exception {
+                return this.a();
+            }
+        });
+        this.d.a("Java Version", new Callable() {
+            public String a() {
+                return System.getProperty("java.version") + ", " + System.getProperty("java.vendor");
+            }
+
+            public Object call() throws Exception {
+                return this.a();
+            }
+        });
+        this.d.a("Java VM Version", new Callable() {
+            public String a() {
+                return System.getProperty("java.vm.name") + " (" + System.getProperty("java.vm.info") + "), " + System.getProperty("java.vm.vendor");
+            }
+
+            public Object call() throws Exception {
+                return this.a();
+            }
+        });
+        this.d.a("Memory", new Callable() {
+            public String a() {
+                Runtime runtime = Runtime.getRuntime();
+                long i = runtime.maxMemory();
+                long j = runtime.totalMemory();
+                long k = runtime.freeMemory();
+                long l = i / 1024L / 1024L;
+                long i1 = j / 1024L / 1024L;
+                long j1 = k / 1024L / 1024L;
+
+                return k + " bytes (" + j1 + " MB) / " + j + " bytes (" + i1 + " MB) up to " + i + " bytes (" + l + " MB)";
+            }
+
+            public Object call() throws Exception {
+                return this.a();
+            }
+        });
+        this.d.a("JVM Flags", new Callable() {
+            public String a() {
+                RuntimeMXBean runtimemxbean = ManagementFactory.getRuntimeMXBean();
+                List list = runtimemxbean.getInputArguments();
+                int i = 0;
+                StringBuilder stringbuilder = new StringBuilder();
+                Iterator iterator = list.iterator();
+
+                while (iterator.hasNext()) {
+                    String s = (String) iterator.next();
+
+                    if (s.startsWith("-X")) {
+                        if (i++ > 0) {
+                            stringbuilder.append(" ");
+                        }
+
+                        stringbuilder.append(s);
+                    }
+                }
+
+                return String.format("%d total; %s", new Object[] { Integer.valueOf(i), stringbuilder.toString()});
+            }
+
+            public Object call() throws Exception {
+                return this.a();
+            }
+        });
+        this.d.a("IntCache", new Callable() {
+            public String a() throws Exception {
+                return IntCache.b();
+            }
+
+            public Object call() throws Exception {
+                return this.a();
+            }
+        });
         this.d.a("CraftBukkit Information", (Callable) (new org.bukkit.craftbukkit.CraftCrashReport())); // CraftBukkit
     }
 
@@ -54,7 +136,7 @@ public class CrashReport {
     }
 
     public void a(StringBuilder stringbuilder) {
-        if ((this.h == null || this.h.length <= 0) && this.e.size() > 0) {
+        if ((this.h == null || this.h.length <= 0) && !this.e.isEmpty()) {
             this.h = (StackTraceElement[]) ArrayUtils.subarray(((CrashReportSystemDetails) this.e.get(0)).a(), 0, 1);
         }
 
@@ -143,23 +225,23 @@ public class CrashReport {
         return stringbuilder.toString();
     }
 
-    public boolean a(File file1) {
+    public boolean a(File file) {
         if (this.f != null) {
             return false;
         } else {
-            if (file1.getParentFile() != null) {
-                file1.getParentFile().mkdirs();
+            if (file.getParentFile() != null) {
+                file.getParentFile().mkdirs();
             }
 
             try {
-                FileWriter filewriter = new FileWriter(file1);
+                FileWriter filewriter = new FileWriter(file);
 
                 filewriter.write(this.e());
                 filewriter.close();
-                this.f = file1;
+                this.f = file;
                 return true;
             } catch (Throwable throwable) {
-                a.error("Could not save crash report to " + file1, throwable);
+                CrashReport.a.error("Could not save crash report to " + file, throwable);
                 return false;
             }
         }
@@ -200,7 +282,7 @@ public class CrashReport {
 
                 crashreportsystemdetails1.b(j);
             } else if (astacktraceelement != null && astacktraceelement.length >= j && 0 <= k && k < astacktraceelement.length) {
-                this.h = new StackTraceElement[astacktraceelement.length - j];
+                this.h = new StackTraceElement[k];
                 System.arraycopy(astacktraceelement, 0, this.h, 0, this.h.length);
             } else {
                 this.g = false;

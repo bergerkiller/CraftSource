@@ -9,16 +9,56 @@ public interface EntityEquipment {
 
     /**
      * Gets a copy of the item the entity is currently holding
+     * in their main hand.
      *
      * @return the currently held item
      */
+    ItemStack getItemInMainHand();
+
+    /**
+     * Sets the item the entity is holding in their main hand.
+     *
+     * @param item The item to put into the entities hand
+     */
+    void setItemInMainHand(ItemStack item);
+
+    /**
+     * Gets a copy of the item the entity is currently holding
+     * in their off hand.
+     *
+     * @return the currently held item
+     */
+    ItemStack getItemInOffHand();
+
+    /**
+     * Sets the item the entity is holding in their off hand.
+     *
+     * @param item The item to put into the entities hand
+     */
+    void setItemInOffHand(ItemStack item);
+
+    /**
+     * Gets a copy of the item the entity is currently holding
+     *
+     * @deprecated entities can duel wield now use the methods for the
+     *      specific hand instead
+     * @see #getItemInMainHand()
+     * @see #getItemInOffHand()
+     * @return the currently held item
+     */
+    @Deprecated
     ItemStack getItemInHand();
 
     /**
      * Sets the item the entity is holding
      *
+     * @deprecated entities can duel wield now use the methods for the
+     *      specific hand instead
+     * @see #setItemInMainHand(ItemStack)
+     * @see #setItemInOffHand(ItemStack)
      * @param stack The item to put into the entities hand
      */
+    @Deprecated
     void setItemInHand(ItemStack stack);
 
     /**
@@ -97,9 +137,29 @@ public interface EntityEquipment {
     void clear();
 
     /**
-     * Gets the chance of the currently held item being dropped upon this
-     * creature's death
-     * <p>
+     * @deprecated entities can duel wield now use the methods for the specific
+     * hand instead
+     * @see #getItemInMainHandDropChance()
+     * @see #getItemInOffHandDropChance()
+     * @return drop chance
+     */
+    @Deprecated
+    float getItemInHandDropChance();
+
+    /**
+     * @deprecated entities can duel wield now use the methods for the specific
+     * hand instead
+     * @see #setItemInMainHandDropChance(float)
+     * @see #setItemInOffHandDropChance(float)
+     * @param chance drop chance
+     */
+    @Deprecated
+    void setItemInHandDropChance(float chance);
+
+    /**
+     * Gets the chance of the main hand item being dropped upon this creature's
+     * death.
+     *
      * <ul>
      * <li>A drop chance of 0F will never drop
      * <li>A drop chance of 1F will always drop
@@ -107,25 +167,52 @@ public interface EntityEquipment {
      *
      * @return chance of the currently held item being dropped (1 for players)
      */
-    float getItemInHandDropChance();
+    float getItemInMainHandDropChance();
 
     /**
-     * Sets the chance of the item this creature is currently holding being
-     * dropped upon this creature's death
-     * <p>
+     * Sets the chance of the item this creature is currently holding in their
+     * main hand being dropped upon this creature's death.
+     *
      * <ul>
      * <li>A drop chance of 0F will never drop
      * <li>A drop chance of 1F will always drop
      * </ul>
      *
-     * @param chance the chance of the currently held item being dropped
+     * @param chance the chance of the main hand item being dropped
      * @throws UnsupportedOperationException when called on players
      */
-    void setItemInHandDropChance(float chance);
+    void setItemInMainHandDropChance(float chance);
 
     /**
-     * Gets the chance of the helmet being dropped upon this creature's death
-     * <p>
+     * Gets the chance of the off hand item being dropped upon this creature's
+     * death.
+     *
+     * <ul>
+     * <li>A drop chance of 0F will never drop
+     * <li>A drop chance of 1F will always drop
+     * </ul>
+     *
+     * @return chance of the off hand item being dropped (1 for players)
+     */
+    float getItemInOffHandDropChance();
+
+    /**
+     * Sets the chance of the off hand item being dropped upon this creature's
+     * death.
+     *
+     * <ul>
+     * <li>A drop chance of 0F will never drop
+     * <li>A drop chance of 1F will always drop
+     * </ul>
+     *
+     * @param chance the chance of off hand item being dropped
+     * @throws UnsupportedOperationException when called on players
+     */
+    void setItemInOffHandDropChance(float chance);
+
+    /**
+     * Gets the chance of the helmet being dropped upon this creature's death.
+     *
      * <ul>
      * <li>A drop chance of 0F will never drop
      * <li>A drop chance of 1F will always drop
@@ -136,8 +223,8 @@ public interface EntityEquipment {
     float getHelmetDropChance();
 
     /**
-     * Sets the chance of the helmet being dropped upon this creature's death
-     * <p>
+     * Sets the chance of the helmet being dropped upon this creature's death.
+     * 
      * <ul>
      * <li>A drop chance of 0F will never drop
      * <li>A drop chance of 1F will always drop
@@ -150,8 +237,8 @@ public interface EntityEquipment {
 
     /**
      * Gets the chance of the chest plate being dropped upon this creature's
-     * death
-     * <p>
+     * death.
+     * 
      * <ul>
      * <li>A drop chance of 0F will never drop
      * <li>A drop chance of 1F will always drop
@@ -163,8 +250,8 @@ public interface EntityEquipment {
 
     /**
      * Sets the chance of the chest plate being dropped upon this creature's
-     * death
-     * <p>
+     * death.
+     * 
      * <ul>
      * <li>A drop chance of 0F will never drop
      * <li>A drop chance of 1F will always drop
@@ -177,8 +264,8 @@ public interface EntityEquipment {
 
     /**
      * Gets the chance of the leggings being dropped upon this creature's
-     * death
-     * <p>
+     * death.
+     * 
      * <ul>
      * <li>A drop chance of 0F will never drop
      * <li>A drop chance of 1F will always drop
@@ -190,8 +277,8 @@ public interface EntityEquipment {
 
     /**
      * Sets the chance of the leggings being dropped upon this creature's
-     * death
-     * <p>
+     * death.
+     * 
      * <ul>
      * <li>A drop chance of 0F will never drop
      * <li>A drop chance of 1F will always drop
@@ -203,8 +290,8 @@ public interface EntityEquipment {
     void setLeggingsDropChance(float chance);
 
     /**
-     * Gets the chance of the boots being dropped upon this creature's death
-     * <p>
+     * Gets the chance of the boots being dropped upon this creature's death.
+     * 
      * <ul>
      * <li>A drop chance of 0F will never drop
      * <li>A drop chance of 1F will always drop
@@ -215,8 +302,8 @@ public interface EntityEquipment {
     float getBootsDropChance();
 
     /**
-     * Sets the chance of the boots being dropped upon this creature's death
-     * <p>
+     * Sets the chance of the boots being dropped upon this creature's death.
+     * 
      * <ul>
      * <li>A drop chance of 0F will never drop
      * <li>A drop chance of 1F will always drop

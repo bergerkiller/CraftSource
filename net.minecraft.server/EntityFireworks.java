@@ -1,35 +1,43 @@
 package net.minecraft.server;
 
+import com.google.common.base.Optional;
+
 public class EntityFireworks extends Entity {
 
+    public static final DataWatcherObject<Optional<ItemStack>> FIREWORK_ITEM = DataWatcher.a(EntityFireworks.class, DataWatcherRegistry.f);
     private int ticksFlown;
-    public int expectedLifespan; // CraftBukkit - private -> public
+    public int expectedLifespan;
 
     public EntityFireworks(World world) {
         super(world);
-        this.a(0.25F, 0.25F);
+        this.setSize(0.25F, 0.25F);
     }
 
-    protected void c() {
-        this.datawatcher.add(8, 5);
+    // Spigot Start
+    @Override
+    public void inactiveTick() {
+        this.ticksFlown += 1;
+        super.inactiveTick();
+    }
+    // Spigot End
+
+    protected void i() {
+        this.datawatcher.register(EntityFireworks.FIREWORK_ITEM, Optional.absent());
     }
 
     public EntityFireworks(World world, double d0, double d1, double d2, ItemStack itemstack) {
         super(world);
         this.ticksFlown = 0;
-        this.a(0.25F, 0.25F);
+        this.setSize(0.25F, 0.25F);
         this.setPosition(d0, d1, d2);
-        this.height = 0.0F;
         int i = 1;
 
         if (itemstack != null && itemstack.hasTag()) {
-            this.datawatcher.watch(8, itemstack);
+            this.datawatcher.set(EntityFireworks.FIREWORK_ITEM, Optional.of(itemstack));
             NBTTagCompound nbttagcompound = itemstack.getTag();
             NBTTagCompound nbttagcompound1 = nbttagcompound.getCompound("Fireworks");
 
-            if (nbttagcompound1 != null) {
-                i += nbttagcompound1.getByte("Flight");
-            }
+            i += nbttagcompound1.getByte("Flight");
         }
 
         this.motX = this.random.nextGaussian() * 0.001D;
@@ -38,20 +46,20 @@ public class EntityFireworks extends Entity {
         this.expectedLifespan = 10 * i + this.random.nextInt(6) + this.random.nextInt(7);
     }
 
-    public void h() {
-        this.S = this.locX;
-        this.T = this.locY;
-        this.U = this.locZ;
-        super.h();
+    public void m() {
+        this.M = this.locX;
+        this.N = this.locY;
+        this.O = this.locZ;
+        super.m();
         this.motX *= 1.15D;
         this.motZ *= 1.15D;
         this.motY += 0.04D;
         this.move(this.motX, this.motY, this.motZ);
         float f = MathHelper.sqrt(this.motX * this.motX + this.motZ * this.motZ);
 
-        this.yaw = (float) (Math.atan2(this.motX, this.motZ) * 180.0D / 3.1415927410125732D);
+        this.yaw = (float) (MathHelper.b(this.motX, this.motZ) * 57.2957763671875D);
 
-        for (this.pitch = (float) (Math.atan2(this.motY, (double) f) * 180.0D / 3.1415927410125732D); this.pitch - this.lastPitch < -180.0F; this.lastPitch -= 360.0F) {
+        for (this.pitch = (float) (MathHelper.b(this.motY, (double) f) * 57.2957763671875D); this.pitch - this.lastPitch < -180.0F; this.lastPitch -= 360.0F) {
             ;
         }
 
@@ -69,25 +77,26 @@ public class EntityFireworks extends Entity {
 
         this.pitch = this.lastPitch + (this.pitch - this.lastPitch) * 0.2F;
         this.yaw = this.lastYaw + (this.yaw - this.lastYaw) * 0.2F;
-        if (this.ticksFlown == 0) {
-            this.world.makeSound(this, "fireworks.launch", 3.0F, 1.0F);
+        if (this.ticksFlown == 0 && !this.ad()) {
+            this.world.a((EntityHuman) null, this.locX, this.locY, this.locZ, SoundEffects.bq, SoundCategory.AMBIENT, 3.0F, 1.0F);
         }
 
         ++this.ticksFlown;
-        if (this.world.isStatic && this.ticksFlown % 2 < 2) {
-            this.world.addParticle("fireworksSpark", this.locX, this.locY - 0.3D, this.locZ, this.random.nextGaussian() * 0.05D, -this.motY * 0.5D, this.random.nextGaussian() * 0.05D);
+        if (this.world.isClientSide && this.ticksFlown % 2 < 2) {
+            this.world.addParticle(EnumParticle.FIREWORKS_SPARK, this.locX, this.locY - 0.3D, this.locZ, this.random.nextGaussian() * 0.05D, -this.motY * 0.5D, this.random.nextGaussian() * 0.05D, new int[0]);
         }
 
-        if (!this.world.isStatic && this.ticksFlown > this.expectedLifespan) {
-            this.world.broadcastEntityEffect(this, (byte) 17);
+        if (!this.world.isClientSide && this.ticksFlown > this.expectedLifespan) {
+            if (!org.bukkit.craftbukkit.event.CraftEventFactory.callFireworkExplodeEvent(this).isCancelled()) this.world.broadcastEntityEffect(this, (byte) 17); // CraftBukkit
             this.die();
         }
+
     }
 
     public void b(NBTTagCompound nbttagcompound) {
         nbttagcompound.setInt("Life", this.ticksFlown);
         nbttagcompound.setInt("LifeTime", this.expectedLifespan);
-        ItemStack itemstack = this.datawatcher.getItemStack(8);
+        ItemStack itemstack = (ItemStack) ((Optional) this.datawatcher.get(EntityFireworks.FIREWORK_ITEM)).orNull();
 
         if (itemstack != null) {
             NBTTagCompound nbttagcompound1 = new NBTTagCompound();
@@ -95,6 +104,7 @@ public class EntityFireworks extends Entity {
             itemstack.save(nbttagcompound1);
             nbttagcompound.set("FireworksItem", nbttagcompound1);
         }
+
     }
 
     public void a(NBTTagCompound nbttagcompound) {
@@ -106,16 +116,17 @@ public class EntityFireworks extends Entity {
             ItemStack itemstack = ItemStack.createStack(nbttagcompound1);
 
             if (itemstack != null) {
-                this.datawatcher.watch(8, itemstack);
+                this.datawatcher.set(EntityFireworks.FIREWORK_ITEM, Optional.of(itemstack));
             }
         }
+
     }
 
-    public float d(float f) {
-        return super.d(f);
+    public float e(float f) {
+        return super.e(f);
     }
 
-    public boolean au() {
+    public boolean aT() {
         return false;
     }
 }

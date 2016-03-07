@@ -1,72 +1,119 @@
 package net.minecraft.server;
 
-public class PacketPlayInFlying extends Packet {
+import java.io.IOException;
+
+public class PacketPlayInFlying implements Packet<PacketListenerPlayIn> {
 
     protected double x;
     protected double y;
     protected double z;
-    protected double stance;
     protected float yaw;
     protected float pitch;
-    protected boolean g;
+    protected boolean f;
     protected boolean hasPos;
     protected boolean hasLook;
 
     public PacketPlayInFlying() {}
 
-    public void a(PacketPlayInListener packetplayinlistener) {
-        packetplayinlistener.a(this);
+    public void a(PacketListenerPlayIn packetlistenerplayin) {
+        packetlistenerplayin.a(this);
     }
 
-    public void a(PacketDataSerializer packetdataserializer) {
-        this.g = packetdataserializer.readUnsignedByte() != 0;
+    public void a(PacketDataSerializer packetdataserializer) throws IOException {
+        this.f = packetdataserializer.readUnsignedByte() != 0;
     }
 
-    public void b(PacketDataSerializer packetdataserializer) {
-        packetdataserializer.writeByte(this.g ? 1 : 0);
+    public void b(PacketDataSerializer packetdataserializer) throws IOException {
+        packetdataserializer.writeByte(this.f ? 1 : 0);
     }
 
-    public double c() {
-        return this.x;
+    public double a(double d0) {
+        return this.hasPos ? this.x : d0;
     }
 
-    public double d() {
-        return this.y;
+    public double b(double d0) {
+        return this.hasPos ? this.y : d0;
     }
 
-    public double e() {
-        return this.z;
+    public double c(double d0) {
+        return this.hasPos ? this.z : d0;
     }
 
-    public double f() {
-        return this.stance;
+    public float a(float f) {
+        return this.hasLook ? this.yaw : f;
     }
 
-    public float g() {
-        return this.yaw;
+    public float b(float f) {
+        return this.hasLook ? this.pitch : f;
     }
 
-    public float h() {
-        return this.pitch;
+    public boolean a() {
+        return this.f;
     }
 
-    public boolean i() {
-        return this.g;
+    public static class PacketPlayInLook extends PacketPlayInFlying {
+
+        public PacketPlayInLook() {
+            this.hasLook = true;
+        }
+
+        public void a(PacketDataSerializer packetdataserializer) throws IOException {
+            this.yaw = packetdataserializer.readFloat();
+            this.pitch = packetdataserializer.readFloat();
+            super.a(packetdataserializer);
+        }
+
+        public void b(PacketDataSerializer packetdataserializer) throws IOException {
+            packetdataserializer.writeFloat(this.yaw);
+            packetdataserializer.writeFloat(this.pitch);
+            super.b(packetdataserializer);
+        }
     }
 
-    public boolean j() {
-        return this.hasPos;
+    public static class PacketPlayInPosition extends PacketPlayInFlying {
+
+        public PacketPlayInPosition() {
+            this.hasPos = true;
+        }
+
+        public void a(PacketDataSerializer packetdataserializer) throws IOException {
+            this.x = packetdataserializer.readDouble();
+            this.y = packetdataserializer.readDouble();
+            this.z = packetdataserializer.readDouble();
+            super.a(packetdataserializer);
+        }
+
+        public void b(PacketDataSerializer packetdataserializer) throws IOException {
+            packetdataserializer.writeDouble(this.x);
+            packetdataserializer.writeDouble(this.y);
+            packetdataserializer.writeDouble(this.z);
+            super.b(packetdataserializer);
+        }
     }
 
-    public boolean k() {
-        return this.hasLook;
-    }
+    public static class PacketPlayInPositionLook extends PacketPlayInFlying {
 
-    public void a(boolean flag) {
-        this.hasPos = flag;
-    }
+        public PacketPlayInPositionLook() {
+            this.hasPos = true;
+            this.hasLook = true;
+        }
 
-    public void handle(PacketListener packetlistener) {
-        this.a((PacketPlayInListener) packetlistener);
+        public void a(PacketDataSerializer packetdataserializer) throws IOException {
+            this.x = packetdataserializer.readDouble();
+            this.y = packetdataserializer.readDouble();
+            this.z = packetdataserializer.readDouble();
+            this.yaw = packetdataserializer.readFloat();
+            this.pitch = packetdataserializer.readFloat();
+            super.a(packetdataserializer);
+        }
+
+        public void b(PacketDataSerializer packetdataserializer) throws IOException {
+            packetdataserializer.writeDouble(this.x);
+            packetdataserializer.writeDouble(this.y);
+            packetdataserializer.writeDouble(this.z);
+            packetdataserializer.writeFloat(this.yaw);
+            packetdataserializer.writeFloat(this.pitch);
+            super.b(packetdataserializer);
+        }
     }
 }

@@ -15,25 +15,25 @@ public class PathfinderGoalMoveTowardsRestriction extends PathfinderGoal {
     }
 
     public boolean a() {
-        if (this.a.bU()) {
+        if (this.a.cU()) {
             return false;
         } else {
-            ChunkCoordinates chunkcoordinates = this.a.bV();
-            Vec3D vec3d = RandomPositionGenerator.a(this.a, 16, 7, Vec3D.a((double) chunkcoordinates.x, (double) chunkcoordinates.y, (double) chunkcoordinates.z));
+            BlockPosition blockposition = this.a.cV();
+            Vec3D vec3d = RandomPositionGenerator.a(this.a, 16, 7, new Vec3D((double) blockposition.getX(), (double) blockposition.getY(), (double) blockposition.getZ()));
 
             if (vec3d == null) {
                 return false;
             } else {
-                this.b = vec3d.a;
-                this.c = vec3d.b;
-                this.d = vec3d.c;
+                this.b = vec3d.x;
+                this.c = vec3d.y;
+                this.d = vec3d.z;
                 return true;
             }
         }
     }
 
     public boolean b() {
-        return !this.a.getNavigation().g();
+        return !this.a.getNavigation().n();
     }
 
     public void c() {

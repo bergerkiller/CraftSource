@@ -1,25 +1,25 @@
 package net.minecraft.server;
 
+import com.google.common.base.Function;
+import com.google.common.collect.Iterators;
+import com.google.common.collect.Lists;
 import java.util.Iterator;
 import java.util.List;
 
-import net.minecraft.util.com.google.common.collect.Iterators;
-import net.minecraft.util.com.google.common.collect.Lists;
-
 public abstract class ChatBaseComponent implements IChatBaseComponent {
 
-    protected List a = Lists.newArrayList();
+    protected List<IChatBaseComponent> a = Lists.newArrayList();
     private ChatModifier b;
 
     public ChatBaseComponent() {}
 
     public IChatBaseComponent addSibling(IChatBaseComponent ichatbasecomponent) {
-        ichatbasecomponent.getChatModifier().a(this.getChatModifier());
+        ichatbasecomponent.getChatModifier().setChatModifier(this.getChatModifier());
         this.a.add(ichatbasecomponent);
         return this;
     }
 
-    public List a() {
+    public List<IChatBaseComponent> a() {
         return this.a;
     }
 
@@ -34,7 +34,7 @@ public abstract class ChatBaseComponent implements IChatBaseComponent {
         while (iterator.hasNext()) {
             IChatBaseComponent ichatbasecomponent = (IChatBaseComponent) iterator.next();
 
-            ichatbasecomponent.getChatModifier().a(this.getChatModifier());
+            ichatbasecomponent.getChatModifier().setChatModifier(this.getChatModifier());
         }
 
         return this;
@@ -48,34 +48,53 @@ public abstract class ChatBaseComponent implements IChatBaseComponent {
             while (iterator.hasNext()) {
                 IChatBaseComponent ichatbasecomponent = (IChatBaseComponent) iterator.next();
 
-                ichatbasecomponent.getChatModifier().a(this.b);
+                ichatbasecomponent.getChatModifier().setChatModifier(this.b);
             }
         }
 
         return this.b;
     }
 
-    public Iterator iterator() {
+    public Iterator<IChatBaseComponent> iterator() {
         return Iterators.concat(Iterators.forArray(new ChatBaseComponent[] { this}), a((Iterable) this.a));
     }
 
-    public final String c() {
+    public final String toPlainText() {
         StringBuilder stringbuilder = new StringBuilder();
         Iterator iterator = this.iterator();
 
         while (iterator.hasNext()) {
             IChatBaseComponent ichatbasecomponent = (IChatBaseComponent) iterator.next();
 
-            stringbuilder.append(ichatbasecomponent.e());
+            stringbuilder.append(ichatbasecomponent.getText());
         }
 
         return stringbuilder.toString();
     }
 
-    public static Iterator a(Iterable iterable) {
-        Iterator iterator = Iterators.concat(Iterators.transform(iterable.iterator(), new ChatFunction1()));
+    public static Iterator<IChatBaseComponent> a(Iterable<IChatBaseComponent> iterable) {
+        Iterator iterator = Iterators.concat(Iterators.transform(iterable.iterator(), new Function() {
+            public Iterator<IChatBaseComponent> a(IChatBaseComponent ichatbasecomponent) {
+                return ichatbasecomponent.iterator();
+            }
 
-        iterator = Iterators.transform(iterator, new ChatFunction2());
+            public Object apply(Object object) {
+                return this.a((IChatBaseComponent) object);
+            }
+        }));
+
+        iterator = Iterators.transform(iterator, new Function() {
+            public IChatBaseComponent a(IChatBaseComponent ichatbasecomponent) {
+                IChatBaseComponent ichatbasecomponent1 = ichatbasecomponent.f();
+
+                ichatbasecomponent1.setChatModifier(ichatbasecomponent1.getChatModifier().n());
+                return ichatbasecomponent1;
+            }
+
+            public Object apply(Object object) {
+                return this.a((IChatBaseComponent) object);
+            }
+        });
         return iterator;
     }
 
@@ -92,7 +111,7 @@ public abstract class ChatBaseComponent implements IChatBaseComponent {
     }
 
     public int hashCode() {
-        return 31 * this.b.hashCode() + this.a.hashCode();
+        return 31 * this.getChatModifier().hashCode() + this.a.hashCode(); // CraftBukkit - fix null pointer
     }
 
     public String toString() {

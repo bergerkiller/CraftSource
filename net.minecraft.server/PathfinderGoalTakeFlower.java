@@ -18,10 +18,10 @@ public class PathfinderGoalTakeFlower extends PathfinderGoal {
     public boolean a() {
         if (this.a.getAge() >= 0) {
             return false;
-        } else if (!this.a.world.w()) {
+        } else if (!this.a.world.B()) {
             return false;
         } else {
-            List list = this.a.world.a(EntityIronGolem.class, this.a.boundingBox.grow(6.0D, 2.0D, 6.0D));
+            List list = this.a.world.a(EntityIronGolem.class, this.a.getBoundingBox().grow(6.0D, 2.0D, 6.0D));
 
             if (list.isEmpty()) {
                 return false;
@@ -31,7 +31,7 @@ public class PathfinderGoalTakeFlower extends PathfinderGoal {
                 while (iterator.hasNext()) {
                     EntityIronGolem entityirongolem = (EntityIronGolem) iterator.next();
 
-                    if (entityirongolem.cb() > 0) {
+                    if (entityirongolem.da() > 0) {
                         this.b = entityirongolem;
                         break;
                     }
@@ -43,30 +43,31 @@ public class PathfinderGoalTakeFlower extends PathfinderGoal {
     }
 
     public boolean b() {
-        return this.b.cb() > 0;
+        return this.b.da() > 0;
     }
 
     public void c() {
-        this.c = this.a.aI().nextInt(320);
+        this.c = this.a.getRandom().nextInt(320);
         this.d = false;
-        this.b.getNavigation().h();
+        this.b.getNavigation().o();
     }
 
     public void d() {
         this.b = null;
-        this.a.getNavigation().h();
+        this.a.getNavigation().o();
     }
 
     public void e() {
         this.a.getControllerLook().a(this.b, 30.0F, 30.0F);
-        if (this.b.cb() == this.c) {
+        if (this.b.da() == this.c) {
             this.a.getNavigation().a((Entity) this.b, 0.5D);
             this.d = true;
         }
 
-        if (this.d && this.a.f(this.b) < 4.0D) {
+        if (this.d && this.a.h(this.b) < 4.0D) {
             this.b.a(false);
-            this.a.getNavigation().h();
+            this.a.getNavigation().o();
         }
+
     }
 }

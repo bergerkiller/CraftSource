@@ -283,7 +283,10 @@ public interface World extends PluginMessageRecipient, Metadatable {
      * @param x X-coordinate of the chunk
      * @param z Z-coordinate of the chunk
      * @return Whether the chunk was actually refreshed
+     * 
+     * @deprecated This method is not guaranteed to work suitably across all client implementations.
      */
+    @Deprecated
     public boolean refreshChunk(int x, int z);
 
     /**
@@ -345,30 +348,6 @@ public interface World extends PluginMessageRecipient, Metadatable {
     public Entity spawnEntity(Location loc, EntityType type);
 
     /**
-     * Creates a creature at the given {@link Location}
-     *
-     * @param loc The location to spawn the creature
-     * @param type The creature to spawn
-     * @return Resulting LivingEntity of this method, or null if it was
-     *     unsuccessful
-     * @deprecated Has issues spawning non LivingEntities. Use {@link
-     *     #spawnEntity(Location, EntityType) spawnEntity} instead.
-     */
-    @Deprecated
-    public LivingEntity spawnCreature(Location loc, EntityType type);
-
-    /**
-     * Creates a creature at the given {@link Location}
-     *
-     * @param loc The location to spawn the creature
-     * @param type The creature to spawn
-     * @return Resulting LivingEntity of this method, or null if it was
-     *     unsuccessful
-     */
-    @Deprecated
-    public LivingEntity spawnCreature(Location loc, CreatureType type);
-
-    /**
      * Strikes lightning at the given {@link Location}
      *
      * @param loc The location to strike lightning
@@ -402,6 +381,7 @@ public interface World extends PluginMessageRecipient, Metadatable {
      * Get a collection of all entities in this World matching the given
      * class/interface
      *
+     * @param <T> an entity subclass
      * @param classes The classes representing the types of entity to match
      * @return A List of all Entities currently residing in this world that
      *     match the given class/interface
@@ -412,7 +392,8 @@ public interface World extends PluginMessageRecipient, Metadatable {
     /**
      * Get a collection of all entities in this World matching the given
      * class/interface
-     *
+     * 
+     * @param <T> an entity subclass
      * @param cls The class representing the type of entity to match
      * @return A List of all Entities currently residing in this world that
      *     match the given class/interface
@@ -435,6 +416,19 @@ public interface World extends PluginMessageRecipient, Metadatable {
      * @return A list of all Players currently residing in this world
      */
     public List<Player> getPlayers();
+
+    /**
+     * Returns a list of entities within a bounding box centered around a Location.
+     *
+     * Some implementations may impose artificial restrictions on the size of the search bounding box.
+     *
+     * @param location The center of the bounding box
+     * @param x 1/2 the size of the box along x axis
+     * @param y 1/2 the size of the box along y axis
+     * @param z 1/2 the size of the box along z axis
+     * @return the collection of entities near location. This will always be a non-null collection.
+     */
+    public Collection<Entity> getNearbyEntities(Location location, double x, double y, double z);
 
     /**
      * Gets the unique name of this world
@@ -746,6 +740,7 @@ public interface World extends PluginMessageRecipient, Metadatable {
      * Plays an effect to all players within a default radius around a given
      * location.
      *
+     * @param <T> data dependant on the type of effect
      * @param location the {@link Location} around which players must be to
      *     hear the sound
      * @param effect the {@link Effect}
@@ -756,6 +751,7 @@ public interface World extends PluginMessageRecipient, Metadatable {
     /**
      * Plays an effect to all players within a given radius around a location.
      *
+     * @param <T> data dependant on the type of effect
      * @param location the {@link Location} around which players must be to
      *     hear the effect
      * @param effect the {@link Effect}
@@ -1050,6 +1046,8 @@ public interface World extends PluginMessageRecipient, Metadatable {
      * <p>
      * <b>Note:</b> If set to a negative number the world will use the
      * server-wide spawn limit instead.
+     * 
+     * @param limit the new mob limit
      */
     void setMonsterSpawnLimit(int limit);
 
@@ -1067,6 +1065,8 @@ public interface World extends PluginMessageRecipient, Metadatable {
      * <p>
      * <b>Note:</b> If set to a negative number the world will use the
      * server-wide spawn limit instead.
+     * 
+     * @param limit the new mob limit
      */
     void setAnimalSpawnLimit(int limit);
 
@@ -1084,6 +1084,8 @@ public interface World extends PluginMessageRecipient, Metadatable {
      * <p>
      * <b>Note:</b> If set to a negative number the world will use the
      * server-wide spawn limit instead.
+     * 
+     * @param limit the new mob limit
      */
     void setWaterAnimalSpawnLimit(int limit);
 
@@ -1101,6 +1103,8 @@ public interface World extends PluginMessageRecipient, Metadatable {
      * <p>
      * <b>Note:</b> If set to a negative number the world will use the
      * server-wide spawn limit instead.
+     * 
+     * @param limit the new mob limit
      */
     void setAmbientSpawnLimit(int limit);
 
@@ -1115,6 +1119,20 @@ public interface World extends PluginMessageRecipient, Metadatable {
      * @param pitch The pitch of the sound
      */
     void playSound(Location location, Sound sound, float volume, float pitch);
+
+    /**
+     * Play a Sound at the provided Location in the World.
+     * <p>
+     * This function will fail silently if Location or Sound are null. No
+     * sound will be heard by the players if their clients do not have the
+     * respective sound for the value passed.
+     *
+     * @param location the location to play the sound
+     * @param sound the internal sound name to play
+     * @param volume the volume of the sound
+     * @param pitch the pitch of the sound
+     */
+    void playSound(Location location, String sound, float volume, float pitch);
 
     /**
      * Get existing rules
@@ -1154,6 +1172,207 @@ public interface World extends PluginMessageRecipient, Metadatable {
      * @return True if rule exists
      */
     public boolean isGameRule(String rule);
+
+    /**
+     * Gets the world border for this world.
+     *
+     * @return The world border for this world.
+     */
+    public WorldBorder getWorldBorder();
+
+    /**
+     * Spawns the particle (the number of times specified by count)
+     * at the target location.
+     *
+     * @param particle the particle to spawn
+     * @param location the location to spawn at
+     * @param count the number of particles
+     */
+    public void spawnParticle(Particle particle, Location location, int count);
+
+    /**
+     * Spawns the particle (the number of times specified by count)
+     * at the target location.
+     *
+     * @param particle the particle to spawn
+     * @param x the position on the x axis to spawn at
+     * @param y the position on the y axis to spawn at
+     * @param z the position on the z axis to spawn at
+     * @param count the number of particles
+     */
+    public void spawnParticle(Particle particle, double x, double y, double z, int count);
+
+    /**
+     * Spawns the particle (the number of times specified by count)
+     * at the target location.
+     *
+     * @param particle the particle to spawn
+     * @param location the location to spawn at
+     * @param count the number of particles
+     * @param data the data to use for the particle or null,
+     *             the type of this depends on {@link Particle#getDataType()}
+     */
+    public <T> void spawnParticle(Particle particle, Location location, int count, T data);
+
+
+    /**
+     * Spawns the particle (the number of times specified by count)
+     * at the target location.
+     *
+     * @param particle the particle to spawn
+     * @param x the position on the x axis to spawn at
+     * @param y the position on the y axis to spawn at
+     * @param z the position on the z axis to spawn at
+     * @param count the number of particles
+     * @param data the data to use for the particle or null,
+     *             the type of this depends on {@link Particle#getDataType()}
+     */
+    public <T> void spawnParticle(Particle particle, double x, double y, double z, int count, T data);
+
+    /**
+     * Spawns the particle (the number of times specified by count)
+     * at the target location. The position of each particle will be
+     * randomized positively and negatively by the offset parameters
+     * on each axis.
+     *
+     * @param particle the particle to spawn
+     * @param location the location to spawn at
+     * @param count the number of particles
+     * @param offsetX the maximum random offset on the X axis
+     * @param offsetY the maximum random offset on the Y axis
+     * @param offsetZ the maximum random offset on the Z axis
+     */
+    public void spawnParticle(Particle particle, Location location, int count, double offsetX, double offsetY, double offsetZ);
+
+    /**
+     * Spawns the particle (the number of times specified by count)
+     * at the target location. The position of each particle will be
+     * randomized positively and negatively by the offset parameters
+     * on each axis.
+     *
+     * @param particle the particle to spawn
+     * @param x the position on the x axis to spawn at
+     * @param y the position on the y axis to spawn at
+     * @param z the position on the z axis to spawn at
+     * @param count the number of particles
+     * @param offsetX the maximum random offset on the X axis
+     * @param offsetY the maximum random offset on the Y axis
+     * @param offsetZ the maximum random offset on the Z axis
+     */
+    public void spawnParticle(Particle particle, double x, double y, double z, int count, double offsetX, double offsetY, double offsetZ);
+
+    /**
+     * Spawns the particle (the number of times specified by count)
+     * at the target location. The position of each particle will be
+     * randomized positively and negatively by the offset parameters
+     * on each axis.
+     *
+     * @param particle the particle to spawn
+     * @param location the location to spawn at
+     * @param count the number of particles
+     * @param offsetX the maximum random offset on the X axis
+     * @param offsetY the maximum random offset on the Y axis
+     * @param offsetZ the maximum random offset on the Z axis
+     * @param data the data to use for the particle or null,
+     *             the type of this depends on {@link Particle#getDataType()}
+     */
+    public <T> void spawnParticle(Particle particle, Location location, int count, double offsetX, double offsetY, double offsetZ, T data);
+
+    /**
+     * Spawns the particle (the number of times specified by count)
+     * at the target location. The position of each particle will be
+     * randomized positively and negatively by the offset parameters
+     * on each axis.
+     *
+     * @param particle the particle to spawn
+     * @param x the position on the x axis to spawn at
+     * @param y the position on the y axis to spawn at
+     * @param z the position on the z axis to spawn at
+     * @param count the number of particles
+     * @param offsetX the maximum random offset on the X axis
+     * @param offsetY the maximum random offset on the Y axis
+     * @param offsetZ the maximum random offset on the Z axis
+     * @param data the data to use for the particle or null,
+     *             the type of this depends on {@link Particle#getDataType()}
+     */
+    public <T> void spawnParticle(Particle particle, double x, double y, double z, int count, double offsetX, double offsetY, double offsetZ, T data);
+
+    /**
+     * Spawns the particle (the number of times specified by count)
+     * at the target location. The position of each particle will be
+     * randomized positively and negatively by the offset parameters
+     * on each axis.
+     *
+     * @param particle the particle to spawn
+     * @param location the location to spawn at
+     * @param count the number of particles
+     * @param offsetX the maximum random offset on the X axis
+     * @param offsetY the maximum random offset on the Y axis
+     * @param offsetZ the maximum random offset on the Z axis
+     * @param extra the extra data for this particle, depends on the
+     *              particle used (normally speed)
+     */
+    public void spawnParticle(Particle particle, Location location, int count, double offsetX, double offsetY, double offsetZ, double extra);
+
+    /**
+     * Spawns the particle (the number of times specified by count)
+     * at the target location. The position of each particle will be
+     * randomized positively and negatively by the offset parameters
+     * on each axis.
+     *
+     * @param particle the particle to spawn
+     * @param x the position on the x axis to spawn at
+     * @param y the position on the y axis to spawn at
+     * @param z the position on the z axis to spawn at
+     * @param count the number of particles
+     * @param offsetX the maximum random offset on the X axis
+     * @param offsetY the maximum random offset on the Y axis
+     * @param offsetZ the maximum random offset on the Z axis
+     * @param extra the extra data for this particle, depends on the
+     *              particle used (normally speed)
+     */
+    public void spawnParticle(Particle particle, double x, double y, double z, int count, double offsetX, double offsetY, double offsetZ, double extra);
+
+    /**
+     * Spawns the particle (the number of times specified by count)
+     * at the target location. The position of each particle will be
+     * randomized positively and negatively by the offset parameters
+     * on each axis.
+     *
+     * @param particle the particle to spawn
+     * @param location the location to spawn at
+     * @param count the number of particles
+     * @param offsetX the maximum random offset on the X axis
+     * @param offsetY the maximum random offset on the Y axis
+     * @param offsetZ the maximum random offset on the Z axis
+     * @param extra the extra data for this particle, depends on the
+     *              particle used (normally speed)
+     * @param data the data to use for the particle or null,
+     *             the type of this depends on {@link Particle#getDataType()}
+     */
+    public <T> void spawnParticle(Particle particle, Location location, int count, double offsetX, double offsetY, double offsetZ, double extra, T data);
+
+    /**
+     * Spawns the particle (the number of times specified by count)
+     * at the target location. The position of each particle will be
+     * randomized positively and negatively by the offset parameters
+     * on each axis.
+     *
+     * @param particle the particle to spawn
+     * @param x the position on the x axis to spawn at
+     * @param y the position on the y axis to spawn at
+     * @param z the position on the z axis to spawn at
+     * @param count the number of particles
+     * @param offsetX the maximum random offset on the X axis
+     * @param offsetY the maximum random offset on the Y axis
+     * @param offsetZ the maximum random offset on the Z axis
+     * @param extra the extra data for this particle, depends on the
+     *              particle used (normally speed)
+     * @param data the data to use for the particle or null,
+     *             the type of this depends on {@link Particle#getDataType()}
+     */
+    public <T> void spawnParticle(Particle particle, double x, double y, double z, int count, double offsetX, double offsetY, double offsetZ, double extra, T data);
+
 
     /**
      * Represents various map environment types that a world may be

@@ -1,12 +1,11 @@
 package net.minecraft.server;
 
+import com.google.gson.JsonObject;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
-import net.minecraft.util.com.google.gson.JsonObject;
-
-public abstract class ExpirableListEntry extends JsonListEntry {
+public abstract class ExpirableListEntry<T> extends JsonListEntry<T> {
 
     public static final SimpleDateFormat a = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss Z");
     protected final Date b;
@@ -14,21 +13,21 @@ public abstract class ExpirableListEntry extends JsonListEntry {
     protected final Date d;
     protected final String e;
 
-    public ExpirableListEntry(Object object, Date date, String s, Date date1, String s1) {
-        super(object);
+    public ExpirableListEntry(T t0, Date date, String s, Date date1, String s1) {
+        super(t0);
         this.b = date == null ? new Date() : date;
         this.c = s == null ? "(Unknown)" : s;
         this.d = date1;
         this.e = s1 == null ? "Banned by an operator." : s1;
     }
 
-    protected ExpirableListEntry(Object object, JsonObject jsonobject) {
-        super(checkExpiry(object, jsonobject), jsonobject); // CraftBukkit - check expiry
+    protected ExpirableListEntry(T t0, JsonObject jsonobject) {
+        super(checkExpiry(t0, jsonobject), jsonobject);
 
         Date date;
 
         try {
-            date = jsonobject.has("created") ? a.parse(jsonobject.get("created").getAsString()) : new Date();
+            date = jsonobject.has("created") ? ExpirableListEntry.a.parse(jsonobject.get("created").getAsString()) : new Date();
         } catch (ParseException parseexception) {
             date = new Date();
         }
@@ -39,7 +38,7 @@ public abstract class ExpirableListEntry extends JsonListEntry {
         Date date1;
 
         try {
-            date1 = jsonobject.has("expires") ? a.parse(jsonobject.get("expires").getAsString()) : null;
+            date1 = jsonobject.has("expires") ? ExpirableListEntry.a.parse(jsonobject.get("expires").getAsString()) : null;
         } catch (ParseException parseexception1) {
             date1 = null;
         }
@@ -61,9 +60,9 @@ public abstract class ExpirableListEntry extends JsonListEntry {
     }
 
     protected void a(JsonObject jsonobject) {
-        jsonobject.addProperty("created", a.format(this.b));
+        jsonobject.addProperty("created", ExpirableListEntry.a.format(this.b));
         jsonobject.addProperty("source", this.c);
-        jsonobject.addProperty("expires", this.d == null ? "forever" : a.format(this.d));
+        jsonobject.addProperty("expires", this.d == null ? "forever" : ExpirableListEntry.a.format(this.d));
         jsonobject.addProperty("reason", this.e);
     }
 
@@ -76,7 +75,7 @@ public abstract class ExpirableListEntry extends JsonListEntry {
         return this.b;
     }
 
-    private static Object checkExpiry(Object object, JsonObject jsonobject) {
+    private static <T> T checkExpiry(T object, JsonObject jsonobject) {
         Date expires = null;
 
         try {

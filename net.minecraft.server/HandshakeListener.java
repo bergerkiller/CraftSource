@@ -1,7 +1,5 @@
 package net.minecraft.server;
 
-import net.minecraft.util.io.netty.util.concurrent.GenericFutureListener;
-
 // CraftBukkit start
 import java.net.InetAddress;
 import java.util.HashMap;
@@ -9,6 +7,7 @@ import java.util.HashMap;
 
 public class HandshakeListener implements PacketHandshakingInListener {
 
+    private static final com.google.gson.Gson gson = new com.google.gson.Gson(); // Spigot
     // CraftBukkit start - add fields
     private static final HashMap<InetAddress, Long> throttleTracker = new HashMap<InetAddress, Long>();
     private static int throttleCounter = 0;
@@ -23,9 +22,9 @@ public class HandshakeListener implements PacketHandshakingInListener {
     }
 
     public void a(PacketHandshakingInSetProtocol packethandshakinginsetprotocol) {
-        switch (ProtocolOrdinalWrapper.a[packethandshakinginsetprotocol.c().ordinal()]) {
+        switch (HandshakeListener.SyntheticClass_1.a[packethandshakinginsetprotocol.a().ordinal()]) {
         case 1:
-            this.b.a(EnumProtocol.LOGIN);
+            this.b.setProtocol(EnumProtocol.LOGIN);
             ChatComponentText chatcomponenttext;
 
             // CraftBukkit start - Connection throttle
@@ -38,7 +37,7 @@ public class HandshakeListener implements PacketHandshakingInListener {
                     if (throttleTracker.containsKey(address) && !"127.0.0.1".equals(address.getHostAddress()) && currentTime - throttleTracker.get(address) < connectionThrottle) {
                         throttleTracker.put(address, currentTime);
                         chatcomponenttext = new ChatComponentText("Connection throttled! Please wait before reconnecting.");
-                        this.b.handle(new PacketLoginOutDisconnect(chatcomponenttext), new GenericFutureListener[0]);
+                        this.b.sendPacket(new PacketLoginOutDisconnect(chatcomponenttext));
                         this.b.close(chatcomponenttext);
                         return;
                     }
@@ -63,37 +62,70 @@ public class HandshakeListener implements PacketHandshakingInListener {
             }
             // CraftBukkit end
 
-            if (packethandshakinginsetprotocol.d() > 5) {
-                chatcomponenttext = new ChatComponentText("Outdated server! I\'m still on 1.7.10");
-                this.b.handle(new PacketLoginOutDisconnect(chatcomponenttext), new GenericFutureListener[0]);
+            if (packethandshakinginsetprotocol.b() > 107) {
+                chatcomponenttext = new ChatComponentText( java.text.MessageFormat.format( org.spigotmc.SpigotConfig.outdatedServerMessage.replaceAll("'", "''"), "1.9" ) ); // Spigot
+                this.b.sendPacket(new PacketLoginOutDisconnect(chatcomponenttext));
                 this.b.close(chatcomponenttext);
-            } else if (packethandshakinginsetprotocol.d() < 5) {
-                chatcomponenttext = new ChatComponentText("Outdated client! Please use 1.7.10");
-                this.b.handle(new PacketLoginOutDisconnect(chatcomponenttext), new GenericFutureListener[0]);
+            } else if (packethandshakinginsetprotocol.b() < 107) {
+                chatcomponenttext = new ChatComponentText( java.text.MessageFormat.format( org.spigotmc.SpigotConfig.outdatedClientMessage.replaceAll("'", "''"), "1.9" ) ); // Spigot
+                this.b.sendPacket(new PacketLoginOutDisconnect(chatcomponenttext));
                 this.b.close(chatcomponenttext);
             } else {
-                this.b.a((PacketListener) (new LoginListener(this.a, this.b)));
-                ((LoginListener) this.b.getPacketListener()).hostname = packethandshakinginsetprotocol.b + ":" + packethandshakinginsetprotocol.c; // CraftBukkit - set hostname
+                this.b.setPacketListener(new LoginListener(this.a, this.b));
+                // Spigot Start
+                if (org.spigotmc.SpigotConfig.bungee) {
+                    String[] split = packethandshakinginsetprotocol.hostname.split("\00");
+                    if ( split.length == 3 || split.length == 4 ) {
+                        packethandshakinginsetprotocol.hostname = split[0];
+                        b.l = new java.net.InetSocketAddress(split[1], ((java.net.InetSocketAddress) b.getSocketAddress()).getPort());
+                        b.spoofedUUID = com.mojang.util.UUIDTypeAdapter.fromString( split[2] );
+                    } else
+                    {
+                        chatcomponenttext = new ChatComponentText("If you wish to use IP forwarding, please enable it in your BungeeCord config as well!");
+                        this.b.sendPacket(new PacketLoginOutDisconnect(chatcomponenttext));
+                        this.b.close(chatcomponenttext);
+                        return;
+                    }
+                    if ( split.length == 4 )
+                    {
+                        b.spoofedProfile = gson.fromJson(split[3], com.mojang.authlib.properties.Property[].class);
+                    }
+                }
+                // Spigot End
+                ((LoginListener) this.b.i()).hostname = packethandshakinginsetprotocol.hostname + ":" + packethandshakinginsetprotocol.port; // CraftBukkit - set hostname
             }
             break;
 
         case 2:
-            this.b.a(EnumProtocol.STATUS);
-            this.b.a((PacketListener) (new PacketStatusListener(this.a, this.b)));
+            this.b.setProtocol(EnumProtocol.STATUS);
+            this.b.setPacketListener(new PacketStatusListener(this.a, this.b));
             break;
 
         default:
-            throw new UnsupportedOperationException("Invalid intention " + packethandshakinginsetprotocol.c());
+            throw new UnsupportedOperationException("Invalid intention " + packethandshakinginsetprotocol.a());
         }
+
     }
 
     public void a(IChatBaseComponent ichatbasecomponent) {}
 
-    public void a(EnumProtocol enumprotocol, EnumProtocol enumprotocol1) {
-        if (enumprotocol1 != EnumProtocol.LOGIN && enumprotocol1 != EnumProtocol.STATUS) {
-            throw new UnsupportedOperationException("Invalid state " + enumprotocol1);
+    static class SyntheticClass_1 {
+
+        static final int[] a = new int[EnumProtocol.values().length];
+
+        static {
+            try {
+                HandshakeListener.SyntheticClass_1.a[EnumProtocol.LOGIN.ordinal()] = 1;
+            } catch (NoSuchFieldError nosuchfielderror) {
+                ;
+            }
+
+            try {
+                HandshakeListener.SyntheticClass_1.a[EnumProtocol.STATUS.ordinal()] = 2;
+            } catch (NoSuchFieldError nosuchfielderror1) {
+                ;
+            }
+
         }
     }
-
-    public void a() {}
 }

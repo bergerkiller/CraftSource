@@ -4,27 +4,27 @@ public class EntityCaveSpider extends EntitySpider {
 
     public EntityCaveSpider(World world) {
         super(world);
-        this.a(0.7F, 0.5F);
+        this.setSize(0.7F, 0.5F);
     }
 
-    protected void aD() {
-        super.aD();
+    protected void initAttributes() {
+        super.initAttributes();
         this.getAttributeInstance(GenericAttributes.maxHealth).setValue(12.0D);
     }
 
-    public boolean n(Entity entity) {
-        if (super.n(entity)) {
+    public boolean B(Entity entity) {
+        if (super.B(entity)) {
             if (entity instanceof EntityLiving) {
                 byte b0 = 0;
 
-                if (this.world.difficulty == EnumDifficulty.NORMAL) {
+                if (this.world.getDifficulty() == EnumDifficulty.NORMAL) {
                     b0 = 7;
-                } else if (this.world.difficulty == EnumDifficulty.HARD) {
+                } else if (this.world.getDifficulty() == EnumDifficulty.HARD) {
                     b0 = 15;
                 }
 
                 if (b0 > 0) {
-                    ((EntityLiving) entity).addEffect(new MobEffect(MobEffectList.POISON.id, b0 * 20, 0));
+                    ((EntityLiving) entity).addEffect(new MobEffect(MobEffects.POISON, b0 * 20, 0));
                 }
             }
 
@@ -34,7 +34,15 @@ public class EntityCaveSpider extends EntitySpider {
         }
     }
 
-    public GroupDataEntity prepare(GroupDataEntity groupdataentity) {
+    public GroupDataEntity prepare(DifficultyDamageScaler difficultydamagescaler, GroupDataEntity groupdataentity) {
         return groupdataentity;
+    }
+
+    public float getHeadHeight() {
+        return 0.45F;
+    }
+
+    protected MinecraftKey J() {
+        return LootTables.r;
     }
 }

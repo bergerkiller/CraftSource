@@ -3,19 +3,16 @@ package net.minecraft.server;
 public class ItemBookAndQuill extends Item {
 
     public ItemBookAndQuill() {
-        this.e(1);
+        this.d(1);
     }
 
-    public ItemStack a(ItemStack itemstack, World world, EntityHuman entityhuman) {
-        entityhuman.b(itemstack);
-        return itemstack;
+    public InteractionResultWrapper<ItemStack> a(ItemStack itemstack, World world, EntityHuman entityhuman, EnumHand enumhand) {
+        entityhuman.a(itemstack, enumhand);
+        entityhuman.b(StatisticList.b((Item) this));
+        return new InteractionResultWrapper(EnumInteractionResult.SUCCESS, itemstack);
     }
 
-    public boolean s() {
-        return true;
-    }
-
-    public static boolean a(NBTTagCompound nbttagcompound) {
+    public static boolean b(NBTTagCompound nbttagcompound) {
         if (nbttagcompound == null) {
             return false;
         } else if (!nbttagcompound.hasKeyOfType("pages", 9)) {
@@ -30,7 +27,7 @@ public class ItemBookAndQuill extends Item {
                     return false;
                 }
 
-                if (s.length() > 256) {
+                if (s.length() > 32767) {
                     return false;
                 }
             }

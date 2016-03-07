@@ -2,7 +2,7 @@ package net.minecraft.server;
 
 public class EntityDamageSourceIndirect extends EntityDamageSource {
 
-    private Entity owner;
+    private final Entity owner;
 
     public EntityDamageSourceIndirect(String s, Entity entity, Entity entity1) {
         super(s, entity);
@@ -10,7 +10,7 @@ public class EntityDamageSourceIndirect extends EntityDamageSource {
     }
 
     public Entity i() {
-        return this.p;
+        return this.s;
     }
 
     public Entity getEntity() {
@@ -18,12 +18,12 @@ public class EntityDamageSourceIndirect extends EntityDamageSource {
     }
 
     public IChatBaseComponent getLocalizedDeathMessage(EntityLiving entityliving) {
-        IChatBaseComponent ichatbasecomponent = this.owner == null ? this.p.getScoreboardDisplayName() : this.owner.getScoreboardDisplayName();
-        ItemStack itemstack = this.owner instanceof EntityLiving ? ((EntityLiving) this.owner).be() : null;
+        IChatBaseComponent ichatbasecomponent = this.owner == null ? this.s.getScoreboardDisplayName() : this.owner.getScoreboardDisplayName();
+        ItemStack itemstack = this.owner instanceof EntityLiving ? ((EntityLiving) this.owner).getItemInMainHand() : null;
         String s = "death.attack." + this.translationIndex;
         String s1 = s + ".item";
 
-        return itemstack != null && itemstack.hasName() && LocaleI18n.c(s1) ? new ChatMessage(s1, new Object[] { entityliving.getScoreboardDisplayName(), ichatbasecomponent, itemstack.E()}) : new ChatMessage(s, new Object[] { entityliving.getScoreboardDisplayName(), ichatbasecomponent});
+        return itemstack != null && itemstack.hasName() && LocaleI18n.c(s1) ? new ChatMessage(s1, new Object[] { entityliving.getScoreboardDisplayName(), ichatbasecomponent, itemstack.B()}) : new ChatMessage(s, new Object[] { entityliving.getScoreboardDisplayName(), ichatbasecomponent});
     }
 
     // CraftBukkit start

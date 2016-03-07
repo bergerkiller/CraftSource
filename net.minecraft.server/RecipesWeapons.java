@@ -6,7 +6,7 @@ public class RecipesWeapons {
     private Object[][] b;
 
     public RecipesWeapons() {
-        this.b = new Object[][] { { Blocks.WOOD, Blocks.COBBLESTONE, Items.IRON_INGOT, Items.DIAMOND, Items.GOLD_INGOT}, { Items.WOOD_SWORD, Items.STONE_SWORD, Items.IRON_SWORD, Items.DIAMOND_SWORD, Items.GOLD_SWORD}};
+        this.b = new Object[][] { { Blocks.PLANKS, Blocks.COBBLESTONE, Items.IRON_INGOT, Items.DIAMOND, Items.GOLD_INGOT}, { Items.WOODEN_SWORD, Items.STONE_SWORD, Items.IRON_SWORD, Items.DIAMOND_SWORD, Items.GOLDEN_SWORD}};
     }
 
     public void a(CraftingManager craftingmanager) {
@@ -22,5 +22,6 @@ public class RecipesWeapons {
 
         craftingmanager.registerShapedRecipe(new ItemStack(Items.BOW, 1), new Object[] { " #X", "# X", " #X", Character.valueOf('X'), Items.STRING, Character.valueOf('#'), Items.STICK});
         craftingmanager.registerShapedRecipe(new ItemStack(Items.ARROW, 4), new Object[] { "X", "#", "Y", Character.valueOf('Y'), Items.FEATHER, Character.valueOf('X'), Items.FLINT, Character.valueOf('#'), Items.STICK});
+        craftingmanager.registerShapedRecipe(new ItemStack(Items.SPECTRAL_ARROW, 2), new Object[] { " # ", "#X#", " # ", Character.valueOf('X'), Items.ARROW, Character.valueOf('#'), Items.GLOWSTONE_DUST});
     }
 }

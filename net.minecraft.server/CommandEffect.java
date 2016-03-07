@@ -1,5 +1,7 @@
 package net.minecraft.server;
 
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
 public class CommandEffect extends CommandAbstract {
@@ -14,71 +16,78 @@ public class CommandEffect extends CommandAbstract {
         return 2;
     }
 
-    public String c(ICommandListener icommandlistener) {
+    public String getUsage(ICommandListener icommandlistener) {
         return "commands.effect.usage";
     }
 
-    public void execute(ICommandListener icommandlistener, String[] astring) {
+    public void execute(MinecraftServer minecraftserver, ICommandListener icommandlistener, String[] astring) throws CommandException {
         if (astring.length < 2) {
             throw new ExceptionUsage("commands.effect.usage", new Object[0]);
         } else {
-            EntityPlayer entityplayer = d(icommandlistener, astring[0]);
+            EntityLiving entityliving = (EntityLiving) a(minecraftserver, icommandlistener, astring[0], EntityLiving.class);
 
             if (astring[1].equals("clear")) {
-                if (entityplayer.getEffects().isEmpty()) {
-                    throw new CommandException("commands.effect.failure.notActive.all", new Object[] { entityplayer.getName()});
-                }
-
-                entityplayer.removeAllEffects();
-                a(icommandlistener, this, "commands.effect.success.removed.all", new Object[] { entityplayer.getName()});
-            } else {
-                int i = a(icommandlistener, astring[1], 1);
-                int j = 600;
-                int k = 30;
-                int l = 0;
-
-                if (i < 0 || i >= MobEffectList.byId.length || MobEffectList.byId[i] == null) {
-                    throw new ExceptionInvalidNumber("commands.effect.notFound", new Object[] { Integer.valueOf(i)});
-                }
-
-                if (astring.length >= 3) {
-                    k = a(icommandlistener, astring[2], 0, 1000000);
-                    if (MobEffectList.byId[i].isInstant()) {
-                        j = k;
-                    } else {
-                        j = k * 20;
-                    }
-                } else if (MobEffectList.byId[i].isInstant()) {
-                    j = 1;
-                }
-
-                if (astring.length >= 4) {
-                    l = a(icommandlistener, astring[3], 0, 255);
-                }
-
-                if (k == 0) {
-                    if (!entityplayer.hasEffect(i)) {
-                        throw new CommandException("commands.effect.failure.notActive", new Object[] { new ChatMessage(MobEffectList.byId[i].a(), new Object[0]), entityplayer.getName()});
-                    }
-
-                    entityplayer.removeEffect(i);
-                    a(icommandlistener, this, "commands.effect.success.removed", new Object[] { new ChatMessage(MobEffectList.byId[i].a(), new Object[0]), entityplayer.getName()});
+                if (entityliving.getEffects().isEmpty()) {
+                    throw new CommandException("commands.effect.failure.notActive.all", new Object[] { entityliving.getName()});
                 } else {
-                    MobEffect mobeffect = new MobEffect(i, j, l);
+                    entityliving.removeAllEffects();
+                    a(icommandlistener, (ICommand) this, "commands.effect.success.removed.all", new Object[] { entityliving.getName()});
+                }
+            } else {
+                MobEffectList mobeffectlist;
 
-                    entityplayer.addEffect(mobeffect);
-                    a(icommandlistener, this, "commands.effect.success", new Object[] { new ChatMessage(mobeffect.f(), new Object[0]), Integer.valueOf(i), Integer.valueOf(l), entityplayer.getName(), Integer.valueOf(k)});
+                try {
+                    mobeffectlist = MobEffectList.fromId(a(astring[1], 1));
+                } catch (ExceptionInvalidNumber exceptioninvalidnumber) {
+                    mobeffectlist = MobEffectList.getByName(astring[1]);
+                }
+
+                if (mobeffectlist == null) {
+                    throw new ExceptionInvalidNumber("commands.effect.notFound", new Object[] { astring[1]});
+                } else {
+                    int i = 600;
+                    int j = 30;
+                    int k = 0;
+
+                    if (astring.length >= 3) {
+                        j = a(astring[2], 0, 1000000);
+                        if (mobeffectlist.isInstant()) {
+                            i = j;
+                        } else {
+                            i = j * 20;
+                        }
+                    } else if (mobeffectlist.isInstant()) {
+                        i = 1;
+                    }
+
+                    if (astring.length >= 4) {
+                        k = a(astring[3], 0, 255);
+                    }
+
+                    boolean flag = true;
+
+                    if (astring.length >= 5 && "true".equalsIgnoreCase(astring[4])) {
+                        flag = false;
+                    }
+
+                    if (j > 0) {
+                        MobEffect mobeffect = new MobEffect(mobeffectlist, i, k, false, flag);
+
+                        entityliving.addEffect(mobeffect);
+                        a(icommandlistener, (ICommand) this, "commands.effect.success", new Object[] { new ChatMessage(mobeffect.f(), new Object[0]), Integer.valueOf(MobEffectList.getId(mobeffectlist)), Integer.valueOf(k), entityliving.getName(), Integer.valueOf(j)});
+                    } else if (entityliving.hasEffect(mobeffectlist)) {
+                        entityliving.removeEffect(mobeffectlist);
+                        a(icommandlistener, (ICommand) this, "commands.effect.success.removed", new Object[] { new ChatMessage(mobeffectlist.a(), new Object[0]), entityliving.getName()});
+                    } else {
+                        throw new CommandException("commands.effect.failure.notActive", new Object[] { new ChatMessage(mobeffectlist.a(), new Object[0]), entityliving.getName()});
+                    }
                 }
             }
         }
     }
 
-    public List tabComplete(ICommandListener icommandlistener, String[] astring) {
-        return astring.length == 1 ? a(astring, this.d()) : null;
-    }
-
-    protected String[] d() {
-        return MinecraftServer.getServer().getPlayers();
+    public List<String> tabComplete(MinecraftServer minecraftserver, ICommandListener icommandlistener, String[] astring, BlockPosition blockposition) {
+        return astring.length == 1 ? a(astring, minecraftserver.getPlayers()) : (astring.length == 2 ? a(astring, (Collection) MobEffectList.REGISTRY.keySet()) : (astring.length == 5 ? a(astring, new String[] { "true", "false"}) : Collections.emptyList()));
     }
 
     public boolean isListStart(String[] astring, int i) {

@@ -7,87 +7,85 @@ public class EntityMagmaCube extends EntitySlime {
         this.fireProof = true;
     }
 
-    protected void aD() {
-        super.aD();
-        this.getAttributeInstance(GenericAttributes.d).setValue(0.20000000298023224D);
+    protected void initAttributes() {
+        super.initAttributes();
+        this.getAttributeInstance(GenericAttributes.MOVEMENT_SPEED).setValue(0.20000000298023224D);
+    }
+
+    public boolean cF() {
+        return this.world.getDifficulty() != EnumDifficulty.PEACEFUL;
     }
 
     public boolean canSpawn() {
-        return this.world.difficulty != EnumDifficulty.PEACEFUL && this.world.b(this.boundingBox) && this.world.getCubes(this, this.boundingBox).isEmpty() && !this.world.containsLiquid(this.boundingBox);
+        return this.world.a(this.getBoundingBox(), (Entity) this) && this.world.getCubes(this, this.getBoundingBox()).isEmpty() && !this.world.containsLiquid(this.getBoundingBox());
     }
 
-    public int aV() {
-        return this.getSize() * 3;
+    protected void setSize(int i) {
+        super.setSize(i);
+        this.getAttributeInstance(GenericAttributes.g).setValue((double) (i * 3));
     }
 
-    public float d(float f) {
+    public float e(float f) {
         return 1.0F;
     }
 
-    protected String bP() {
-        return "flame";
+    protected EnumParticle o() {
+        return EnumParticle.FLAME;
     }
 
-    protected EntitySlime bQ() {
+    protected EntitySlime cT() {
         return new EntityMagmaCube(this.world);
     }
 
-    protected Item getLoot() {
-        return Items.MAGMA_CREAM;
-    }
-
-    protected void dropDeathLoot(boolean flag, int i) {
-        Item item = this.getLoot();
-
-        if (item != null && this.getSize() > 1) {
-            int j = this.random.nextInt(4) - 2;
-
-            if (i > 0) {
-                j += this.random.nextInt(i + 1);
-            }
-
-            for (int k = 0; k < j; ++k) {
-                this.a(item, 1);
-            }
-        }
+    protected MinecraftKey J() {
+        return !this.db() ? LootTables.ad : LootTables.a;
     }
 
     public boolean isBurning() {
         return false;
     }
 
-    protected int bR() {
-        return super.bR() * 4;
+    protected int cU() {
+        return super.cU() * 4;
     }
 
-    protected void bS() {
-        this.h *= 0.9F;
+    protected void cV() {
+        this.a *= 0.9F;
     }
 
-    protected void bj() {
+    protected void ch() {
         this.motY = (double) (0.42F + (float) this.getSize() * 0.1F);
-        this.al = true;
+        this.impulse = true;
     }
 
-    protected void b(float f) {}
+    protected void cj() {
+        this.motY = (double) (0.22F + (float) this.getSize() * 0.05F);
+        this.impulse = true;
+    }
 
-    protected boolean bT() {
+    public void e(float f, float f1) {}
+
+    protected boolean cW() {
         return true;
     }
 
-    protected int bU() {
-        return super.bU() + 2;
+    protected int cX() {
+        return super.cX() + 2;
     }
 
-    protected String bV() {
-        return this.getSize() > 1 ? "mob.magmacube.big" : "mob.magmacube.small";
+    protected SoundEffect bR() {
+        return this.db() ? SoundEffects.fA : SoundEffects.dk;
     }
 
-    public boolean P() {
-        return false;
+    protected SoundEffect bS() {
+        return this.db() ? SoundEffects.fz : SoundEffects.dj;
     }
 
-    protected boolean bW() {
-        return true;
+    protected SoundEffect cY() {
+        return this.db() ? SoundEffects.fB : SoundEffects.dm;
+    }
+
+    protected SoundEffect cZ() {
+        return SoundEffects.dl;
     }
 }

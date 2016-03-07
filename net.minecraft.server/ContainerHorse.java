@@ -25,18 +25,26 @@ public class ContainerHorse extends Container {
         return bukkitEntity = new CraftInventoryView(player.player.getBukkitEntity(), inventory, this);
     }
 
-    public ContainerHorse(IInventory iinventory, IInventory iinventory1, EntityHorse entityhorse) {
+    public ContainerHorse(IInventory iinventory, final IInventory iinventory1, final EntityHorse entityhorse, EntityHuman entityhuman) {
         player = (PlayerInventory) iinventory;
         // CraftBukkit end
         this.a = iinventory1;
         this.f = entityhorse;
         byte b0 = 3;
 
-        iinventory1.startOpen();
+        iinventory1.startOpen(entityhuman);
         int i = (b0 - 4) * 18;
 
-        this.a(new SlotHorseSaddle(this, iinventory1, 0, 8, 18));
-        this.a(new SlotHorseArmor(this, iinventory1, 1, 8, 36, entityhorse));
+        this.a(new Slot(iinventory1, 0, 8, 18) {
+            public boolean isAllowed(ItemStack itemstack) {
+                return super.isAllowed(itemstack) && itemstack.getItem() == Items.SADDLE && !this.hasItem();
+            }
+        });
+        this.a(new Slot(iinventory1, 1, 8, 36) {
+            public boolean isAllowed(ItemStack itemstack) {
+                return super.isAllowed(itemstack) && entityhorse.getType().j() && EnumHorseArmor.b(itemstack.getItem());
+            }
+        });
         int j;
         int k;
 
@@ -57,10 +65,11 @@ public class ContainerHorse extends Container {
         for (j = 0; j < 9; ++j) {
             this.a(new Slot(iinventory, j, 8 + j * 18, 160 + i));
         }
+
     }
 
     public boolean a(EntityHuman entityhuman) {
-        return this.a.a(entityhuman) && this.f.isAlive() && this.f.e(entityhuman) < 8.0F;
+        return this.a.a(entityhuman) && this.f.isAlive() && this.f.g((Entity) entityhuman) < 8.0F;
     }
 
     public ItemStack b(EntityHuman entityhuman, int i) {
@@ -99,6 +108,6 @@ public class ContainerHorse extends Container {
 
     public void b(EntityHuman entityhuman) {
         super.b(entityhuman);
-        this.a.closeContainer();
+        this.a.closeContainer(entityhuman);
     }
 }

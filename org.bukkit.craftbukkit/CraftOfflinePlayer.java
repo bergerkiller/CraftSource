@@ -1,5 +1,6 @@
 package org.bukkit.craftbukkit;
 
+import com.mojang.authlib.GameProfile;
 import java.io.File;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -10,7 +11,6 @@ import net.minecraft.server.EntityPlayer;
 import net.minecraft.server.NBTTagCompound;
 import net.minecraft.server.WorldNBTStorage;
 
-import net.minecraft.util.com.mojang.authlib.GameProfile;
 import org.bukkit.BanList;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -144,14 +144,7 @@ public class CraftOfflinePlayer implements OfflinePlayer, ConfigurationSerializa
     }
 
     public Player getPlayer() {
-        for (Object obj : server.getHandle().players) {
-            EntityPlayer player = (EntityPlayer) obj;
-            if (player.getUniqueID().equals(getUniqueId())) {
-                return (player.playerConnection != null) ? player.playerConnection.getPlayer() : null;
-            }
-        }
-
-        return null;
+        return server.getPlayer(getUniqueId());
     }
 
     @Override

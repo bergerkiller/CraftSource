@@ -7,26 +7,26 @@ public class EntityComplexPart extends Entity {
 
     public EntityComplexPart(IComplex icomplex, String s, float f, float f1) {
         super(icomplex.a());
-        this.a(f, f1);
+        this.setSize(f, f1);
         this.owner = icomplex;
         this.b = s;
     }
 
-    protected void c() {}
+    protected void i() {}
 
     protected void a(NBTTagCompound nbttagcompound) {}
 
     protected void b(NBTTagCompound nbttagcompound) {}
 
-    public boolean R() {
+    public boolean isInteractable() {
         return true;
     }
 
     public boolean damageEntity(DamageSource damagesource, float f) {
-        return this.isInvulnerable() ? false : this.owner.a(this, damagesource, f);
+        return this.isInvulnerable(damagesource) ? false : this.owner.a(this, damagesource, f);
     }
 
-    public boolean i(Entity entity) {
+    public boolean s(Entity entity) {
         return this == entity || this.owner == entity;
     }
 }

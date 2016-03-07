@@ -1,6 +1,8 @@
 package net.minecraft.server;
 
-public class PacketStatusOutPong extends Packet {
+import java.io.IOException;
+
+public class PacketStatusOutPong implements Packet<PacketStatusOutListener> {
 
     private long a;
 
@@ -10,23 +12,15 @@ public class PacketStatusOutPong extends Packet {
         this.a = i;
     }
 
-    public void a(PacketDataSerializer packetdataserializer) {
+    public void a(PacketDataSerializer packetdataserializer) throws IOException {
         this.a = packetdataserializer.readLong();
     }
 
-    public void b(PacketDataSerializer packetdataserializer) {
+    public void b(PacketDataSerializer packetdataserializer) throws IOException {
         packetdataserializer.writeLong(this.a);
     }
 
     public void a(PacketStatusOutListener packetstatusoutlistener) {
         packetstatusoutlistener.a(this);
-    }
-
-    public boolean a() {
-        return true;
-    }
-
-    public void handle(PacketListener packetlistener) {
-        this.a((PacketStatusOutListener) packetlistener);
     }
 }

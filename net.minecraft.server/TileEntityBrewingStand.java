@@ -1,22 +1,25 @@
 package net.minecraft.server;
 
-import java.util.List;
+import java.util.Arrays;
 
 // CraftBukkit start
+import java.util.List;
 import org.bukkit.craftbukkit.entity.CraftHumanEntity;
 import org.bukkit.entity.HumanEntity;
 import org.bukkit.event.inventory.BrewEvent;
 // CraftBukkit end
 
-public class TileEntityBrewingStand extends TileEntity implements IWorldInventory {
+public class TileEntityBrewingStand extends TileEntityContainer implements ITickable, IWorldInventory {
 
     private static final int[] a = new int[] { 3};
-    private static final int[] i = new int[] { 0, 1, 2};
-    public ItemStack[] items = new ItemStack[4]; // CraftBukkit - private -> public
-    public int brewTime; // CraftBukkit - private -> public
-    private int l;
-    private Item m;
-    private String n;
+    private static final int[] f = new int[] { 0, 1, 2, 3};
+    private static final int[] g = new int[] { 0, 1, 2, 4};
+    private ItemStack[] items = new ItemStack[5];
+    private int brewTime;
+    private boolean[] j;
+    private Item k;
+    private String l;
+    private int m;
     private int lastTick = MinecraftServer.currentTick; // CraftBukkit - add field
 
     public TileEntityBrewingStand() {}
@@ -46,139 +49,152 @@ public class TileEntityBrewingStand extends TileEntity implements IWorldInventor
     }
     // CraftBukkit end
 
-    public String getInventoryName() {
-        return this.k_() ? this.n : "container.brewing";
+    public String getName() {
+        return this.hasCustomName() ? this.l : "container.brewing";
     }
 
-    public boolean k_() {
-        return this.n != null && this.n.length() > 0;
+    public boolean hasCustomName() {
+        return this.l != null && !this.l.isEmpty();
     }
 
     public void a(String s) {
-        this.n = s;
+        this.l = s;
     }
 
     public int getSize() {
         return this.items.length;
     }
 
-    public void h() {
+    public void c() {
+        if (this.m <= 0 && this.items[4] != null && this.items[4].getItem() == Items.BLAZE_POWDER) {
+            this.m = 20;
+            --this.items[4].count;
+            if (this.items[4].count <= 0) {
+                this.items[4] = null;
+            }
+
+            this.update();
+        }
+
+        boolean flag = this.n();
+        boolean flag1 = this.brewTime > 0;
+
         // CraftBukkit start - Use wall time instead of ticks for brewing
         int elapsedTicks = MinecraftServer.currentTick - this.lastTick;
         this.lastTick = MinecraftServer.currentTick;
 
-        if (this.brewTime > 0) {
+        if (flag1) {
             this.brewTime -= elapsedTicks;
-            if (this.brewTime <= 0) { // == -> <=
-                // CraftBukkit end
-                this.l();
+            boolean flag2 = this.brewTime <= 0; // == -> <=
+            // CraftBukkit end
+
+            if (flag2 && flag) {
+                this.o();
                 this.update();
-            } else if (!this.k()) {
+            } else if (!flag) {
                 this.brewTime = 0;
                 this.update();
-            } else if (this.m != this.items[3].getItem()) {
+            } else if (this.k != this.items[3].getItem()) {
                 this.brewTime = 0;
                 this.update();
             }
-        } else if (this.k()) {
+        } else if (flag && this.m > 0) {
+            --this.m;
             this.brewTime = 400;
-            this.m = this.items[3].getItem();
+            this.k = this.items[3].getItem();
+            this.update();
         }
 
-        int i = this.j();
+        if (!this.world.isClientSide) {
+            boolean[] aboolean = this.m();
 
-        if (i != this.l) {
-            this.l = i;
-            this.world.setData(this.x, this.y, this.z, i, 2);
+            if (!Arrays.equals(aboolean, this.j)) {
+                this.j = aboolean;
+                IBlockData iblockdata = this.world.getType(this.getPosition());
+
+                if (!(iblockdata.getBlock() instanceof BlockBrewingStand)) {
+                    return;
+                }
+
+                for (int i = 0; i < BlockBrewingStand.HAS_BOTTLE.length; ++i) {
+                    iblockdata = iblockdata.set(BlockBrewingStand.HAS_BOTTLE[i], Boolean.valueOf(aboolean[i]));
+                }
+
+                this.world.setTypeAndData(this.position, iblockdata, 2);
+            }
         }
 
-        super.h();
     }
 
-    public int i() {
-        return this.brewTime;
+    public boolean[] m() {
+        boolean[] aboolean = new boolean[3];
+
+        for (int i = 0; i < 3; ++i) {
+            if (this.items[i] != null) {
+                aboolean[i] = true;
+            }
+        }
+
+        return aboolean;
     }
 
-    private boolean k() {
+    private boolean n() {
         if (this.items[3] != null && this.items[3].count > 0) {
             ItemStack itemstack = this.items[3];
 
-            if (!itemstack.getItem().m(itemstack)) {
+            if (!PotionBrewer.a(itemstack)) {
                 return false;
             } else {
-                boolean flag = false;
-
                 for (int i = 0; i < 3; ++i) {
-                    if (this.items[i] != null && this.items[i].getItem() == Items.POTION) {
-                        int j = this.items[i].getData();
-                        int k = this.c(j, itemstack);
+                    ItemStack itemstack1 = this.items[i];
 
-                        if (!ItemPotion.g(j) && ItemPotion.g(k)) {
-                            flag = true;
-                            break;
-                        }
-
-                        List list = Items.POTION.c(j);
-                        List list1 = Items.POTION.c(k);
-
-                        if ((j <= 0 || list != list1) && (list == null || !list.equals(list1) && list1 != null) && j != k) {
-                            flag = true;
-                            break;
-                        }
+                    if (itemstack1 != null && PotionBrewer.a(itemstack1, itemstack)) {
+                        return true;
                     }
                 }
 
-                return flag;
+                return false;
             }
         } else {
             return false;
         }
     }
 
-    private void l() {
-        if (this.k()) {
-            ItemStack itemstack = this.items[3];
-
-            // CraftBukkit start
-            if (getOwner() != null) {
-                BrewEvent event = new BrewEvent(world.getWorld().getBlockAt(x, y, z), (org.bukkit.inventory.BrewerInventory) this.getOwner().getInventory());
-                org.bukkit.Bukkit.getPluginManager().callEvent(event);
-                if (event.isCancelled()) {
-                    return;
-                }
-            }
-            // CraftBukkit end
-
-            for (int i = 0; i < 3; ++i) {
-                if (this.items[i] != null && this.items[i].getItem() == Items.POTION) {
-                    int j = this.items[i].getData();
-                    int k = this.c(j, itemstack);
-                    List list = Items.POTION.c(j);
-                    List list1 = Items.POTION.c(k);
-
-                    if ((j <= 0 || list != list1) && (list == null || !list.equals(list1) && list1 != null)) {
-                        if (j != k) {
-                            this.items[i].setData(k);
-                        }
-                    } else if (!ItemPotion.g(j) && ItemPotion.g(k)) {
-                        this.items[i].setData(k);
-                    }
-                }
-            }
-
-            if (itemstack.getItem().u()) {
-                this.items[3] = new ItemStack(itemstack.getItem().t());
-            } else {
-                --this.items[3].count;
-                if (this.items[3].count <= 0) {
-                    this.items[3] = null;
-                }
+    private void o() {
+        ItemStack itemstack = this.items[3];
+        // CraftBukkit start
+        if (getOwner() != null) {
+            BrewEvent event = new BrewEvent(world.getWorld().getBlockAt(position.getX(), position.getY(), position.getZ()), (org.bukkit.inventory.BrewerInventory) this.getOwner().getInventory());
+            org.bukkit.Bukkit.getPluginManager().callEvent(event);
+            if (event.isCancelled()) {
+                return;
             }
         }
-    }
+        // CraftBukkit end
 
-    private int c(int i, ItemStack itemstack) {
-        return itemstack == null ? i : (itemstack.getItem().m(itemstack) ? PotionBrewer.a(i, itemstack.getItem().i(itemstack)) : i);
+        for (int i = 0; i < 3; ++i) {
+            this.items[i] = PotionBrewer.d(itemstack, this.items[i]);
+        }
+
+        --itemstack.count;
+        BlockPosition blockposition = this.getPosition();
+
+        if (itemstack.getItem().r()) {
+            ItemStack itemstack1 = new ItemStack(itemstack.getItem().q());
+
+            if (itemstack.count <= 0) {
+                itemstack = itemstack1;
+            } else {
+                InventoryUtils.dropItem(this.world, (double) blockposition.getX(), (double) blockposition.getY(), (double) blockposition.getZ(), itemstack1);
+            }
+        }
+
+        if (itemstack.count <= 0) {
+            itemstack = null;
+        }
+
+        this.items[3] = itemstack;
+        this.world.triggerEffect(1035, blockposition, 0);
     }
 
     public void a(NBTTagCompound nbttagcompound) {
@@ -198,12 +214,14 @@ public class TileEntityBrewingStand extends TileEntity implements IWorldInventor
 
         this.brewTime = nbttagcompound.getShort("BrewTime");
         if (nbttagcompound.hasKeyOfType("CustomName", 8)) {
-            this.n = nbttagcompound.getString("CustomName");
+            this.l = nbttagcompound.getString("CustomName");
         }
+
+        this.m = nbttagcompound.getByte("Fuel");
     }
 
-    public void b(NBTTagCompound nbttagcompound) {
-        super.b(nbttagcompound);
+    public void save(NBTTagCompound nbttagcompound) {
+        super.save(nbttagcompound);
         nbttagcompound.setShort("BrewTime", (short) this.brewTime);
         NBTTagList nbttaglist = new NBTTagList();
 
@@ -218,9 +236,11 @@ public class TileEntityBrewingStand extends TileEntity implements IWorldInventor
         }
 
         nbttagcompound.set("Items", nbttaglist);
-        if (this.k_()) {
-            nbttagcompound.setString("CustomName", this.n);
+        if (this.hasCustomName()) {
+            nbttagcompound.setString("CustomName", this.l);
         }
+
+        nbttagcompound.setByte("Fuel", (byte) this.m);
     }
 
     public ItemStack getItem(int i) {
@@ -228,31 +248,18 @@ public class TileEntityBrewingStand extends TileEntity implements IWorldInventor
     }
 
     public ItemStack splitStack(int i, int j) {
-        if (i >= 0 && i < this.items.length) {
-            ItemStack itemstack = this.items[i];
-
-            this.items[i] = null;
-            return itemstack;
-        } else {
-            return null;
-        }
+        return ContainerUtil.a(this.items, i, j);
     }
 
     public ItemStack splitWithoutUpdate(int i) {
-        if (i >= 0 && i < this.items.length) {
-            ItemStack itemstack = this.items[i];
-
-            this.items[i] = null;
-            return itemstack;
-        } else {
-            return null;
-        }
+        return ContainerUtil.a(this.items, i);
     }
 
     public void setItem(int i, ItemStack itemstack) {
         if (i >= 0 && i < this.items.length) {
             this.items[i] = itemstack;
         }
+
     }
 
     public int getMaxStackSize() {
@@ -260,38 +267,73 @@ public class TileEntityBrewingStand extends TileEntity implements IWorldInventor
     }
 
     public boolean a(EntityHuman entityhuman) {
-        return this.world.getTileEntity(this.x, this.y, this.z) != this ? false : entityhuman.e((double) this.x + 0.5D, (double) this.y + 0.5D, (double) this.z + 0.5D) <= 64.0D;
+        return this.world.getTileEntity(this.position) != this ? false : entityhuman.e((double) this.position.getX() + 0.5D, (double) this.position.getY() + 0.5D, (double) this.position.getZ() + 0.5D) <= 64.0D;
     }
 
-    public void startOpen() {}
+    public void startOpen(EntityHuman entityhuman) {}
 
-    public void closeContainer() {}
+    public void closeContainer(EntityHuman entityhuman) {}
 
     public boolean b(int i, ItemStack itemstack) {
-        return i == 3 ? itemstack.getItem().m(itemstack) : itemstack.getItem() == Items.POTION || itemstack.getItem() == Items.GLASS_BOTTLE;
-    }
+        if (i == 3) {
+            return PotionBrewer.a(itemstack);
+        } else {
+            Item item = itemstack.getItem();
 
-    public int j() {
-        int i = 0;
-
-        for (int j = 0; j < 3; ++j) {
-            if (this.items[j] != null) {
-                i |= 1 << j;
-            }
+            return i == 4 ? item == Items.BLAZE_POWDER : item == Items.POTION || item == Items.SPLASH_POTION || item == Items.LINGERING_POTION || item == Items.GLASS_BOTTLE;
         }
-
-        return i;
     }
 
-    public int[] getSlotsForFace(int i) {
-        return i == 1 ? a : TileEntityBrewingStand.i; // CraftBukkit - decompilation error
+    public int[] getSlotsForFace(EnumDirection enumdirection) {
+        return enumdirection == EnumDirection.UP ? TileEntityBrewingStand.a : (enumdirection == EnumDirection.DOWN ? TileEntityBrewingStand.f : TileEntityBrewingStand.g);
     }
 
-    public boolean canPlaceItemThroughFace(int i, ItemStack itemstack, int j) {
+    public boolean canPlaceItemThroughFace(int i, ItemStack itemstack, EnumDirection enumdirection) {
         return this.b(i, itemstack);
     }
 
-    public boolean canTakeItemThroughFace(int i, ItemStack itemstack, int j) {
-        return true;
+    public boolean canTakeItemThroughFace(int i, ItemStack itemstack, EnumDirection enumdirection) {
+        return i == 3 ? itemstack.getItem() == Items.GLASS_BOTTLE : true;
+    }
+
+    public String getContainerName() {
+        return "minecraft:brewing_stand";
+    }
+
+    public Container createContainer(PlayerInventory playerinventory, EntityHuman entityhuman) {
+        return new ContainerBrewingStand(playerinventory, this);
+    }
+
+    public int getProperty(int i) {
+        switch (i) {
+        case 0:
+            return this.brewTime;
+
+        case 1:
+            return this.m;
+
+        default:
+            return 0;
+        }
+    }
+
+    public void setProperty(int i, int j) {
+        switch (i) {
+        case 0:
+            this.brewTime = j;
+            break;
+
+        case 1:
+            this.m = j;
+        }
+
+    }
+
+    public int g() {
+        return 2;
+    }
+
+    public void l() {
+        Arrays.fill(this.items, (Object) null);
     }
 }

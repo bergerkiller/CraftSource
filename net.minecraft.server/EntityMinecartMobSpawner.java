@@ -2,7 +2,19 @@ package net.minecraft.server;
 
 public class EntityMinecartMobSpawner extends EntityMinecartAbstract {
 
-    private final MobSpawnerAbstract a = new MobSpawnerMinecart(this);
+    private final MobSpawnerAbstract a = new MobSpawnerAbstract() {
+        public void a(int i) {
+            EntityMinecartMobSpawner.this.world.broadcastEntityEffect(EntityMinecartMobSpawner.this, (byte) i);
+        }
+
+        public World a() {
+            return EntityMinecartMobSpawner.this.world;
+        }
+
+        public BlockPosition b() {
+            return new BlockPosition(EntityMinecartMobSpawner.this);
+        }
+    };
 
     public EntityMinecartMobSpawner(World world) {
         super(world);
@@ -12,12 +24,12 @@ public class EntityMinecartMobSpawner extends EntityMinecartAbstract {
         super(world, d0, d1, d2);
     }
 
-    public int m() {
-        return 4;
+    public EntityMinecartAbstract.EnumMinecartType v() {
+        return EntityMinecartAbstract.EnumMinecartType.SPAWNER;
     }
 
-    public Block o() {
-        return Blocks.MOB_SPAWNER;
+    public IBlockData x() {
+        return Blocks.MOB_SPAWNER.getBlockData();
     }
 
     protected void a(NBTTagCompound nbttagcompound) {
@@ -30,8 +42,8 @@ public class EntityMinecartMobSpawner extends EntityMinecartAbstract {
         this.a.b(nbttagcompound);
     }
 
-    public void h() {
-        super.h();
-        this.a.g();
+    public void m() {
+        super.m();
+        this.a.c();
     }
 }

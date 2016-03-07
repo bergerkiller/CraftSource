@@ -4,37 +4,40 @@ import java.util.Random;
 
 public class WorldGenTaiga1 extends WorldGenTreeAbstract {
 
+    private static final IBlockData a = Blocks.LOG.getBlockData().set(BlockLog1.VARIANT, BlockWood.EnumLogVariant.SPRUCE);
+    private static final IBlockData b = Blocks.LEAVES.getBlockData().set(BlockLeaves1.VARIANT, BlockWood.EnumLogVariant.SPRUCE).set(BlockLeaves.CHECK_DECAY, Boolean.valueOf(false));
+
     public WorldGenTaiga1() {
         super(false);
     }
 
-    public boolean generate(World world, Random random, int i, int j, int k) {
-        int l = random.nextInt(5) + 7;
-        int i1 = l - random.nextInt(2) - 3;
-        int j1 = l - i1;
-        int k1 = 1 + random.nextInt(j1 + 1);
+    public boolean generate(World world, Random random, BlockPosition blockposition) {
+        int i = random.nextInt(5) + 7;
+        int j = i - random.nextInt(2) - 3;
+        int k = i - j;
+        int l = 1 + random.nextInt(k + 1);
         boolean flag = true;
 
-        if (j >= 1 && j + l + 1 <= 256) {
-            int l1;
-            int i2;
-            int j2;
+        if (blockposition.getY() >= 1 && blockposition.getY() + i + 1 <= 256) {
+            int i1;
+            int j1;
+            int k1;
 
-            for (int k2 = j; k2 <= j + 1 + l && flag; ++k2) {
+            for (int l1 = blockposition.getY(); l1 <= blockposition.getY() + 1 + i && flag; ++l1) {
                 boolean flag1 = true;
 
-                if (k2 - j < i1) {
-                    j2 = 0;
+                if (l1 - blockposition.getY() < j) {
+                    k1 = 0;
                 } else {
-                    j2 = k1;
+                    k1 = l;
                 }
 
-                for (l1 = i - j2; l1 <= i + j2 && flag; ++l1) {
-                    for (i2 = k - j2; i2 <= k + j2 && flag; ++i2) {
-                        if (k2 >= 0 && k2 < 256) {
-                            Block block = world.getType(l1, k2, i2);
+                BlockPosition.MutableBlockPosition blockposition_mutableblockposition = new BlockPosition.MutableBlockPosition();
 
-                            if (!this.a(block)) {
+                for (i1 = blockposition.getX() - k1; i1 <= blockposition.getX() + k1 && flag; ++i1) {
+                    for (j1 = blockposition.getZ() - k1; j1 <= blockposition.getZ() + k1 && flag; ++j1) {
+                        if (l1 >= 0 && l1 < 256) {
+                            if (!this.a(world.getType(blockposition_mutableblockposition.c(i1, l1, j1)).getBlock())) {
                                 flag = false;
                             }
                         } else {
@@ -47,37 +50,43 @@ public class WorldGenTaiga1 extends WorldGenTreeAbstract {
             if (!flag) {
                 return false;
             } else {
-                Block block1 = world.getType(i, j - 1, k);
+                Block block = world.getType(blockposition.down()).getBlock();
 
-                if ((block1 == Blocks.GRASS || block1 == Blocks.DIRT) && j < 256 - l - 1) {
-                    this.setType(world, i, j - 1, k, Blocks.DIRT);
-                    j2 = 0;
+                if ((block == Blocks.GRASS || block == Blocks.DIRT) && blockposition.getY() < 256 - i - 1) {
+                    this.a(world, blockposition.down());
+                    k1 = 0;
 
-                    for (l1 = j + l; l1 >= j + i1; --l1) {
-                        for (i2 = i - j2; i2 <= i + j2; ++i2) {
-                            int l2 = i2 - i;
+                    int i2;
 
-                            for (int i3 = k - j2; i3 <= k + j2; ++i3) {
-                                int j3 = i3 - k;
+                    for (i2 = blockposition.getY() + i; i2 >= blockposition.getY() + j; --i2) {
+                        for (i1 = blockposition.getX() - k1; i1 <= blockposition.getX() + k1; ++i1) {
+                            j1 = i1 - blockposition.getX();
 
-                                if ((Math.abs(l2) != j2 || Math.abs(j3) != j2 || j2 <= 0) && !world.getType(i2, l1, i3).j()) {
-                                    this.setTypeAndData(world, i2, l1, i3, Blocks.LEAVES, 1);
+                            for (int j2 = blockposition.getZ() - k1; j2 <= blockposition.getZ() + k1; ++j2) {
+                                int k2 = j2 - blockposition.getZ();
+
+                                if (Math.abs(j1) != k1 || Math.abs(k2) != k1 || k1 <= 0) {
+                                    BlockPosition blockposition1 = new BlockPosition(i1, i2, j2);
+
+                                    if (!world.getType(blockposition1).b()) {
+                                        this.a(world, blockposition1, WorldGenTaiga1.b);
+                                    }
                                 }
                             }
                         }
 
-                        if (j2 >= 1 && l1 == j + i1 + 1) {
-                            --j2;
-                        } else if (j2 < k1) {
-                            ++j2;
+                        if (k1 >= 1 && i2 == blockposition.getY() + j + 1) {
+                            --k1;
+                        } else if (k1 < l) {
+                            ++k1;
                         }
                     }
 
-                    for (l1 = 0; l1 < l - 1; ++l1) {
-                        Block block2 = world.getType(i, j + l1, k);
+                    for (i2 = 0; i2 < i - 1; ++i2) {
+                        Material material = world.getType(blockposition.up(i2)).getMaterial();
 
-                        if (block2.getMaterial() == Material.AIR || block2.getMaterial() == Material.LEAVES) {
-                            this.setTypeAndData(world, i, j + l1, k, Blocks.LOG, 1);
+                        if (material == Material.AIR || material == Material.LEAVES) {
+                            this.a(world, blockposition.up(i2), WorldGenTaiga1.a);
                         }
                     }
 

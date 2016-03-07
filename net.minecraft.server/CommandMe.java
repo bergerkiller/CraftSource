@@ -14,21 +14,21 @@ public class CommandMe extends CommandAbstract {
         return 0;
     }
 
-    public String c(ICommandListener icommandlistener) {
+    public String getUsage(ICommandListener icommandlistener) {
         return "commands.me.usage";
     }
 
-    public void execute(ICommandListener icommandlistener, String[] astring) {
-        if (astring.length > 0) {
-            IChatBaseComponent ichatbasecomponent = a(icommandlistener, astring, 0, icommandlistener.a(1, "me"));
-
-            MinecraftServer.getServer().getPlayerList().sendMessage(new ChatMessage("chat.type.emote", new Object[] { icommandlistener.getScoreboardDisplayName(), ichatbasecomponent}));
-        } else {
+    public void execute(MinecraftServer minecraftserver, ICommandListener icommandlistener, String[] astring) throws CommandException {
+        if (astring.length <= 0) {
             throw new ExceptionUsage("commands.me.usage", new Object[0]);
+        } else {
+            IChatBaseComponent ichatbasecomponent = b(icommandlistener, astring, 0, !(icommandlistener instanceof EntityHuman));
+
+            minecraftserver.getPlayerList().sendMessage(new ChatMessage("chat.type.emote", new Object[] { icommandlistener.getScoreboardDisplayName(), ichatbasecomponent}));
         }
     }
 
-    public List tabComplete(ICommandListener icommandlistener, String[] astring) {
-        return a(astring, MinecraftServer.getServer().getPlayers());
+    public List<String> tabComplete(MinecraftServer minecraftserver, ICommandListener icommandlistener, String[] astring, BlockPosition blockposition) {
+        return a(astring, minecraftserver.getPlayers());
     }
 }

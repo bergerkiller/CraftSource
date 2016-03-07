@@ -1,5 +1,6 @@
 package net.minecraft.server;
 
+import com.google.common.collect.Lists;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -11,10 +12,10 @@ import org.bukkit.craftbukkit.inventory.CraftShapelessRecipe;
 
 public class ShapelessRecipes implements IRecipe {
 
-    private final ItemStack result;
-    private final List ingredients;
+    public final ItemStack result; // Spigot
+    private final List<ItemStack> ingredients;
 
-    public ShapelessRecipes(ItemStack itemstack, List list) {
+    public ShapelessRecipes(ItemStack itemstack, List<ItemStack> list) {
         this.result = itemstack;
         this.ingredients = list;
     }
@@ -37,12 +38,26 @@ public class ShapelessRecipes implements IRecipe {
         return this.result;
     }
 
-    public boolean a(InventoryCrafting inventorycrafting, World world) {
-        ArrayList arraylist = new ArrayList(this.ingredients);
+    public ItemStack[] b(InventoryCrafting inventorycrafting) {
+        ItemStack[] aitemstack = new ItemStack[inventorycrafting.getSize()];
 
-        for (int i = 0; i < 3; ++i) {
-            for (int j = 0; j < 3; ++j) {
-                ItemStack itemstack = inventorycrafting.b(j, i);
+        for (int i = 0; i < aitemstack.length; ++i) {
+            ItemStack itemstack = inventorycrafting.getItem(i);
+
+            if (itemstack != null && itemstack.getItem().r()) {
+                aitemstack[i] = new ItemStack(itemstack.getItem().q());
+            }
+        }
+
+        return aitemstack;
+    }
+
+    public boolean a(InventoryCrafting inventorycrafting, World world) {
+        ArrayList arraylist = Lists.newArrayList(this.ingredients);
+
+        for (int i = 0; i < inventorycrafting.h(); ++i) {
+            for (int j = 0; j < inventorycrafting.i(); ++j) {
+                ItemStack itemstack = inventorycrafting.c(j, i);
 
                 if (itemstack != null) {
                     boolean flag = false;
@@ -68,11 +83,18 @@ public class ShapelessRecipes implements IRecipe {
         return arraylist.isEmpty();
     }
 
-    public ItemStack a(InventoryCrafting inventorycrafting) {
+    public ItemStack craftItem(InventoryCrafting inventorycrafting) {
         return this.result.cloneItemStack();
     }
 
     public int a() {
         return this.ingredients.size();
     }
+
+    // Spigot start
+    public java.util.List<ItemStack> getIngredients()
+    {
+        return java.util.Collections.unmodifiableList( ingredients );
+    }
+    // Spigot end
 }

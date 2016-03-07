@@ -4,77 +4,79 @@ import java.util.Random;
 
 public class BiomePlains extends BiomeBase {
 
-    protected boolean aC;
+    protected boolean y;
 
-    protected BiomePlains(int i) {
-        super(i);
-        this.a(0.8F, 0.4F);
-        this.a(e);
-        this.at.add(new BiomeMeta(EntityHorse.class, 5, 2, 6));
-        this.ar.x = -999;
-        this.ar.y = 4;
-        this.ar.z = 10;
+    protected BiomePlains(boolean flag, BiomeBase.a biomebase_a) {
+        super(biomebase_a);
+        this.y = flag;
+        this.v.add(new BiomeBase.BiomeMeta(EntityHorse.class, 5, 2, 6));
+        this.t.z = -999;
+        this.t.A = 4;
+        this.t.B = 10;
     }
 
-    public String a(Random random, int i, int j, int k) {
-        double d0 = ad.a((double) i / 200.0D, (double) k / 200.0D);
-        int l;
+    public BlockFlowers.EnumFlowerVarient a(Random random, BlockPosition blockposition) {
+        double d0 = BiomePlains.l.a((double) blockposition.getX() / 200.0D, (double) blockposition.getZ() / 200.0D);
+        int i;
 
         if (d0 < -0.8D) {
-            l = random.nextInt(4);
-            return BlockFlowers.a[4 + l];
+            i = random.nextInt(4);
+            switch (i) {
+            case 0:
+                return BlockFlowers.EnumFlowerVarient.ORANGE_TULIP;
+
+            case 1:
+                return BlockFlowers.EnumFlowerVarient.RED_TULIP;
+
+            case 2:
+                return BlockFlowers.EnumFlowerVarient.PINK_TULIP;
+
+            case 3:
+            default:
+                return BlockFlowers.EnumFlowerVarient.WHITE_TULIP;
+            }
         } else if (random.nextInt(3) > 0) {
-            l = random.nextInt(3);
-            return l == 0 ? BlockFlowers.a[0] : (l == 1 ? BlockFlowers.a[3] : BlockFlowers.a[8]);
+            i = random.nextInt(3);
+            return i == 0 ? BlockFlowers.EnumFlowerVarient.POPPY : (i == 1 ? BlockFlowers.EnumFlowerVarient.HOUSTONIA : BlockFlowers.EnumFlowerVarient.OXEYE_DAISY);
         } else {
-            return BlockFlowers.b[0];
+            return BlockFlowers.EnumFlowerVarient.DANDELION;
         }
     }
 
-    public void a(World world, Random random, int i, int j) {
-        double d0 = ad.a((double) (i + 8) / 200.0D, (double) (j + 8) / 200.0D);
+    public void a(World world, Random random, BlockPosition blockposition) {
+        double d0 = BiomePlains.l.a((double) (blockposition.getX() + 8) / 200.0D, (double) (blockposition.getZ() + 8) / 200.0D);
+        int i;
+        int j;
         int k;
         int l;
-        int i1;
-        int j1;
 
         if (d0 < -0.8D) {
-            this.ar.y = 15;
-            this.ar.z = 5;
+            this.t.A = 15;
+            this.t.B = 5;
         } else {
-            this.ar.y = 4;
-            this.ar.z = 10;
-            ae.a(2);
+            this.t.A = 4;
+            this.t.B = 10;
+            BiomePlains.m.a(BlockTallPlant.EnumTallFlowerVariants.GRASS);
 
-            for (k = 0; k < 7; ++k) {
-                l = i + random.nextInt(16) + 8;
-                i1 = j + random.nextInt(16) + 8;
-                j1 = random.nextInt(world.getHighestBlockYAt(l, i1) + 32);
-                ae.generate(world, random, l, j1, i1);
+            for (i = 0; i < 7; ++i) {
+                j = random.nextInt(16) + 8;
+                k = random.nextInt(16) + 8;
+                l = random.nextInt(world.getHighestBlockYAt(blockposition.a(j, 0, k)).getY() + 32);
+                BiomePlains.m.generate(world, random, blockposition.a(j, l, k));
             }
         }
 
-        if (this.aC) {
-            ae.a(0);
+        if (this.y) {
+            BiomePlains.m.a(BlockTallPlant.EnumTallFlowerVariants.SUNFLOWER);
 
-            for (k = 0; k < 10; ++k) {
-                l = i + random.nextInt(16) + 8;
-                i1 = j + random.nextInt(16) + 8;
-                j1 = random.nextInt(world.getHighestBlockYAt(l, i1) + 32);
-                ae.generate(world, random, l, j1, i1);
+            for (i = 0; i < 10; ++i) {
+                j = random.nextInt(16) + 8;
+                k = random.nextInt(16) + 8;
+                l = random.nextInt(world.getHighestBlockYAt(blockposition.a(j, 0, k)).getY() + 32);
+                BiomePlains.m.generate(world, random, blockposition.a(j, l, k));
             }
         }
 
-        super.a(world, random, i, j);
-    }
-
-    protected BiomeBase k() {
-        BiomePlains biomeplains = new BiomePlains(this.id + 128);
-
-        biomeplains.a("Sunflower Plains");
-        biomeplains.aC = true;
-        biomeplains.b(9286496);
-        biomeplains.ah = 14273354;
-        return biomeplains;
+        super.a(world, random, blockposition);
     }
 }

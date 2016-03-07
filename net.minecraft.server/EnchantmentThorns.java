@@ -4,9 +4,9 @@ import java.util.Random;
 
 public class EnchantmentThorns extends Enchantment {
 
-    public EnchantmentThorns(int i, int j) {
-        super(i, j, EnchantmentSlotType.ARMOR_TORSO);
-        this.b("thorns");
+    public EnchantmentThorns(Enchantment.Rarity enchantment_rarity, EnumItemSlot... aenumitemslot) {
+        super(enchantment_rarity, EnchantmentSlotType.ARMOR_CHEST, aenumitemslot);
+        this.c("thorns");
     }
 
     public int a(int i) {
@@ -26,18 +26,21 @@ public class EnchantmentThorns extends Enchantment {
     }
 
     public void b(EntityLiving entityliving, Entity entity, int i) {
-        Random random = entityliving.aI();
-        ItemStack itemstack = EnchantmentManager.a(Enchantment.THORNS, entityliving);
+        Random random = entityliving.getRandom();
+        ItemStack itemstack = EnchantmentManager.b(Enchantments.THORNS, entityliving);
 
-        if (a(i, random)) {
-            entity.damageEntity(DamageSource.a(entityliving), (float) b(i, random));
-            entity.makeSound("damage.thorns", 0.5F, 1.0F);
+        if (entity != null && a(i, random)) { // CraftBukkit
+            if (entity != null) {
+                entity.damageEntity(DamageSource.a(entityliving), (float) b(i, random));
+            }
+
             if (itemstack != null) {
                 itemstack.damage(3, entityliving);
             }
         } else if (itemstack != null) {
             itemstack.damage(1, entityliving);
         }
+
     }
 
     public static boolean a(int i, Random random) {

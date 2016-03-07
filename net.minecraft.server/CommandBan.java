@@ -1,9 +1,9 @@
 package net.minecraft.server;
 
+import com.mojang.authlib.GameProfile;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
-
-import net.minecraft.util.com.mojang.authlib.GameProfile;
 
 public class CommandBan extends CommandAbstract {
 
@@ -17,17 +17,16 @@ public class CommandBan extends CommandAbstract {
         return 3;
     }
 
-    public String c(ICommandListener icommandlistener) {
+    public String getUsage(ICommandListener icommandlistener) {
         return "commands.ban.usage";
     }
 
-    public boolean canUse(ICommandListener icommandlistener) {
-        return MinecraftServer.getServer().getPlayerList().getProfileBans().isEnabled() && super.canUse(icommandlistener);
+    public boolean canUse(MinecraftServer minecraftserver, ICommandListener icommandlistener) {
+        return minecraftserver.getPlayerList().getProfileBans().isEnabled() && super.canUse(minecraftserver, icommandlistener);
     }
 
-    public void execute(ICommandListener icommandlistener, String[] astring) {
+    public void execute(MinecraftServer minecraftserver, ICommandListener icommandlistener, String[] astring) throws CommandException {
         if (astring.length >= 1 && astring[0].length() > 0) {
-            MinecraftServer minecraftserver = MinecraftServer.getServer();
             GameProfile gameprofile = minecraftserver.getUserCache().getProfile(astring[0]);
 
             if (gameprofile == null) {
@@ -36,7 +35,7 @@ public class CommandBan extends CommandAbstract {
                 String s = null;
 
                 if (astring.length >= 2) {
-                    s = a(icommandlistener, astring, 1).c();
+                    s = a(icommandlistener, astring, 1).toPlainText();
                 }
 
                 GameProfileBanEntry gameprofilebanentry = new GameProfileBanEntry(gameprofile, (Date) null, icommandlistener.getName(), (Date) null, s);
@@ -48,14 +47,14 @@ public class CommandBan extends CommandAbstract {
                     entityplayer.playerConnection.disconnect("You are banned from this server.");
                 }
 
-                a(icommandlistener, this, "commands.ban.success", new Object[] { astring[0]});
+                a(icommandlistener, (ICommand) this, "commands.ban.success", new Object[] { astring[0]});
             }
         } else {
             throw new ExceptionUsage("commands.ban.usage", new Object[0]);
         }
     }
 
-    public List tabComplete(ICommandListener icommandlistener, String[] astring) {
-        return astring.length >= 1 ? a(astring, MinecraftServer.getServer().getPlayers()) : null;
+    public List<String> tabComplete(MinecraftServer minecraftserver, ICommandListener icommandlistener, String[] astring, BlockPosition blockposition) {
+        return astring.length >= 1 ? a(astring, minecraftserver.getPlayers()) : Collections.emptyList();
     }
 }

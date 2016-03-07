@@ -1,29 +1,28 @@
 package net.minecraft.server;
 
-public class PacketPlayInCloseWindow extends Packet {
+import java.io.IOException;
 
-    private int a;
+public class PacketPlayInCloseWindow implements Packet<PacketListenerPlayIn> {
+
+    private int id;
 
     public PacketPlayInCloseWindow() {}
 
-    // CraftBukkit start - Add constructor
+    // CraftBukkit start
     public PacketPlayInCloseWindow(int id) {
-        this.a = id;
+        this.id = id;
     }
     // CraftBukkit end
-    public void a(PacketPlayInListener packetplayinlistener) {
-        packetplayinlistener.a(this);
+
+    public void a(PacketListenerPlayIn packetlistenerplayin) {
+        packetlistenerplayin.a(this);
     }
 
-    public void a(PacketDataSerializer packetdataserializer) {
-        this.a = packetdataserializer.readByte();
+    public void a(PacketDataSerializer packetdataserializer) throws IOException {
+        this.id = packetdataserializer.readByte();
     }
 
-    public void b(PacketDataSerializer packetdataserializer) {
-        packetdataserializer.writeByte(this.a);
-    }
-
-    public void handle(PacketListener packetlistener) {
-        this.a((PacketPlayInListener) packetlistener);
+    public void b(PacketDataSerializer packetdataserializer) throws IOException {
+        packetdataserializer.writeByte(this.id);
     }
 }

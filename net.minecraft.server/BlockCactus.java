@@ -1,86 +1,109 @@
 package net.minecraft.server;
 
+import java.util.Iterator;
 import java.util.Random;
 
 import org.bukkit.craftbukkit.event.CraftEventFactory; // CraftBukkit
 
 public class BlockCactus extends Block {
 
+    public static final BlockStateInteger AGE = BlockStateInteger.of("age", 0, 15);
+    protected static final AxisAlignedBB b = new AxisAlignedBB(0.0625D, 0.0D, 0.0625D, 0.9375D, 0.9375D, 0.9375D);
+    protected static final AxisAlignedBB c = new AxisAlignedBB(0.0625D, 0.0D, 0.0625D, 0.9375D, 1.0D, 0.9375D);
+
     protected BlockCactus() {
         super(Material.CACTUS);
+        this.w(this.blockStateList.getBlockData().set(BlockCactus.AGE, Integer.valueOf(0)));
         this.a(true);
         this.a(CreativeModeTab.c);
     }
 
-    public void a(World world, int i, int j, int k, Random random) {
-        if (world.isEmpty(i, j + 1, k)) {
-            int l;
+    public void b(World world, BlockPosition blockposition, IBlockData iblockdata, Random random) {
+        BlockPosition blockposition1 = blockposition.up();
 
-            for (l = 1; world.getType(i, j - l, k) == this; ++l) {
+        if (world.isEmpty(blockposition1)) {
+            int i;
+
+            for (i = 1; world.getType(blockposition.down(i)).getBlock() == this; ++i) {
                 ;
             }
 
-            if (l < 3) {
-                int i1 = world.getData(i, j, k);
+            if (i < 3) {
+                int j = ((Integer) iblockdata.get(BlockCactus.AGE)).intValue();
 
-                if (i1 == 15) {
-                    CraftEventFactory.handleBlockGrowEvent(world, i, j + 1, k, this, 0); // CraftBukkit
-                    world.setData(i, j, k, 0, 4);
-                    this.doPhysics(world, i, j + 1, k, this);
+                if (j >= (byte) range(3, ((100 / world.spigotConfig.cactusModifier) * 15) + 0.5F, 15)) { // Spigot
+                    // world.setTypeUpdate(blockposition1, this.getBlockData()); // CraftBukkit
+                    IBlockData iblockdata1 = iblockdata.set(BlockCactus.AGE, Integer.valueOf(0));
+
+                    CraftEventFactory.handleBlockGrowEvent(world, blockposition1.getX(), blockposition1.getY(), blockposition1.getZ(), this, 0); // CraftBukkit
+                    world.setTypeAndData(blockposition, iblockdata1, 4);
+                    this.doPhysics(world, blockposition1, iblockdata1, this);
                 } else {
-                    world.setData(i, j, k, i1 + 1, 4);
+                    world.setTypeAndData(blockposition, iblockdata.set(BlockCactus.AGE, Integer.valueOf(j + 1)), 4);
                 }
+
             }
         }
     }
 
-    public AxisAlignedBB a(World world, int i, int j, int k) {
-        float f = 0.0625F;
-
-        return AxisAlignedBB.a((double) ((float) i + f), (double) j, (double) ((float) k + f), (double) ((float) (i + 1) - f), (double) ((float) (j + 1) - f), (double) ((float) (k + 1) - f));
+    public AxisAlignedBB a(IBlockData iblockdata, World world, BlockPosition blockposition) {
+        return BlockCactus.b;
     }
 
-    public boolean d() {
+    public boolean c(IBlockData iblockdata) {
         return false;
     }
 
-    public boolean c() {
+    public boolean b(IBlockData iblockdata) {
         return false;
     }
 
-    public int b() {
-        return 13;
+    public boolean canPlace(World world, BlockPosition blockposition) {
+        return super.canPlace(world, blockposition) ? this.b(world, blockposition) : false;
     }
 
-    public boolean canPlace(World world, int i, int j, int k) {
-        return !super.canPlace(world, i, j, k) ? false : this.j(world, i, j, k);
-    }
-
-    public void doPhysics(World world, int i, int j, int k, Block block) {
-        if (!this.j(world, i, j, k)) {
-            world.setAir(i, j, k, true);
+    public void doPhysics(World world, BlockPosition blockposition, IBlockData iblockdata, Block block) {
+        if (!this.b(world, blockposition)) {
+            world.setAir(blockposition, true);
         }
+
     }
 
-    public boolean j(World world, int i, int j, int k) {
-        if (world.getType(i - 1, j, k).getMaterial().isBuildable()) {
-            return false;
-        } else if (world.getType(i + 1, j, k).getMaterial().isBuildable()) {
-            return false;
-        } else if (world.getType(i, j, k - 1).getMaterial().isBuildable()) {
-            return false;
-        } else if (world.getType(i, j, k + 1).getMaterial().isBuildable()) {
-            return false;
-        } else {
-            Block block = world.getType(i, j - 1, k);
+    public boolean b(World world, BlockPosition blockposition) {
+        Iterator iterator = EnumDirection.EnumDirectionLimit.HORIZONTAL.iterator();
 
-            return block == Blocks.CACTUS || block == Blocks.SAND;
-        }
+        Material material;
+
+        do {
+            if (!iterator.hasNext()) {
+                Block block = world.getType(blockposition.down()).getBlock();
+
+                return block == Blocks.CACTUS || block == Blocks.SAND && !world.getType(blockposition.up()).getMaterial().isLiquid();
+            }
+
+            EnumDirection enumdirection = (EnumDirection) iterator.next();
+
+            material = world.getType(blockposition.shift(enumdirection)).getMaterial();
+        } while (!material.isBuildable() && material != Material.LAVA);
+
+        return false;
     }
 
-    public void a(World world, int i, int j, int k, Entity entity) {
-        CraftEventFactory.blockDamage = world.getWorld().getBlockAt(i, j, k); // CraftBukkit
+    public void a(World world, BlockPosition blockposition, IBlockData iblockdata, Entity entity) {
+        CraftEventFactory.blockDamage = world.getWorld().getBlockAt(blockposition.getX(), blockposition.getY(), blockposition.getZ()); // CraftBukkit
         entity.damageEntity(DamageSource.CACTUS, 1.0F);
         CraftEventFactory.blockDamage = null; // CraftBukkit
+    }
+
+    public IBlockData fromLegacyData(int i) {
+        return this.getBlockData().set(BlockCactus.AGE, Integer.valueOf(i));
+    }
+
+    public int toLegacyData(IBlockData iblockdata) {
+        return ((Integer) iblockdata.get(BlockCactus.AGE)).intValue();
+    }
+
+    protected BlockStateList getStateList() {
+        return new BlockStateList(this, new IBlockState[] { BlockCactus.AGE});
     }
 }

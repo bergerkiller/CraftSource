@@ -1,6 +1,8 @@
 package net.minecraft.server;
 
-public class PacketPlayOutCloseWindow extends Packet {
+import java.io.IOException;
+
+public class PacketPlayOutCloseWindow implements Packet<PacketListenerPlayOut> {
 
     private int a;
 
@@ -10,19 +12,15 @@ public class PacketPlayOutCloseWindow extends Packet {
         this.a = i;
     }
 
-    public void a(PacketPlayOutListener packetplayoutlistener) {
-        packetplayoutlistener.a(this);
+    public void a(PacketListenerPlayOut packetlistenerplayout) {
+        packetlistenerplayout.a(this);
     }
 
-    public void a(PacketDataSerializer packetdataserializer) {
+    public void a(PacketDataSerializer packetdataserializer) throws IOException {
         this.a = packetdataserializer.readUnsignedByte();
     }
 
-    public void b(PacketDataSerializer packetdataserializer) {
+    public void b(PacketDataSerializer packetdataserializer) throws IOException {
         packetdataserializer.writeByte(this.a);
-    }
-
-    public void handle(PacketListener packetlistener) {
-        this.a((PacketPlayOutListener) packetlistener);
     }
 }

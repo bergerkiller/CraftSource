@@ -1,20 +1,24 @@
 package net.minecraft.server;
 
-public abstract class EntityWaterAnimal extends EntityCreature implements IAnimal {
+public abstract class EntityWaterAnimal extends EntityInsentient implements IAnimal {
 
     public EntityWaterAnimal(World world) {
         super(world);
     }
 
-    public boolean aE() {
+    public boolean bB() {
+        return true;
+    }
+
+    public boolean cF() {
         return true;
     }
 
     public boolean canSpawn() {
-        return this.world.b(this.boundingBox);
+        return this.world.a(this.getBoundingBox(), (Entity) this);
     }
 
-    public int q() {
+    public int C() {
         return 120;
     }
 
@@ -26,11 +30,11 @@ public abstract class EntityWaterAnimal extends EntityCreature implements IAnima
         return 1 + this.world.random.nextInt(3);
     }
 
-    public void C() {
+    public void U() {
         int i = this.getAirTicks();
 
-        super.C();
-        if (this.isAlive() && !this.M()) {
+        super.U();
+        if (this.isAlive() && !this.isInWater()) {
             --i;
             this.setAirTicks(i);
             if (this.getAirTicks() == -20) {
@@ -40,5 +44,10 @@ public abstract class EntityWaterAnimal extends EntityCreature implements IAnima
         } else {
             this.setAirTicks(300);
         }
+
+    }
+
+    public boolean bd() {
+        return false;
     }
 }

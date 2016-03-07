@@ -5,61 +5,66 @@ import java.util.Random;
 public class BlockIce extends BlockHalfTransparent {
 
     public BlockIce() {
-        super("ice", Material.ICE, false);
+        super(Material.ICE, false);
         this.frictionFactor = 0.98F;
         this.a(true);
         this.a(CreativeModeTab.b);
     }
 
-    public void a(World world, EntityHuman entityhuman, int i, int j, int k, int l) {
-        entityhuman.a(StatisticList.MINE_BLOCK_COUNT[Block.getId(this)], 1);
+    public void a(World world, EntityHuman entityhuman, BlockPosition blockposition, IBlockData iblockdata, TileEntity tileentity, ItemStack itemstack) {
+        entityhuman.b(StatisticList.a((Block) this));
         entityhuman.applyExhaustion(0.025F);
-        if (this.E() && EnchantmentManager.hasSilkTouchEnchantment(entityhuman)) {
-            ItemStack itemstack = this.j(l);
+        if (this.o() && EnchantmentManager.getEnchantmentLevel(Enchantments.SILK_TOUCH, itemstack) > 0) {
+            ItemStack itemstack1 = this.u(iblockdata);
 
-            if (itemstack != null) {
-                this.a(world, i, j, k, itemstack);
+            if (itemstack1 != null) {
+                a(world, blockposition, itemstack1);
             }
         } else {
-            if (world.worldProvider.f) {
-                world.setAir(i, j, k);
+            if (world.worldProvider.l()) {
+                world.setAir(blockposition);
                 return;
             }
 
-            int i1 = EnchantmentManager.getBonusBlockLootEnchantmentLevel(entityhuman);
+            int i = EnchantmentManager.getEnchantmentLevel(Enchantments.LOOT_BONUS_BLOCKS, itemstack);
 
-            this.b(world, i, j, k, l, i1);
-            Material material = world.getType(i, j - 1, k).getMaterial();
+            this.b(world, blockposition, iblockdata, i);
+            Material material = world.getType(blockposition.down()).getMaterial();
 
             if (material.isSolid() || material.isLiquid()) {
-                world.setTypeUpdate(i, j, k, Blocks.WATER);
+                world.setTypeUpdate(blockposition, Blocks.FLOWING_WATER.getBlockData());
             }
         }
+
     }
 
     public int a(Random random) {
         return 0;
     }
 
-    public void a(World world, int i, int j, int k, Random random) {
-        if (world.b(EnumSkyBlock.BLOCK, i, j, k) > 11 - this.k()) {
-            // CraftBukkit start
-            if (org.bukkit.craftbukkit.event.CraftEventFactory.callBlockFadeEvent(world.getWorld().getBlockAt(i, j, k), world.worldProvider.f ? Blocks.AIR : Blocks.STATIONARY_WATER).isCancelled()) {
-                return;
-            }
-            // CraftBukkit end
+    public void b(World world, BlockPosition blockposition, IBlockData iblockdata, Random random) {
+        if (world.b(EnumSkyBlock.BLOCK, blockposition) > 11 - this.getBlockData().c()) {
+            this.b(world, blockposition);
+        }
 
-            if (world.worldProvider.f) {
-                world.setAir(i, j, k);
-                return;
-            }
+    }
 
-            this.b(world, i, j, k, world.getData(i, j, k), 0);
-            world.setTypeUpdate(i, j, k, Blocks.STATIONARY_WATER);
+    protected void b(World world, BlockPosition blockposition) {
+        // CraftBukkit start
+        if (org.bukkit.craftbukkit.event.CraftEventFactory.callBlockFadeEvent(world.getWorld().getBlockAt(blockposition.getX(), blockposition.getY(), blockposition.getZ()), world.worldProvider.l() ? Blocks.AIR : Blocks.WATER).isCancelled()) {
+            return;
+        }
+        // CraftBukkit end
+        if (world.worldProvider.l()) {
+            world.setAir(blockposition);
+        } else {
+            this.b(world, blockposition, world.getType(blockposition), 0);
+            world.setTypeUpdate(blockposition, Blocks.WATER.getBlockData());
+            world.e(blockposition, Blocks.WATER);
         }
     }
 
-    public int h() {
-        return 0;
+    public EnumPistonReaction h(IBlockData iblockdata) {
+        return EnumPistonReaction.NORMAL;
     }
 }

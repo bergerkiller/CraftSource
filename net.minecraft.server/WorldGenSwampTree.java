@@ -4,43 +4,49 @@ import java.util.Random;
 
 public class WorldGenSwampTree extends WorldGenTreeAbstract {
 
+    private static final IBlockData a = Blocks.LOG.getBlockData().set(BlockLog1.VARIANT, BlockWood.EnumLogVariant.OAK);
+    private static final IBlockData b = Blocks.LEAVES.getBlockData().set(BlockLeaves1.VARIANT, BlockWood.EnumLogVariant.OAK).set(BlockLeaves1.CHECK_DECAY, Boolean.valueOf(false));
+
     public WorldGenSwampTree() {
         super(false);
     }
 
-    public boolean generate(World world, Random random, int i, int j, int k) {
-        int l;
+    public boolean generate(World world, Random random, BlockPosition blockposition) {
+        int i;
 
-        for (l = random.nextInt(4) + 5; world.getType(i, j - 1, k).getMaterial() == Material.WATER; --j) {
+        for (i = random.nextInt(4) + 5; world.getType(blockposition.down()).getMaterial() == Material.WATER; blockposition = blockposition.down()) {
             ;
         }
 
         boolean flag = true;
 
-        if (j >= 1 && j + l + 1 <= 256) {
-            int i1;
-            int j1;
+        if (blockposition.getY() >= 1 && blockposition.getY() + i + 1 <= 256) {
+            int j;
+            int k;
 
-            for (int k1 = j; k1 <= j + 1 + l; ++k1) {
+            for (int l = blockposition.getY(); l <= blockposition.getY() + 1 + i; ++l) {
                 byte b0 = 1;
 
-                if (k1 == j) {
+                if (l == blockposition.getY()) {
                     b0 = 0;
                 }
 
-                if (k1 >= j + 1 + l - 2) {
+                if (l >= blockposition.getY() + 1 + i - 2) {
                     b0 = 3;
                 }
 
-                for (i1 = i - b0; i1 <= i + b0 && flag; ++i1) {
-                    for (j1 = k - b0; j1 <= k + b0 && flag; ++j1) {
-                        if (k1 >= 0 && k1 < 256) {
-                            Block block = world.getType(i1, k1, j1);
+                BlockPosition.MutableBlockPosition blockposition_mutableblockposition = new BlockPosition.MutableBlockPosition();
 
-                            if (block.getMaterial() != Material.AIR && block.getMaterial() != Material.LEAVES) {
-                                if (block != Blocks.STATIONARY_WATER && block != Blocks.WATER) {
+                for (j = blockposition.getX() - b0; j <= blockposition.getX() + b0 && flag; ++j) {
+                    for (k = blockposition.getZ() - b0; k <= blockposition.getZ() + b0 && flag; ++k) {
+                        if (l >= 0 && l < 256) {
+                            IBlockData iblockdata = world.getType(blockposition_mutableblockposition.c(j, l, k));
+                            Block block = iblockdata.getBlock();
+
+                            if (iblockdata.getMaterial() != Material.AIR && iblockdata.getMaterial() != Material.LEAVES) {
+                                if (block != Blocks.WATER && block != Blocks.FLOWING_WATER) {
                                     flag = false;
-                                } else if (k1 > j) {
+                                } else if (l > blockposition.getY()) {
                                     flag = false;
                                 }
                             }
@@ -54,61 +60,75 @@ public class WorldGenSwampTree extends WorldGenTreeAbstract {
             if (!flag) {
                 return false;
             } else {
-                Block block1 = world.getType(i, j - 1, k);
+                Block block1 = world.getType(blockposition.down()).getBlock();
 
-                if ((block1 == Blocks.GRASS || block1 == Blocks.DIRT) && j < 256 - l - 1) {
-                    this.setType(world, i, j - 1, k, Blocks.DIRT);
+                if ((block1 == Blocks.GRASS || block1 == Blocks.DIRT) && blockposition.getY() < 256 - i - 1) {
+                    this.a(world, blockposition.down());
 
+                    BlockPosition blockposition1;
+                    int i1;
+                    int j1;
+                    int k1;
                     int l1;
-                    int i2;
-                    int j2;
 
-                    for (j2 = j - 3 + l; j2 <= j + l; ++j2) {
-                        i1 = j2 - (j + l);
-                        j1 = 2 - i1 / 2;
+                    for (i1 = blockposition.getY() - 3 + i; i1 <= blockposition.getY() + i; ++i1) {
+                        j1 = i1 - (blockposition.getY() + i);
+                        j = 2 - j1 / 2;
 
-                        for (i2 = i - j1; i2 <= i + j1; ++i2) {
-                            l1 = i2 - i;
+                        for (k = blockposition.getX() - j; k <= blockposition.getX() + j; ++k) {
+                            k1 = k - blockposition.getX();
 
-                            for (int k2 = k - j1; k2 <= k + j1; ++k2) {
-                                int l2 = k2 - k;
+                            for (l1 = blockposition.getZ() - j; l1 <= blockposition.getZ() + j; ++l1) {
+                                int i2 = l1 - blockposition.getZ();
 
-                                if ((Math.abs(l1) != j1 || Math.abs(l2) != j1 || random.nextInt(2) != 0 && i1 != 0) && !world.getType(i2, j2, k2).j()) {
-                                    this.setType(world, i2, j2, k2, Blocks.LEAVES);
+                                if (Math.abs(k1) != j || Math.abs(i2) != j || random.nextInt(2) != 0 && j1 != 0) {
+                                    blockposition1 = new BlockPosition(k, i1, l1);
+                                    if (!world.getType(blockposition1).b()) {
+                                        this.a(world, blockposition1, WorldGenSwampTree.b);
+                                    }
                                 }
                             }
                         }
                     }
 
-                    for (j2 = 0; j2 < l; ++j2) {
-                        Block block2 = world.getType(i, j + j2, k);
+                    for (i1 = 0; i1 < i; ++i1) {
+                        IBlockData iblockdata1 = world.getType(blockposition.up(i1));
+                        Block block2 = iblockdata1.getBlock();
 
-                        if (block2.getMaterial() == Material.AIR || block2.getMaterial() == Material.LEAVES || block2 == Blocks.WATER || block2 == Blocks.STATIONARY_WATER) {
-                            this.setType(world, i, j + j2, k, Blocks.LOG);
+                        if (iblockdata1.getMaterial() == Material.AIR || iblockdata1.getMaterial() == Material.LEAVES || block2 == Blocks.FLOWING_WATER || block2 == Blocks.WATER) {
+                            this.a(world, blockposition.up(i1), WorldGenSwampTree.a);
                         }
                     }
 
-                    for (j2 = j - 3 + l; j2 <= j + l; ++j2) {
-                        i1 = j2 - (j + l);
-                        j1 = 2 - i1 / 2;
+                    for (i1 = blockposition.getY() - 3 + i; i1 <= blockposition.getY() + i; ++i1) {
+                        j1 = i1 - (blockposition.getY() + i);
+                        j = 2 - j1 / 2;
+                        BlockPosition.MutableBlockPosition blockposition_mutableblockposition1 = new BlockPosition.MutableBlockPosition();
 
-                        for (i2 = i - j1; i2 <= i + j1; ++i2) {
-                            for (l1 = k - j1; l1 <= k + j1; ++l1) {
-                                if (world.getType(i2, j2, l1).getMaterial() == Material.LEAVES) {
-                                    if (random.nextInt(4) == 0 && world.getType(i2 - 1, j2, l1).getMaterial() == Material.AIR) {
-                                        this.a(world, i2 - 1, j2, l1, 8);
+                        for (k1 = blockposition.getX() - j; k1 <= blockposition.getX() + j; ++k1) {
+                            for (l1 = blockposition.getZ() - j; l1 <= blockposition.getZ() + j; ++l1) {
+                                blockposition_mutableblockposition1.c(k1, i1, l1);
+                                if (world.getType(blockposition_mutableblockposition1).getMaterial() == Material.LEAVES) {
+                                    BlockPosition blockposition2 = blockposition_mutableblockposition1.west();
+
+                                    blockposition1 = blockposition_mutableblockposition1.east();
+                                    BlockPosition blockposition3 = blockposition_mutableblockposition1.north();
+                                    BlockPosition blockposition4 = blockposition_mutableblockposition1.south();
+
+                                    if (random.nextInt(4) == 0 && world.getType(blockposition2).getMaterial() == Material.AIR) {
+                                        this.a(world, blockposition2, BlockVine.EAST);
                                     }
 
-                                    if (random.nextInt(4) == 0 && world.getType(i2 + 1, j2, l1).getMaterial() == Material.AIR) {
-                                        this.a(world, i2 + 1, j2, l1, 2);
+                                    if (random.nextInt(4) == 0 && world.getType(blockposition1).getMaterial() == Material.AIR) {
+                                        this.a(world, blockposition1, BlockVine.WEST);
                                     }
 
-                                    if (random.nextInt(4) == 0 && world.getType(i2, j2, l1 - 1).getMaterial() == Material.AIR) {
-                                        this.a(world, i2, j2, l1 - 1, 1);
+                                    if (random.nextInt(4) == 0 && world.getType(blockposition3).getMaterial() == Material.AIR) {
+                                        this.a(world, blockposition3, BlockVine.SOUTH);
                                     }
 
-                                    if (random.nextInt(4) == 0 && world.getType(i2, j2, l1 + 1).getMaterial() == Material.AIR) {
-                                        this.a(world, i2, j2, l1 + 1, 4);
+                                    if (random.nextInt(4) == 0 && world.getType(blockposition4).getMaterial() == Material.AIR) {
+                                        this.a(world, blockposition4, BlockVine.NORTH);
                                     }
                                 }
                             }
@@ -125,18 +145,16 @@ public class WorldGenSwampTree extends WorldGenTreeAbstract {
         }
     }
 
-    private void a(World world, int i, int j, int k, int l) {
-        this.setTypeAndData(world, i, j, k, Blocks.VINE, l);
-        int i1 = 4;
+    private void a(World world, BlockPosition blockposition, BlockStateBoolean blockstateboolean) {
+        IBlockData iblockdata = Blocks.VINE.getBlockData().set(blockstateboolean, Boolean.valueOf(true));
 
-        while (true) {
-            --j;
-            if (world.getType(i, j, k).getMaterial() != Material.AIR || i1 <= 0) {
-                return;
-            }
+        this.a(world, blockposition, iblockdata);
+        int i = 4;
 
-            this.setTypeAndData(world, i, j, k, Blocks.VINE, l);
-            --i1;
+        for (blockposition = blockposition.down(); world.getType(blockposition).getMaterial() == Material.AIR && i > 0; --i) {
+            this.a(world, blockposition, iblockdata);
+            blockposition = blockposition.down();
         }
+
     }
 }

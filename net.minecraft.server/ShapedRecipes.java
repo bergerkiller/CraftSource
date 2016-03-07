@@ -7,10 +7,10 @@ import org.bukkit.craftbukkit.inventory.CraftShapedRecipe;
 
 public class ShapedRecipes implements IRecipe {
 
-    private int width;
-    private int height;
-    private ItemStack[] items;
-    private ItemStack result;
+    private final int width;
+    private final int height;
+    private final ItemStack[] items;
+    public ItemStack result; // Spigot
     private boolean e;
 
     public ShapedRecipes(int i, int j, ItemStack[] aitemstack, ItemStack itemstack) {
@@ -80,6 +80,20 @@ public class ShapedRecipes implements IRecipe {
         return this.result;
     }
 
+    public ItemStack[] b(InventoryCrafting inventorycrafting) {
+        ItemStack[] aitemstack = new ItemStack[inventorycrafting.getSize()];
+
+        for (int i = 0; i < aitemstack.length; ++i) {
+            ItemStack itemstack = inventorycrafting.getItem(i);
+
+            if (itemstack != null && itemstack.getItem().r()) {
+                aitemstack[i] = new ItemStack(itemstack.getItem().q());
+            }
+        }
+
+        return aitemstack;
+    }
+
     public boolean a(InventoryCrafting inventorycrafting, World world) {
         for (int i = 0; i <= 3 - this.width; ++i) {
             for (int j = 0; j <= 3 - this.height; ++j) {
@@ -111,7 +125,7 @@ public class ShapedRecipes implements IRecipe {
                     }
                 }
 
-                ItemStack itemstack1 = inventorycrafting.b(k, l);
+                ItemStack itemstack1 = inventorycrafting.c(k, l);
 
                 if (itemstack1 != null || itemstack != null) {
                     if (itemstack1 == null && itemstack != null || itemstack1 != null && itemstack == null) {
@@ -132,7 +146,7 @@ public class ShapedRecipes implements IRecipe {
         return true;
     }
 
-    public ItemStack a(InventoryCrafting inventorycrafting) {
+    public ItemStack craftItem(InventoryCrafting inventorycrafting) {
         ItemStack itemstack = this.b().cloneItemStack();
 
         if (this.e) {
@@ -140,7 +154,7 @@ public class ShapedRecipes implements IRecipe {
                 ItemStack itemstack1 = inventorycrafting.getItem(i);
 
                 if (itemstack1 != null && itemstack1.hasTag()) {
-                    itemstack.setTag((NBTTagCompound) itemstack1.tag.clone());
+                    itemstack.setTag((NBTTagCompound) itemstack1.getTag().clone());
                 }
             }
         }
@@ -152,8 +166,10 @@ public class ShapedRecipes implements IRecipe {
         return this.width * this.height;
     }
 
-    public ShapedRecipes c() {
-        this.e = true;
-        return this;
+    // Spigot start
+    public java.util.List<ItemStack> getIngredients()
+    {
+        return java.util.Arrays.asList( items );
     }
+    // Spigot end
 }

@@ -1,125 +1,95 @@
 package net.minecraft.server;
 
-import org.bukkit.event.entity.EntityTargetEvent; // CraftBukkit
+import java.util.Random;
 
 public class EntitySpider extends EntityMonster {
 
+    private static final DataWatcherObject<Byte> a = DataWatcher.a(EntitySpider.class, DataWatcherRegistry.a);
+
     public EntitySpider(World world) {
         super(world);
-        this.a(1.4F, 0.9F);
+        this.setSize(1.4F, 0.9F);
     }
 
-    protected void c() {
-        super.c();
-        this.datawatcher.a(16, new Byte((byte) 0));
+    protected void r() {
+        this.goalSelector.a(1, new PathfinderGoalFloat(this));
+        this.goalSelector.a(3, new PathfinderGoalLeapAtTarget(this, 0.4F));
+        this.goalSelector.a(4, new EntitySpider.PathfinderGoalSpiderMeleeAttack(this));
+        this.goalSelector.a(5, new PathfinderGoalRandomStroll(this, 0.8D));
+        this.goalSelector.a(6, new PathfinderGoalLookAtPlayer(this, EntityHuman.class, 8.0F));
+        this.goalSelector.a(6, new PathfinderGoalRandomLookaround(this));
+        this.targetSelector.a(1, new PathfinderGoalHurtByTarget(this, false, new Class[0]));
+        this.targetSelector.a(2, new EntitySpider.PathfinderGoalSpiderNearestAttackableTarget(this, EntityHuman.class));
+        this.targetSelector.a(3, new EntitySpider.PathfinderGoalSpiderNearestAttackableTarget(this, EntityIronGolem.class));
     }
 
-    public void h() {
-        super.h();
-        if (!this.world.isStatic) {
+    public double ay() {
+        return (double) (this.length * 0.5F);
+    }
+
+    protected NavigationAbstract b(World world) {
+        return new NavigationSpider(this, world);
+    }
+
+    protected void i() {
+        super.i();
+        this.datawatcher.register(EntitySpider.a, Byte.valueOf((byte) 0));
+    }
+
+    public void m() {
+        super.m();
+        if (!this.world.isClientSide) {
             this.a(this.positionChanged);
         }
+
     }
 
-    protected void aD() {
-        super.aD();
+    protected void initAttributes() {
+        super.initAttributes();
         this.getAttributeInstance(GenericAttributes.maxHealth).setValue(16.0D);
-        this.getAttributeInstance(GenericAttributes.d).setValue(0.800000011920929D);
+        this.getAttributeInstance(GenericAttributes.MOVEMENT_SPEED).setValue(0.30000001192092896D);
     }
 
-    protected Entity findTarget() {
-        float f = this.d(1.0F);
-
-        if (f < 0.5F) {
-            double d0 = 16.0D;
-
-            return this.world.findNearbyVulnerablePlayer(this, d0);
-        } else {
-            return null;
-        }
+    protected SoundEffect G() {
+        return SoundEffects.fQ;
     }
 
-    protected String t() {
-        return "mob.spider.say";
+    protected SoundEffect bR() {
+        return SoundEffects.fS;
     }
 
-    protected String aT() {
-        return "mob.spider.say";
+    protected SoundEffect bS() {
+        return SoundEffects.fR;
     }
 
-    protected String aU() {
-        return "mob.spider.death";
+    protected void a(BlockPosition blockposition, Block block) {
+        this.a(SoundEffects.fT, 0.15F, 1.0F);
     }
 
-    protected void a(int i, int j, int k, Block block) {
-        this.makeSound("mob.spider.step", 0.15F, 1.0F);
+    protected MinecraftKey J() {
+        return LootTables.q;
     }
 
-    protected void a(Entity entity, float f) {
-        float f1 = this.d(1.0F);
-
-        if (f1 > 0.5F && this.random.nextInt(100) == 0) {
-            // CraftBukkit start
-            EntityTargetEvent event = new EntityTargetEvent(this.getBukkitEntity(), null, EntityTargetEvent.TargetReason.FORGOT_TARGET);
-            this.world.getServer().getPluginManager().callEvent(event);
-
-            if (!event.isCancelled()) {
-                if (event.getTarget() == null) {
-                    this.target = null;
-                } else {
-                    this.target = ((org.bukkit.craftbukkit.entity.CraftEntity) event.getTarget()).getHandle();
-                }
-                return;
-            }
-            // CraftBukkit end
-        } else {
-            if (f > 2.0F && f < 6.0F && this.random.nextInt(10) == 0) {
-                if (this.onGround) {
-                    double d0 = entity.locX - this.locX;
-                    double d1 = entity.locZ - this.locZ;
-                    float f2 = MathHelper.sqrt(d0 * d0 + d1 * d1);
-
-                    this.motX = d0 / (double) f2 * 0.5D * 0.800000011920929D + this.motX * 0.20000000298023224D;
-                    this.motZ = d1 / (double) f2 * 0.5D * 0.800000011920929D + this.motZ * 0.20000000298023224D;
-                    this.motY = 0.4000000059604645D;
-                }
-            } else {
-                super.a(entity, f);
-            }
-        }
+    public boolean n_() {
+        return this.o();
     }
 
-    protected Item getLoot() {
-        return Items.STRING;
-    }
-
-    protected void dropDeathLoot(boolean flag, int i) {
-        super.dropDeathLoot(flag, i);
-        if (flag && (this.random.nextInt(3) == 0 || this.random.nextInt(1 + i) > 0)) {
-            this.a(Items.SPIDER_EYE, 1);
-        }
-    }
-
-    public boolean h_() {
-        return this.bZ();
-    }
-
-    public void as() {}
+    public void aQ() {}
 
     public EnumMonsterType getMonsterType() {
         return EnumMonsterType.ARTHROPOD;
     }
 
     public boolean d(MobEffect mobeffect) {
-        return mobeffect.getEffectId() == MobEffectList.POISON.id ? false : super.d(mobeffect);
+        return mobeffect.getMobEffect() == MobEffects.POISON ? false : super.d(mobeffect);
     }
 
-    public boolean bZ() {
-        return (this.datawatcher.getByte(16) & 1) != 0;
+    public boolean o() {
+        return (((Byte) this.datawatcher.get(EntitySpider.a)).byteValue() & 1) != 0;
     }
 
     public void a(boolean flag) {
-        byte b0 = this.datawatcher.getByte(16);
+        byte b0 = ((Byte) this.datawatcher.get(EntitySpider.a)).byteValue();
 
         if (flag) {
             b0 = (byte) (b0 | 1);
@@ -127,36 +97,97 @@ public class EntitySpider extends EntityMonster {
             b0 &= -2;
         }
 
-        this.datawatcher.watch(16, Byte.valueOf(b0));
+        this.datawatcher.set(EntitySpider.a, Byte.valueOf(b0));
     }
 
-    public GroupDataEntity prepare(GroupDataEntity groupdataentity) {
-        Object object = super.prepare(groupdataentity);
+    public GroupDataEntity prepare(DifficultyDamageScaler difficultydamagescaler, GroupDataEntity groupdataentity) {
+        Object object = super.prepare(difficultydamagescaler, groupdataentity);
 
         if (this.world.random.nextInt(100) == 0) {
             EntitySkeleton entityskeleton = new EntitySkeleton(this.world);
 
             entityskeleton.setPositionRotation(this.locX, this.locY, this.locZ, this.yaw, 0.0F);
-            entityskeleton.prepare((GroupDataEntity) null);
+            entityskeleton.prepare(difficultydamagescaler, (GroupDataEntity) null);
             this.world.addEntity(entityskeleton, org.bukkit.event.entity.CreatureSpawnEvent.SpawnReason.JOCKEY); // CraftBukkit - add SpawnReason
-            entityskeleton.mount(this);
+            entityskeleton.startRiding(this);
         }
 
         if (object == null) {
-            object = new GroupDataSpider();
-            if (this.world.difficulty == EnumDifficulty.HARD && this.world.random.nextFloat() < 0.1F * this.world.b(this.locX, this.locY, this.locZ)) {
-                ((GroupDataSpider) object).a(this.world.random);
+            object = new EntitySpider.GroupDataSpider();
+            if (this.world.getDifficulty() == EnumDifficulty.HARD && this.world.random.nextFloat() < 0.1F * difficultydamagescaler.c()) {
+                ((EntitySpider.GroupDataSpider) object).a(this.world.random);
             }
         }
 
-        if (object instanceof GroupDataSpider) {
-            int i = ((GroupDataSpider) object).a;
+        if (object instanceof EntitySpider.GroupDataSpider) {
+            MobEffectList mobeffectlist = ((EntitySpider.GroupDataSpider) object).a;
 
-            if (i > 0 && MobEffectList.byId[i] != null) {
-                this.addEffect(new MobEffect(i, Integer.MAX_VALUE));
+            if (mobeffectlist != null) {
+                this.addEffect(new MobEffect(mobeffectlist, Integer.MAX_VALUE));
             }
         }
 
         return (GroupDataEntity) object;
+    }
+
+    public float getHeadHeight() {
+        return 0.65F;
+    }
+
+    static class PathfinderGoalSpiderNearestAttackableTarget<T extends EntityLiving> extends PathfinderGoalNearestAttackableTarget<T> {
+
+        public PathfinderGoalSpiderNearestAttackableTarget(EntitySpider entityspider, Class<T> oclass) {
+            super(entityspider, oclass, true);
+        }
+
+        public boolean a() {
+            float f = this.e.e(1.0F);
+
+            return f >= 0.5F ? false : super.a();
+        }
+    }
+
+    static class PathfinderGoalSpiderMeleeAttack extends PathfinderGoalMeleeAttack {
+
+        public PathfinderGoalSpiderMeleeAttack(EntitySpider entityspider) {
+            super(entityspider, 1.0D, true);
+        }
+
+        public boolean b() {
+            float f = this.b.e(1.0F);
+
+            if (f >= 0.5F && this.b.getRandom().nextInt(100) == 0) {
+                this.b.setGoalTarget((EntityLiving) null);
+                return false;
+            } else {
+                return super.b();
+            }
+        }
+
+        protected double a(EntityLiving entityliving) {
+            return (double) (4.0F + entityliving.width);
+        }
+    }
+
+    public static class GroupDataSpider implements GroupDataEntity {
+
+        public MobEffectList a;
+
+        public GroupDataSpider() {}
+
+        public void a(Random random) {
+            int i = random.nextInt(5);
+
+            if (i <= 1) {
+                this.a = MobEffects.FASTER_MOVEMENT;
+            } else if (i <= 2) {
+                this.a = MobEffects.INCREASE_DAMAGE;
+            } else if (i <= 3) {
+                this.a = MobEffects.REGENERATION;
+            } else if (i <= 4) {
+                this.a = MobEffects.INVISIBILITY;
+            }
+
+        }
     }
 }

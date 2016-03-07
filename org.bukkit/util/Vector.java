@@ -7,6 +7,7 @@ import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.configuration.serialization.ConfigurationSerializable;
 import org.bukkit.configuration.serialization.SerializableAs;
+import static org.bukkit.util.NumberConversions.checkFinite;
 
 /**
  * Represents a mutable vector. Because the components of Vectors are mutable,
@@ -300,6 +301,25 @@ public class Vector implements Cloneable, ConfigurationSerializable {
         y = newY;
         z = newZ;
         return this;
+    }
+
+    /**
+     * Calculates the cross product of this vector with another without mutating
+     * the original. The cross product is defined as:
+     * <ul>
+     * <li>x = y1 * z2 - y2 * z1
+     * <li>y = z1 * x2 - z2 * x1
+     * <li>z = x1 * y2 - x2 * y1
+     * </ul>
+     *
+     * @param o The other vector
+     * @return a new vector
+     */
+    public Vector getCrossProduct(Vector o) {
+        double x = this.y * o.z - o.y * this.z;
+        double y = this.z * o.x - o.z * this.x;
+        double z = this.x * o.y - o.x * this.y;
+        return new Vector(x, y, z);
     }
 
     /**

@@ -1,8 +1,9 @@
 package org.bukkit.craftbukkit.block;
 
+import com.mojang.authlib.GameProfile;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.TileEntitySkull;
-import net.minecraft.util.com.mojang.authlib.GameProfile;
+import org.bukkit.Material;
 
 import org.bukkit.SkullType;
 import org.bukkit.block.Block;
@@ -27,8 +28,17 @@ public class CraftSkull extends CraftBlockState implements Skull {
         rotation = (byte) skull.getRotation();
     }
 
+    public CraftSkull(final Material material, final TileEntitySkull te) {
+        super(material);
+        skull = te;
+        profile = skull.getGameProfile();
+        skullType = getSkullType(skull.getSkullType());
+        rotation = (byte) skull.getRotation();
+    }
+
     static SkullType getSkullType(int id) {
         switch (id) {
+            default:
             case 0:
                 return SkullType.SKELETON;
             case 1:
@@ -39,13 +49,14 @@ public class CraftSkull extends CraftBlockState implements Skull {
                 return SkullType.PLAYER;
             case 4:
                 return SkullType.CREEPER;
-            default:
-                throw new AssertionError(id);
+            case 5:
+                return SkullType.DRAGON;
         }
     }
 
     static int getSkullType(SkullType type) {
         switch(type) {
+            default:
             case SKELETON:
                 return 0;
             case WITHER:
@@ -56,8 +67,8 @@ public class CraftSkull extends CraftBlockState implements Skull {
                 return 3;
             case CREEPER:
                 return 4;
-            default:
-                throw new AssertionError(type);
+            case DRAGON:
+                return 5;
         }
     }
 
@@ -201,5 +212,10 @@ public class CraftSkull extends CraftBlockState implements Skull {
         }
 
         return result;
+    }
+
+    @Override
+    public TileEntitySkull getTileEntity() {
+        return skull;
     }
 }

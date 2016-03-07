@@ -1,8 +1,31 @@
 package net.minecraft.server;
 
-import java.awt.GraphicsEnvironment;
+import com.google.common.base.Charsets;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Queues;
+import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.ListenableFutureTask;
+import com.mojang.authlib.GameProfile;
+import com.mojang.authlib.GameProfileRepository;
+import com.mojang.authlib.minecraft.MinecraftSessionService;
+import com.mojang.authlib.yggdrasil.YggdrasilAuthenticationService;
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.ByteBufOutputStream;
+import io.netty.buffer.Unpooled;
+import io.netty.handler.codec.base64.Base64;
+import jline.console.ConsoleReader;
+import joptsimple.OptionSet;
+import org.apache.commons.lang3.Validate;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.bukkit.craftbukkit.Main;
+
+import javax.imageio.ImageIO;
+import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
+import java.io.IOException;
 import java.net.Proxy;
 import java.security.KeyPair;
 import java.text.SimpleDateFormat;
@@ -10,91 +33,76 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
-import java.util.Iterator;
 import java.util.List;
+import java.util.Queue;
 import java.util.Random;
 import java.util.UUID;
 import java.util.concurrent.Callable;
-import javax.imageio.ImageIO;
-
-import net.minecraft.util.com.google.common.base.Charsets;
-import net.minecraft.util.com.mojang.authlib.GameProfile;
-import net.minecraft.util.com.mojang.authlib.GameProfileRepository;
-import net.minecraft.util.com.mojang.authlib.minecraft.MinecraftSessionService;
-import net.minecraft.util.com.mojang.authlib.yggdrasil.YggdrasilAuthenticationService;
-import net.minecraft.util.io.netty.buffer.ByteBuf;
-import net.minecraft.util.io.netty.buffer.ByteBufOutputStream;
-import net.minecraft.util.io.netty.buffer.Unpooled;
-import net.minecraft.util.io.netty.handler.codec.base64.Base64;
-import net.minecraft.util.org.apache.commons.lang3.Validate;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import java.util.concurrent.Executors;
+import java.util.concurrent.FutureTask;
+import org.bukkit.Bukkit;
+import org.bukkit.craftbukkit.CraftServer;
 
 // CraftBukkit start
-import java.io.IOException;
-
-import jline.console.ConsoleReader;
-import joptsimple.OptionSet;
-
-import org.bukkit.World.Environment;
-import org.bukkit.craftbukkit.util.Waitable;
-import org.bukkit.event.server.RemoteServerCommandEvent;
-import org.bukkit.event.world.WorldSaveEvent;
 // CraftBukkit end
+import org.bukkit.craftbukkit.SpigotTimings; // Spigot
 
-public abstract class MinecraftServer implements ICommandListener, Runnable, IMojangStatistics {
+public abstract class MinecraftServer implements Runnable, ICommandListener, IAsyncTaskHandler, IMojangStatistics {
 
-    private static final Logger i = LogManager.getLogger();
-    private static final File a = new File("usercache.json");
-    private static MinecraftServer j;
-    public Convertable convertable; // CraftBukkit - private final -> public
-    private final MojangStatisticsGenerator l = new MojangStatisticsGenerator("server", this, ar());
-    public File universe; // CraftBukkit - private final -> public
-    private final List n = new ArrayList();
-    private final ICommandHandler o;
+    public static final Logger LOGGER = LogManager.getLogger();
+    public static final File a = new File("usercache.json");
+    public Convertable convertable;
+    private final MojangStatisticsGenerator m = new MojangStatisticsGenerator("server", this, av());
+    public File universe;
+    private final List<ITickable> o = Lists.newArrayList();
+    protected final ICommandHandler b;
     public final MethodProfiler methodProfiler = new MethodProfiler();
-    private final ServerConnection p;
+    private ServerConnection p; // Spigot
     private final ServerPing q = new ServerPing();
     private final Random r = new Random();
+    private final DataConverterManager dataConverterManager;
     private String serverIp;
-    private int t = -1;
+    private int u = -1;
     public WorldServer[] worldServer;
-    private PlayerList u;
+    private PlayerList v;
     private boolean isRunning = true;
     private boolean isStopped;
     private int ticks;
-    protected final Proxy d;
-    public String e;
-    public int f;
+    protected final Proxy e;
+    public String f;
+    public int g;
     private boolean onlineMode;
     private boolean spawnAnimals;
     private boolean spawnNPCs;
     private boolean pvpMode;
     private boolean allowFlight;
     private String motd;
-    private int E;
-    private int F = 0;
-    public final long[] g = new long[100];
-    public long[][] h;
-    private KeyPair G;
-    private String H;
+    private int F;
+    private int G = 0;
+    public final long[] h = new long[100];
+    public long[][] i;
+    private KeyPair H;
     private String I;
+    private String J;
     private boolean demoMode;
-    private boolean L;
     private boolean M;
     private String N = "";
-    private boolean O;
-    private long P;
-    private String Q;
-    private boolean R;
+    private String O = "";
+    private boolean P;
+    private long Q;
+    private String R;
     private boolean S;
-    private final YggdrasilAuthenticationService T;
-    private final MinecraftSessionService U;
-    private long V = 0L;
+    private boolean T;
+    private final YggdrasilAuthenticationService U;
+    private final MinecraftSessionService V;
     private final GameProfileRepository W;
     private final UserCache X;
+    private long Y = 0L;
+    protected final Queue<FutureTask<?>> j = new java.util.concurrent.ConcurrentLinkedQueue<FutureTask<?>>(); // Spigot, PAIL: Rename
+    private Thread serverThread;
+    private long aa = av();
 
-    // CraftBukkit start - add fields
+    // CraftBukkit start
     public List<WorldServer> worlds = new ArrayList<WorldServer>();
     public org.bukkit.craftbukkit.CraftServer server;
     public OptionSet options;
@@ -106,92 +114,126 @@ public abstract class MinecraftServer implements ICommandListener, Runnable, IMo
     public java.util.Queue<Runnable> processQueue = new java.util.concurrent.ConcurrentLinkedQueue<Runnable>();
     public int autosavePeriod;
     // CraftBukkit end
+    // Spigot start
+    private static final int TPS = 20;
+    private static final int TICK_TIME = 1000000000 / TPS;
+    private static final int SAMPLE_INTERVAL = 100;
+    public final double[] recentTps = new double[ 3 ];
+    // Spigot end
 
-    public MinecraftServer(OptionSet options, Proxy proxy) { // CraftBukkit - signature file -> OptionSet
-        this.X = new UserCache(this, a);
-        j = this;
-        this.d = proxy;
-        // this.universe = file1; // CraftBukkit
-        this.p = new ServerConnection(this);
-        this.o = new CommandDispatcher();
-        // this.convertable = new WorldLoaderServer(file1); // CraftBukkit - moved to DedicatedServer.init
-        this.T = new YggdrasilAuthenticationService(proxy, UUID.randomUUID().toString());
-        this.U = this.T.createMinecraftSessionService();
-        this.W = this.T.createProfileRepository();
+    public MinecraftServer(OptionSet options, Proxy proxy, DataConverterManager dataconvertermanager, YggdrasilAuthenticationService yggdrasilauthenticationservice, MinecraftSessionService minecraftsessionservice, GameProfileRepository gameprofilerepository, UserCache usercache) {
+        io.netty.util.ResourceLeakDetector.setEnabled( false ); // Spigot - disable
+        this.e = proxy;
+        this.U = yggdrasilauthenticationservice;
+        this.V = minecraftsessionservice;
+        this.W = gameprofilerepository;
+        this.X = usercache;
+        // this.universe = file; // CraftBukkit
+        // this.p = new ServerConnection(this); // Spigot
+        this.b = this.i();
+        // this.convertable = new WorldLoaderServer(file); // CraftBukkit - moved to DedicatedServer.init
+        this.dataConverterManager = dataconvertermanager;
         // CraftBukkit start
         this.options = options;
         // Try to see if we're actually running in a terminal, disable jline if not
-        if (System.console() == null) {
+        if (System.console() == null && System.getProperty("jline.terminal") == null) {
             System.setProperty("jline.terminal", "jline.UnsupportedTerminal");
-            org.bukkit.craftbukkit.Main.useJline = false;
+            Main.useJline = false;
         }
 
         try {
-            this.reader = new ConsoleReader(System.in, System.out);
-            this.reader.setExpandEvents(false); // Avoid parsing exceptions for uncommonly used event designators
+            reader = new ConsoleReader(System.in, System.out);
+            reader.setExpandEvents(false); // Avoid parsing exceptions for uncommonly used event designators
         } catch (Throwable e) {
             try {
                 // Try again with jline disabled for Windows users without C++ 2008 Redistributable
                 System.setProperty("jline.terminal", "jline.UnsupportedTerminal");
                 System.setProperty("user.language", "en");
-                org.bukkit.craftbukkit.Main.useJline = false;
-                this.reader = new ConsoleReader(System.in, System.out);
-                this.reader.setExpandEvents(false);
+                Main.useJline = false;
+                reader = new ConsoleReader(System.in, System.out);
+                reader.setExpandEvents(false);
             } catch (IOException ex) {
-                i.warn((String) null, ex);
+                LOGGER.warn((String) null, ex);
             }
         }
         Runtime.getRuntime().addShutdownHook(new org.bukkit.craftbukkit.util.ServerShutdownThread(this));
 
-        primaryThread = new ThreadServerApplication(this, "Server thread"); // Moved from main
+        this.serverThread = primaryThread = new Thread(this, "Server thread"); // Moved from main
     }
 
     public abstract PropertyManager getPropertyManager();
     // CraftBukkit end
 
-    protected abstract boolean init() throws java.net.UnknownHostException; // CraftBukkit - throws UnknownHostException
+    protected CommandDispatcher i() {
+        return new CommandDispatcher(this);
+    }
+
+    protected abstract boolean init() throws IOException;
 
     protected void a(String s) {
         if (this.getConvertable().isConvertable(s)) {
-            i.info("Converting map!");
+            MinecraftServer.LOGGER.info("Converting map!");
             this.b("menu.convertingLevel");
-            this.getConvertable().convert(s, new ConvertProgressUpdater(this));
+            this.getConvertable().convert(s, new IProgressUpdate() {
+                private long b = System.currentTimeMillis();
+
+                public void a(String s) {}
+
+                public void a(int i) {
+                    if (System.currentTimeMillis() - this.b >= 1000L) {
+                        this.b = System.currentTimeMillis();
+                        MinecraftServer.LOGGER.info("Converting... " + i + "%");
+                    }
+
+                }
+
+                public void c(String s) {}
+            });
         }
+
     }
 
     protected synchronized void b(String s) {
-        this.Q = s;
+        this.R = s;
     }
 
     protected void a(String s, String s1, long i, WorldType worldtype, String s2) {
         this.a(s);
         this.b("menu.loadingLevel");
         this.worldServer = new WorldServer[3];
-        // this.h = new long[this.worldServer.length][100]; // CraftBukkit - Removed ticktime arrays
-        // IDataManager idatamanager = this.convertable.a(s, true);
-        // WorldData worlddata = idatamanager.getWorldData();
-        /* CraftBukkit start - Removed worldsettings
+        /* CraftBukkit start - Remove ticktime arrays and worldsettings
+        this.i = new long[this.worldServer.length][100];
+        IDataManager idatamanager = this.convertable.a(s, true);
+
+        this.a(this.S(), idatamanager);
+        WorldData worlddata = idatamanager.getWorldData();
         WorldSettings worldsettings;
 
         if (worlddata == null) {
-            worldsettings = new WorldSettings(i, this.getGamemode(), this.getGenerateStructures(), this.isHardcore(), worldtype);
-            worldsettings.a(s2);
+            if (this.V()) {
+                worldsettings = DemoWorldServer.a;
+            } else {
+                worldsettings = new WorldSettings(i, this.getGamemode(), this.getGenerateStructures(), this.isHardcore(), worldtype);
+                worldsettings.setGeneratorSettings(s2);
+                if (this.M) {
+                    worldsettings.a();
+                }
+            }
+
+            worlddata = new WorldData(worldsettings, s1);
         } else {
+            worlddata.a(s1);
             worldsettings = new WorldSettings(worlddata);
         }
-
-        if (this.L) {
-            worldsettings.a();
-        }
-        // */
+        */
         int worldCount = 3;
 
         for (int j = 0; j < worldCount; ++j) {
             WorldServer world;
-            int dimension = 0;
+            byte dimension = 0;
 
             if (j == 1) {
-                if (this.getAllowNether()) {
+                if (getAllowNether()) {
                     dimension = -1;
                 } else {
                     continue;
@@ -199,28 +241,34 @@ public abstract class MinecraftServer implements ICommandListener, Runnable, IMo
             }
 
             if (j == 2) {
-                if (this.server.getAllowEnd()) {
+                if (server.getAllowEnd()) {
                     dimension = 1;
                 } else {
                     continue;
                 }
             }
 
-            String worldType = Environment.getEnvironment(dimension).toString().toLowerCase();
+            String worldType = org.bukkit.World.Environment.getEnvironment(dimension).toString().toLowerCase();
             String name = (dimension == 0) ? s : s + "_" + worldType;
 
             org.bukkit.generator.ChunkGenerator gen = this.server.getGenerator(name);
             WorldSettings worldsettings = new WorldSettings(i, this.getGamemode(), this.getGenerateStructures(), this.isHardcore(), worldtype);
-            worldsettings.a(s2);
+            worldsettings.setGeneratorSettings(s2);
 
             if (j == 0) {
-                IDataManager idatamanager = new ServerNBTManager(server.getWorldContainer(), s1, true);
-                if (this.R()) {
-                    world = new DemoWorldServer(this, idatamanager, s1, dimension, this.methodProfiler);
-                } else {
-                    // world =, b0 to dimension, added Environment and gen
-                    world = new WorldServer(this, idatamanager, s1, dimension, worldsettings, this.methodProfiler, Environment.getEnvironment(dimension), gen);
+                IDataManager idatamanager = new ServerNBTManager(server.getWorldContainer(), s1, true, this.dataConverterManager);
+                WorldData worlddata = idatamanager.getWorldData();
+                if (worlddata == null) {
+                    worlddata = new WorldData(worldsettings, s1);
                 }
+                worlddata.checkName(s1); // CraftBukkit - Migration did not rewrite the level.dat; This forces 1.8 to take the last loaded world as respawn (in this case the end)
+                if (this.V()) {
+                    world = (WorldServer) (new DemoWorldServer(this, idatamanager, worlddata, dimension, this.methodProfiler)).b();
+                } else {
+                    world = (WorldServer) (new WorldServer(this, idatamanager, worlddata, dimension, this.methodProfiler, org.bukkit.World.Environment.getEnvironment(dimension), gen)).b();
+                }
+
+                world.a(worldsettings);
                 this.server.scoreboardManager = new org.bukkit.craftbukkit.scoreboard.CraftScoreboardManager(this, world.getScoreboard());
             } else {
                 String dim = "DIM" + dimension;
@@ -229,60 +277,61 @@ public abstract class MinecraftServer implements ICommandListener, Runnable, IMo
                 File oldWorld = new File(new File(s), dim);
 
                 if ((!newWorld.isDirectory()) && (oldWorld.isDirectory())) {
-                    MinecraftServer.i.info("---- Migration of old " + worldType + " folder required ----");
-                    MinecraftServer.i.info("Unfortunately due to the way that Minecraft implemented multiworld support in 1.6, Bukkit requires that you move your " + worldType + " folder to a new location in order to operate correctly.");
-                    MinecraftServer.i.info("We will move this folder for you, but it will mean that you need to move it back should you wish to stop using Bukkit in the future.");
-                    MinecraftServer.i.info("Attempting to move " + oldWorld + " to " + newWorld + "...");
+                    MinecraftServer.LOGGER.info("---- Migration of old " + worldType + " folder required ----");
+                    MinecraftServer.LOGGER.info("Unfortunately due to the way that Minecraft implemented multiworld support in 1.6, Bukkit requires that you move your " + worldType + " folder to a new location in order to operate correctly.");
+                    MinecraftServer.LOGGER.info("We will move this folder for you, but it will mean that you need to move it back should you wish to stop using Bukkit in the future.");
+                    MinecraftServer.LOGGER.info("Attempting to move " + oldWorld + " to " + newWorld + "...");
 
                     if (newWorld.exists()) {
-                        MinecraftServer.i.warn("A file or folder already exists at " + newWorld + "!");
-                        MinecraftServer.i.info("---- Migration of old " + worldType + " folder failed ----");
+                        MinecraftServer.LOGGER.warn("A file or folder already exists at " + newWorld + "!");
+                        MinecraftServer.LOGGER.info("---- Migration of old " + worldType + " folder failed ----");
                     } else if (newWorld.getParentFile().mkdirs()) {
                         if (oldWorld.renameTo(newWorld)) {
-                            MinecraftServer.i.info("Success! To restore " + worldType + " in the future, simply move " + newWorld + " to " + oldWorld);
+                            MinecraftServer.LOGGER.info("Success! To restore " + worldType + " in the future, simply move " + newWorld + " to " + oldWorld);
                             // Migrate world data too.
                             try {
                                 com.google.common.io.Files.copy(new File(new File(s), "level.dat"), new File(new File(name), "level.dat"));
                             } catch (IOException exception) {
-                                MinecraftServer.i.warn("Unable to migrate world data.");
+                                MinecraftServer.LOGGER.warn("Unable to migrate world data.");
                             }
-                            MinecraftServer.i.info("---- Migration of old " + worldType + " folder complete ----");
+                            MinecraftServer.LOGGER.info("---- Migration of old " + worldType + " folder complete ----");
                         } else {
-                            MinecraftServer.i.warn("Could not move folder " + oldWorld + " to " + newWorld + "!");
-                            MinecraftServer.i.info("---- Migration of old " + worldType + " folder failed ----");
+                            MinecraftServer.LOGGER.warn("Could not move folder " + oldWorld + " to " + newWorld + "!");
+                            MinecraftServer.LOGGER.info("---- Migration of old " + worldType + " folder failed ----");
                         }
                     } else {
-                        MinecraftServer.i.warn("Could not create path for " + newWorld + "!");
-                        MinecraftServer.i.info("---- Migration of old " + worldType + " folder failed ----");
+                        MinecraftServer.LOGGER.warn("Could not create path for " + newWorld + "!");
+                        MinecraftServer.LOGGER.info("---- Migration of old " + worldType + " folder failed ----");
                     }
                 }
 
-                IDataManager idatamanager = new ServerNBTManager(server.getWorldContainer(), name, true);
+                IDataManager idatamanager = new ServerNBTManager(server.getWorldContainer(), name, true, this.dataConverterManager);
                 // world =, b0 to dimension, s1 to name, added Environment and gen
-                world = new SecondaryWorldServer(this, idatamanager, name, dimension, worldsettings, this.worlds.get(0), this.methodProfiler, Environment.getEnvironment(dimension), gen);
-            }
-
-            if (gen != null) {
-                world.getWorld().getPopulators().addAll(gen.getDefaultPopulators(world.getWorld()));
+                WorldData worlddata = idatamanager.getWorldData();
+                if (worlddata == null) {
+                    worlddata = new WorldData(worldsettings, name);
+                }
+                worlddata.checkName(name); // CraftBukkit - Migration did not rewrite the level.dat; This forces 1.8 to take the last loaded world as respawn (in this case the end)
+                world = (WorldServer) new SecondaryWorldServer(this, idatamanager, dimension, this.worlds.get(0), this.methodProfiler, worlddata, org.bukkit.World.Environment.getEnvironment(dimension), gen).b();
             }
 
             this.server.getPluginManager().callEvent(new org.bukkit.event.world.WorldInitEvent(world.getWorld()));
 
             world.addIWorldAccess(new WorldManager(this, world));
-            if (!this.N()) {
+            if (!this.R()) {
                 world.getWorldData().setGameType(this.getGamemode());
             }
 
-            this.worlds.add(world);
-            this.u.setPlayerFileData(this.worlds.toArray(new WorldServer[this.worlds.size()]));
-            // CraftBukkit end
+            worlds.add(world);
+            getPlayerList().setPlayerFileData(worlds.toArray(new WorldServer[worlds.size()]));
         }
-
+        // CraftBukkit end
+        this.v.setPlayerFileData(this.worldServer);
         this.a(this.getDifficulty());
-        this.g();
+        this.l();
     }
 
-    protected void g() {
+    protected void l() {
         boolean flag = true;
         boolean flag1 = true;
         boolean flag2 = true;
@@ -293,20 +342,21 @@ public abstract class MinecraftServer implements ICommandListener, Runnable, IMo
         byte b0 = 0;
 
         // CraftBukkit start - fire WorldLoadEvent and handle whether or not to keep the spawn in memory
-        for (int m = 0; m < this.worlds.size(); ++m) {
+        for (int m = 0; m < worlds.size(); m++) {
             WorldServer worldserver = this.worlds.get(m);
-            MinecraftServer.i.info("Preparing start region for level " + m + " (Seed: " + worldserver.getSeed() + ")");
+            MinecraftServer.LOGGER.info("Preparing start region for level " + m + " (Seed: " + worldserver.getSeed() + ")");
+
             if (!worldserver.getWorld().getKeepSpawnInMemory()) {
                 continue;
             }
 
-            ChunkCoordinates chunkcoordinates = worldserver.getSpawn();
-            long j = ar();
+            BlockPosition blockposition = worldserver.getSpawn();
+            long j = av();
             i = 0;
 
             for (int k = -192; k <= 192 && this.isRunning(); k += 16) {
                 for (int l = -192; l <= 192 && this.isRunning(); l += 16) {
-                    long i1 = ar();
+                    long i1 = av();
 
                     if (i1 - j > 1000L) {
                         this.a_("Preparing spawn area", i * 100 / 625);
@@ -314,7 +364,7 @@ public abstract class MinecraftServer implements ICommandListener, Runnable, IMo
                     }
 
                     ++i;
-                    worldserver.chunkProviderServer.getChunkAt(chunkcoordinates.x + k >> 4, chunkcoordinates.z + l >> 4);
+                    worldserver.getChunkProviderServer().getChunkAt(blockposition.getX() + k >> 4, blockposition.getZ() + l >> 4);
                 }
             }
         }
@@ -323,96 +373,130 @@ public abstract class MinecraftServer implements ICommandListener, Runnable, IMo
             this.server.getPluginManager().callEvent(new org.bukkit.event.world.WorldLoadEvent(world.getWorld()));
         }
         // CraftBukkit end
-        this.n();
+        this.t();
+    }
+
+    protected void a(String s, IDataManager idatamanager) {
+        File file = new File(idatamanager.getDirectory(), "resources.zip");
+
+        if (file.isFile()) {
+            this.setResourcePack("level://" + s + "/" + "resources.zip", "");
+        }
+
     }
 
     public abstract boolean getGenerateStructures();
 
-    public abstract EnumGamemode getGamemode();
+    public abstract WorldSettings.EnumGamemode getGamemode();
 
     public abstract EnumDifficulty getDifficulty();
 
     public abstract boolean isHardcore();
 
-    public abstract int l();
+    public abstract int q();
 
-    public abstract boolean m();
+    public abstract boolean r();
+
+    public abstract boolean s();
 
     protected void a_(String s, int i) {
-        this.e = s;
-        this.f = i;
-        // CraftBukkit - Use FQN to work around decompiler issue
-        MinecraftServer.i.info(s + ": " + i + "%");
+        this.f = s;
+        this.g = i;
+        MinecraftServer.LOGGER.info(s + ": " + i + "%");
     }
 
-    protected void n() {
-        this.e = null;
-        this.f = 0;
-
+    protected void t() {
+        this.f = null;
+        this.g = 0;
         this.server.enablePlugins(org.bukkit.plugin.PluginLoadOrder.POSTWORLD); // CraftBukkit
     }
 
-    protected void saveChunks(boolean flag) throws ExceptionWorldConflict { // CraftBukkit - added throws
-        if (!this.M) {
-            // CraftBukkit start - fire WorldSaveEvent
-            // WorldServer[] aworldserver = this.worldServer;
-            int i = this.worlds.size();
+    protected void saveChunks(boolean flag) {
+        WorldServer[] aworldserver = this.worldServer;
+        int i = aworldserver.length;
 
-            for (int j = 0; j < i; ++j) {
-                WorldServer worldserver = this.worlds.get(j);
-
-                if (worldserver != null) {
-                    if (!flag) {
-                        MinecraftServer.i.info("Saving chunks for level \'" + worldserver.getWorldData().getName() + "\'/" + worldserver.worldProvider.getName());
-                    }
-
-                    worldserver.save(true, (IProgressUpdate) null);
-                    worldserver.saveLevel();
-
-                    WorldSaveEvent event = new WorldSaveEvent(worldserver.getWorld());
-                    this.server.getPluginManager().callEvent(event);
-                    // CraftBukkit end
-                }
-            }
-        }
-    }
-
-    public void stop() throws ExceptionWorldConflict { // CraftBukkit - added throws
-        if (!this.M) {
-            i.info("Stopping server");
-            // CraftBukkit start
-            if (this.server != null) {
-                this.server.disablePlugins();
-            }
+        // CraftBukkit start
+        for (int j = 0; j < worlds.size(); ++j) {
+            WorldServer worldserver = worlds.get(j);
             // CraftBukkit end
 
-            if (this.ai() != null) {
-                this.ai().b();
-            }
-
-            if (this.u != null) {
-                i.info("Saving players");
-                this.u.savePlayers();
-                this.u.u();
-            }
-
-            if (this.worldServer != null) {
-                i.info("Saving worlds");
-                this.saveChunks(false);
-            
-                /* CraftBukkit start - Handled in saveChunks
-                for (int i = 0; i < this.worldServer.length; ++i) {
-                    WorldServer worldserver = this.worldServer[i];
-
-                    worldserver.saveLevel();
+            if (worldserver != null) {
+                if (!flag) {
+                    MinecraftServer.LOGGER.info("Saving chunks for level \'" + worldserver.getWorldData().getName() + "\'/" + worldserver.worldProvider.getDimensionManager().b());
                 }
-                // CraftBukkit end */
-            }
 
-            if (this.l.d()) {
-                this.l.e();
+                try {
+                    worldserver.save(true, (IProgressUpdate) null);
+                    worldserver.saveLevel(); // CraftBukkit
+                } catch (ExceptionWorldConflict exceptionworldconflict) {
+                    MinecraftServer.LOGGER.warn(exceptionworldconflict.getMessage());
+                }
             }
         }
+
+    }
+
+    // CraftBukkit start
+    private boolean hasStopped = false;
+    private final Object stopLock = new Object();
+    // CraftBukkit end
+
+    public void stop() throws ExceptionWorldConflict { // CraftBukkit - added throws
+        // CraftBukkit start - prevent double stopping on multiple threads
+        synchronized(stopLock) {
+            if (hasStopped) return;
+            hasStopped = true;
+        }
+        // CraftBukkit end
+        MinecraftServer.LOGGER.info("Stopping server");
+        // CraftBukkit start
+        if (this.server != null) {
+            this.server.disablePlugins();
+        }
+        // CraftBukkit end
+        if (this.am() != null) {
+            this.am().b();
+        }
+
+        if (this.v != null) {
+            MinecraftServer.LOGGER.info("Saving players");
+            this.v.savePlayers();
+            this.v.u();
+            try { Thread.sleep(100); } catch (InterruptedException ex) {} // CraftBukkit - SPIGOT-625 - give server at least a chance to send packets
+        }
+
+        if (this.worldServer != null) {
+            MinecraftServer.LOGGER.info("Saving worlds");
+
+            int i;
+
+            for (i = 0; i < this.worldServer.length; ++i) {
+                if (this.worldServer[i] != null) {
+                    this.worldServer[i].savingDisabled = false;
+                }
+            }
+
+            this.saveChunks(false);
+
+            /* CraftBukkit start - Handled in saveChunks
+            for (i = 0; i < this.worldServer.length; ++i) {
+                if (this.worldServer[i] != null) {
+                    this.worldServer[i].saveLevel();
+                }
+            }
+            // CraftBukkit end */
+        }
+
+        if (this.m.d()) {
+            this.m.e();
+        }
+
+        // Spigot start
+        if (org.spigotmc.SpigotConfig.saveUserCacheOnStopOnly) {
+            LOGGER.info("Saving usercache.json");
+            this.X.c();
+        }
+        // Spigot end
     }
 
     public String getServerIp() {
@@ -431,53 +515,62 @@ public abstract class MinecraftServer implements ICommandListener, Runnable, IMo
         this.isRunning = false;
     }
 
+    // Spigot Start
+    private static double calcTps(double avg, double exp, double tps)
+    {
+        return ( avg * exp ) + ( tps * ( 1 - exp ) );
+    }
+    // Spigot End
+ 
     public void run() {
         try {
             if (this.init()) {
-                long i = ar();
-                long j = 0L;
+                this.aa = av();
+                long i = 0L;
 
                 this.q.setMOTD(new ChatComponentText(this.motd));
-                this.q.setServerInfo(new ServerPingServerData("1.7.10", 5));
+                this.q.setServerInfo(new ServerPing.ServerData("1.9", 107));
                 this.a(this.q);
 
+                // Spigot start
+                Arrays.fill( recentTps, 20 );
+                long lastTick = System.nanoTime(), catchupTime = 0, curTime, wait, tickSection = lastTick;
                 while (this.isRunning) {
-                    long k = ar();
-                    long l = k - i;
-
-                    if (l > 2000L && i - this.P >= 15000L) {
-                        if (this.server.getWarnOnOverload()) // CraftBukkit - Added option to suppress warning messages
-                        MinecraftServer.i.warn("Can\'t keep up! Did the system time change, or is the server overloaded? Running {}ms behind, skipping {} tick(s)", new Object[] { Long.valueOf(l), Long.valueOf(l / 50L)});
-                        l = 2000L;
-                        this.P = i;
-                    }
-
-                    if (l < 0L) {
-                        MinecraftServer.i.warn("Time ran backwards! Did the system time change?");
-                        l = 0L;
-                    }
-
-                    j += l;
-                    i = k;
-                    if (this.worlds.get(0).everyoneDeeplySleeping()) { // CraftBukkit
-                        this.u();
-                        j = 0L;
+                    curTime = System.nanoTime();
+                    wait = TICK_TIME - (curTime - lastTick) - catchupTime;
+                    if (wait > 0) {
+                        Thread.sleep(wait / 1000000);
+                        catchupTime = 0;
+                        continue;
                     } else {
-                        while (j > 50L) {
-                            MinecraftServer.currentTick = (int) (System.currentTimeMillis() / 50); // CraftBukkit
-                            j -= 50L;
-                            this.u();
-                        }
+                        catchupTime = Math.min(1000000000, Math.abs(wait));
                     }
 
-                    Thread.sleep(Math.max(1L,  50L - j));
-                    this.O = true;
+                    if ( MinecraftServer.currentTick++ % SAMPLE_INTERVAL == 0 )
+                    {
+                        double currentTps = 1E9 / ( curTime - tickSection ) * SAMPLE_INTERVAL;
+                        recentTps[0] = calcTps( recentTps[0], 0.92, currentTps ); // 1/exp(5sec/1min)
+                        recentTps[1] = calcTps( recentTps[1], 0.9835, currentTps ); // 1/exp(5sec/5min)
+                        recentTps[2] = calcTps( recentTps[2], 0.9945, currentTps ); // 1/exp(5sec/15min)
+                        tickSection = curTime;
+                    }
+                    lastTick = curTime;
+
+                    this.C();
+                    this.P = true;
                 }
+                // Spigot end
             } else {
                 this.a((CrashReport) null);
             }
         } catch (Throwable throwable) {
-            i.error("Encountered an unexpected exception", throwable);
+            MinecraftServer.LOGGER.error("Encountered an unexpected exception", throwable);
+            // Spigot Start
+            if ( throwable.getCause() != null )
+            {
+                MinecraftServer.LOGGER.error( "\tCause of unexpected exception was", throwable.getCause() );
+            }
+            // Spigot End
             CrashReport crashreport = null;
 
             if (throwable instanceof ReportedException) {
@@ -486,41 +579,48 @@ public abstract class MinecraftServer implements ICommandListener, Runnable, IMo
                 crashreport = this.b(new CrashReport("Exception in server tick loop", throwable));
             }
 
-            File file1 = new File(new File(this.s(), "crash-reports"), "crash-" + (new SimpleDateFormat("yyyy-MM-dd_HH.mm.ss")).format(new Date()) + "-server.txt");
+            File file = new File(new File(this.A(), "crash-reports"), "crash-" + (new SimpleDateFormat("yyyy-MM-dd_HH.mm.ss")).format(new Date()) + "-server.txt");
 
-            if (crashreport.a(file1)) {
-                i.error("This crash report has been saved to: " + file1.getAbsolutePath());
+            if (crashreport.a(file)) {
+                MinecraftServer.LOGGER.error("This crash report has been saved to: " + file.getAbsolutePath());
             } else {
-                i.error("We were unable to save this crash report to disk.");
+                MinecraftServer.LOGGER.error("We were unable to save this crash report to disk.");
             }
 
             this.a(crashreport);
         } finally {
             try {
-                this.stop();
+                org.spigotmc.WatchdogThread.doStop();
                 this.isStopped = true;
+                this.stop();
             } catch (Throwable throwable1) {
-                i.error("Exception stopping the server", throwable1);
+                MinecraftServer.LOGGER.error("Exception stopping the server", throwable1);
             } finally {
                 // CraftBukkit start - Restore terminal to original settings
                 try {
-                    this.reader.getTerminal().restore();
-                } catch (Exception e) {
+                    reader.getTerminal().restore();
+                } catch (Exception ignored) {
                 }
                 // CraftBukkit end
-                this.t();
+                this.B();
             }
+
         }
+
     }
 
-    private void a(ServerPing serverping) {
-        File file1 = this.d("server-icon.png");
+    public void a(ServerPing serverping) {
+        File file = this.d("server-icon.png");
 
-        if (file1.isFile()) {
+        if (!file.exists()) {
+            file = this.getConvertable().b(this.S(), "icon.png");
+        }
+
+        if (file.isFile()) {
             ByteBuf bytebuf = Unpooled.buffer();
 
             try {
-                BufferedImage bufferedimage = ImageIO.read(file1);
+                BufferedImage bufferedimage = ImageIO.read(file);
 
                 Validate.validState(bufferedimage.getWidth() == 64, "Must be 64 pixels wide", new Object[0]);
                 Validate.validState(bufferedimage.getHeight() == 64, "Must be 64 pixels high", new Object[0]);
@@ -529,83 +629,118 @@ public abstract class MinecraftServer implements ICommandListener, Runnable, IMo
 
                 serverping.setFavicon("data:image/png;base64," + bytebuf1.toString(Charsets.UTF_8));
             } catch (Exception exception) {
-                i.error("Couldn\'t load server icon", exception);
+                MinecraftServer.LOGGER.error("Couldn\'t load server icon", exception);
             } finally {
                 bytebuf.release();
             }
         }
+
     }
 
-    protected File s() {
+    public File A() {
         return new File(".");
     }
 
     protected void a(CrashReport crashreport) {}
 
-    protected void t() {}
+    protected void B() {}
 
-    protected void u() throws ExceptionWorldConflict { // CraftBukkit - added throws
+    protected void C() throws ExceptionWorldConflict { // CraftBukkit - added throws
+        SpigotTimings.serverTickTimer.startTiming(); // Spigot
         long i = System.nanoTime();
 
         ++this.ticks;
-        if (this.R) {
-            this.R = false;
+        if (this.S) {
+            this.S = false;
             this.methodProfiler.a = true;
             this.methodProfiler.a();
         }
 
         this.methodProfiler.a("root");
-        this.v();
-        if (i - this.V >= 5000000000L) {
-            this.V = i;
-            this.q.setPlayerSample(new ServerPingPlayerSample(this.D(), this.C()));
-            GameProfile[] agameprofile = new GameProfile[Math.min(this.C(), 12)];
-            int j = MathHelper.nextInt(this.r, 0, this.C() - agameprofile.length);
+        this.D();
+        if (i - this.Y >= 5000000000L) {
+            this.Y = i;
+            this.q.setPlayerSample(new ServerPing.ServerPingPlayerSample(this.I(), this.H()));
+            GameProfile[] agameprofile = new GameProfile[Math.min(this.H(), 12)];
+            int j = MathHelper.nextInt(this.r, 0, this.H() - agameprofile.length);
 
             for (int k = 0; k < agameprofile.length; ++k) {
-                agameprofile[k] = ((EntityPlayer) this.u.players.get(j + k)).getProfile();
+                agameprofile[k] = ((EntityPlayer) this.v.v().get(j + k)).getProfile();
             }
 
             Collections.shuffle(Arrays.asList(agameprofile));
             this.q.b().a(agameprofile);
         }
 
-        if ((this.autosavePeriod > 0) && ((this.ticks % this.autosavePeriod) == 0)) { // CraftBukkit
+        if (autosavePeriod > 0 && this.ticks % autosavePeriod == 0) { // CraftBukkit
+            SpigotTimings.worldSaveTimer.startTiming(); // Spigot
             this.methodProfiler.a("save");
-            this.u.savePlayers();
-            this.saveChunks(true);
+            this.v.savePlayers();
+            // Spigot Start
+            // We replace this with saving each individual world as this.saveChunks(...) is broken,
+            // and causes the main thread to sleep for random amounts of time depending on chunk activity
+            // Also pass flag to only save modified chunks
+            server.playerCommandState = true;
+            for (World world : worlds) {
+                world.getWorld().save(false);
+            }
+            server.playerCommandState = false;
+            // this.saveChunks(true);
+            // Spigot End
             this.methodProfiler.b();
+            SpigotTimings.worldSaveTimer.stopTiming(); // Spigot
         }
 
         this.methodProfiler.a("tallying");
-        this.g[this.ticks % 100] = System.nanoTime() - i;
+        this.h[this.ticks % 100] = System.nanoTime() - i;
         this.methodProfiler.b();
         this.methodProfiler.a("snooper");
-        if (!this.l.d() && this.ticks > 100) {
-            this.l.a();
+        if (getSnooperEnabled() && !this.m.d() && this.ticks > 100) {  // Spigot
+            this.m.a();
         }
 
-        if (this.ticks % 6000 == 0) {
-            this.l.b();
+        if (getSnooperEnabled() && this.ticks % 6000 == 0) { // Spigot
+            this.m.b();
         }
 
         this.methodProfiler.b();
         this.methodProfiler.b();
+        org.spigotmc.WatchdogThread.tick(); // Spigot
+        SpigotTimings.serverTickTimer.stopTiming(); // Spigot
+        org.spigotmc.CustomTimingsHandler.tick(); // Spigot
     }
 
-    public void v() {
-        this.methodProfiler.a("levels");
+    public void D() {
+        this.methodProfiler.a("jobs");
+        Queue queue = this.j;
 
+        // Spigot start
+        FutureTask<?> entry;
+        int count = this.j.size();
+        while (count-- > 0 && (entry = this.j.poll()) != null) {
+            SystemUtils.a(entry, MinecraftServer.LOGGER);
+         }
+        // Spigot end
+
+        this.methodProfiler.c("levels");
+
+        SpigotTimings.schedulerTimer.startTiming(); // Spigot
         // CraftBukkit start
         this.server.getScheduler().mainThreadHeartbeat(this.ticks);
+        SpigotTimings.schedulerTimer.stopTiming(); // Spigot
 
         // Run tasks that are waiting on processing
+        SpigotTimings.processQueueTimer.startTiming(); // Spigot
         while (!processQueue.isEmpty()) {
             processQueue.remove().run();
         }
+        SpigotTimings.processQueueTimer.stopTiming(); // Spigot
 
+        SpigotTimings.chunkIOTickTimer.startTiming(); // Spigot
         org.bukkit.craftbukkit.chunkio.ChunkIOExecutor.tick();
+        SpigotTimings.chunkIOTickTimer.stopTiming(); // Spigot
 
+        SpigotTimings.timeUpdateTimer.startTiming(); // Spigot
         // Send time updates to everyone, it will get the right time from the world the player is in.
         if (this.ticks % 20 == 0) {
             for (int i = 0; i < this.getPlayerList().players.size(); ++i) {
@@ -613,22 +748,21 @@ public abstract class MinecraftServer implements ICommandListener, Runnable, IMo
                 entityplayer.playerConnection.sendPacket(new PacketPlayOutUpdateTime(entityplayer.world.getTime(), entityplayer.getPlayerTime(), entityplayer.world.getGameRules().getBoolean("doDaylightCycle"))); // Add support for per player time
             }
         }
+        SpigotTimings.timeUpdateTimer.stopTiming(); // Spigot
 
         int i;
 
-        for (i = 0; i < this.worlds.size(); ++i) {
+        for (i = 0; i < this.worlds.size(); ++i) { // CraftBukkit
             long j = System.nanoTime();
 
             // if (i == 0 || this.getAllowNether()) {
                 WorldServer worldserver = this.worlds.get(i);
 
                 this.methodProfiler.a(worldserver.getWorldData().getName());
-                this.methodProfiler.a("pools");
-                this.methodProfiler.b();
                 /* Drop global time updates
                 if (this.ticks % 20 == 0) {
                     this.methodProfiler.a("timeSync");
-                    this.t.a(new PacketPlayOutUpdateTime(worldserver.getTime(), worldserver.getDayTime(), worldserver.getGameRules().getBoolean("doDaylightCycle")), worldserver.worldProvider.dimension);
+                    this.v.a((Packet) (new PacketPlayOutUpdateTime(worldserver.getTime(), worldserver.getDayTime(), worldserver.getGameRules().getBoolean("doDaylightCycle"))), worldserver.worldProvider.getDimensionManager().getDimensionID());
                     this.methodProfiler.b();
                 }
                 // CraftBukkit end */
@@ -638,40 +772,64 @@ public abstract class MinecraftServer implements ICommandListener, Runnable, IMo
                 CrashReport crashreport;
 
                 try {
+                    worldserver.timings.doTick.startTiming(); // Spigot
                     worldserver.doTick();
+                    worldserver.timings.doTick.stopTiming(); // Spigot
                 } catch (Throwable throwable) {
+                    // Spigot Start
+                    try {
                     crashreport = CrashReport.a(throwable, "Exception ticking world");
+                    } catch (Throwable t){
+                        throw new RuntimeException("Error generating crash report", t);
+                    }
+                    // Spigot End
                     worldserver.a(crashreport);
                     throw new ReportedException(crashreport);
                 }
 
                 try {
+                    worldserver.timings.tickEntities.startTiming(); // Spigot
                     worldserver.tickEntities();
+                    worldserver.timings.tickEntities.stopTiming(); // Spigot
                 } catch (Throwable throwable1) {
+                    // Spigot Start
+                    try {
                     crashreport = CrashReport.a(throwable1, "Exception ticking world entities");
+                    } catch (Throwable t){
+                        throw new RuntimeException("Error generating crash report", t);
+                    }
+                    // Spigot End
                     worldserver.a(crashreport);
                     throw new ReportedException(crashreport);
                 }
 
                 this.methodProfiler.b();
                 this.methodProfiler.a("tracker");
+                worldserver.timings.tracker.startTiming(); // Spigot
                 worldserver.getTracker().updatePlayers();
+                worldserver.timings.tracker.stopTiming(); // Spigot
                 this.methodProfiler.b();
                 this.methodProfiler.b();
             // } // CraftBukkit
 
-            // this.h[i][this.ticks % 100] = System.nanoTime() - j; // CraftBukkit
+            // this.i[i][this.ticks % 100] = System.nanoTime() - j; // CraftBukkit
         }
 
         this.methodProfiler.c("connection");
-        this.ai().c();
+        SpigotTimings.connectionTimer.startTiming(); // Spigot
+        this.am().c();
+        SpigotTimings.connectionTimer.stopTiming(); // Spigot
         this.methodProfiler.c("players");
-        this.u.tick();
+        SpigotTimings.playerListTimer.startTiming(); // Spigot
+        this.v.tick();
+        SpigotTimings.playerListTimer.stopTiming(); // Spigot
         this.methodProfiler.c("tickables");
 
-        for (i = 0; i < this.n.size(); ++i) {
-            ((IUpdatePlayerListBox) this.n.get(i)).a();
+        SpigotTimings.tickablesTimer.startTiming(); // Spigot
+        for (i = 0; i < this.o.size(); ++i) {
+            ((ITickable) this.o.get(i)).c();
         }
+        SpigotTimings.tickablesTimer.stopTiming(); // Spigot
 
         this.methodProfiler.b();
     }
@@ -680,12 +838,12 @@ public abstract class MinecraftServer implements ICommandListener, Runnable, IMo
         return true;
     }
 
-    public void a(IUpdatePlayerListBox iupdateplayerlistbox) {
-        this.n.add(iupdateplayerlistbox);
+    public void a(ITickable itickable) {
+        this.o.add(itickable);
     }
 
     public static void main(final OptionSet options) { // CraftBukkit - replaces main(String[] astring)
-        DispenserRegistry.b();
+        DispenserRegistry.c();
 
         try {
             /* CraftBukkit start - Replace everything
@@ -733,15 +891,22 @@ public abstract class MinecraftServer implements ICommandListener, Runnable, IMo
                     ++j;
                 }
             }
+            */ // CraftBukkit end
 
-            DedicatedServer dedicatedserver = new DedicatedServer(new File(s1));
+            String s1 = "."; // PAIL?
+            YggdrasilAuthenticationService yggdrasilauthenticationservice = new YggdrasilAuthenticationService(Proxy.NO_PROXY, UUID.randomUUID().toString());
+            MinecraftSessionService minecraftsessionservice = yggdrasilauthenticationservice.createMinecraftSessionService();
+            GameProfileRepository gameprofilerepository = yggdrasilauthenticationservice.createProfileRepository();
+            UserCache usercache = new UserCache(gameprofilerepository, new File(s1, MinecraftServer.a.getName()));
+            final DedicatedServer dedicatedserver = new DedicatedServer(options, DataConverterRegistry.a(), yggdrasilauthenticationservice, minecraftsessionservice, gameprofilerepository, usercache);
 
+            /* CraftBukkit start
             if (s != null) {
-                dedicatedserver.j(s);
+                dedicatedserver.i(s);
             }
 
             if (s2 != null) {
-                dedicatedserver.k(s2);
+                dedicatedserver.setWorld(s2);
             }
 
             if (i >= 0) {
@@ -756,12 +921,17 @@ public abstract class MinecraftServer implements ICommandListener, Runnable, IMo
                 dedicatedserver.c(true);
             }
 
-            if (flag) {
-                dedicatedserver.aD();
+            if (flag && !GraphicsEnvironment.isHeadless()) {
+                dedicatedserver.aN();
             }
-            // */
 
-            DedicatedServer dedicatedserver = new DedicatedServer(options);
+            dedicatedserver.F();
+            Runtime.getRuntime().addShutdownHook(new Thread("Server Shutdown Thread") {
+                public void run() {
+                    dedicatedserver.stop();
+                }
+            });
+            */
 
             if (options.has("port")) {
                 int port = (Integer) options.valueOf("port");
@@ -775,210 +945,162 @@ public abstract class MinecraftServer implements ICommandListener, Runnable, IMo
             }
 
             if (options.has("world")) {
-                dedicatedserver.k((String) options.valueOf("world"));
+                dedicatedserver.setWorld((String) options.valueOf("world"));
             }
 
             dedicatedserver.primaryThread.start();
-            // Runtime.getRuntime().addShutdownHook(new ThreadShutdown("Server Shutdown Thread", dedicatedserver));
             // CraftBukkit end
         } catch (Exception exception) {
-            i.fatal("Failed to start the minecraft server", exception);
+            MinecraftServer.LOGGER.fatal("Failed to start the minecraft server", exception);
         }
+
     }
 
-    public void x() {
-        // (new ThreadServerApplication(this, "Server thread")).start(); // CraftBukkit - prevent abuse
+    public void F() {
+        /* CraftBukkit start - prevent abuse
+        this.serverThread = new Thread(this, "Server thread");
+        this.serverThread.start();
+        // CraftBukkit end */
     }
 
     public File d(String s) {
-        return new File(this.s(), s);
+        return new File(this.A(), s);
     }
 
     public void info(String s) {
-        i.info(s);
+        MinecraftServer.LOGGER.info(s);
     }
 
     public void warning(String s) {
-        i.warn(s);
+        MinecraftServer.LOGGER.warn(s);
     }
 
     public WorldServer getWorldServer(int i) {
         // CraftBukkit start
-        for (WorldServer world : this.worlds) {
+        for (WorldServer world : worlds) {
             if (world.dimension == i) {
                 return world;
             }
         }
-
-        return this.worlds.get(0);
+        return worlds.get(0);
         // CraftBukkit end
-    }
-
-    public String y() {
-        return this.serverIp;
-    }
-
-    public int z() {
-        return this.t;
-    }
-
-    public String A() {
-        return this.motd;
     }
 
     public String getVersion() {
-        return "1.7.10";
+        return "1.9";
     }
 
-    public int C() {
-        return this.u.getPlayerCount();
+    public int H() {
+        return this.v.getPlayerCount();
     }
 
-    public int D() {
-        return this.u.getMaxPlayers();
+    public int I() {
+        return this.v.getMaxPlayers();
     }
 
     public String[] getPlayers() {
-        return this.u.f();
+        return this.v.f();
     }
 
-    public GameProfile[] F() {
-        return this.u.g();
-    }
-
-    public String getPlugins() {
-        // CraftBukkit start - Whole method
-        StringBuilder result = new StringBuilder();
-        org.bukkit.plugin.Plugin[] plugins = server.getPluginManager().getPlugins();
-
-        result.append(server.getName());
-        result.append(" on Bukkit ");
-        result.append(server.getBukkitVersion());
-
-        if (plugins.length > 0 && this.server.getQueryPlugins()) {
-            result.append(": ");
-
-            for (int i = 0; i < plugins.length; i++) {
-                if (i > 0) {
-                    result.append("; ");
-                }
-
-                result.append(plugins[i].getDescription().getName());
-                result.append(" ");
-                result.append(plugins[i].getDescription().getVersion().replaceAll(";", ","));
-            }
-        }
-
-        return result.toString();
-        // CraftBukkit end
-    }
-
-    // CraftBukkit start - fire RemoteServerCommandEvent
-    public String g(final String s) { // final parameter
-        Waitable<String> waitable = new Waitable<String>() {
-            @Override
-            protected String evaluate() {
-                RemoteControlCommandListener.instance.e();
-                // Event changes start
-                RemoteServerCommandEvent event = new RemoteServerCommandEvent(MinecraftServer.this.remoteConsole, s);
-                MinecraftServer.this.server.getPluginManager().callEvent(event);
-                // Event changes end
-                ServerCommand servercommand = new ServerCommand(event.getCommand(), RemoteControlCommandListener.instance);
-                MinecraftServer.this.server.dispatchServerCommand(MinecraftServer.this.remoteConsole, servercommand); // CraftBukkit
-                // this.o.a(RemoteControlCommandListener.instance, s);
-                return RemoteControlCommandListener.instance.f();
-            }};
-        processQueue.add(waitable);
-        try {
-            return waitable.get();
-        } catch (java.util.concurrent.ExecutionException e) {
-            throw new RuntimeException("Exception processing rcon command " + s, e.getCause());
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt(); // Maintain interrupted state
-            throw new RuntimeException("Interrupted processing rcon command " + s, e);
-        }
-        // CraftBukkit end
+    public GameProfile[] K() {
+        return this.v.g();
     }
 
     public boolean isDebugging() {
         return this.getPropertyManager().getBoolean("debug", false); // CraftBukkit - don't hardcode
     }
 
-    public void h(String s) {
-        i.error(s);
+    public void g(String s) {
+        MinecraftServer.LOGGER.error(s);
     }
 
-    public void i(String s) {
+    public void h(String s) {
         if (this.isDebugging()) {
-            i.info(s);
+            MinecraftServer.LOGGER.info(s);
         }
+
     }
 
     public String getServerModName() {
-        return server.getName(); // CraftBukkit - cb > vanilla!
+        return "Spigot"; // Spigot - Spigot > // CraftBukkit - cb > vanilla!
     }
 
     public CrashReport b(CrashReport crashreport) {
-        crashreport.g().a("Profiler Position", (Callable) (new CrashReportProfilerPosition(this)));
-        if (this.worlds != null && this.worlds.size() > 0 && this.worlds.get(0) != null) { // CraftBukkit
-            crashreport.g().a("Vec3 Pool Size", (Callable) (new CrashReportVec3DPoolSize(this)));
-        }
+        crashreport.g().a("Profiler Position", new Callable() {
+            public String a() throws Exception {
+                return MinecraftServer.this.methodProfiler.a ? MinecraftServer.this.methodProfiler.c() : "N/A (disabled)";
+            }
 
-        if (this.u != null) {
-            crashreport.g().a("Player Count", (Callable) (new CrashReportPlayerCount(this)));
+            public Object call() throws Exception {
+                return this.a();
+            }
+        });
+        if (this.v != null) {
+            crashreport.g().a("Player Count", new Callable() {
+                public String a() {
+                    return MinecraftServer.this.v.getPlayerCount() + " / " + MinecraftServer.this.v.getMaxPlayers() + "; " + MinecraftServer.this.v.v();
+                }
+
+                public Object call() throws Exception {
+                    return this.a();
+                }
+            });
         }
 
         return crashreport;
     }
 
-    public List a(ICommandListener icommandlistener, String s) {
-        // CraftBukkit start - Allow tab-completion of Bukkit commands
-        /*
-        ArrayList arraylist = new ArrayList();
+    public List<String> tabCompleteCommand(ICommandListener icommandlistener, String s, BlockPosition blockposition, boolean flag) {
+        /* CraftBukkit start - Allow tab-completion of Bukkit commands
+        ArrayList arraylist = Lists.newArrayList();
+        boolean flag1 = s.startsWith("/");
 
-        if (s.startsWith("/")) {
+        if (flag1) {
             s = s.substring(1);
-            boolean flag = !s.contains(" ");
-            List list = this.o.b(icommandlistener, s);
+        }
 
-            if (list != null) {
-                Iterator iterator = list.iterator();
+        if (!flag1 && !flag) {
+            String[] astring = s.split(" ", -1);
+            String s1 = astring[astring.length - 1];
+            String[] astring1 = this.v.f();
+            int i = astring1.length;
 
-                while (iterator.hasNext()) {
-                    String s1 = (String) iterator.next();
+            for (int j = 0; j < i; ++j) {
+                String s2 = astring1[j];
 
-                    if (flag) {
-                        arraylist.add("/" + s1);
-                    } else {
-                        arraylist.add(s1);
-                    }
+                if (CommandAbstract.a(s1, s2)) {
+                    arraylist.add(s2);
                 }
             }
 
             return arraylist;
         } else {
-            String[] astring = s.split(" ", -1);
-            String s2 = astring[astring.length - 1];
-            String[] astring1 = this.u.f();
-            int i = astring1.length;
+            boolean flag2 = !s.contains(" ");
+            List list = this.b.a(icommandlistener, s, blockposition);
 
-            for (int j = 0; j < i; ++j) {
-                String s3 = astring1[j];
+            if (!list.isEmpty()) {
+                Iterator iterator = list.iterator();
 
-                if (CommandAbstract.a(s2, s3)) {
-                    arraylist.add(s3);
+                while (iterator.hasNext()) {
+                    String s3 = (String) iterator.next();
+
+                    if (flag2) {
+                        arraylist.add("/" + s3);
+                    } else {
+                        arraylist.add(s3);
+                    }
                 }
             }
 
             return arraylist;
         }
         */
-        return this.server.tabComplete(icommandlistener, s);
+        return server.tabComplete(icommandlistener, s); // PAIL : todo args
         // CraftBukkit end
     }
 
-    public static MinecraftServer getServer() {
-        return j;
+    public boolean M() {
+        return true; // CraftBukkit
     }
 
     public String getName() {
@@ -986,7 +1108,7 @@ public abstract class MinecraftServer implements ICommandListener, Runnable, IMo
     }
 
     public void sendMessage(IChatBaseComponent ichatbasecomponent) {
-        i.info(ichatbasecomponent.c());
+        MinecraftServer.LOGGER.info(ichatbasecomponent.toPlainText());
     }
 
     public boolean a(int i, String s) {
@@ -994,71 +1116,72 @@ public abstract class MinecraftServer implements ICommandListener, Runnable, IMo
     }
 
     public ICommandHandler getCommandHandler() {
-        return this.o;
+        return this.b;
     }
 
-    public KeyPair K() {
-        return this.G;
-    }
-
-    public int L() {
-        return this.t;
-    }
-
-    public void setPort(int i) {
-        this.t = i;
-    }
-
-    public String M() {
+    public KeyPair O() {
         return this.H;
     }
 
-    public void j(String s) {
-        this.H = s;
+    public int P() {
+        return this.u;
     }
 
-    public boolean N() {
-        return this.H != null;
+    public void setPort(int i) {
+        this.u = i;
     }
 
-    public String O() {
+    public String Q() {
         return this.I;
     }
 
-    public void k(String s) {
+    public void i(String s) {
         this.I = s;
     }
 
+    public boolean R() {
+        return this.I != null;
+    }
+
+    public String S() {
+        return this.J;
+    }
+
+    public void setWorld(String s) {
+        this.J = s;
+    }
+
     public void a(KeyPair keypair) {
-        this.G = keypair;
+        this.H = keypair;
     }
 
     public void a(EnumDifficulty enumdifficulty) {
-        // CraftBukkit start - Use worlds list for iteration
-        for (int j = 0; j < this.worlds.size(); ++j) {
-            WorldServer worldserver = this.worlds.get(j);
+        // CraftBukkit start
+        for (int i = 0; i < this.worlds.size(); ++i) {
+            WorldServer worldserver = this.worlds.get(i);
             // CraftBukkit end
 
             if (worldserver != null) {
                 if (worldserver.getWorldData().isHardcore()) {
-                    worldserver.difficulty = EnumDifficulty.HARD;
+                    worldserver.getWorldData().setDifficulty(EnumDifficulty.HARD);
                     worldserver.setSpawnFlags(true, true);
-                } else if (this.N()) {
-                    worldserver.difficulty = enumdifficulty;
-                    worldserver.setSpawnFlags(worldserver.difficulty != EnumDifficulty.PEACEFUL, true);
+                } else if (this.R()) {
+                    worldserver.getWorldData().setDifficulty(enumdifficulty);
+                    worldserver.setSpawnFlags(worldserver.getDifficulty() != EnumDifficulty.PEACEFUL, true);
                 } else {
-                    worldserver.difficulty = enumdifficulty;
+                    worldserver.getWorldData().setDifficulty(enumdifficulty);
                     worldserver.setSpawnFlags(this.getSpawnMonsters(), this.spawnAnimals);
                 }
             }
         }
+
     }
 
     protected boolean getSpawnMonsters() {
         return true;
     }
 
-    public boolean R() {
+    public boolean V() {
         return this.demoMode;
     }
 
@@ -1067,67 +1190,59 @@ public abstract class MinecraftServer implements ICommandListener, Runnable, IMo
     }
 
     public void c(boolean flag) {
-        this.L = flag;
+        this.M = flag;
     }
 
     public Convertable getConvertable() {
         return this.convertable;
     }
 
-    public void U() {
-        this.M = true;
-        this.getConvertable().d();
-
-        // CraftBukkit start
-        for (int i = 0; i < this.worlds.size(); ++i) {
-            WorldServer worldserver = this.worlds.get(i);
-            // CraftBukkit end
-
-            if (worldserver != null) {
-                worldserver.saveLevel();
-            }
-        }
-
-        this.getConvertable().e(this.worlds.get(0).getDataManager().g()); // CraftBukkit
-        this.safeShutdown();
-    }
-
     public String getResourcePack() {
         return this.N;
     }
 
-    public void setTexturePack(String s) {
+    public String getResourcePackHash() {
+        return this.O;
+    }
+
+    public void setResourcePack(String s, String s1) {
         this.N = s;
+        this.O = s1;
     }
 
     public void a(MojangStatisticsGenerator mojangstatisticsgenerator) {
         mojangstatisticsgenerator.a("whitelist_enabled", Boolean.valueOf(false));
         mojangstatisticsgenerator.a("whitelist_count", Integer.valueOf(0));
-        mojangstatisticsgenerator.a("players_current", Integer.valueOf(this.C()));
-        mojangstatisticsgenerator.a("players_max", Integer.valueOf(this.D()));
-        mojangstatisticsgenerator.a("players_seen", Integer.valueOf(this.u.getSeenPlayers().length));
+        if (this.v != null) {
+            mojangstatisticsgenerator.a("players_current", Integer.valueOf(this.H()));
+            mojangstatisticsgenerator.a("players_max", Integer.valueOf(this.I()));
+            mojangstatisticsgenerator.a("players_seen", Integer.valueOf(this.v.getSeenPlayers().length));
+        }
+
         mojangstatisticsgenerator.a("uses_auth", Boolean.valueOf(this.onlineMode));
-        mojangstatisticsgenerator.a("gui_state", this.ak() ? "enabled" : "disabled");
-        mojangstatisticsgenerator.a("run_time", Long.valueOf((ar() - mojangstatisticsgenerator.g()) / 60L * 1000L));
-        mojangstatisticsgenerator.a("avg_tick_ms", Integer.valueOf((int) (MathHelper.a(this.g) * 1.0E-6D)));
+        mojangstatisticsgenerator.a("gui_state", this.ao() ? "enabled" : "disabled");
+        mojangstatisticsgenerator.a("run_time", Long.valueOf((av() - mojangstatisticsgenerator.g()) / 60L * 1000L));
+        mojangstatisticsgenerator.a("avg_tick_ms", Integer.valueOf((int) (MathHelper.a(this.h) * 1.0E-6D)));
         int i = 0;
 
-        // CraftBukkit start - use worlds list for iteration
-        for (int j = 0; j < this.worlds.size(); ++j) {
-            WorldServer worldserver = this.worlds.get(j);
-            if (worldServer != null) {
-                // CraftBukkit end
-                WorldData worlddata = worldserver.getWorldData();
+        if (this.worldServer != null) {
+            // CraftBukkit start
+            for (int j = 0; j < this.worlds.size(); ++j) {
+                WorldServer worldserver = this.worlds.get(j);
+                if (worldserver != null) {
+                    // CraftBukkit end
+                    WorldData worlddata = worldserver.getWorldData();
 
-                mojangstatisticsgenerator.a("world[" + i + "][dimension]", Integer.valueOf(worldserver.worldProvider.dimension));
-                mojangstatisticsgenerator.a("world[" + i + "][mode]", worlddata.getGameType());
-                mojangstatisticsgenerator.a("world[" + i + "][difficulty]", worldserver.difficulty);
-                mojangstatisticsgenerator.a("world[" + i + "][hardcore]", Boolean.valueOf(worlddata.isHardcore()));
-                mojangstatisticsgenerator.a("world[" + i + "][generator_name]", worlddata.getType().name());
-                mojangstatisticsgenerator.a("world[" + i + "][generator_version]", Integer.valueOf(worlddata.getType().getVersion()));
-                mojangstatisticsgenerator.a("world[" + i + "][height]", Integer.valueOf(this.E));
-                mojangstatisticsgenerator.a("world[" + i + "][chunks_loaded]", Integer.valueOf(worldserver.L().getLoadedChunks()));
-                ++i;
+                    mojangstatisticsgenerator.a("world[" + i + "][dimension]", Integer.valueOf(worldserver.worldProvider.getDimensionManager().getDimensionID()));
+                    mojangstatisticsgenerator.a("world[" + i + "][mode]", worlddata.getGameType());
+                    mojangstatisticsgenerator.a("world[" + i + "][difficulty]", worldserver.getDifficulty());
+                    mojangstatisticsgenerator.a("world[" + i + "][hardcore]", Boolean.valueOf(worlddata.isHardcore()));
+                    mojangstatisticsgenerator.a("world[" + i + "][generator_name]", worlddata.getType().name());
+                    mojangstatisticsgenerator.a("world[" + i + "][generator_version]", Integer.valueOf(worlddata.getType().getVersion()));
+                    mojangstatisticsgenerator.a("world[" + i + "][height]", Integer.valueOf(this.F));
+                    mojangstatisticsgenerator.a("world[" + i + "][chunks_loaded]", Integer.valueOf(worldserver.getChunkProviderServer().g()));
+                    ++i;
+                }
             }
         }
 
@@ -1135,20 +1250,20 @@ public abstract class MinecraftServer implements ICommandListener, Runnable, IMo
     }
 
     public void b(MojangStatisticsGenerator mojangstatisticsgenerator) {
-        mojangstatisticsgenerator.b("singleplayer", Boolean.valueOf(this.N()));
+        mojangstatisticsgenerator.b("singleplayer", Boolean.valueOf(this.R()));
         mojangstatisticsgenerator.b("server_brand", this.getServerModName());
         mojangstatisticsgenerator.b("gui_supported", GraphicsEnvironment.isHeadless() ? "headless" : "supported");
-        mojangstatisticsgenerator.b("dedicated", Boolean.valueOf(this.X()));
+        mojangstatisticsgenerator.b("dedicated", Boolean.valueOf(this.aa()));
     }
 
     public boolean getSnooperEnabled() {
         return true;
     }
 
-    public abstract boolean X();
+    public abstract boolean aa();
 
     public boolean getOnlineMode() {
-        return this.server.getOnlineMode(); // CraftBukkit
+        return server.getOnlineMode(); // CraftBukkit
     }
 
     public void setOnlineMode(boolean flag) {
@@ -1167,15 +1282,17 @@ public abstract class MinecraftServer implements ICommandListener, Runnable, IMo
         return this.spawnNPCs;
     }
 
+    public abstract boolean ae();
+
     public void setSpawnNPCs(boolean flag) {
         this.spawnNPCs = flag;
     }
 
-    public boolean getPvP() {
+    public boolean getPVP() {
         return this.pvpMode;
     }
 
-    public void setPvP(boolean flag) {
+    public void setPVP(boolean flag) {
         this.pvpMode = flag;
     }
 
@@ -1198,11 +1315,11 @@ public abstract class MinecraftServer implements ICommandListener, Runnable, IMo
     }
 
     public int getMaxBuildHeight() {
-        return this.E;
+        return this.F;
     }
 
     public void c(int i) {
-        this.E = i;
+        this.F = i;
     }
 
     public boolean isStopped() {
@@ -1210,89 +1327,103 @@ public abstract class MinecraftServer implements ICommandListener, Runnable, IMo
     }
 
     public PlayerList getPlayerList() {
-        return this.u;
+        return this.v;
     }
 
     public void a(PlayerList playerlist) {
-        this.u = playerlist;
+        this.v = playerlist;
     }
 
-    public void a(EnumGamemode enumgamemode) {
-        // CraftBukkit start - use worlds list for iteration
+    public void setGamemode(WorldSettings.EnumGamemode worldsettings_enumgamemode) {
+        // CraftBukkit start
         for (int i = 0; i < this.worlds.size(); ++i) {
-            getServer().worlds.get(i).getWorldData().setGameType(enumgamemode);
-            // CraftBukkit end
+            worlds.get(i).getWorldData().setGameType(worldsettings_enumgamemode);
         }
+
     }
 
-    public ServerConnection ai() {
+    // Spigot Start
+    public ServerConnection getServerConnection()
+    {
         return this.p;
     }
+    // Spigot End
+    public ServerConnection am() {
+        return this.p == null ? this.p = new ServerConnection(this) : this.p; // Spigot
+    }
 
-    public boolean ak() {
+    public boolean ao() {
         return false;
     }
 
-    public abstract String a(EnumGamemode enumgamemode, boolean flag);
+    public abstract String a(WorldSettings.EnumGamemode worldsettings_enumgamemode, boolean flag);
 
-    public int al() {
+    public int ap() {
         return this.ticks;
     }
 
-    public void am() {
-        this.R = true;
+    public void aq() {
+        this.S = true;
     }
 
-    public ChunkCoordinates getChunkCoordinates() {
-        return new ChunkCoordinates(0, 0, 0);
+    public BlockPosition getChunkCoordinates() {
+        return BlockPosition.ZERO;
+    }
+
+    public Vec3D d() {
+        return Vec3D.a;
     }
 
     public World getWorld() {
         return this.worlds.get(0); // CraftBukkit
     }
 
+    public Entity f() {
+        return null;
+    }
+
     public int getSpawnProtection() {
         return 16;
     }
 
-    public boolean a(World world, int i, int j, int k, EntityHuman entityhuman) {
+    public boolean a(World world, BlockPosition blockposition, EntityHuman entityhuman) {
         return false;
     }
 
     public void setForceGamemode(boolean flag) {
-        this.S = flag;
+        this.T = flag;
     }
 
     public boolean getForceGamemode() {
-        return this.S;
+        return this.T;
     }
 
-    public Proxy aq() {
-        return this.d;
+    public Proxy au() {
+        return this.e;
     }
 
-    public static long ar() {
+    public static long av() {
         return System.currentTimeMillis();
     }
 
     public int getIdleTimeout() {
-        return this.F;
+        return this.G;
     }
 
     public void setIdleTimeout(int i) {
-        this.F = i;
+        this.G = i;
     }
 
     public IChatBaseComponent getScoreboardDisplayName() {
         return new ChatComponentText(this.getName());
     }
 
-    public boolean at() {
+    public boolean ax() {
         return true;
     }
 
-    public MinecraftSessionService av() {
-        return this.U;
+    public MinecraftSessionService ay() {
+        return this.V;
     }
 
     public GameProfileRepository getGameProfileRepository() {
@@ -1303,19 +1434,101 @@ public abstract class MinecraftServer implements ICommandListener, Runnable, IMo
         return this.X;
     }
 
-    public ServerPing ay() {
+    public ServerPing getServerPing() {
         return this.q;
     }
 
-    public void az() {
-        this.V = 0L;
+    public void aC() {
+        this.Y = 0L;
     }
 
-    public static Logger getLogger() {
-        return i;
+    public Entity a(UUID uuid) {
+        WorldServer[] aworldserver = this.worldServer;
+        int i = aworldserver.length;
+
+        // CraftBukkit start
+        for (int j = 0; j < worlds.size(); ++j) {
+            WorldServer worldserver = worlds.get(j);
+            // CraftBukkit end
+
+            if (worldserver != null) {
+                Entity entity = worldserver.getEntity(uuid);
+
+                if (entity != null) {
+                    return entity;
+                }
+            }
+        }
+
+        return null;
     }
 
-    public static PlayerList a(MinecraftServer minecraftserver) {
-        return minecraftserver.u;
+    public boolean getSendCommandFeedback() {
+        return worlds.get(0).getGameRules().getBoolean("sendCommandFeedback");
     }
+
+    public void a(CommandObjectiveExecutor.EnumCommandResult commandobjectiveexecutor_enumcommandresult, int i) {}
+
+    public MinecraftServer h() {
+        return this;
+    }
+
+    public int aD() {
+        return 29999984;
+    }
+
+    public <V> ListenableFuture<V> a(Callable<V> callable) {
+        Validate.notNull(callable);
+        if (!this.isMainThread()) { // CraftBukkit && !this.isStopped()) {
+            ListenableFutureTask listenablefuturetask = ListenableFutureTask.create(callable);
+            Queue queue = this.j;
+
+            // Spigot start
+            this.j.add(listenablefuturetask);
+            return listenablefuturetask;
+            // Spigot end
+        } else {
+            try {
+                return Futures.immediateFuture(callable.call());
+            } catch (Exception exception) {
+                return Futures.immediateFailedCheckedFuture(exception);
+            }
+        }
+    }
+
+    public ListenableFuture<Object> postToMainThread(Runnable runnable) {
+        Validate.notNull(runnable);
+        return this.a(Executors.callable(runnable));
+    }
+
+    public boolean isMainThread() {
+        return Thread.currentThread() == this.serverThread;
+    }
+
+    public int aF() {
+        return 256;
+    }
+
+    public long aG() {
+        return this.aa;
+    }
+
+    public Thread aH() {
+        return this.serverThread;
+    }
+
+    public DataConverterManager getDataConverterManager() {
+        return this.dataConverterManager;
+    }
+
+    public int a(WorldServer worldserver) {
+        return worldserver != null ? worldserver.getGameRules().c("spawnRadius") : 10;
+    }
+
+    // CraftBukkit start
+    @Deprecated
+    public static MinecraftServer getServer() {
+        return ((CraftServer) Bukkit.getServer()).getServer();
+    }
+    // CraftBukkit end
 }

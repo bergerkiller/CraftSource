@@ -1,18 +1,17 @@
 package net.minecraft.server;
 
+import com.google.gson.JsonObject;
+import com.mojang.authlib.GameProfile;
 import java.io.File;
 import java.util.Iterator;
 
-import net.minecraft.util.com.google.gson.JsonObject;
-import net.minecraft.util.com.mojang.authlib.GameProfile;
+public class GameProfileBanList extends JsonList<GameProfile, GameProfileBanEntry> {
 
-public class GameProfileBanList extends JsonList {
-
-    public GameProfileBanList(File file1) {
-        super(file1);
+    public GameProfileBanList(File file) {
+        super(file);
     }
 
-    protected JsonListEntry a(JsonObject jsonobject) {
+    protected JsonListEntry<GameProfile> a(JsonObject jsonobject) {
         return new GameProfileBanEntry(jsonobject);
     }
 

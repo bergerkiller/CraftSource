@@ -1,6 +1,8 @@
 package net.minecraft.server;
 
-public class PacketPlayOutKickDisconnect extends Packet {
+import java.io.IOException;
+
+public class PacketPlayOutKickDisconnect implements Packet<PacketListenerPlayOut> {
 
     private IChatBaseComponent a;
 
@@ -10,23 +12,15 @@ public class PacketPlayOutKickDisconnect extends Packet {
         this.a = ichatbasecomponent;
     }
 
-    public void a(PacketDataSerializer packetdataserializer) {
-        this.a = ChatSerializer.a(packetdataserializer.c(32767));
+    public void a(PacketDataSerializer packetdataserializer) throws IOException {
+        this.a = packetdataserializer.f();
     }
 
-    public void b(PacketDataSerializer packetdataserializer) {
-        packetdataserializer.a(ChatSerializer.a(this.a));
+    public void b(PacketDataSerializer packetdataserializer) throws IOException {
+        packetdataserializer.a(this.a);
     }
 
-    public void a(PacketPlayOutListener packetplayoutlistener) {
-        packetplayoutlistener.a(this);
-    }
-
-    public boolean a() {
-        return true;
-    }
-
-    public void handle(PacketListener packetlistener) {
-        this.a((PacketPlayOutListener) packetlistener);
+    public void a(PacketListenerPlayOut packetlistenerplayout) {
+        packetlistenerplayout.a(this);
     }
 }

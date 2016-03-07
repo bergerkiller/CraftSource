@@ -12,15 +12,17 @@ public class PathfinderGoalDefendVillage extends PathfinderGoalTarget {
     }
 
     public boolean a() {
-        Village village = this.a.bZ();
+        Village village = this.a.o();
 
         if (village == null) {
             return false;
         } else {
             this.b = village.b((EntityLiving) this.a);
-            if (!this.a(this.b, false)) {
-                if (this.c.aI().nextInt(20) == 0) {
-                    this.b = village.c(this.a);
+            if (this.b instanceof EntityCreeper) {
+                return false;
+            } else if (!this.a(this.b, false)) {
+                if (this.e.getRandom().nextInt(20) == 0) {
+                    this.b = village.c((EntityLiving) this.a);
                     return this.a(this.b, false);
                 } else {
                     return false;
@@ -32,7 +34,7 @@ public class PathfinderGoalDefendVillage extends PathfinderGoalTarget {
     }
 
     public void c() {
-        this.a.setGoalTarget(this.b);
+        this.a.setGoalTarget(this.b, org.bukkit.event.entity.EntityTargetEvent.TargetReason.DEFEND_VILLAGE, true); // CraftBukkit - reason
         super.c();
     }
 }

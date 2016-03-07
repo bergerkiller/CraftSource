@@ -1,52 +1,43 @@
 package net.minecraft.server;
 
-public class PacketPlayOutSpawnEntityPainting extends Packet {
+import java.io.IOException;
+import java.util.UUID;
+
+public class PacketPlayOutSpawnEntityPainting implements Packet<PacketListenerPlayOut> {
 
     private int a;
-    private int b;
-    private int c;
-    private int d;
-    private int e;
-    private String f;
+    private UUID b;
+    private BlockPosition c;
+    private EnumDirection d;
+    private String e;
 
     public PacketPlayOutSpawnEntityPainting() {}
 
     public PacketPlayOutSpawnEntityPainting(EntityPainting entitypainting) {
         this.a = entitypainting.getId();
-        this.b = entitypainting.x;
-        this.c = entitypainting.y;
-        this.d = entitypainting.z;
-        this.e = entitypainting.direction;
-        this.f = entitypainting.art.B;
+        this.b = entitypainting.getUniqueID();
+        this.c = entitypainting.getBlockPosition();
+        this.d = entitypainting.direction;
+        this.e = entitypainting.art.B;
     }
 
-    public void a(PacketDataSerializer packetdataserializer) {
-        this.a = packetdataserializer.a();
-        this.f = packetdataserializer.c(EnumArt.A);
-        this.b = packetdataserializer.readInt();
-        this.c = packetdataserializer.readInt();
-        this.d = packetdataserializer.readInt();
-        this.e = packetdataserializer.readInt();
+    public void a(PacketDataSerializer packetdataserializer) throws IOException {
+        this.a = packetdataserializer.g();
+        this.b = packetdataserializer.i();
+        this.e = packetdataserializer.c(EntityPainting.EnumArt.A);
+        this.c = packetdataserializer.e();
+        this.d = EnumDirection.fromType2(packetdataserializer.readUnsignedByte());
     }
 
-    public void b(PacketDataSerializer packetdataserializer) {
+    public void b(PacketDataSerializer packetdataserializer) throws IOException {
         packetdataserializer.b(this.a);
-        packetdataserializer.a(this.f);
-        packetdataserializer.writeInt(this.b);
-        packetdataserializer.writeInt(this.c);
-        packetdataserializer.writeInt(this.d);
-        packetdataserializer.writeInt(this.e);
+        packetdataserializer.a(this.b);
+        packetdataserializer.a(this.e);
+        packetdataserializer.a(this.c);
+        packetdataserializer.writeByte(this.d.get2DRotationValue());
     }
 
-    public void a(PacketPlayOutListener packetplayoutlistener) {
-        packetplayoutlistener.a(this);
-    }
-
-    public String b() {
-        return String.format("id=%d, type=%s, x=%d, y=%d, z=%d", new Object[] { Integer.valueOf(this.a), this.f, Integer.valueOf(this.b), Integer.valueOf(this.c), Integer.valueOf(this.d)});
-    }
-
-    public void handle(PacketListener packetlistener) {
-        this.a((PacketPlayOutListener) packetlistener);
+    public void a(PacketListenerPlayOut packetlistenerplayout) {
+        packetlistenerplayout.a(this);
     }
 }

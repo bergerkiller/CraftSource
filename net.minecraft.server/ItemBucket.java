@@ -17,111 +17,67 @@ public class ItemBucket extends Item {
         this.a(CreativeModeTab.f);
     }
 
-    public ItemStack a(ItemStack itemstack, World world, EntityHuman entityhuman) {
+    public InteractionResultWrapper<ItemStack> a(ItemStack itemstack, World world, EntityHuman entityhuman, EnumHand enumhand) {
         boolean flag = this.a == Blocks.AIR;
         MovingObjectPosition movingobjectposition = this.a(world, entityhuman, flag);
 
         if (movingobjectposition == null) {
-            return itemstack;
+            return new InteractionResultWrapper(EnumInteractionResult.PASS, itemstack);
+        } else if (movingobjectposition.type != MovingObjectPosition.EnumMovingObjectType.BLOCK) {
+            return new InteractionResultWrapper(EnumInteractionResult.PASS, itemstack);
         } else {
-            if (movingobjectposition.type == EnumMovingObjectType.BLOCK) {
-                int i = movingobjectposition.b;
-                int j = movingobjectposition.c;
-                int k = movingobjectposition.d;
+            BlockPosition blockposition = movingobjectposition.a();
 
-                if (!world.a(entityhuman, i, j, k)) {
-                    return itemstack;
-                }
-
-                if (flag) {
-                    if (!entityhuman.a(i, j, k, movingobjectposition.face, itemstack)) {
-                        return itemstack;
-                    }
-
-                    Material material = world.getType(i, j, k).getMaterial();
-                    int l = world.getData(i, j, k);
-
-                    if (material == Material.WATER && l == 0) {
-                        // CraftBukkit start
-                        PlayerBucketFillEvent event = CraftEventFactory.callPlayerBucketFillEvent(entityhuman, i, j, k, -1, itemstack, Items.WATER_BUCKET);
-
-                        if (event.isCancelled()) {
-                            return itemstack;
-                        }
-                        // CraftBukkit end
-                        world.setAir(i, j, k);
-                        return this.a(itemstack, entityhuman, Items.WATER_BUCKET, event.getItemStack()); // CraftBukkit - added Event stack
-                    }
-
-                    if (material == Material.LAVA && l == 0) {
-                        // CraftBukkit start
-                        PlayerBucketFillEvent event = CraftEventFactory.callPlayerBucketFillEvent(entityhuman, i, j, k, -1, itemstack, Items.LAVA_BUCKET);
-
-                        if (event.isCancelled()) {
-                            return itemstack;
-                        }
-                        // CraftBukkit end
-                        world.setAir(i, j, k);
-                        return this.a(itemstack, entityhuman, Items.LAVA_BUCKET, event.getItemStack()); // CraftBukkit - added Event stack
-                    }
+            if (!world.a(entityhuman, blockposition)) {
+                return new InteractionResultWrapper(EnumInteractionResult.FAIL, itemstack);
+            } else if (flag) {
+                if (!entityhuman.a(blockposition.shift(movingobjectposition.direction), movingobjectposition.direction, itemstack)) {
+                    return new InteractionResultWrapper(EnumInteractionResult.FAIL, itemstack);
                 } else {
-                    if (this.a == Blocks.AIR) {
+                    IBlockData iblockdata = world.getType(blockposition);
+                    Material material = iblockdata.getMaterial();
+
+                    if (material == Material.WATER && ((Integer) iblockdata.get(BlockFluids.LEVEL)).intValue() == 0) {
                         // CraftBukkit start
-                        PlayerBucketEmptyEvent event = CraftEventFactory.callPlayerBucketEmptyEvent(entityhuman, i, j, k, movingobjectposition.face, itemstack);
+                        PlayerBucketFillEvent event = CraftEventFactory.callPlayerBucketFillEvent(entityhuman, blockposition.getX(), blockposition.getY(), blockposition.getZ(), null, itemstack, Items.WATER_BUCKET);
+ 
+                        if (event.isCancelled()) {
+                            return new InteractionResultWrapper(EnumInteractionResult.FAIL, itemstack);
+                        }
+                        // CraftBukkit end
+                        world.setTypeAndData(blockposition, Blocks.AIR.getBlockData(), 11);
+                        entityhuman.b(StatisticList.b((Item) this));
+                        entityhuman.a(SoundEffects.N, 1.0F, 1.0F);
+                        return new InteractionResultWrapper(EnumInteractionResult.SUCCESS, this.a(itemstack, entityhuman, Items.WATER_BUCKET, event.getItemStack())); // CraftBUkkit
+                    } else if (material == Material.LAVA && ((Integer) iblockdata.get(BlockFluids.LEVEL)).intValue() == 0) {
+                        // CraftBukkit start
+                        PlayerBucketFillEvent event = CraftEventFactory.callPlayerBucketFillEvent(entityhuman, blockposition.getX(), blockposition.getY(), blockposition.getZ(), null, itemstack, Items.LAVA_BUCKET);
 
                         if (event.isCancelled()) {
-                            return itemstack;
+                            return new InteractionResultWrapper(EnumInteractionResult.FAIL, itemstack);
                         }
-
-                        return CraftItemStack.asNMSCopy(event.getItemStack());
+                        // CraftBukkit end
+                        entityhuman.a(SoundEffects.O, 1.0F, 1.0F);
+                        world.setTypeAndData(blockposition, Blocks.AIR.getBlockData(), 11);
+                        entityhuman.b(StatisticList.b((Item) this));
+                        return new InteractionResultWrapper(EnumInteractionResult.SUCCESS, this.a(itemstack, entityhuman, Items.LAVA_BUCKET, event.getItemStack())); // CraftBukkit
+                    } else {
+                        return new InteractionResultWrapper(EnumInteractionResult.FAIL, itemstack);
                     }
+                }
+            } else {
+                boolean flag1 = world.getType(blockposition).getBlock().a((IBlockAccess) world, blockposition);
+                BlockPosition blockposition1 = flag1 && movingobjectposition.direction == EnumDirection.UP ? blockposition : blockposition.shift(movingobjectposition.direction);
 
-                    int clickedX = i, clickedY = j, clickedZ = k;
-                    // CraftBukkit end
-
-                    if (movingobjectposition.face == 0) {
-                        --j;
-                    }
-
-                    if (movingobjectposition.face == 1) {
-                        ++j;
-                    }
-
-                    if (movingobjectposition.face == 2) {
-                        --k;
-                    }
-
-                    if (movingobjectposition.face == 3) {
-                        ++k;
-                    }
-
-                    if (movingobjectposition.face == 4) {
-                        --i;
-                    }
-
-                    if (movingobjectposition.face == 5) {
-                        ++i;
-                    }
-
-                    if (!entityhuman.a(i, j, k, movingobjectposition.face, itemstack)) {
-                        return itemstack;
-                    }
-
-                    // CraftBukkit start
-                    PlayerBucketEmptyEvent event = CraftEventFactory.callPlayerBucketEmptyEvent(entityhuman, clickedX, clickedY, clickedZ, movingobjectposition.face, itemstack);
-
-                    if (event.isCancelled()) {
-                        return itemstack;
-                    }
-                    // CraftBukkit end
-
-                    if (this.a(world, i, j, k) && !entityhuman.abilities.canInstantlyBuild) {
-                        return CraftItemStack.asNMSCopy(event.getItemStack()); // CraftBukkit
-                    }
+                if (!entityhuman.a(blockposition1, movingobjectposition.direction, itemstack)) {
+                    return new InteractionResultWrapper(EnumInteractionResult.FAIL, itemstack);
+                } else if (this.a(entityhuman, world, blockposition1, movingobjectposition.direction, blockposition, itemstack)) { // CraftBukkit
+                    entityhuman.b(StatisticList.b((Item) this));
+                    return !entityhuman.abilities.canInstantlyBuild ? new InteractionResultWrapper(EnumInteractionResult.SUCCESS, new ItemStack(Items.BUCKET)) : new InteractionResultWrapper(EnumInteractionResult.SUCCESS, itemstack);
+                } else {
+                    return new InteractionResultWrapper(EnumInteractionResult.FAIL, itemstack);
                 }
             }
-
-            return itemstack;
         }
     }
 
@@ -132,36 +88,60 @@ public class ItemBucket extends Item {
         } else if (--itemstack.count <= 0) {
             return CraftItemStack.asNMSCopy(result); // CraftBukkit
         } else {
-            if (!entityhuman.inventory.pickup(CraftItemStack.asNMSCopy(result))) { // CraftBukkit
-                entityhuman.drop(CraftItemStack.asNMSCopy(result), false); // CraftBukkit
+            if (!entityhuman.inventory.pickup(CraftItemStack.asNMSCopy(result))) {
+                entityhuman.drop(CraftItemStack.asNMSCopy(result), false);
             }
 
             return itemstack;
         }
     }
 
-    public boolean a(World world, int i, int j, int k) {
+    // CraftBukkit start
+    public boolean a(EntityHuman entityhuman, World world, BlockPosition blockposition) {
+        return a(entityhuman, world, blockposition, null, blockposition, null);
+    }
+
+    public boolean a(EntityHuman entityhuman, World world, BlockPosition blockposition, EnumDirection enumdirection, BlockPosition clicked, ItemStack itemstack) {
+        // CraftBukkit end
         if (this.a == Blocks.AIR) {
             return false;
         } else {
-            Material material = world.getType(i, j, k).getMaterial();
+            IBlockData iblockdata = world.getType(blockposition);
+            Material material = iblockdata.getMaterial();
             boolean flag = !material.isBuildable();
+            boolean flag1 = iblockdata.getBlock().a((IBlockAccess) world, blockposition);
 
-            if (!world.isEmpty(i, j, k) && !flag) {
+            if (!world.isEmpty(blockposition) && !flag && !flag1) {
                 return false;
             } else {
-                if (world.worldProvider.f && this.a == Blocks.WATER) {
-                    world.makeSound((double) ((float) i + 0.5F), (double) ((float) j + 0.5F), (double) ((float) k + 0.5F), "random.fizz", 0.5F, 2.6F + (world.random.nextFloat() - world.random.nextFloat()) * 0.8F);
+                // CraftBukkit start
+                if (entityhuman != null) {
+                    PlayerBucketEmptyEvent event = CraftEventFactory.callPlayerBucketEmptyEvent(entityhuman, clicked.getX(), clicked.getY(), clicked.getZ(), enumdirection, itemstack);
+                    if (event.isCancelled()) {
+                        // TODO: inventory not updated
+                        return false;
+                    }
+                }
+                // CraftBukkit end
+                if (world.worldProvider.l() && this.a == Blocks.FLOWING_WATER) {
+                    int i = blockposition.getX();
+                    int j = blockposition.getY();
+                    int k = blockposition.getZ();
+
+                    world.a(entityhuman, blockposition, SoundEffects.bv, SoundCategory.BLOCKS, 0.5F, 2.6F + (world.random.nextFloat() - world.random.nextFloat()) * 0.8F);
 
                     for (int l = 0; l < 8; ++l) {
-                        world.addParticle("largesmoke", (double) i + Math.random(), (double) j + Math.random(), (double) k + Math.random(), 0.0D, 0.0D, 0.0D);
+                        world.addParticle(EnumParticle.SMOKE_LARGE, (double) i + Math.random(), (double) j + Math.random(), (double) k + Math.random(), 0.0D, 0.0D, 0.0D, new int[0]);
                     }
                 } else {
-                    if (!world.isStatic && flag && !material.isLiquid()) {
-                        world.setAir(i, j, k, true);
+                    if (!world.isClientSide && (flag || flag1) && !material.isLiquid()) {
+                        world.setAir(blockposition, true);
                     }
 
-                    world.setTypeAndData(i, j, k, this.a, 0, 3);
+                    SoundEffect soundeffect = this.a == Blocks.FLOWING_LAVA ? SoundEffects.M : SoundEffects.L;
+
+                    world.a(entityhuman, blockposition, soundeffect, SoundCategory.BLOCKS, 1.0F, 1.0F);
+                    world.setTypeAndData(blockposition, this.a.getBlockData(), 11);
                 }
 
                 return true;

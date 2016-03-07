@@ -2,17 +2,19 @@ package net.minecraft.server;
 
 public class RemoteControlCommandListener implements ICommandListener {
 
-    public static final RemoteControlCommandListener instance = new RemoteControlCommandListener();
-    private StringBuffer b = new StringBuffer();
+    private final StringBuffer a = new StringBuffer();
+    private final MinecraftServer b;
 
-    public RemoteControlCommandListener() {}
-
-    public void e() {
-        this.b.setLength(0);
+    public RemoteControlCommandListener(MinecraftServer minecraftserver) {
+        this.b = minecraftserver;
     }
 
-    public String f() {
-        return this.b.toString();
+    public void clearMessages() {
+        this.a.setLength(0);
+    }
+
+    public String getMessages() {
+        return this.a.toString();
     }
 
     public String getName() {
@@ -25,23 +27,41 @@ public class RemoteControlCommandListener implements ICommandListener {
 
     // CraftBukkit start - Send a String
     public void sendMessage(String message) {
-        this.b.append(message);
+        this.a.append(message);
     }
     // CraftBukkit end
 
     public void sendMessage(IChatBaseComponent ichatbasecomponent) {
-        this.b.append(ichatbasecomponent.c());
+        this.a.append(ichatbasecomponent.toPlainText());
     }
 
     public boolean a(int i, String s) {
         return true;
     }
 
-    public ChunkCoordinates getChunkCoordinates() {
-        return new ChunkCoordinates(0, 0, 0);
+    public BlockPosition getChunkCoordinates() {
+        return BlockPosition.ZERO;
+    }
+
+    public Vec3D d() {
+        return Vec3D.a;
     }
 
     public World getWorld() {
-        return MinecraftServer.getServer().getWorld();
+        return this.b.getWorld();
+    }
+
+    public Entity f() {
+        return null;
+    }
+
+    public boolean getSendCommandFeedback() {
+        return true;
+    }
+
+    public void a(CommandObjectiveExecutor.EnumCommandResult commandobjectiveexecutor_enumcommandresult, int i) {}
+
+    public MinecraftServer h() {
+        return this.b;
     }
 }

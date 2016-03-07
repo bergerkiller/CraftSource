@@ -1,29 +1,31 @@
 package net.minecraft.server;
 
-import net.minecraft.util.com.google.common.collect.Multimap;
+import com.google.common.collect.Multimap;
 
 public class ItemSword extends Item {
 
-    private float damage;
-    private final EnumToolMaterial b;
+    private final float a;
+    private final Item.EnumToolMaterial b;
 
-    public ItemSword(EnumToolMaterial enumtoolmaterial) {
-        this.b = enumtoolmaterial;
+    public ItemSword(Item.EnumToolMaterial item_enumtoolmaterial) {
+        this.b = item_enumtoolmaterial;
         this.maxStackSize = 1;
-        this.setMaxDurability(enumtoolmaterial.a());
+        this.setMaxDurability(item_enumtoolmaterial.a());
         this.a(CreativeModeTab.j);
-        this.damage = 4.0F + enumtoolmaterial.c();
+        this.a = 3.0F + item_enumtoolmaterial.c();
     }
 
-    public float i() {
+    public float g() {
         return this.b.c();
     }
 
-    public float getDestroySpeed(ItemStack itemstack, Block block) {
+    public float getDestroySpeed(ItemStack itemstack, IBlockData iblockdata) {
+        Block block = iblockdata.getBlock();
+
         if (block == Blocks.WEB) {
             return 15.0F;
         } else {
-            Material material = block.getMaterial();
+            Material material = iblockdata.getMaterial();
 
             return material != Material.PLANT && material != Material.REPLACEABLE_PLANT && material != Material.CORAL && material != Material.LEAVES && material != Material.PUMPKIN ? 1.0F : 1.5F;
         }
@@ -34,36 +36,23 @@ public class ItemSword extends Item {
         return true;
     }
 
-    public boolean a(ItemStack itemstack, World world, Block block, int i, int j, int k, EntityLiving entityliving) {
-        if ((double) block.f(world, i, j, k) != 0.0D) {
+    public boolean a(ItemStack itemstack, World world, IBlockData iblockdata, BlockPosition blockposition, EntityLiving entityliving) {
+        if ((double) iblockdata.b(world, blockposition) != 0.0D) {
             itemstack.damage(2, entityliving);
         }
 
         return true;
     }
 
-    public EnumAnimation d(ItemStack itemstack) {
-        return EnumAnimation.BLOCK;
-    }
-
-    public int d_(ItemStack itemstack) {
-        return 72000;
-    }
-
-    public ItemStack a(ItemStack itemstack, World world, EntityHuman entityhuman) {
-        entityhuman.a(itemstack, this.d_(itemstack));
-        return itemstack;
-    }
-
-    public boolean canDestroySpecialBlock(Block block) {
-        return block == Blocks.WEB;
+    public boolean canDestroySpecialBlock(IBlockData iblockdata) {
+        return iblockdata.getBlock() == Blocks.WEB;
     }
 
     public int c() {
         return this.b.e();
     }
 
-    public String j() {
+    public String h() {
         return this.b.toString();
     }
 
@@ -71,10 +60,14 @@ public class ItemSword extends Item {
         return this.b.f() == itemstack1.getItem() ? true : super.a(itemstack, itemstack1);
     }
 
-    public Multimap k() {
-        Multimap multimap = super.k();
+    public Multimap<String, AttributeModifier> a(EnumItemSlot enumitemslot) {
+        Multimap multimap = super.a(enumitemslot);
 
-        multimap.put(GenericAttributes.e.getName(), new AttributeModifier(f, "Weapon modifier", (double) this.damage, 0));
+        if (enumitemslot == EnumItemSlot.MAINHAND) {
+            multimap.put(GenericAttributes.ATTACK_DAMAGE.getName(), new AttributeModifier(ItemSword.g, "Weapon modifier", (double) this.a, 0));
+            multimap.put(GenericAttributes.f.getName(), new AttributeModifier(ItemSword.h, "Weapon modifier", -2.4000000953674316D, 0));
+        }
+
         return multimap;
     }
 }

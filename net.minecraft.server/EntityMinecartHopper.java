@@ -6,24 +6,27 @@ public class EntityMinecartHopper extends EntityMinecartContainer implements IHo
 
     private boolean a = true;
     private int b = -1;
+    private BlockPosition c;
 
     public EntityMinecartHopper(World world) {
         super(world);
+        this.c = BlockPosition.ZERO;
     }
 
     public EntityMinecartHopper(World world, double d0, double d1, double d2) {
         super(world, d0, d1, d2);
+        this.c = BlockPosition.ZERO;
     }
 
-    public int m() {
-        return 5;
+    public EntityMinecartAbstract.EnumMinecartType v() {
+        return EntityMinecartAbstract.EnumMinecartType.HOPPER;
     }
 
-    public Block o() {
-        return Blocks.HOPPER;
+    public IBlockData x() {
+        return Blocks.HOPPER.getBlockData();
     }
 
-    public int s() {
+    public int A() {
         return 1;
     }
 
@@ -31,9 +34,9 @@ public class EntityMinecartHopper extends EntityMinecartContainer implements IHo
         return 5;
     }
 
-    public boolean c(EntityHuman entityhuman) {
-        if (!this.world.isStatic) {
-            entityhuman.openMinecartHopper(this);
+    public boolean a(EntityHuman entityhuman, ItemStack itemstack, EnumHand enumhand) {
+        if (!this.world.isClientSide) {
+            entityhuman.openContainer(this);
         }
 
         return true;
@@ -42,16 +45,17 @@ public class EntityMinecartHopper extends EntityMinecartContainer implements IHo
     public void a(int i, int j, int k, boolean flag) {
         boolean flag1 = !flag;
 
-        if (flag1 != this.v()) {
-            this.f(flag1);
+        if (flag1 != this.C()) {
+            this.k(flag1);
         }
+
     }
 
-    public boolean v() {
+    public boolean C() {
         return this.a;
     }
 
-    public void f(boolean flag) {
+    public void k(boolean flag) {
         this.a = flag;
     }
 
@@ -59,40 +63,48 @@ public class EntityMinecartHopper extends EntityMinecartContainer implements IHo
         return this.world;
     }
 
-    public double x() {
+    public double E() {
         return this.locX;
     }
 
-    public double aD() {
-        return this.locY;
+    public double F() {
+        return this.locY + 0.5D;
     }
 
-    public double aE() {
+    public double G() {
         return this.locZ;
     }
 
-    public void h() {
-        super.h();
-        if (!this.world.isStatic && this.isAlive() && this.v()) {
-            --this.b;
-            if (!this.aG()) {
-                this.n(0);
-                if (this.aF()) {
-                    this.n(4);
+    public void m() {
+        super.m();
+        if (!this.world.isClientSide && this.isAlive() && this.C()) {
+            BlockPosition blockposition = new BlockPosition(this);
+
+            if (blockposition.equals(this.c)) {
+                --this.b;
+            } else {
+                this.setCooldown(0);
+            }
+
+            if (!this.J()) {
+                this.setCooldown(0);
+                if (this.I()) {
+                    this.setCooldown(4);
                     this.update();
                 }
             }
         }
+
     }
 
-    public boolean aF() {
-        if (TileEntityHopper.suckInItems(this)) {
+    public boolean I() {
+        if (TileEntityHopper.a((IHopper) this)) {
             return true;
         } else {
-            List list = this.world.a(EntityItem.class, this.boundingBox.grow(0.25D, 0.0D, 0.25D), IEntitySelector.a);
+            List list = this.world.a(EntityItem.class, this.getBoundingBox().grow(0.25D, 0.0D, 0.25D), IEntitySelector.a);
 
-            if (list.size() > 0) {
-                TileEntityHopper.addEntityItem(this, (EntityItem) list.get(0));
+            if (!list.isEmpty()) {
+                TileEntityHopper.a((IInventory) this, (EntityItem) list.get(0));
             }
 
             return false;
@@ -101,24 +113,37 @@ public class EntityMinecartHopper extends EntityMinecartContainer implements IHo
 
     public void a(DamageSource damagesource) {
         super.a(damagesource);
-        this.a(Item.getItemOf(Blocks.HOPPER), 1, 0.0F);
+        if (this.world.getGameRules().getBoolean("doEntityDrops")) {
+            this.a(Item.getItemOf(Blocks.HOPPER), 1, 0.0F);
+        }
+
     }
 
     protected void b(NBTTagCompound nbttagcompound) {
         super.b(nbttagcompound);
         nbttagcompound.setInt("TransferCooldown", this.b);
+        nbttagcompound.setBoolean("Enabled", this.a);
     }
 
     protected void a(NBTTagCompound nbttagcompound) {
         super.a(nbttagcompound);
         this.b = nbttagcompound.getInt("TransferCooldown");
+        this.a = nbttagcompound.hasKey("Enabled") ? nbttagcompound.getBoolean("Enabled") : true;
     }
 
-    public void n(int i) {
+    public void setCooldown(int i) {
         this.b = i;
     }
 
-    public boolean aG() {
+    public boolean J() {
         return this.b > 0;
+    }
+
+    public String getContainerName() {
+        return "minecraft:hopper";
+    }
+
+    public Container createContainer(PlayerInventory playerinventory, EntityHuman entityhuman) {
+        return new ContainerHopper(playerinventory, this, entityhuman);
     }
 }

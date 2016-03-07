@@ -2,9 +2,9 @@ package net.minecraft.server;
 
 public class EnchantmentWaterWorker extends Enchantment {
 
-    public EnchantmentWaterWorker(int i, int j) {
-        super(i, j, EnchantmentSlotType.ARMOR_HEAD);
-        this.b("waterWorker");
+    public EnchantmentWaterWorker(Enchantment.Rarity enchantment_rarity, EnumItemSlot... aenumitemslot) {
+        super(enchantment_rarity, EnchantmentSlotType.ARMOR_HEAD, aenumitemslot);
+        this.c("waterWorker");
     }
 
     public int a(int i) {

@@ -1,32 +1,30 @@
 package net.minecraft.server;
 
-public class PacketPlayOutRemoveEntityEffect extends Packet {
+import java.io.IOException;
+
+public class PacketPlayOutRemoveEntityEffect implements Packet<PacketListenerPlayOut> {
 
     private int a;
-    private int b;
+    private MobEffectList b;
 
     public PacketPlayOutRemoveEntityEffect() {}
 
-    public PacketPlayOutRemoveEntityEffect(int i, MobEffect mobeffect) {
+    public PacketPlayOutRemoveEntityEffect(int i, MobEffectList mobeffectlist) {
         this.a = i;
-        this.b = mobeffect.getEffectId();
+        this.b = mobeffectlist;
     }
 
-    public void a(PacketDataSerializer packetdataserializer) {
-        this.a = packetdataserializer.readInt();
-        this.b = packetdataserializer.readUnsignedByte();
+    public void a(PacketDataSerializer packetdataserializer) throws IOException {
+        this.a = packetdataserializer.g();
+        this.b = MobEffectList.fromId(packetdataserializer.readUnsignedByte());
     }
 
-    public void b(PacketDataSerializer packetdataserializer) {
-        packetdataserializer.writeInt(this.a);
-        packetdataserializer.writeByte(this.b);
+    public void b(PacketDataSerializer packetdataserializer) throws IOException {
+        packetdataserializer.b(this.a);
+        packetdataserializer.writeByte(MobEffectList.getId(this.b));
     }
 
-    public void a(PacketPlayOutListener packetplayoutlistener) {
-        packetplayoutlistener.a(this);
-    }
-
-    public void handle(PacketListener packetlistener) {
-        this.a((PacketPlayOutListener) packetlistener);
+    public void a(PacketListenerPlayOut packetlistenerplayout) {
+        packetlistenerplayout.a(this);
     }
 }

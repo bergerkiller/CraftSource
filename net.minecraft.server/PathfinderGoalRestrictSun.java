@@ -9,14 +9,14 @@ public class PathfinderGoalRestrictSun extends PathfinderGoal {
     }
 
     public boolean a() {
-        return this.a.world.w();
+        return this.a.world.B() && this.a.getEquipment(EnumItemSlot.HEAD) == null;
     }
 
     public void c() {
-        this.a.getNavigation().d(true);
+        ((Navigation) this.a.getNavigation()).d(true);
     }
 
     public void d() {
-        this.a.getNavigation().d(false);
+        ((Navigation) this.a.getNavigation()).d(false);
     }
 }

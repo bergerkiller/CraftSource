@@ -1,66 +1,37 @@
 package net.minecraft.server;
 
-// CraftBukkit start
-import org.bukkit.craftbukkit.block.CraftBlockState;
-import org.bukkit.craftbukkit.event.CraftEventFactory;
-// CraftBukkit end
-
 public class ItemFireball extends Item {
 
     public ItemFireball() {
         this.a(CreativeModeTab.f);
     }
 
-    public boolean interactWith(ItemStack itemstack, EntityHuman entityhuman, World world, int i, int j, int k, int l, float f, float f1, float f2) {
-        if (world.isStatic) {
-            return true;
+    public EnumInteractionResult a(ItemStack itemstack, EntityHuman entityhuman, World world, BlockPosition blockposition, EnumHand enumhand, EnumDirection enumdirection, float f, float f1, float f2) {
+        if (world.isClientSide) {
+            return EnumInteractionResult.SUCCESS;
         } else {
-            if (l == 0) {
-                --j;
-            }
-
-            if (l == 1) {
-                ++j;
-            }
-
-            if (l == 2) {
-                --k;
-            }
-
-            if (l == 3) {
-                ++k;
-            }
-
-            if (l == 4) {
-                --i;
-            }
-
-            if (l == 5) {
-                ++i;
-            }
-
-            if (!entityhuman.a(i, j, k, l, itemstack)) {
-                return false;
+            blockposition = blockposition.shift(enumdirection);
+            if (!entityhuman.a(blockposition, enumdirection, itemstack)) {
+                return EnumInteractionResult.FAIL;
             } else {
-                if (world.getType(i, j, k).getMaterial() == Material.AIR) {
+                if (world.getType(blockposition).getMaterial() == Material.AIR) {
                     // CraftBukkit start - fire BlockIgniteEvent
-                    if (org.bukkit.craftbukkit.event.CraftEventFactory.callBlockIgniteEvent(world, i, j, k, org.bukkit.event.block.BlockIgniteEvent.IgniteCause.FIREBALL, entityhuman).isCancelled()) {
+                    if (org.bukkit.craftbukkit.event.CraftEventFactory.callBlockIgniteEvent(world, blockposition.getX(), blockposition.getY(), blockposition.getZ(), org.bukkit.event.block.BlockIgniteEvent.IgniteCause.FIREBALL, entityhuman).isCancelled()) {
                         if (!entityhuman.abilities.canInstantlyBuild) {
                             --itemstack.count;
                         }
-                        return false;
+                        return EnumInteractionResult.PASS;
                     }
                     // CraftBukkit end
-
-                    world.makeSound((double) i + 0.5D, (double) j + 0.5D, (double) k + 0.5D, "fire.ignite", 1.0F, g.nextFloat() * 0.4F + 0.8F);
-                    world.setTypeUpdate(i, j, k, Blocks.FIRE);
+                    world.a((EntityHuman) null, blockposition, SoundEffects.bl, SoundCategory.BLOCKS, 1.0F, (ItemFireball.i.nextFloat() - ItemFireball.i.nextFloat()) * 0.2F + 1.0F);
+                    world.setTypeUpdate(blockposition, Blocks.FIRE.getBlockData());
                 }
 
                 if (!entityhuman.abilities.canInstantlyBuild) {
                     --itemstack.count;
                 }
 
-                return true;
+                return EnumInteractionResult.SUCCESS;
             }
         }
     }

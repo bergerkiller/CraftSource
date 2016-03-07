@@ -1,47 +1,39 @@
 package net.minecraft.server;
 
-import java.io.IOException; // CraftBukkit
+import java.io.IOException;
 
-public class PacketHandshakingInSetProtocol extends Packet {
+public class PacketHandshakingInSetProtocol implements Packet<PacketHandshakingInListener> {
 
     private int a;
-    public String b; // CraftBukkit private -> public
-    public int c; // CraftBukkit private -> public
+    public String hostname;
+    public int port;
     private EnumProtocol d;
 
     public PacketHandshakingInSetProtocol() {}
 
-    public void a(PacketDataSerializer packetdataserializer) throws IOException { // CraftBukkit - added throws
-        this.a = packetdataserializer.a();
-        this.b = packetdataserializer.c(255);
-        this.c = packetdataserializer.readUnsignedShort();
-        this.d = EnumProtocol.a(packetdataserializer.a());
+    public void a(PacketDataSerializer packetdataserializer) throws IOException {
+        this.a = packetdataserializer.g();
+        this.hostname = packetdataserializer.c(Short.MAX_VALUE); // Spigot
+        this.port = packetdataserializer.readUnsignedShort();
+        this.d = EnumProtocol.a(packetdataserializer.g());
     }
 
-    public void b(PacketDataSerializer packetdataserializer) throws IOException { // CraftBukkit - added throws
+    public void b(PacketDataSerializer packetdataserializer) throws IOException {
         packetdataserializer.b(this.a);
-        packetdataserializer.a(this.b);
-        packetdataserializer.writeShort(this.c);
-        packetdataserializer.b(this.d.c());
+        packetdataserializer.a(this.hostname);
+        packetdataserializer.writeShort(this.port);
+        packetdataserializer.b(this.d.a());
     }
 
     public void a(PacketHandshakingInListener packethandshakinginlistener) {
         packethandshakinginlistener.a(this);
     }
 
-    public boolean a() {
-        return true;
-    }
-
-    public EnumProtocol c() {
+    public EnumProtocol a() {
         return this.d;
     }
 
-    public int d() {
+    public int b() {
         return this.a;
-    }
-
-    public void handle(PacketListener packetlistener) {
-        this.a((PacketHandshakingInListener) packetlistener);
     }
 }

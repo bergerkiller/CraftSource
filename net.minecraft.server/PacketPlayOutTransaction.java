@@ -1,6 +1,8 @@
 package net.minecraft.server;
 
-public class PacketPlayOutTransaction extends Packet {
+import java.io.IOException;
+
+public class PacketPlayOutTransaction implements Packet<PacketListenerPlayOut> {
 
     private int a;
     private short b;
@@ -8,33 +10,25 @@ public class PacketPlayOutTransaction extends Packet {
 
     public PacketPlayOutTransaction() {}
 
-    public PacketPlayOutTransaction(int i, short short1, boolean flag) {
+    public PacketPlayOutTransaction(int i, short short0, boolean flag) {
         this.a = i;
-        this.b = short1;
+        this.b = short0;
         this.c = flag;
     }
 
-    public void a(PacketPlayOutListener packetplayoutlistener) {
-        packetplayoutlistener.a(this);
+    public void a(PacketListenerPlayOut packetlistenerplayout) {
+        packetlistenerplayout.a(this);
     }
 
-    public void a(PacketDataSerializer packetdataserializer) {
+    public void a(PacketDataSerializer packetdataserializer) throws IOException {
         this.a = packetdataserializer.readUnsignedByte();
         this.b = packetdataserializer.readShort();
         this.c = packetdataserializer.readBoolean();
     }
 
-    public void b(PacketDataSerializer packetdataserializer) {
+    public void b(PacketDataSerializer packetdataserializer) throws IOException {
         packetdataserializer.writeByte(this.a);
         packetdataserializer.writeShort(this.b);
         packetdataserializer.writeBoolean(this.c);
-    }
-
-    public String b() {
-        return String.format("id=%d, uid=%d, accepted=%b", new Object[] { Integer.valueOf(this.a), Short.valueOf(this.b), Boolean.valueOf(this.c)});
-    }
-
-    public void handle(PacketListener packetlistener) {
-        this.a((PacketPlayOutListener) packetlistener);
     }
 }

@@ -1,33 +1,39 @@
 package net.minecraft.server;
 
+import com.google.common.base.Predicate;
+
 public class EntityOcelot extends EntityTameableAnimal {
 
-    private PathfinderGoalTempt bq;
+    private static final DataWatcherObject<Integer> bz = DataWatcher.a(EntityOcelot.class, DataWatcherRegistry.b);
+    private PathfinderGoalAvoidTarget<EntityHuman> bA;
+    private PathfinderGoalTempt bB;
+    public boolean spawnBonus = true; // Spigot
 
     public EntityOcelot(World world) {
         super(world);
-        this.a(0.6F, 0.8F);
-        this.getNavigation().a(true);
+        this.setSize(0.6F, 0.7F);
+    }
+
+    protected void r() {
         this.goalSelector.a(1, new PathfinderGoalFloat(this));
-        this.goalSelector.a(2, this.bp);
-        this.goalSelector.a(3, this.bq = new PathfinderGoalTempt(this, 0.6D, Items.RAW_FISH, true));
-        this.goalSelector.a(4, new PathfinderGoalAvoidPlayer(this, EntityHuman.class, 16.0F, 0.8D, 1.33D));
+        this.goalSelector.a(2, this.goalSit = new PathfinderGoalSit(this));
+        this.goalSelector.a(3, this.bB = new PathfinderGoalTempt(this, 0.6D, Items.FISH, true));
         this.goalSelector.a(5, new PathfinderGoalFollowOwner(this, 1.0D, 10.0F, 5.0F));
-        this.goalSelector.a(6, new PathfinderGoalJumpOnBlock(this, 1.33D));
+        this.goalSelector.a(6, new PathfinderGoalJumpOnBlock(this, 0.8D));
         this.goalSelector.a(7, new PathfinderGoalLeapAtTarget(this, 0.3F));
         this.goalSelector.a(8, new PathfinderGoalOcelotAttack(this));
         this.goalSelector.a(9, new PathfinderGoalBreed(this, 0.8D));
         this.goalSelector.a(10, new PathfinderGoalRandomStroll(this, 0.8D));
         this.goalSelector.a(11, new PathfinderGoalLookAtPlayer(this, EntityHuman.class, 10.0F));
-        this.targetSelector.a(1, new PathfinderGoalRandomTargetNonTamed(this, EntityChicken.class, 750, false));
+        this.targetSelector.a(1, new PathfinderGoalRandomTargetNonTamed(this, EntityChicken.class, false, (Predicate) null));
     }
 
-    protected void c() {
-        super.c();
-        this.datawatcher.a(18, Byte.valueOf((byte) 0));
+    protected void i() {
+        super.i();
+        this.datawatcher.register(EntityOcelot.bz, Integer.valueOf(0));
     }
 
-    public void bp() {
+    public void M() {
         if (this.getControllerMove().a()) {
             double d0 = this.getControllerMove().b();
 
@@ -45,23 +51,20 @@ public class EntityOcelot extends EntityTameableAnimal {
             this.setSneaking(false);
             this.setSprinting(false);
         }
+
     }
 
     protected boolean isTypeNotPersistent() {
         return !this.isTamed() /*&& this.ticksLived > 2400*/; // CraftBukkit
     }
 
-    public boolean bk() {
-        return true;
-    }
-
-    protected void aD() {
-        super.aD();
+    protected void initAttributes() {
+        super.initAttributes();
         this.getAttributeInstance(GenericAttributes.maxHealth).setValue(10.0D);
-        this.getAttributeInstance(GenericAttributes.d).setValue(0.30000001192092896D);
+        this.getAttributeInstance(GenericAttributes.MOVEMENT_SPEED).setValue(0.30000001192092896D);
     }
 
-    protected void b(float f) {}
+    public void e(float f, float f1) {}
 
     public void b(NBTTagCompound nbttagcompound) {
         super.b(nbttagcompound);
@@ -73,68 +76,67 @@ public class EntityOcelot extends EntityTameableAnimal {
         this.setCatType(nbttagcompound.getInt("CatType"));
     }
 
-    protected String t() {
-        return this.isTamed() ? (this.ce() ? "mob.cat.purr" : (this.random.nextInt(4) == 0 ? "mob.cat.purreow" : "mob.cat.meow")) : "";
+    protected SoundEffect G() {
+        return this.isTamed() ? (this.isInLove() ? SoundEffects.T : (this.random.nextInt(4) == 0 ? SoundEffects.U : SoundEffects.P)) : null;
     }
 
-    protected String aT() {
-        return "mob.cat.hitt";
+    protected SoundEffect bR() {
+        return SoundEffects.S;
     }
 
-    protected String aU() {
-        return "mob.cat.hitt";
+    protected SoundEffect bS() {
+        return SoundEffects.Q;
     }
 
-    protected float bf() {
+    protected float cd() {
         return 0.4F;
     }
 
-    protected Item getLoot() {
-        return Items.LEATHER;
-    }
-
-    public boolean n(Entity entity) {
+    public boolean B(Entity entity) {
         return entity.damageEntity(DamageSource.mobAttack(this), 3.0F);
     }
 
+    /* CraftBukkit start
+    // Function disabled as it has no special function anymore after
+    //   setSitting is disabled.
     public boolean damageEntity(DamageSource damagesource, float f) {
-        if (this.isInvulnerable()) {
+        if (this.isInvulnerable(damagesource)) {
             return false;
         } else {
-            this.bp.setSitting(false);
+            if (this.goalSit != null) {
+                this.goalSit.setSitting(false);
+            }
+
             return super.damageEntity(damagesource, f);
         }
     }
+    // CraftBukkit end */
 
-    protected void dropDeathLoot(boolean flag, int i) {}
+    protected MinecraftKey J() {
+        return LootTables.J;
+    }
 
-    public boolean a(EntityHuman entityhuman) {
-        ItemStack itemstack = entityhuman.inventory.getItemInHand();
-
+    public boolean a(EntityHuman entityhuman, EnumHand enumhand, ItemStack itemstack) {
         if (this.isTamed()) {
-            if (this.e(entityhuman) && !this.world.isStatic && !this.c(itemstack)) {
-                this.bp.setSitting(!this.isSitting());
+            if (this.d((EntityLiving) entityhuman) && !this.world.isClientSide && !this.e(itemstack)) {
+                this.goalSit.setSitting(!this.isSitting());
             }
-        } else if (this.bq.f() && itemstack != null && itemstack.getItem() == Items.RAW_FISH && entityhuman.f(this) < 9.0D) {
+        } else if ((this.bB == null || this.bB.f()) && itemstack != null && itemstack.getItem() == Items.FISH && entityhuman.h(this) < 9.0D) {
             if (!entityhuman.abilities.canInstantlyBuild) {
                 --itemstack.count;
             }
 
-            if (itemstack.count <= 0) {
-                entityhuman.inventory.setItem(entityhuman.inventory.itemInHandIndex, (ItemStack) null);
-            }
-
-            if (!this.world.isStatic) {
+            if (!this.world.isClientSide) {
                 // CraftBukkit - added event call and isCancelled check
                 if (this.random.nextInt(3) == 0 && !org.bukkit.craftbukkit.event.CraftEventFactory.callEntityTameEvent(this, entityhuman).isCancelled()) {
                     this.setTamed(true);
                     this.setCatType(1 + this.world.random.nextInt(3));
-                    this.setOwnerUUID(entityhuman.getUniqueID().toString());
-                    this.i(true);
-                    this.bp.setSitting(true);
+                    this.setOwnerUUID(entityhuman.getUniqueID());
+                    this.o(true);
+                    this.goalSit.setSitting(true);
                     this.world.broadcastEntityEffect(this, (byte) 7);
                 } else {
-                    this.i(false);
+                    this.o(false);
                     this.world.broadcastEntityEffect(this, (byte) 6);
                 }
             }
@@ -142,7 +144,7 @@ public class EntityOcelot extends EntityTameableAnimal {
             return true;
         }
 
-        return super.a(entityhuman);
+        return super.a(entityhuman, enumhand, itemstack);
     }
 
     public EntityOcelot b(EntityAgeable entityageable) {
@@ -157,8 +159,8 @@ public class EntityOcelot extends EntityTameableAnimal {
         return entityocelot;
     }
 
-    public boolean c(ItemStack itemstack) {
-        return itemstack != null && itemstack.getItem() == Items.RAW_FISH;
+    public boolean e(ItemStack itemstack) {
+        return itemstack != null && itemstack.getItem() == Items.FISH;
     }
 
     public boolean mate(EntityAnimal entityanimal) {
@@ -171,54 +173,69 @@ public class EntityOcelot extends EntityTameableAnimal {
         } else {
             EntityOcelot entityocelot = (EntityOcelot) entityanimal;
 
-            return !entityocelot.isTamed() ? false : this.ce() && entityocelot.ce();
+            return !entityocelot.isTamed() ? false : this.isInLove() && entityocelot.isInLove();
         }
     }
 
     public int getCatType() {
-        return this.datawatcher.getByte(18);
+        return ((Integer) this.datawatcher.get(EntityOcelot.bz)).intValue();
     }
 
     public void setCatType(int i) {
-        this.datawatcher.watch(18, Byte.valueOf((byte) i));
+        this.datawatcher.set(EntityOcelot.bz, Integer.valueOf(i));
+    }
+
+    public boolean cF() {
+        return this.world.random.nextInt(3) != 0;
     }
 
     public boolean canSpawn() {
-        if (this.world.random.nextInt(3) == 0) {
-            return false;
-        } else {
-            if (this.world.b(this.boundingBox) && this.world.getCubes(this, this.boundingBox).isEmpty() && !this.world.containsLiquid(this.boundingBox)) {
-                int i = MathHelper.floor(this.locX);
-                int j = MathHelper.floor(this.boundingBox.b);
-                int k = MathHelper.floor(this.locZ);
+        if (this.world.a(this.getBoundingBox(), (Entity) this) && this.world.getCubes(this, this.getBoundingBox()).isEmpty() && !this.world.containsLiquid(this.getBoundingBox())) {
+            BlockPosition blockposition = new BlockPosition(this.locX, this.getBoundingBox().b, this.locZ);
 
-                if (j < 63) {
-                    return false;
-                }
-
-                Block block = this.world.getType(i, j - 1, k);
-
-                if (block == Blocks.GRASS || block.getMaterial() == Material.LEAVES) {
-                    return true;
-                }
+            if (blockposition.getY() < this.world.K()) {
+                return false;
             }
 
-            return false;
+            IBlockData iblockdata = this.world.getType(blockposition.down());
+            Block block = iblockdata.getBlock();
+
+            if (block == Blocks.GRASS || iblockdata.getMaterial() == Material.LEAVES) {
+                return true;
+            }
         }
+
+        return false;
     }
 
     public String getName() {
         return this.hasCustomName() ? this.getCustomName() : (this.isTamed() ? LocaleI18n.get("entity.Cat.name") : super.getName());
     }
 
-    public GroupDataEntity prepare(GroupDataEntity groupdataentity) {
-        groupdataentity = super.prepare(groupdataentity);
-        if (this.world.random.nextInt(7) == 0) {
+    public void setTamed(boolean flag) {
+        super.setTamed(flag);
+    }
+
+    protected void da() {
+        if (this.bA == null) {
+            this.bA = new PathfinderGoalAvoidTarget(this, EntityHuman.class, 16.0F, 0.8D, 1.33D);
+        }
+
+        this.goalSelector.a((PathfinderGoal) this.bA);
+        if (!this.isTamed()) {
+            this.goalSelector.a(4, this.bA);
+        }
+
+    }
+
+    public GroupDataEntity prepare(DifficultyDamageScaler difficultydamagescaler, GroupDataEntity groupdataentity) {
+        groupdataentity = super.prepare(difficultydamagescaler, groupdataentity);
+        if (spawnBonus && this.world.random.nextInt(7) == 0) { // Spigot
             for (int i = 0; i < 2; ++i) {
                 EntityOcelot entityocelot = new EntityOcelot(this.world);
 
                 entityocelot.setPositionRotation(this.locX, this.locY, this.locZ, this.yaw, 0.0F);
-                entityocelot.setAge(-24000);
+                entityocelot.setAgeRaw(-24000);
                 this.world.addEntity(entityocelot, org.bukkit.event.entity.CreatureSpawnEvent.SpawnReason.OCELOT_BABY); // CraftBukkit - add SpawnReason
             }
         }

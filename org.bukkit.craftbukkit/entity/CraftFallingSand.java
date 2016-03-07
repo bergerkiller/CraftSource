@@ -33,11 +33,11 @@ public class CraftFallingSand extends CraftEntity implements FallingSand {
     }
 
     public int getBlockId() {
-        return CraftMagicNumbers.getId(getHandle().id);
+        return CraftMagicNumbers.getId(getHandle().getBlock().getBlock());
     }
 
     public byte getBlockData() {
-        return (byte) getHandle().data;
+        return (byte) getHandle().getBlock().getBlock().toLegacyData(getHandle().getBlock());
     }
 
     public boolean getDropItem() {
@@ -46,5 +46,15 @@ public class CraftFallingSand extends CraftEntity implements FallingSand {
 
     public void setDropItem(boolean drop) {
         getHandle().dropItem = drop;
+    }
+
+    @Override
+    public boolean canHurtEntities() {
+        return getHandle().hurtEntities;
+    }
+
+    @Override
+    public void setHurtEntities(boolean hurtEntities) {
+        getHandle().hurtEntities = hurtEntities;
     }
 }

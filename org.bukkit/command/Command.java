@@ -21,7 +21,7 @@ import com.google.common.collect.ImmutableList;
  * Represents a Command, which executes various tasks upon user input
  */
 public abstract class Command {
-    private final String name;
+    private String name;
     private String nextLabel;
     private String label;
     private List<String> aliases;
@@ -57,7 +57,14 @@ public abstract class Command {
     public abstract boolean execute(CommandSender sender, String commandLabel, String[] args);
 
     /**
+     * Executed on tab completion for this command, returning a list of
+     * options the player can tab through.
+     *
      * @deprecated This method is not supported and returns null
+     * @param sender Source object which is executing this command
+     * @param args All arguments passed to the command, split via ' '
+     * @return a list of tab-completions for the specified arguments. This
+     *     will never be null. List may be immutable.
      */
     @Deprecated
     public List<String> tabComplete(CommandSender sender, String[] args) {
@@ -107,6 +114,25 @@ public abstract class Command {
      */
     public String getName() {
         return name;
+    }
+
+    /**
+     * Sets the name of this command.
+     * <p>
+     * May only be used before registering the command.
+     * Will return true if the new name is set, and false
+     * if the command has already been registered.
+     *
+     * @param name New command name
+     * @return returns true if the name change happened instantly or false if
+     *     the command was already registered
+     */
+    public boolean setName(String name) {
+        if (!isRegistered()) {
+            this.name = name;
+            return true;
+        }
+        return false;
     }
 
     /**
@@ -179,9 +205,9 @@ public abstract class Command {
     }
 
     /**
-     * Returns the current label for this command
+     * Returns the label for this command
      *
-     * @return Label of this command or null if not registered
+     * @return Label of this command
      */
     public String getLabel() {
         return label;
@@ -190,12 +216,13 @@ public abstract class Command {
     /**
      * Sets the label of this command.
      * <p>
-     * If the command is currently registered the label change will only take
-     * effect after its been re-registered e.g. after a /reload
+     * May only be used before registering the command.
+     * Will return true if the new name is set, and false
+     * if the command has already been registered.
      *
      * @param name The command's name
      * @return returns true if the name change happened instantly or false if
-     *     it was scheduled for re-registration
+     *     the command was already registered
      */
     public boolean setLabel(String name) {
         this.nextLabel = name;

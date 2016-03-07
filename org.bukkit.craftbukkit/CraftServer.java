@@ -23,83 +23,7 @@ import java.util.regex.Pattern;
 
 import javax.imageio.ImageIO;
 
-import net.minecraft.server.ChunkCoordinates;
-import net.minecraft.server.CommandAchievement;
-import net.minecraft.server.CommandBan;
-import net.minecraft.server.CommandBanIp;
-import net.minecraft.server.CommandBanList;
-import net.minecraft.server.CommandClear;
-import net.minecraft.server.CommandDeop;
-import net.minecraft.server.CommandDifficulty;
-import net.minecraft.server.CommandEffect;
-import net.minecraft.server.CommandEnchant;
-import net.minecraft.server.CommandGamemode;
-import net.minecraft.server.CommandGamemodeDefault;
-import net.minecraft.server.CommandGamerule;
-import net.minecraft.server.CommandGive;
-import net.minecraft.server.CommandHelp;
-import net.minecraft.server.CommandIdleTimeout;
-import net.minecraft.server.CommandKick;
-import net.minecraft.server.CommandKill;
-import net.minecraft.server.CommandList;
-import net.minecraft.server.CommandMe;
-import net.minecraft.server.CommandNetstat;
-import net.minecraft.server.CommandOp;
-import net.minecraft.server.CommandPardon;
-import net.minecraft.server.CommandPardonIP;
-import net.minecraft.server.CommandPlaySound;
-import net.minecraft.server.CommandSay;
-import net.minecraft.server.CommandScoreboard;
-import net.minecraft.server.CommandSeed;
-import net.minecraft.server.CommandSetBlock;
-import net.minecraft.server.CommandSetWorldSpawn;
-import net.minecraft.server.CommandSpawnpoint;
-import net.minecraft.server.CommandSpreadPlayers;
-import net.minecraft.server.CommandSummon;
-import net.minecraft.server.CommandTell;
-import net.minecraft.server.CommandTellRaw;
-import net.minecraft.server.CommandTestFor;
-import net.minecraft.server.CommandTestForBlock;
-import net.minecraft.server.CommandTime;
-import net.minecraft.server.CommandToggleDownfall;
-import net.minecraft.server.CommandTp;
-import net.minecraft.server.CommandWeather;
-import net.minecraft.server.CommandWhitelist;
-import net.minecraft.server.CommandXp;
-import net.minecraft.server.Convertable;
-import net.minecraft.server.ConvertProgressUpdater;
-import net.minecraft.server.CraftingManager;
-import net.minecraft.server.DedicatedPlayerList;
-import net.minecraft.server.DedicatedServer;
-import net.minecraft.server.Enchantment;
-import net.minecraft.server.EntityPlayer;
-import net.minecraft.server.EntityTracker;
-import net.minecraft.server.EnumDifficulty;
-import net.minecraft.server.EnumGamemode;
-import net.minecraft.server.ExceptionWorldConflict;
-import net.minecraft.server.Items;
-import net.minecraft.server.JsonListEntry;
-import net.minecraft.server.PlayerList;
-import net.minecraft.server.RecipesFurnace;
-import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.MobEffectList;
-import net.minecraft.server.PropertyManager;
-import net.minecraft.server.ServerCommand;
-import net.minecraft.server.ServerNBTManager;
-import net.minecraft.server.WorldLoaderServer;
-import net.minecraft.server.WorldManager;
-import net.minecraft.server.WorldMap;
-import net.minecraft.server.PersistentCollection;
-import net.minecraft.server.WorldNBTStorage;
-import net.minecraft.server.WorldServer;
-import net.minecraft.server.WorldSettings;
-import net.minecraft.server.WorldType;
-import net.minecraft.util.com.google.common.base.Charsets;
-import net.minecraft.util.com.mojang.authlib.GameProfile;
-import net.minecraft.util.io.netty.buffer.ByteBuf;
-import net.minecraft.util.io.netty.buffer.ByteBufOutputStream;
-import net.minecraft.util.io.netty.buffer.Unpooled;
-import net.minecraft.util.io.netty.handler.codec.base64.Base64;
+import net.minecraft.server.*;
 
 import org.bukkit.BanList;
 import org.bukkit.Bukkit;
@@ -112,6 +36,10 @@ import org.bukkit.Warning.WarningState;
 import org.bukkit.World;
 import org.bukkit.World.Environment;
 import org.bukkit.WorldCreator;
+import org.bukkit.boss.BarColor;
+import org.bukkit.boss.BarFlag;
+import org.bukkit.boss.BarStyle;
+import org.bukkit.boss.BossBar;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandException;
 import org.bukkit.command.CommandSender;
@@ -122,8 +50,10 @@ import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.configuration.serialization.ConfigurationSerialization;
 import org.bukkit.conversations.Conversable;
+import org.bukkit.craftbukkit.boss.CraftBossBar;
 import org.bukkit.craftbukkit.command.VanillaCommandWrapper;
 import org.bukkit.craftbukkit.entity.CraftPlayer;
+import org.bukkit.craftbukkit.generator.CraftChunkData;
 import org.bukkit.craftbukkit.help.SimpleHelpMap;
 import org.bukkit.craftbukkit.inventory.CraftFurnaceRecipe;
 import org.bukkit.craftbukkit.inventory.CraftInventoryCustom;
@@ -139,18 +69,16 @@ import org.bukkit.craftbukkit.metadata.WorldMetadataStore;
 import org.bukkit.craftbukkit.potion.CraftPotionBrewer;
 import org.bukkit.craftbukkit.scheduler.CraftScheduler;
 import org.bukkit.craftbukkit.scoreboard.CraftScoreboardManager;
-import org.bukkit.craftbukkit.updater.AutoUpdater;
-import org.bukkit.craftbukkit.updater.BukkitDLUpdaterService;
 import org.bukkit.craftbukkit.util.CraftIconCache;
 import org.bukkit.craftbukkit.util.CraftMagicNumbers;
 import org.bukkit.craftbukkit.util.DatFileFilter;
 import org.bukkit.craftbukkit.util.Versioning;
+import org.bukkit.craftbukkit.util.permissions.CraftDefaultPermissions;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.event.player.PlayerChatTabCompleteEvent;
 import org.bukkit.event.world.WorldInitEvent;
 import org.bukkit.event.world.WorldLoadEvent;
-import org.bukkit.event.world.WorldSaveEvent;
 import org.bukkit.event.world.WorldUnloadEvent;
 import org.bukkit.generator.ChunkGenerator;
 import org.bukkit.help.HelpMap;
@@ -186,10 +114,19 @@ import com.avaje.ebean.config.DataSourceConfig;
 import com.avaje.ebean.config.ServerConfig;
 import com.avaje.ebean.config.dbplatform.SQLitePlatform;
 import com.avaje.ebeaninternal.server.lib.sql.TransactionIsolation;
+import com.google.common.base.Charsets;
+import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 import com.google.common.collect.MapMaker;
+import com.mojang.authlib.GameProfile;
 
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.ByteBufOutputStream;
+import io.netty.buffer.Unpooled;
+import io.netty.handler.codec.base64.Base64;
 import jline.console.ConsoleReader;
+import net.md_5.bungee.api.chat.BaseComponent;
 
 public final class CraftServer implements Server {
     private static final Player[] EMPTY_PLAYER_ARRAY = new Player[0];
@@ -210,7 +147,6 @@ public final class CraftServer implements Server {
     private YamlConfiguration commandsConfiguration;
     private final Yaml yaml = new Yaml(new SafeConstructor());
     private final Map<UUID, OfflinePlayer> offlinePlayers = new MapMaker().softValues().makeMap();
-    private final AutoUpdater updater;
     private final EntityMetadataStore entityMetadata = new EntityMetadataStore();
     private final PlayerMetadataStore playerMetadata = new PlayerMetadataStore();
     private final WorldMetadataStore worldMetadata = new WorldMetadataStore();
@@ -231,6 +167,7 @@ public final class CraftServer implements Server {
     private final Pattern validUserPattern = Pattern.compile("^[a-zA-Z0-9_]{2,16}$");
     private final UUID invalidUserUUID = UUID.nameUUIDFromBytes("InvalidUsername".getBytes(Charsets.UTF_8));
     private final List<CraftPlayer> playerView;
+    public int reloadCount;
 
     private final class BooleanWrapper {
         private boolean value = true;
@@ -244,7 +181,7 @@ public final class CraftServer implements Server {
     public CraftServer(MinecraftServer console, PlayerList playerList) {
         this.console = console;
         this.playerList = (DedicatedPlayerList) playerList;
-        this.playerView = Collections.unmodifiableList(net.minecraft.util.com.google.common.collect.Lists.transform(playerList.players, new net.minecraft.util.com.google.common.base.Function<EntityPlayer, CraftPlayer>() {
+        this.playerView = Collections.unmodifiableList(Lists.transform(playerList.players, new Function<EntityPlayer, CraftPlayer>() {
             @Override
             public CraftPlayer apply(EntityPlayer player) {
                 return player.getBukkitEntity();
@@ -256,11 +193,11 @@ public final class CraftServer implements Server {
         Bukkit.setServer(this);
 
         // Register all the Enchantments and PotionTypes now so we can stop new registration immediately after
-        Enchantment.DAMAGE_ALL.getClass();
+        Enchantments.DAMAGE_ALL.getClass();
         org.bukkit.enchantments.Enchantment.stopAcceptingRegistrations();
 
         Potion.setPotionBrewer(new CraftPotionBrewer());
-        MobEffectList.BLINDNESS.getClass();
+        MobEffects.BLINDNESS.getClass();
         PotionEffectType.stopAcceptingRegistrations();
         // Ugly hack :(
 
@@ -316,15 +253,10 @@ public final class CraftServer implements Server {
         chunkGCLoadThresh = configuration.getInt("chunk-gc.load-threshold");
         loadIcon();
 
-        updater = new AutoUpdater(new BukkitDLUpdaterService(configuration.getString("auto-updater.host")), getLogger(), configuration.getString("auto-updater.preferred-channel"));
-        updater.setEnabled(configuration.getBoolean("auto-updater.enabled"));
-        updater.setSuggestChannels(configuration.getBoolean("auto-updater.suggest-channels"));
-        updater.getOnBroken().addAll(configuration.getStringList("auto-updater.on-broken"));
-        updater.getOnUpdate().addAll(configuration.getStringList("auto-updater.on-update"));
-        updater.check(serverVersion);
-
-        loadPlugins();
-        enablePlugins(PluginLoadOrder.STARTUP);
+        // Spigot Start - Moved to old location of new DedicatedPlayerList in DedicatedServer
+        // loadPlugins();
+        // enablePlugins(PluginLoadOrder.STARTUP);
+        // Spigot End
     }
 
     public boolean getCommandBlockOverride(String command) {
@@ -391,11 +323,15 @@ public final class CraftServer implements Server {
         }
 
         if (type == PluginLoadOrder.POSTWORLD) {
+            // Spigot start - Allow vanilla commands to be forced to be the main command
+            setVanillaCommands(true);
             commandMap.setFallbackCommands();
-            setVanillaCommands();
+            setVanillaCommands(false);
+            // Spigot end
             commandMap.registerServerAliases();
             loadCustomPermissions();
             DefaultPermissions.registerCorePermissions();
+            CraftDefaultPermissions.registerCorePermissions();
             helpMap.initializeCommands();
         }
     }
@@ -404,50 +340,20 @@ public final class CraftServer implements Server {
         pluginManager.disablePlugins();
     }
 
-    private void setVanillaCommands() {
-        commandMap.register("minecraft", new VanillaCommandWrapper(new CommandAchievement(), "/achievement give <stat_name> [player]"));
-        commandMap.register("minecraft", new VanillaCommandWrapper(new CommandBan(), "/ban <playername> [reason]"));
-        commandMap.register("minecraft", new VanillaCommandWrapper(new CommandBanIp(), "/ban-ip <ip-address|playername>"));
-        commandMap.register("minecraft", new VanillaCommandWrapper(new CommandBanList(), "/banlist [ips]"));
-        commandMap.register("minecraft", new VanillaCommandWrapper(new CommandClear(), "/clear <playername> [item] [metadata]"));
-        commandMap.register("minecraft", new VanillaCommandWrapper(new CommandGamemodeDefault(), "/defaultgamemode <mode>"));
-        commandMap.register("minecraft", new VanillaCommandWrapper(new CommandDeop(), "/deop <playername>"));
-        commandMap.register("minecraft", new VanillaCommandWrapper(new CommandDifficulty(), "/difficulty <new difficulty>"));
-        commandMap.register("minecraft", new VanillaCommandWrapper(new CommandEffect(), "/effect <player> <effect|clear> [seconds] [amplifier]"));
-        commandMap.register("minecraft", new VanillaCommandWrapper(new CommandEnchant(), "/enchant <playername> <enchantment ID> [enchantment level]"));
-        commandMap.register("minecraft", new VanillaCommandWrapper(new CommandGamemode(), "/gamemode <mode> [player]"));
-        commandMap.register("minecraft", new VanillaCommandWrapper(new CommandGamerule(), "/gamerule <rulename> [true|false]"));
-        commandMap.register("minecraft", new VanillaCommandWrapper(new CommandGive(), "/give <playername> <item> [amount] [metadata] [dataTag]"));
-        commandMap.register("minecraft", new VanillaCommandWrapper(new CommandHelp(), "/help [page|commandname]"));
-        commandMap.register("minecraft", new VanillaCommandWrapper(new CommandIdleTimeout(), "/setidletimeout <Minutes until kick>"));
-        commandMap.register("minecraft", new VanillaCommandWrapper(new CommandKick(), "/kick <playername> [reason]"));
-        commandMap.register("minecraft", new VanillaCommandWrapper(new CommandKill(), "/kill [playername]"));
-        commandMap.register("minecraft", new VanillaCommandWrapper(new CommandList(), "/list"));
-        commandMap.register("minecraft", new VanillaCommandWrapper(new CommandMe(), "/me <actiontext>"));
-        commandMap.register("minecraft", new VanillaCommandWrapper(new CommandOp(), "/op <playername>"));
-        commandMap.register("minecraft", new VanillaCommandWrapper(new CommandPardon(), "/pardon <playername>"));
-        commandMap.register("minecraft", new VanillaCommandWrapper(new CommandPardonIP(), "/pardon-ip <ip-address>"));
-        commandMap.register("minecraft", new VanillaCommandWrapper(new CommandPlaySound(), "/playsound <sound> <playername> [x] [y] [z] [volume] [pitch] [minimumVolume]"));
-        commandMap.register("minecraft", new VanillaCommandWrapper(new CommandSay(), "/say <message>"));
-        commandMap.register("minecraft", new VanillaCommandWrapper(new CommandScoreboard(), "/scoreboard"));
-        commandMap.register("minecraft", new VanillaCommandWrapper(new CommandSeed(), "/seed"));
-        commandMap.register("minecraft", new VanillaCommandWrapper(new CommandSetBlock(), "/setblock <x> <y> <z> <tilename> [datavalue] [oldblockHandling] [dataTag]"));
-        commandMap.register("minecraft", new VanillaCommandWrapper(new CommandSetWorldSpawn(), "/setworldspawn [x] [y] [z]"));
-        commandMap.register("minecraft", new VanillaCommandWrapper(new CommandSpawnpoint(), "/spawnpoint <playername> [x] [y] [z]"));
-        commandMap.register("minecraft", new VanillaCommandWrapper(new CommandSpreadPlayers(), "/spreadplayers <x> <z> [spreadDistance] [maxRange] [respectTeams] <playernames>"));
-        commandMap.register("minecraft", new VanillaCommandWrapper(new CommandSummon(), "/summon <EntityName> [x] [y] [z] [dataTag]"));
-        commandMap.register("minecraft", new VanillaCommandWrapper(new CommandTp(), "/tp [player] <target>\n/tp [player] <x> <y> <z>"));
-        commandMap.register("minecraft", new VanillaCommandWrapper(new CommandTell(), "/tell <playername> <message>"));
-        commandMap.register("minecraft", new VanillaCommandWrapper(new CommandTellRaw(), "/tellraw <playername> <raw message>"));
-        commandMap.register("minecraft", new VanillaCommandWrapper(new CommandTestFor(), "/testfor <playername | selector> [dataTag]"));
-        commandMap.register("minecraft", new VanillaCommandWrapper(new CommandTestForBlock(), "/testforblock <x> <y> <z> <tilename> [datavalue] [dataTag]"));
-        commandMap.register("minecraft", new VanillaCommandWrapper(new CommandTime(), "/time set <value>\n/time add <value>"));
-        commandMap.register("minecraft", new VanillaCommandWrapper(new CommandToggleDownfall(), "/toggledownfall"));
-        commandMap.register("minecraft", new VanillaCommandWrapper(new CommandWeather(), "/weather <clear/rain/thunder> [duration in seconds]"));
-        commandMap.register("minecraft", new VanillaCommandWrapper(new CommandWhitelist(), "/whitelist (add|remove) <player>\n/whitelist (on|off|list|reload)"));
-        commandMap.register("minecraft", new VanillaCommandWrapper(new CommandXp(), "/xp <amount> [player]\n/xp <amount>L [player]"));
-        // This is what is in the lang file, I swear.
-        commandMap.register("minecraft", new VanillaCommandWrapper(new CommandNetstat(), "/list"));
+    private void setVanillaCommands(boolean first) { // Spigot
+        Map<String, ICommand> commands = new CommandDispatcher(console).getCommands();
+        for (ICommand cmd : commands.values()) {
+            // Spigot start
+            VanillaCommandWrapper wrapper = new VanillaCommandWrapper((CommandAbstract) cmd, LocaleI18n.get(cmd.getUsage(null)));
+            if (org.spigotmc.SpigotConfig.replaceCommands.contains( wrapper.getName() ) ) {
+                if (first) {
+                    commandMap.register("minecraft", wrapper);
+                }
+            } else if (!first) {
+                commandMap.register("minecraft", wrapper);
+            }
+            // Spigot end
+        }
     }
 
     private void loadPlugin(Plugin plugin) {
@@ -500,12 +406,17 @@ public final class CraftServer implements Server {
     public Player getPlayer(final String name) {
         Validate.notNull(name, "Name cannot be null");
 
-        Player found = null;
+        Player found = getPlayerExact(name);
+        // Try for an exact match first.
+        if (found != null) {
+            return found;
+        }
+
         String lowerName = name.toLowerCase();
         int delta = Integer.MAX_VALUE;
         for (Player player : getOnlinePlayers()) {
             if (player.getName().toLowerCase().startsWith(lowerName)) {
-                int curDelta = player.getName().length() - lowerName.length();
+                int curDelta = Math.abs(player.getName().length() - lowerName.length());
                 if (curDelta < delta) {
                     found = player;
                     delta = curDelta;
@@ -521,24 +432,16 @@ public final class CraftServer implements Server {
     public Player getPlayerExact(String name) {
         Validate.notNull(name, "Name cannot be null");
 
-        String lname = name.toLowerCase();
-
-        for (Player player : getOnlinePlayers()) {
-            if (player.getName().equalsIgnoreCase(lname)) {
-                return player;
-            }
-        }
-
-        return null;
+        EntityPlayer player = playerList.getPlayer(name);
+        return (player != null) ? player.getBukkitEntity() : null;
     }
 
-    // TODO: In 1.8+ this should use the server's UUID->EntityPlayer map
     @Override
     public Player getPlayer(UUID id) {
-        for (Player player : getOnlinePlayers()) {
-            if (player.getUniqueId().equals(id)) {
-                return player;
-            }
+        EntityPlayer player = playerList.a(id);
+
+        if (player != null) {
+            return player.getBukkitEntity();
         }
 
         return null;
@@ -550,7 +453,7 @@ public final class CraftServer implements Server {
     }
 
     public Player getPlayer(final EntityPlayer entity) {
-        return entity.playerConnection.getPlayer();
+        return entity.getBukkitEntity();
     }
 
     @Override
@@ -583,7 +486,7 @@ public final class CraftServer implements Server {
         return playerList.getMaxPlayers();
     }
 
-    // NOTE: These are dependent on the corrisponding call in MinecraftServer
+    // NOTE: These are dependent on the corresponding call in MinecraftServer
     // so if that changes this will need to as well
     @Override
     public int getPort() {
@@ -668,13 +571,15 @@ public final class CraftServer implements Server {
         return new File((File) console.options.valueOf("plugins"), this.configuration.getString("settings.update-folder", "update"));
     }
 
-    public int getPingPacketLimit() {
-        return this.configuration.getInt("settings.ping-packet-limit", 100);
-    }
-
     @Override
     public long getConnectionThrottle() {
-        return this.configuration.getInt("settings.connection-throttle");
+        // Spigot Start - Automatically set connection throttle for bungee configurations
+        if (org.spigotmc.SpigotConfig.bungee) {
+            return -1;
+        } else {
+            return this.configuration.getInt("settings.connection-throttle");
+        }
+        // Spigot End
     }
 
     @Override
@@ -741,17 +646,14 @@ public final class CraftServer implements Server {
             return true;
         }
 
-        if (sender instanceof Player) {
-            sender.sendMessage("Unknown command. Type \"/help\" for help.");
-        } else {
-            sender.sendMessage("Unknown command. Type \"help\" for help.");
-        }
+        sender.sendMessage(org.spigotmc.SpigotConfig.unknownCommandMessage);
 
         return false;
     }
 
     @Override
     public void reload() {
+        reloadCount++;
         configuration = YamlConfiguration.loadConfiguration(getConfigFile());
         commandsConfiguration = YamlConfiguration.loadConfiguration(getCommandsConfigFile());
         PropertyManager config = new PropertyManager(console.options);
@@ -759,12 +661,12 @@ public final class CraftServer implements Server {
         ((DedicatedServer) console).propertyManager = config;
 
         boolean animals = config.getBoolean("spawn-animals", console.getSpawnAnimals());
-        boolean monsters = config.getBoolean("spawn-monsters", console.worlds.get(0).difficulty != EnumDifficulty.PEACEFUL);
-        EnumDifficulty difficulty = EnumDifficulty.getById(config.getInt("difficulty", console.worlds.get(0).difficulty.ordinal()));
+        boolean monsters = config.getBoolean("spawn-monsters", console.worlds.get(0).getDifficulty() != EnumDifficulty.PEACEFUL);
+        EnumDifficulty difficulty = EnumDifficulty.getById(config.getInt("difficulty", console.worlds.get(0).getDifficulty().ordinal()));
 
         online.value = config.getBoolean("online-mode", console.getOnlineMode());
         console.setSpawnAnimals(config.getBoolean("spawn-animals", console.getSpawnAnimals()));
-        console.setPvP(config.getBoolean("pvp", console.getPvP()));
+        console.setPVP(config.getBoolean("pvp", console.getPVP()));
         console.setAllowFlight(config.getBoolean("allow-flight", console.getAllowFlight()));
         console.setMotd(config.getString("motd", console.getMotd()));
         monsterSpawn = configuration.getInt("spawn-limits.monsters");
@@ -789,8 +691,9 @@ public final class CraftServer implements Server {
             logger.log(Level.WARNING, "Failed to load banned-players.json, " + ex.getMessage());
         }
 
+        org.spigotmc.SpigotConfig.init((File) console.options.valueOf("spigot-settings")); // Spigot
         for (WorldServer world : console.worlds) {
-            world.difficulty = difficulty;
+            world.worldData.setDifficulty(difficulty);
             world.setSpawnFlags(monsters, animals);
             if (this.getTicksPerAnimalSpawns() < 0) {
                 world.ticksPerAnimalSpawns = 400;
@@ -803,11 +706,14 @@ public final class CraftServer implements Server {
             } else {
                 world.ticksPerMonsterSpawns = this.getTicksPerMonsterSpawns();
             }
+            world.spigotConfig.init(); // Spigot
         }
 
         pluginManager.clearPlugins();
         commandMap.clearCommands();
         resetRecipes();
+        org.spigotmc.SpigotConfig.registerCommands(); // Spigot
+
         overrideAllCommandBlockCommands = commandsConfiguration.getStringList("command-block-overrides").contains("*");
 
         int pollCount = 0;
@@ -942,10 +848,24 @@ public final class CraftServer implements Server {
             generator = getGenerator(name);
         }
 
-        Convertable converter = new WorldLoaderServer(getWorldContainer());
+        Convertable converter = new WorldLoaderServer(getWorldContainer(), getHandle().getServer().getDataConverterManager());
         if (converter.isConvertable(name)) {
             getLogger().info("Converting world '" + name + "'");
-            converter.convert(name, new ConvertProgressUpdater(console));
+            converter.convert(name, new IProgressUpdate() {
+                private long b = System.currentTimeMillis();
+
+                public void a(String s) {}
+
+                public void a(int i) {
+                    if (System.currentTimeMillis() - this.b >= 1000L) {
+                        this.b = System.currentTimeMillis();
+                        MinecraftServer.LOGGER.info("Converting... " + i + "%");
+                    }
+
+                }
+
+                public void c(String s) {}
+            });
         }
 
         int dimension = CraftWorld.CUSTOM_DIMENSION_OFFSET + console.worlds.size();
@@ -961,7 +881,15 @@ public final class CraftServer implements Server {
         } while(used);
         boolean hardcore = false;
 
-        WorldServer internal = new WorldServer(console, new ServerNBTManager(getWorldContainer(), name, true), name, dimension, new WorldSettings(creator.seed(), EnumGamemode.getById(getDefaultGameMode().getValue()), generateStructures, hardcore, type), console.methodProfiler, creator.environment(), generator);
+        IDataManager sdm = new ServerNBTManager(getWorldContainer(), name, true, getHandle().getServer().getDataConverterManager());
+        WorldData worlddata = sdm.getWorldData();
+        if (worlddata == null) {
+            WorldSettings worldSettings = new WorldSettings(creator.seed(), WorldSettings.EnumGamemode.getById(getDefaultGameMode().getValue()), generateStructures, hardcore, type);
+            worldSettings.setGeneratorSettings(creator.generatorSettings());
+            worlddata = new WorldData(worldSettings, name);
+        }
+        worlddata.checkName(name); // CraftBukkit - Migration did not rewrite the level.dat; This forces 1.8 to take the last loaded world as respawn (in this case the end)
+        WorldServer internal = (WorldServer) new WorldServer(console, sdm, worlddata, dimension, console.methodProfiler, creator.environment(), generator).b();
 
         if (!(worlds.containsKey(name.toLowerCase()))) {
             return null;
@@ -971,7 +899,7 @@ public final class CraftServer implements Server {
 
         internal.tracker = new EntityTracker(internal);
         internal.addIWorldAccess(new WorldManager(console, internal));
-        internal.difficulty = EnumDifficulty.EASY;
+        internal.worldData.setDifficulty(EnumDifficulty.EASY);
         internal.setSpawnFlags(true, true);
         console.worlds.add(internal);
 
@@ -1001,8 +929,8 @@ public final class CraftServer implements Server {
                         i = l;
                     }
 
-                    ChunkCoordinates chunkcoordinates = internal.getSpawn();
-                    internal.chunkProviderServer.getChunkAt(chunkcoordinates.x + j >> 4, chunkcoordinates.z + k >> 4);
+                    BlockPosition chunkcoordinates = internal.getSpawn();
+                    internal.getChunkProviderServer().getChunkAt(chunkcoordinates.getX() + j >> 4, chunkcoordinates.getZ() + k >> 4);
                 }
             }
         }
@@ -1046,8 +974,6 @@ public final class CraftServer implements Server {
             try {
                 handle.save(true, null);
                 handle.saveLevel();
-                WorldSaveEvent event = new WorldSaveEvent(handle.getWorld());
-                getPluginManager().callEvent(event);
             } catch (ExceptionWorldConflict ex) {
                 getLogger().log(Level.SEVERE, null, ex);
             }
@@ -1055,6 +981,30 @@ public final class CraftServer implements Server {
 
         worlds.remove(world.getName().toLowerCase());
         console.worlds.remove(console.worlds.indexOf(handle));
+
+        File parentFolder = world.getWorldFolder().getAbsoluteFile();
+
+        // Synchronized because access to RegionFileCache.a is guarded by this lock.
+        synchronized (RegionFileCache.class) {
+            // RegionFileCache.a should be RegionFileCache.cache
+            Iterator<Map.Entry<File, RegionFile>> i = RegionFileCache.a.entrySet().iterator();
+            while(i.hasNext()) {
+                Map.Entry<File, RegionFile> entry = i.next();
+                File child = entry.getKey().getAbsoluteFile();
+                while (child != null) {
+                    if (child.equals(parentFolder)) {
+                        i.remove();
+                        try {
+                            entry.getValue().c(); // Should be RegionFile.close();
+                        } catch (IOException ex) {
+                            getLogger().log(Level.SEVERE, null, ex);
+                        }
+                        break;
+                    }
+                    child = child.getParentFile();
+                }
+            }
+        }
 
         return true;
     }
@@ -1184,6 +1134,7 @@ public final class CraftServer implements Server {
         CraftingManager.getInstance().recipes.clear();
         RecipesFurnace.getInstance().recipes.clear();
         RecipesFurnace.getInstance().customRecipes.clear();
+        RecipesFurnace.getInstance().customExperience.clear();
     }
 
     @Override
@@ -1191,6 +1142,7 @@ public final class CraftServer implements Server {
         CraftingManager.getInstance().recipes = new CraftingManager().recipes;
         RecipesFurnace.getInstance().recipes = new RecipesFurnace().recipes;
         RecipesFurnace.getInstance().customRecipes.clear();
+        RecipesFurnace.getInstance().customExperience.clear();
     }
 
     @Override
@@ -1312,7 +1264,7 @@ public final class CraftServer implements Server {
         Validate.notNull(world, "World cannot be null");
 
         net.minecraft.server.ItemStack stack = new net.minecraft.server.ItemStack(Items.MAP, 1, -1);
-        WorldMap worldmap = Items.MAP.getSavedMap(stack, ((CraftWorld) world).getHandle());
+        WorldMap worldmap = Items.FILLED_MAP.getSavedMap(stack, ((CraftWorld) world).getHandle());
         return worldmap.mapView;
     }
 
@@ -1341,16 +1293,18 @@ public final class CraftServer implements Server {
     @Deprecated
     public OfflinePlayer getOfflinePlayer(String name) {
         Validate.notNull(name, "Name cannot be null");
-
-        // If the name given cannot ever be a valid username give a dummy return, for scoreboard plugins
-        if (!validUserPattern.matcher(name).matches()) {
-            return new CraftOfflinePlayer(this, new GameProfile(invalidUserUUID, name));
-        }
+        com.google.common.base.Preconditions.checkArgument( !org.apache.commons.lang.StringUtils.isBlank( name ), "Name cannot be blank" ); // Spigot
 
         OfflinePlayer result = getPlayerExact(name);
         if (result == null) {
-            // This is potentially blocking :(
-            GameProfile profile = MinecraftServer.getServer().getUserCache().getProfile(name);
+            // Spigot Start
+            GameProfile profile = null;
+            // Only fetch an online UUID in online mode
+            if ( MinecraftServer.getServer().getOnlineMode() || org.spigotmc.SpigotConfig.bungee )
+            {
+                profile = console.getUserCache().getProfile( name );
+            }
+            // Spigot end
             if (profile == null) {
                 // Make an OfflinePlayer using an offline mode UUID since the name has no profile
                 result = getOfflinePlayer(new GameProfile(UUID.nameUUIDFromBytes(("OfflinePlayer:" + name).getBytes(Charsets.UTF_8)), name));
@@ -1415,7 +1369,7 @@ public final class CraftServer implements Server {
 
         for (JsonListEntry entry : playerList.getProfileBans().getValues()) {
             result.add(getOfflinePlayer((GameProfile) entry.getKey()));
-        }
+        }        
 
         return result;
     }
@@ -1476,7 +1430,7 @@ public final class CraftServer implements Server {
         Validate.notNull(mode, "Mode cannot be null");
 
         for (World world : getWorlds()) {
-            ((CraftWorld) world).getHandle().worldData.setGameType(EnumGamemode.getById(mode.getValue()));
+            ((CraftWorld) world).getHandle().worldData.setGameType(WorldSettings.EnumGamemode.getById(mode.getValue()));
         }
     }
 
@@ -1495,27 +1449,6 @@ public final class CraftServer implements Server {
 
     public WorldMetadataStore getWorldMetadata() {
         return worldMetadata;
-    }
-
-    public void detectListNameConflict(EntityPlayer entityPlayer) {
-        // Collisions will make for invisible people
-        for (int i = 0; i < getHandle().players.size(); ++i) {
-            EntityPlayer testEntityPlayer = (EntityPlayer) getHandle().players.get(i);
-
-            // We have a problem!
-            if (testEntityPlayer != entityPlayer && testEntityPlayer.listName.equals(entityPlayer.listName)) {
-                String oldName = entityPlayer.listName;
-                int spaceLeft = 16 - oldName.length();
-
-                if (spaceLeft <= 1) { // We also hit the list name length limit!
-                    entityPlayer.listName = oldName.subSequence(0, oldName.length() - 2 - spaceLeft) + String.valueOf(System.currentTimeMillis() % 99);
-                } else {
-                    entityPlayer.listName = oldName + String.valueOf(System.currentTimeMillis() % 99);
-                }
-
-                return;
-            }
-        }
     }
 
     @Override
@@ -1573,16 +1506,6 @@ public final class CraftServer implements Server {
         }
 
         return result;
-    }
-
-    public void onPlayerJoin(Player player) {
-        if ((updater.isEnabled()) && (updater.getCurrent() != null) && (player.hasPermission(Server.BROADCAST_CHANNEL_ADMINISTRATIVE))) {
-            if ((updater.getCurrent().isBroken()) && (updater.getOnBroken().contains(AutoUpdater.WARN_OPERATORS))) {
-                player.sendMessage(ChatColor.DARK_RED + "The version of CraftBukkit that this server is running is known to be broken. Please consider updating to the latest version at dl.bukkit.org.");
-            } else if ((updater.isUpdateAvailable()) && (updater.getOnUpdate().contains(AutoUpdater.WARN_OPERATORS))) {
-                player.sendMessage(ChatColor.DARK_PURPLE + "The version of CraftBukkit that this server is running is out of date. Please consider updating to the latest version at dl.bukkit.org.");
-            }
-        }
     }
 
     @Override
@@ -1666,6 +1589,13 @@ public final class CraftServer implements Server {
     }
 
     public List<String> tabCompleteCommand(Player player, String message) {
+        // Spigot Start
+		if ( (org.spigotmc.SpigotConfig.tabComplete < 0 || message.length() <= org.spigotmc.SpigotConfig.tabComplete) && !message.contains( " " ) )
+        {
+            return ImmutableList.of();
+        }
+        // Spigot End
+
         List<String> completions = null;
         try {
             completions = getCommandMap().tabComplete(player, message.substring(1));
@@ -1763,9 +1693,53 @@ public final class CraftServer implements Server {
         return console.getIdleTimeout();
     }
 
+    @Override
+    public ChunkGenerator.ChunkData createChunkData(World world) {
+        return new CraftChunkData(world);
+    }
+
+    @Override
+    public BossBar createBossBar(String title, BarColor color, BarStyle style, BarFlag... flags) {
+        return new CraftBossBar(title, color, style, flags);
+    }
+
     @Deprecated
     @Override
     public UnsafeValues getUnsafe() {
         return CraftMagicNumbers.INSTANCE;
+    }
+
+    private final Spigot spigot = new Spigot()
+    {
+
+        @Override
+        public YamlConfiguration getConfig()
+        {
+            return org.spigotmc.SpigotConfig.config;
+        }
+
+        @Override
+        public void restart() {
+            org.spigotmc.RestartCommand.restart();
+        }
+
+        @Override
+        public void broadcast(BaseComponent component) {
+            for (Player player : getOnlinePlayers()) {
+                player.spigot().sendMessage(component);
+            }
+        }
+
+        @Override
+        public void broadcast(BaseComponent... components) {
+            for (Player player : getOnlinePlayers()) {
+                player.spigot().sendMessage(components);
+            }
+        }
+    };
+
+    public Spigot spigot()
+    {
+        return spigot;
     }
 }

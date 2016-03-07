@@ -9,31 +9,36 @@ public class BlockWeb extends Block {
         this.a(CreativeModeTab.c);
     }
 
-    public void a(World world, int i, int j, int k, Entity entity) {
-        entity.as();
+    public void a(World world, BlockPosition blockposition, IBlockData iblockdata, Entity entity) {
+        entity.aQ();
     }
 
-    public boolean c() {
+    public boolean b(IBlockData iblockdata) {
         return false;
     }
 
-    public AxisAlignedBB a(World world, int i, int j, int k) {
-        return null;
+    public AxisAlignedBB a(IBlockData iblockdata, World world, BlockPosition blockposition) {
+        return BlockWeb.k;
     }
 
-    public int b() {
-        return 1;
-    }
-
-    public boolean d() {
+    public boolean c(IBlockData iblockdata) {
         return false;
     }
 
-    public Item getDropType(int i, Random random, int j) {
+    public Item getDropType(IBlockData iblockdata, Random random, int i) {
         return Items.STRING;
     }
 
-    protected boolean E() {
+    protected boolean o() {
         return true;
+    }
+
+    public void a(World world, EntityHuman entityhuman, BlockPosition blockposition, IBlockData iblockdata, TileEntity tileentity, ItemStack itemstack) {
+        if (!world.isClientSide && itemstack != null && itemstack.getItem() == Items.SHEARS) {
+            entityhuman.b(StatisticList.a((Block) this));
+            a(world, blockposition, new ItemStack(Item.getItemOf(this), 1));
+        } else {
+            super.a(world, entityhuman, blockposition, iblockdata, tileentity, itemstack);
+        }
     }
 }

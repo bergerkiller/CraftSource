@@ -11,9 +11,15 @@ public enum PotionType {
     WEAKNESS(8, PotionEffectType.WEAKNESS, 1),
     STRENGTH(9, PotionEffectType.INCREASE_DAMAGE, 2),
     SLOWNESS(10, PotionEffectType.SLOW, 1),
+    JUMP(11, PotionEffectType.JUMP, 2),
     INSTANT_DAMAGE(12, PotionEffectType.HARM, 2),
     WATER_BREATHING(13, PotionEffectType.WATER_BREATHING, 1),
     INVISIBILITY(14, PotionEffectType.INVISIBILITY, 1),
+    /**
+     * @deprecated not representable with a damage value!
+     */
+    @Deprecated
+    LUCK(-1, PotionEffectType.LUCK, 1),
     ;
 
     private final int damageValue, maxLevel;
@@ -31,6 +37,7 @@ public enum PotionType {
 
     /**
      *
+     * @return the damage value
      * @deprecated Magic value
      */
     @Deprecated
@@ -48,6 +55,8 @@ public enum PotionType {
 
     /**
      *
+     * @param damage the damage value
+     * @return the matching potion type or null
      * @deprecated Magic value
      */
     @Deprecated

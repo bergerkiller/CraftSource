@@ -2,39 +2,42 @@ package net.minecraft.server;
 
 public class EntityAIBodyControl {
 
-    private EntityLiving entity;
+    private EntityLiving a;
     private int b;
     private float c;
 
     public EntityAIBodyControl(EntityLiving entityliving) {
-        this.entity = entityliving;
+        this.a = entityliving;
     }
 
     public void a() {
-        double d0 = this.entity.locX - this.entity.lastX;
-        double d1 = this.entity.locZ - this.entity.lastZ;
+        double d0 = this.a.locX - this.a.lastX;
+        double d1 = this.a.locZ - this.a.lastZ;
 
         if (d0 * d0 + d1 * d1 > 2.500000277905201E-7D) {
-            this.entity.aM = this.entity.yaw;
-            this.entity.aO = this.a(this.entity.aM, this.entity.aO, 75.0F);
-            this.c = this.entity.aO;
+            this.a.aM = this.a.yaw;
+            this.a.aO = this.a(this.a.aM, this.a.aO, 75.0F);
+            this.c = this.a.aO;
             this.b = 0;
         } else {
-            float f = 75.0F;
+            if (this.a.bu().isEmpty() || !(this.a.bu().get(0) instanceof EntityInsentient)) {
+                float f = 75.0F;
 
-            if (Math.abs(this.entity.aO - this.c) > 15.0F) {
-                this.b = 0;
-                this.c = this.entity.aO;
-            } else {
-                ++this.b;
-                boolean flag = true;
+                if (Math.abs(this.a.aO - this.c) > 15.0F) {
+                    this.b = 0;
+                    this.c = this.a.aO;
+                } else {
+                    ++this.b;
+                    boolean flag = true;
 
-                if (this.b > 10) {
-                    f = Math.max(1.0F - (float) (this.b - 10) / 10.0F, 0.0F) * 75.0F;
+                    if (this.b > 10) {
+                        f = Math.max(1.0F - (float) (this.b - 10) / 10.0F, 0.0F) * 75.0F;
+                    }
                 }
+
+                this.a.aM = this.a(this.a.aO, this.a.aM, f);
             }
 
-            this.entity.aM = this.a(this.entity.aO, this.entity.aM, f);
         }
     }
 

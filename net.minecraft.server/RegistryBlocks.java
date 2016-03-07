@@ -1,35 +1,56 @@
 package net.minecraft.server;
 
-public class RegistryBlocks extends RegistryMaterials {
+import java.util.Random;
+import org.apache.commons.lang3.Validate;
 
-    private final String d;
-    private Object e;
+public class RegistryBlocks<K, V> extends RegistryMaterials<K, V> {
 
-    public RegistryBlocks(String s) {
-        this.d = s;
+    private final K d;
+    private V e;
+
+    public RegistryBlocks(K k0) {
+        this.d = k0;
     }
 
-    public void a(int i, String s, Object object) {
-        if (this.d.equals(s)) {
-            this.e = object;
+    public void a(int i, K k0, V v0) {
+        if (this.d.equals(k0)) {
+            this.e = v0;
         }
 
-        super.a(i, s, object);
+        super.a(i, k0, v0);
     }
 
-    public Object get(String s) {
-        Object object = super.get(s);
+    public void a() {
+        Validate.notNull(this.e, "Missing default of DefaultedMappedRegistry: " + this.d, new Object[0]);
+    }
+
+    public int a(V v0) {
+        int i = super.a(v0);
+
+        return i == -1 ? super.a(this.e) : i;
+    }
+
+    public K b(V v0) {
+        Object object = super.b(v0);
+
+        return object == null ? this.d : object;
+    }
+
+    public V get(K k0) {
+        Object object = super.get(k0);
 
         return object == null ? this.e : object;
     }
 
-    public Object a(int i) {
-        Object object = super.a(i);
+    public V getId(int i) {
+        Object object = super.getId(i);
 
         return object == null ? this.e : object;
     }
 
-    public Object get(Object object) {
-        return this.get((String) object);
+    public V a(Random random) {
+        Object object = super.a(random);
+
+        return object == null ? this.e : object;
     }
 }

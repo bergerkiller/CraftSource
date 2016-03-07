@@ -4,26 +4,28 @@ public class ItemCarrotStick extends Item {
 
     public ItemCarrotStick() {
         this.a(CreativeModeTab.e);
-        this.e(1);
+        this.d(1);
         this.setMaxDurability(25);
     }
 
-    public ItemStack a(ItemStack itemstack, World world, EntityHuman entityhuman) {
-        if (entityhuman.am() && entityhuman.vehicle instanceof EntityPig) {
-            EntityPig entitypig = (EntityPig) entityhuman.vehicle;
+    public InteractionResultWrapper<ItemStack> a(ItemStack itemstack, World world, EntityHuman entityhuman, EnumHand enumhand) {
+        if (entityhuman.isPassenger() && entityhuman.by() instanceof EntityPig) {
+            EntityPig entitypig = (EntityPig) entityhuman.by();
 
-            if (entitypig.ca().h() && itemstack.l() - itemstack.getData() >= 7) {
-                entitypig.ca().g();
+            if (itemstack.j() - itemstack.getData() >= 7 && entitypig.da()) {
                 itemstack.damage(7, entityhuman);
                 if (itemstack.count == 0) {
                     ItemStack itemstack1 = new ItemStack(Items.FISHING_ROD);
 
-                    itemstack1.setTag(itemstack.tag);
-                    return itemstack1;
+                    itemstack1.setTag(itemstack.getTag());
+                    return new InteractionResultWrapper(EnumInteractionResult.SUCCESS, itemstack1);
                 }
+
+                return new InteractionResultWrapper(EnumInteractionResult.SUCCESS, itemstack);
             }
         }
 
-        return itemstack;
+        entityhuman.b(StatisticList.b((Item) this));
+        return new InteractionResultWrapper(EnumInteractionResult.PASS, itemstack);
     }
 }

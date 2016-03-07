@@ -19,18 +19,18 @@ public class PathfinderGoalPlay extends PathfinderGoal {
     public boolean a() {
         if (this.a.getAge() >= 0) {
             return false;
-        } else if (this.a.aI().nextInt(400) != 0) {
+        } else if (this.a.getRandom().nextInt(400) != 0) {
             return false;
         } else {
-            List list = this.a.world.a(EntityVillager.class, this.a.boundingBox.grow(6.0D, 3.0D, 6.0D));
+            List list = this.a.world.a(EntityVillager.class, this.a.getBoundingBox().grow(6.0D, 3.0D, 6.0D));
             double d0 = Double.MAX_VALUE;
             Iterator iterator = list.iterator();
 
             while (iterator.hasNext()) {
                 EntityVillager entityvillager = (EntityVillager) iterator.next();
 
-                if (entityvillager != this.a && !entityvillager.cb() && entityvillager.getAge() < 0) {
-                    double d1 = entityvillager.f(this.a);
+                if (entityvillager != this.a && !entityvillager.db() && entityvillager.getAge() < 0) {
+                    double d1 = entityvillager.h(this.a);
 
                     if (d1 <= d0) {
                         d0 = d1;
@@ -57,31 +57,32 @@ public class PathfinderGoalPlay extends PathfinderGoal {
 
     public void c() {
         if (this.b != null) {
-            this.a.j(true);
+            this.a.p(true);
         }
 
         this.d = 1000;
     }
 
     public void d() {
-        this.a.j(false);
+        this.a.p(false);
         this.b = null;
     }
 
     public void e() {
         --this.d;
         if (this.b != null) {
-            if (this.a.f(this.b) > 4.0D) {
+            if (this.a.h(this.b) > 4.0D) {
                 this.a.getNavigation().a((Entity) this.b, this.c);
             }
-        } else if (this.a.getNavigation().g()) {
+        } else if (this.a.getNavigation().n()) {
             Vec3D vec3d = RandomPositionGenerator.a(this.a, 16, 3);
 
             if (vec3d == null) {
                 return;
             }
 
-            this.a.getNavigation().a(vec3d.a, vec3d.b, vec3d.c, this.c);
+            this.a.getNavigation().a(vec3d.x, vec3d.y, vec3d.z, this.c);
         }
+
     }
 }

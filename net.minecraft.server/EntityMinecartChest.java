@@ -12,22 +12,34 @@ public class EntityMinecartChest extends EntityMinecartContainer {
 
     public void a(DamageSource damagesource) {
         super.a(damagesource);
-        this.a(Item.getItemOf(Blocks.CHEST), 1, 0.0F);
+        if (this.world.getGameRules().getBoolean("doEntityDrops")) {
+            this.a(Item.getItemOf(Blocks.CHEST), 1, 0.0F);
+        }
+
     }
 
     public int getSize() {
         return 27;
     }
 
-    public int m() {
-        return 1;
+    public EntityMinecartAbstract.EnumMinecartType v() {
+        return EntityMinecartAbstract.EnumMinecartType.CHEST;
     }
 
-    public Block o() {
-        return Blocks.CHEST;
+    public IBlockData x() {
+        return Blocks.CHEST.getBlockData().set(BlockChest.FACING, EnumDirection.NORTH);
     }
 
-    public int s() {
+    public int A() {
         return 8;
+    }
+
+    public String getContainerName() {
+        return "minecraft:chest";
+    }
+
+    public Container createContainer(PlayerInventory playerinventory, EntityHuman entityhuman) {
+        this.f(entityhuman);
+        return new ContainerChest(playerinventory, this, entityhuman);
     }
 }

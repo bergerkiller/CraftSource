@@ -12,7 +12,7 @@ public class Dye extends MaterialData implements Colorable {
     }
 
     /**
-     *
+     * @param type the raw type id
      * @deprecated Magic value
      */
     @Deprecated
@@ -25,7 +25,8 @@ public class Dye extends MaterialData implements Colorable {
     }
 
     /**
-     *
+     * @param type the raw type id
+     * @param data the raw data value
      * @deprecated Magic value
      */
     @Deprecated
@@ -34,12 +35,20 @@ public class Dye extends MaterialData implements Colorable {
     }
 
     /**
-     *
+     * @param type the type
+     * @param data the raw data value
      * @deprecated Magic value
      */
     @Deprecated
     public Dye(final Material type, final byte data) {
         super(type, data);
+    }
+
+    /**
+     * @param color color of the dye
+     */
+    public Dye(final DyeColor color) {
+        super(Material.INK_SACK, color.getDyeData());
     }
 
     /**

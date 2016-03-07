@@ -2,8 +2,9 @@ package net.minecraft.server;
 
 import java.io.DataInput;
 import java.io.DataOutput;
+import java.io.IOException;
 
-public class NBTTagInt extends NBTNumber {
+public class NBTTagInt extends NBTBase.NBTNumber {
 
     private int data;
 
@@ -13,12 +14,12 @@ public class NBTTagInt extends NBTNumber {
         this.data = i;
     }
 
-    void write(DataOutput dataoutput) {
+    void write(DataOutput dataoutput) throws IOException {
         dataoutput.writeInt(this.data);
     }
 
-    void load(DataInput datainput, int i, NBTReadLimiter nbtreadlimiter) {
-        nbtreadlimiter.a(32L);
+    void load(DataInput datainput, int i, NBTReadLimiter nbtreadlimiter) throws IOException {
+        nbtreadlimiter.a(96L);
         this.data = datainput.readInt();
     }
 
