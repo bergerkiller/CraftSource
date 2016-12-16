@@ -1,6 +1,7 @@
 package net.minecraft.server;
 
 import com.google.common.base.Optional;
+import javax.annotation.Nullable;
 
 // CraftBukkit start
 import org.bukkit.craftbukkit.event.CraftEventFactory;
@@ -34,7 +35,7 @@ public class EntityEnderCrystal extends Entity {
         this.getDataWatcher().register(EntityEnderCrystal.c, Boolean.valueOf(true));
     }
 
-    public void m() {
+    public void A_() {
         this.lastX = this.locX;
         this.lastY = this.locY;
         this.lastZ = this.locZ;
@@ -54,20 +55,20 @@ public class EntityEnderCrystal extends Entity {
     }
 
     protected void b(NBTTagCompound nbttagcompound) {
-        if (this.j() != null) {
-            nbttagcompound.set("BeamTarget", GameProfileSerializer.a(this.j()));
+        if (this.getBeamTarget() != null) {
+            nbttagcompound.set("BeamTarget", GameProfileSerializer.a(this.getBeamTarget()));
         }
 
-        nbttagcompound.setBoolean("ShowBottom", this.k());
+        nbttagcompound.setBoolean("ShowBottom", this.isShowingBottom());
     }
 
     protected void a(NBTTagCompound nbttagcompound) {
         if (nbttagcompound.hasKeyOfType("BeamTarget", 10)) {
-            this.a(GameProfileSerializer.c(nbttagcompound.getCompound("BeamTarget")));
+            this.setBeamTarget(GameProfileSerializer.c(nbttagcompound.getCompound("BeamTarget")));
         }
 
         if (nbttagcompound.hasKeyOfType("ShowBottom", 1)) {
-            this.a(nbttagcompound.getBoolean("ShowBottom"));
+            this.setShowingBottom(nbttagcompound.getBoolean("ShowBottom"));
         }
 
     }
@@ -115,7 +116,7 @@ public class EntityEnderCrystal extends Entity {
     private void a(DamageSource damagesource) {
         if (this.world.worldProvider instanceof WorldProviderTheEnd) {
             WorldProviderTheEnd worldprovidertheend = (WorldProviderTheEnd) this.world.worldProvider;
-            EnderDragonBattle enderdragonbattle = worldprovidertheend.s();
+            EnderDragonBattle enderdragonbattle = worldprovidertheend.t();
 
             if (enderdragonbattle != null) {
                 enderdragonbattle.a(this, damagesource);
@@ -124,19 +125,20 @@ public class EntityEnderCrystal extends Entity {
 
     }
 
-    public void a(BlockPosition blockposition) {
+    public void setBeamTarget(@Nullable BlockPosition blockposition) {
         this.getDataWatcher().set(EntityEnderCrystal.b, Optional.fromNullable(blockposition));
     }
 
-    public BlockPosition j() {
+    @Nullable
+    public BlockPosition getBeamTarget() {
         return (BlockPosition) ((Optional) this.getDataWatcher().get(EntityEnderCrystal.b)).orNull();
     }
 
-    public void a(boolean flag) {
+    public void setShowingBottom(boolean flag) {
         this.getDataWatcher().set(EntityEnderCrystal.c, Boolean.valueOf(flag));
     }
 
-    public boolean k() {
+    public boolean isShowingBottom() {
         return ((Boolean) this.getDataWatcher().get(EntityEnderCrystal.c)).booleanValue();
     }
 }

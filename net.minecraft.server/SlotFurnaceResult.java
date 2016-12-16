@@ -7,7 +7,7 @@ import org.bukkit.event.inventory.FurnaceExtractEvent;
 
 public class SlotFurnaceResult extends Slot {
 
-    private EntityHuman a;
+    private final EntityHuman a;
     private int b;
 
     public SlotFurnaceResult(EntityHuman entityhuman, IInventory iinventory, int i, int j, int k) {
@@ -21,15 +21,16 @@ public class SlotFurnaceResult extends Slot {
 
     public ItemStack a(int i) {
         if (this.hasItem()) {
-            this.b += Math.min(i, this.getItem().count);
+            this.b += Math.min(i, this.getItem().getCount());
         }
 
         return super.a(i);
     }
 
-    public void a(EntityHuman entityhuman, ItemStack itemstack) {
+    public ItemStack a(EntityHuman entityhuman, ItemStack itemstack) {
         this.c(itemstack);
         super.a(entityhuman, itemstack);
+        return itemstack;
     }
 
     protected void a(ItemStack itemstack, int i) {

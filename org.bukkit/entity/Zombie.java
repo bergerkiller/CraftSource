@@ -23,30 +23,29 @@ public interface Zombie extends Monster {
      * Gets whether the zombie is a villager
      *
      * @return Whether the zombie is a villager
+     * @deprecated check if instanceof {@link ZombieVillager}.
      */
+    @Deprecated
     public boolean isVillager();
 
     /**
-     * Sets whether the zombie is a villager
-     *
-     * @param flag Whether the zombie is a villager
-     * @deprecated Defaults to a basic villager
+     * @param flag
+     * @deprecated must spawn {@link ZombieVillager}.
      */
     @Deprecated
     public void setVillager(boolean flag);
 
     /**
-     * Sets whether the zombie is a villager
-     *
-     * @param profession the profession of the villager or null to clear
+     * @param profession
+     * @see ZombieVillager#getVillagerProfession()
      */
+    @Deprecated
     public void setVillagerProfession(Villager.Profession profession);
 
     /**
-     * Returns the villager profession of the zombie if the
-     * zombie is a villager
-     *
-     * @return the profession or null
+     * @return profession
+     * @see ZombieVillager#getVillagerProfession()
      */
+    @Deprecated
     public Villager.Profession getVillagerProfession();
 }

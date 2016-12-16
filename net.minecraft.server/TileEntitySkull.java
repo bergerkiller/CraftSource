@@ -5,6 +5,7 @@ import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.minecraft.MinecraftSessionService;
 import com.mojang.authlib.properties.Property;
 import java.util.UUID;
+import javax.annotation.Nullable;
 
 // Spigot start
 import com.google.common.base.Predicate;
@@ -23,8 +24,8 @@ import com.mojang.authlib.ProfileLookupCallback;
 public class TileEntitySkull extends TileEntity implements ITickable {
 
     private int a;
-    private int rotation;
-    private GameProfile g = null;
+    public int rotation;
+    private GameProfile g;
     private int h;
     private boolean i;
     private static UserCache j;
@@ -72,7 +73,7 @@ public class TileEntitySkull extends TileEntity implements ITickable {
 
                         if ( property == null )
                         {
-                            profile = MinecraftServer.getServer().ay().fillProfileProperties( profile, true );
+                            profile = MinecraftServer.getServer().az().fillProfileProperties( profile, true );
                         }
                     }
 
@@ -92,7 +93,7 @@ public class TileEntitySkull extends TileEntity implements ITickable {
         TileEntitySkull.k = minecraftsessionservice;
     }
 
-    public void save(NBTTagCompound nbttagcompound) {
+    public NBTTagCompound save(NBTTagCompound nbttagcompound) {
         super.save(nbttagcompound);
         nbttagcompound.setByte("SkullType", (byte) (this.a & 255));
         nbttagcompound.setByte("Rot", (byte) (this.rotation & 255));
@@ -103,6 +104,7 @@ public class TileEntitySkull extends TileEntity implements ITickable {
             nbttagcompound.set("Owner", nbttagcompound1);
         }
 
+        return nbttagcompound;
     }
 
     public void a(NBTTagCompound nbttagcompound) {
@@ -117,14 +119,14 @@ public class TileEntitySkull extends TileEntity implements ITickable {
 
                 if (!UtilColor.b(s)) {
                     this.g = new GameProfile((UUID) null, s);
-                    this.g();
+                    this.h();
                 }
             }
         }
 
     }
 
-    public void c() {
+    public void F_() {
         if (this.a == 5) {
             if (this.world.isBlockIndirectlyPowered(this.position)) {
                 this.i = true;
@@ -136,15 +138,18 @@ public class TileEntitySkull extends TileEntity implements ITickable {
 
     }
 
+    @Nullable
     public GameProfile getGameProfile() {
         return this.g;
     }
 
-    public Packet<?> getUpdatePacket() {
-        NBTTagCompound nbttagcompound = new NBTTagCompound();
+    @Nullable
+    public PacketPlayOutTileEntityData getUpdatePacket() {
+        return new PacketPlayOutTileEntityData(this.position, 4, this.d());
+    }
 
-        this.save(nbttagcompound);
-        return new PacketPlayOutTileEntityData(this.position, 4, nbttagcompound);
+    public NBTTagCompound d() {
+        return this.save(new NBTTagCompound());
     }
 
     public void setSkullType(int i) {
@@ -152,13 +157,13 @@ public class TileEntitySkull extends TileEntity implements ITickable {
         this.g = null;
     }
 
-    public void setGameProfile(GameProfile gameprofile) {
+    public void setGameProfile(@Nullable GameProfile gameprofile) {
         this.a = 3;
         this.g = gameprofile;
-        this.g();
+        this.h();
     }
 
-    private void g() {
+    private void h() {
         // Spigot start
         GameProfile profile = this.g;
         setSkullType( 0 ); // Work around client bug
@@ -222,9 +227,17 @@ public class TileEntitySkull extends TileEntity implements ITickable {
         this.rotation = i;
     }
 
-    // CraftBukkit start - add method
-    public int getRotation() {
-        return this.rotation;
+    public void a(EnumBlockMirror enumblockmirror) {
+        if (this.world != null && this.world.getType(this.getPosition()).get(BlockSkull.FACING) == EnumDirection.UP) {
+            this.rotation = enumblockmirror.a(this.rotation, 16);
+        }
+
     }
-    // CraftBukkit end
+
+    public void a(EnumBlockRotation enumblockrotation) {
+        if (this.world != null && this.world.getType(this.getPosition()).get(BlockSkull.FACING) == EnumDirection.UP) {
+            this.rotation = enumblockrotation.a(this.rotation, 16);
+        }
+
+    }
 }

@@ -1,5 +1,7 @@
 package net.minecraft.server;
 
+import javax.annotation.Nullable;
+
 public class TileEntityCommand extends TileEntity {
 
     private boolean a;
@@ -37,19 +39,20 @@ public class TileEntityCommand extends TileEntity {
             return null;
         }
 
-        public MinecraftServer h() {
+        public MinecraftServer B_() {
             return TileEntityCommand.this.world.getMinecraftServer();
         }
     };
 
     public TileEntityCommand() {}
 
-    public void save(NBTTagCompound nbttagcompound) {
+    public NBTTagCompound save(NBTTagCompound nbttagcompound) {
         super.save(nbttagcompound);
         this.i.a(nbttagcompound);
-        nbttagcompound.setBoolean("powered", this.d());
-        nbttagcompound.setBoolean("conditionMet", this.g());
-        nbttagcompound.setBoolean("auto", this.e());
+        nbttagcompound.setBoolean("powered", this.f());
+        nbttagcompound.setBoolean("conditionMet", this.i());
+        nbttagcompound.setBoolean("auto", this.h());
+        return nbttagcompound;
     }
 
     public void a(NBTTagCompound nbttagcompound) {
@@ -60,12 +63,12 @@ public class TileEntityCommand extends TileEntity {
         this.b(nbttagcompound.getBoolean("auto"));
     }
 
-    public Packet<?> getUpdatePacket() {
-        if (this.h()) {
+    @Nullable
+    public PacketPlayOutTileEntityData getUpdatePacket() {
+        if (this.j()) {
             this.d(false);
-            NBTTagCompound nbttagcompound = new NBTTagCompound();
+            NBTTagCompound nbttagcompound = this.save(new NBTTagCompound());
 
-            this.save(nbttagcompound);
             return new PacketPlayOutTileEntityData(this.position, 2, nbttagcompound);
         } else {
             return null;
@@ -80,7 +83,7 @@ public class TileEntityCommand extends TileEntity {
         return this.i;
     }
 
-    public CommandObjectiveExecutor c() {
+    public CommandObjectiveExecutor e() {
         return this.i.o();
     }
 
@@ -88,11 +91,11 @@ public class TileEntityCommand extends TileEntity {
         this.a = flag;
     }
 
-    public boolean d() {
+    public boolean f() {
         return this.a;
     }
 
-    public boolean e() {
+    public boolean h() {
         return this.f;
     }
 
@@ -100,14 +103,14 @@ public class TileEntityCommand extends TileEntity {
         boolean flag1 = this.f;
 
         this.f = flag;
-        if (!flag1 && flag && !this.a && this.world != null && this.i() != TileEntityCommand.Type.SEQUENCE) {
+        if (!flag1 && flag && !this.a && this.world != null && this.k() != TileEntityCommand.Type.SEQUENCE) {
             Block block = this.getBlock();
 
             if (block instanceof BlockCommand) {
                 BlockPosition blockposition = this.getPosition();
                 BlockCommand blockcommand = (BlockCommand) block;
 
-                this.g = !this.j() || blockcommand.e(this.world, blockposition, this.world.getType(blockposition));
+                this.g = !this.l() || blockcommand.e(this.world, blockposition, this.world.getType(blockposition));
                 this.world.a(blockposition, block, block.a(this.world));
                 if (this.g) {
                     blockcommand.c(this.world, blockposition);
@@ -117,7 +120,7 @@ public class TileEntityCommand extends TileEntity {
 
     }
 
-    public boolean g() {
+    public boolean i() {
         return this.g;
     }
 
@@ -125,7 +128,7 @@ public class TileEntityCommand extends TileEntity {
         this.g = flag;
     }
 
-    public boolean h() {
+    public boolean j() {
         return this.h;
     }
 
@@ -133,21 +136,21 @@ public class TileEntityCommand extends TileEntity {
         this.h = flag;
     }
 
-    public TileEntityCommand.Type i() {
+    public TileEntityCommand.Type k() {
         Block block = this.getBlock();
 
         return block == Blocks.COMMAND_BLOCK ? TileEntityCommand.Type.REDSTONE : (block == Blocks.dc ? TileEntityCommand.Type.AUTO : (block == Blocks.dd ? TileEntityCommand.Type.SEQUENCE : TileEntityCommand.Type.REDSTONE));
     }
 
-    public boolean j() {
+    public boolean l() {
         IBlockData iblockdata = this.world.getType(this.getPosition());
 
         return iblockdata.getBlock() instanceof BlockCommand ? ((Boolean) iblockdata.get(BlockCommand.b)).booleanValue() : false;
     }
 
-    public void z() {
+    public void A() {
         this.e = null;
-        super.z();
+        super.A();
     }
 
     public static enum Type {

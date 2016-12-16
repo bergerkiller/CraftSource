@@ -1,6 +1,7 @@
 package net.minecraft.server;
 
 import java.util.Random;
+import javax.annotation.Nullable;
 
 public class BlockIce extends BlockHalfTransparent {
 
@@ -11,15 +12,11 @@ public class BlockIce extends BlockHalfTransparent {
         this.a(CreativeModeTab.b);
     }
 
-    public void a(World world, EntityHuman entityhuman, BlockPosition blockposition, IBlockData iblockdata, TileEntity tileentity, ItemStack itemstack) {
+    public void a(World world, EntityHuman entityhuman, BlockPosition blockposition, IBlockData iblockdata, @Nullable TileEntity tileentity, ItemStack itemstack) {
         entityhuman.b(StatisticList.a((Block) this));
-        entityhuman.applyExhaustion(0.025F);
-        if (this.o() && EnchantmentManager.getEnchantmentLevel(Enchantments.SILK_TOUCH, itemstack) > 0) {
-            ItemStack itemstack1 = this.u(iblockdata);
-
-            if (itemstack1 != null) {
-                a(world, blockposition, itemstack1);
-            }
+        entityhuman.applyExhaustion(0.005F);
+        if (this.n() && EnchantmentManager.getEnchantmentLevel(Enchantments.SILK_TOUCH, itemstack) > 0) {
+            a(world, blockposition, this.w(iblockdata));
         } else {
             if (world.worldProvider.l()) {
                 world.setAir(blockposition);
@@ -43,7 +40,7 @@ public class BlockIce extends BlockHalfTransparent {
     }
 
     public void b(World world, BlockPosition blockposition, IBlockData iblockdata, Random random) {
-        if (world.b(EnumSkyBlock.BLOCK, blockposition) > 11 - this.getBlockData().c()) {
+        if (world.getBrightness(EnumSkyBlock.BLOCK, blockposition) > 11 - this.getBlockData().c()) {
             this.b(world, blockposition);
         }
 
@@ -60,7 +57,7 @@ public class BlockIce extends BlockHalfTransparent {
         } else {
             this.b(world, blockposition, world.getType(blockposition), 0);
             world.setTypeUpdate(blockposition, Blocks.WATER.getBlockData());
-            world.e(blockposition, Blocks.WATER);
+            world.a(blockposition, (Block) Blocks.WATER, blockposition);
         }
     }
 

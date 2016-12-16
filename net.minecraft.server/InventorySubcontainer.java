@@ -1,6 +1,7 @@
 package net.minecraft.server;
 
 import com.google.common.collect.Lists;
+import java.util.Iterator;
 import java.util.List;
 
 // CraftBukkit start
@@ -13,8 +14,8 @@ import org.bukkit.entity.HumanEntity;
 public class InventorySubcontainer implements IInventory {
 
     private String a;
-    private int b;
-    public ItemStack[] items;
+    private final int b;
+    public final NonNullList<ItemStack> items;
     private List<IInventoryListener> d;
     private boolean e;
 
@@ -23,7 +24,7 @@ public class InventorySubcontainer implements IInventory {
     private int maxStack = MAX_STACK;
     protected org.bukkit.inventory.InventoryHolder bukkitOwner;
 
-    public ItemStack[] getContents() {
+    public List<ItemStack> getContents() {
         return this.items;
     }
 
@@ -56,13 +57,13 @@ public class InventorySubcontainer implements IInventory {
         this(s, flag, i, null);
     }
 
-    public InventorySubcontainer(String s, boolean flag, int i, org.bukkit.inventory.InventoryHolder owner) { // Added argument
+    public InventorySubcontainer(String s, boolean flag, int i, org.bukkit.inventory.InventoryHolder owner) {
         this.bukkitOwner = owner;
-    // CraftBukkit end
+        // CraftBukkit end
         this.a = s;
         this.e = flag;
         this.b = i;
-        this.items = new ItemStack[i];
+        this.items = NonNullList.a(i, ItemStack.a);
     }
 
     public void a(IInventoryListener iinventorylistener) {
@@ -78,13 +79,13 @@ public class InventorySubcontainer implements IInventory {
     }
 
     public ItemStack getItem(int i) {
-        return i >= 0 && i < this.items.length ? this.items[i] : null;
+        return i >= 0 && i < this.items.size() ? (ItemStack) this.items.get(i) : ItemStack.a;
     }
 
     public ItemStack splitStack(int i, int j) {
         ItemStack itemstack = ContainerUtil.a(this.items, i, j);
 
-        if (itemstack != null) {
+        if (!itemstack.isEmpty()) {
             this.update();
         }
 
@@ -97,28 +98,28 @@ public class InventorySubcontainer implements IInventory {
         for (int i = 0; i < this.b; ++i) {
             ItemStack itemstack2 = this.getItem(i);
 
-            if (itemstack2 == null) {
+            if (itemstack2.isEmpty()) {
                 this.setItem(i, itemstack1);
                 this.update();
-                return null;
+                return ItemStack.a;
             }
 
             if (ItemStack.c(itemstack2, itemstack1)) {
                 int j = Math.min(this.getMaxStackSize(), itemstack2.getMaxStackSize());
-                int k = Math.min(itemstack1.count, j - itemstack2.count);
+                int k = Math.min(itemstack1.getCount(), j - itemstack2.getCount());
 
                 if (k > 0) {
-                    itemstack2.count += k;
-                    itemstack1.count -= k;
-                    if (itemstack1.count <= 0) {
+                    itemstack2.add(k);
+                    itemstack1.subtract(k);
+                    if (itemstack1.isEmpty()) {
                         this.update();
-                        return null;
+                        return ItemStack.a;
                     }
                 }
             }
         }
 
-        if (itemstack1.count != itemstack.count) {
+        if (itemstack1.getCount() != itemstack.getCount()) {
             this.update();
         }
 
@@ -126,20 +127,20 @@ public class InventorySubcontainer implements IInventory {
     }
 
     public ItemStack splitWithoutUpdate(int i) {
-        if (this.items[i] != null) {
-            ItemStack itemstack = this.items[i];
+        ItemStack itemstack = (ItemStack) this.items.get(i);
 
-            this.items[i] = null;
-            return itemstack;
+        if (itemstack.isEmpty()) {
+            return ItemStack.a;
         } else {
-            return null;
+            this.items.set(i, ItemStack.a);
+            return itemstack;
         }
     }
 
     public void setItem(int i, ItemStack itemstack) {
-        this.items[i] = itemstack;
-        if (itemstack != null && itemstack.count > this.getMaxStackSize()) {
-            itemstack.count = this.getMaxStackSize();
+        this.items.set(i, itemstack);
+        if (!itemstack.isEmpty() && itemstack.getCount() > this.getMaxStackSize()) {
+            itemstack.setCount(this.getMaxStackSize());
         }
 
         this.update();
@@ -147,6 +148,22 @@ public class InventorySubcontainer implements IInventory {
 
     public int getSize() {
         return this.b;
+    }
+
+    public boolean w_() {
+        Iterator iterator = this.items.iterator();
+
+        ItemStack itemstack;
+
+        do {
+            if (!iterator.hasNext()) {
+                return true;
+            }
+
+            itemstack = (ItemStack) iterator.next();
+        } while (itemstack.isEmpty());
+
+        return false;
     }
 
     public String getName() {
@@ -197,14 +214,11 @@ public class InventorySubcontainer implements IInventory {
 
     public void setProperty(int i, int j) {}
 
-    public int g() {
+    public int h() {
         return 0;
     }
 
-    public void l() {
-        for (int i = 0; i < this.items.length; ++i) {
-            this.items[i] = null;
-        }
-
+    public void clear() {
+        this.items.clear();
     }
 }

@@ -19,6 +19,7 @@ import io.netty.util.concurrent.GenericFutureListener;
 import java.net.SocketAddress;
 import java.util.Queue;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+import javax.annotation.Nullable;
 import javax.crypto.SecretKey;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.Validate;
@@ -168,7 +169,7 @@ public class NetworkManager extends SimpleChannelInboundHandler<Packet<?>> {
 
     }
 
-    private void a(final Packet<?> packet, final GenericFutureListener<? extends Future<? super Void>>[] agenericfuturelistener) {
+    private void a(final Packet<?> packet, @Nullable final GenericFutureListener<? extends Future<? super Void>>[] agenericfuturelistener) {
         final EnumProtocol enumprotocol = EnumProtocol.a(packet);
         final EnumProtocol enumprotocol1 = (EnumProtocol) this.channel.attr(NetworkManager.c).get();
 
@@ -229,7 +230,7 @@ public class NetworkManager extends SimpleChannelInboundHandler<Packet<?>> {
     public void a() {
         this.m();
         if (this.m instanceof ITickable) {
-            ((ITickable) this.m).c();
+            ((ITickable) this.m).F_();
         }
 
         this.channel.flush();

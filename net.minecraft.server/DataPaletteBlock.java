@@ -1,12 +1,14 @@
 package net.minecraft.server;
 
+import javax.annotation.Nullable;
+
 public class DataPaletteBlock implements DataPaletteExpandable {
 
     private static final DataPalette d = new DataPaletteGlobal();
     protected static final IBlockData a = Blocks.AIR.getBlockData();
     protected DataBits b;
     protected DataPalette c;
-    private int e = 0;
+    private int e;
 
     public DataPaletteBlock() {
         this.b(4);
@@ -77,6 +79,7 @@ public class DataPaletteBlock implements DataPaletteExpandable {
         packetdataserializer.a(this.b.a());
     }
 
+    @Nullable
     public NibbleArray exportData(byte[] abyte, NibbleArray nibblearray) {
         NibbleArray nibblearray1 = null;
 
@@ -101,7 +104,7 @@ public class DataPaletteBlock implements DataPaletteExpandable {
         return nibblearray1;
     }
 
-    public void a(byte[] abyte, NibbleArray nibblearray, NibbleArray nibblearray1) {
+    public void a(byte[] abyte, NibbleArray nibblearray, @Nullable NibbleArray nibblearray1) {
         for (int i = 0; i < 4096; ++i) {
             int j = i & 15;
             int k = i >> 8 & 15;
@@ -129,8 +132,6 @@ public class DataPaletteBlock implements DataPaletteExpandable {
     }
 
     public int a() {
-        int i = this.b.b();
-
-        return 1 + this.c.a() + PacketDataSerializer.a(i) + i * 8;
+        return 1 + this.c.a() + PacketDataSerializer.a(this.b.b()) + this.b.a().length * 8;
     }
 }

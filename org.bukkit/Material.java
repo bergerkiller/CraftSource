@@ -1,6 +1,7 @@
 package org.bukkit;
 
 import java.lang.reflect.Constructor;
+import java.util.Arrays;
 import java.util.Map;
 
 import org.apache.commons.lang.Validate;
@@ -13,6 +14,7 @@ import org.bukkit.material.Chest;
 import org.bukkit.material.Coal;
 import org.bukkit.material.CocoaPlant;
 import org.bukkit.material.Command;
+import org.bukkit.material.Comparator;
 import org.bukkit.material.Crops;
 import org.bukkit.material.DetectorRail;
 import org.bukkit.material.Diode;
@@ -23,6 +25,7 @@ import org.bukkit.material.EnderChest;
 import org.bukkit.material.FlowerPot;
 import org.bukkit.material.Furnace;
 import org.bukkit.material.Gate;
+import org.bukkit.material.Hopper;
 import org.bukkit.material.Ladder;
 import org.bukkit.material.Leaves;
 import org.bukkit.material.Lever;
@@ -56,8 +59,6 @@ import org.bukkit.material.Vine;
 import org.bukkit.material.Wood;
 import org.bukkit.material.WoodenStep;
 import org.bukkit.material.Wool;
-import org.bukkit.potion.Potion;
-import org.bukkit.util.Java15Compat;
 
 import com.google.common.collect.Maps;
 
@@ -208,20 +209,20 @@ public enum Material {
     BEACON(138),
     COBBLE_WALL(139),
     FLOWER_POT(140, FlowerPot.class),
-    CARROT(141),
-    POTATO(142),
+    CARROT(141, Crops.class),
+    POTATO(142, Crops.class),
     WOOD_BUTTON(143, Button.class),
     SKULL(144, Skull.class),
     ANVIL(145),
     TRAPPED_CHEST(146, Chest.class),
     GOLD_PLATE(147),
     IRON_PLATE(148),
-    REDSTONE_COMPARATOR_OFF(149),
-    REDSTONE_COMPARATOR_ON(150),
+    REDSTONE_COMPARATOR_OFF(149, Comparator.class),
+    REDSTONE_COMPARATOR_ON(150, Comparator.class),
     DAYLIGHT_DETECTOR(151),
     REDSTONE_BLOCK(152),
     QUARTZ_ORE(153),
-    HOPPER(154),
+    HOPPER(154, Hopper.class),
     QUARTZ_BLOCK(155),
     QUARTZ_STAIRS(156, Stairs.class),
     ACTIVATOR_RAIL(157, PoweredRail.class),
@@ -277,9 +278,31 @@ public enum Material {
     BEETROOT_BLOCK(207, Crops.class),
     GRASS_PATH(208),
     END_GATEWAY(209),
-    COMMAND_REPEATING(210),
-    COMMAND_CHAIN(211),
+    COMMAND_REPEATING(210, Command.class),
+    COMMAND_CHAIN(211, Command.class),
     FROSTED_ICE(212),
+    MAGMA(213),
+    NETHER_WART_BLOCK(214),
+    RED_NETHER_BRICK(215),
+    BONE_BLOCK(216),
+    STRUCTURE_VOID(217),
+    OBSERVER(218),
+    WHITE_SHULKER_BOX(219, 1),
+    ORANGE_SHULKER_BOX(220, 1),
+    MAGENTA_SHULKER_BOX(221, 1),
+    LIGHT_BLUE_SHULKER_BOX(222, 1),
+    YELLOW_SHULKER_BOX(223, 1),
+    LIME_SHULKER_BOX(224, 1),
+    PINK_SHULKER_BOX(225, 1),
+    GRAY_SHULKER_BOX(226, 1),
+    SILVER_SHULKER_BOX(227, 1),
+    CYAN_SHULKER_BOX(228, 1),
+    PURPLE_SHULKER_BOX(229, 1),
+    BLUE_SHULKER_BOX(230, 1),
+    BROWN_SHULKER_BOX(231, 1),
+    GREEN_SHULKER_BOX(232, 1),
+    RED_SHULKER_BOX(233, 1),
+    BLACK_SHULKER_BOX(234, 1),
     STRUCTURE_BLOCK(255),
     // ----- Item Separator -----
     IRON_SPADE(256, 1, 250),
@@ -402,9 +425,6 @@ public enum Material {
     GHAST_TEAR(370),
     GOLD_NUGGET(371),
     NETHER_STALK(372),
-    /**
-     * @see Potion
-     */
     POTION(373, 1, MaterialData.class),
     GLASS_BOTTLE(374),
     SPIDER_EYE(375),
@@ -473,17 +493,16 @@ public enum Material {
     SPLASH_POTION(438, 1),
     SPECTRAL_ARROW(439),
     TIPPED_ARROW(440),
-    /**
-     * @see Potion
-     */
-    LINGERING_POTION(441, 1, MaterialData.class),
+    LINGERING_POTION(441, 1),
     SHIELD(442, 1, 336),
-    ELYTRA(443, 1),
+    ELYTRA(443, 1, 431),
     BOAT_SPRUCE(444, 1),
     BOAT_BIRCH(445, 1),
     BOAT_JUNGLE(446, 1),
     BOAT_ACACIA(447, 1),
     BOAT_DARK_OAK(448, 1),
+    TOTEM(449, 1),
+    SHULKER_SHELL(450),
     GOLD_RECORD(2256, 1),
     GREEN_RECORD(2257, 1),
     RECORD_3(2258, 1),
@@ -706,7 +725,7 @@ public enum Material {
         } catch (NumberFormatException ex) {}
 
         if (result == null) {
-            String filtered = name.toUpperCase();
+            String filtered = name.toUpperCase(java.util.Locale.ENGLISH);
 
             filtered = filtered.replaceAll("\\s+", "_").replaceAll("\\W", "");
             result = BY_NAME.get(filtered);
@@ -720,7 +739,7 @@ public enum Material {
             if (byId.length > material.id) {
                 byId[material.id] = material;
             } else {
-                byId = Java15Compat.Arrays_copyOfRange(byId, 0, material.id + 2);
+                byId = Arrays.copyOfRange(byId, 0, material.id + 2);
                 byId[material.id] = material;
             }
             BY_NAME.put(material.name(), material);
@@ -735,8 +754,7 @@ public enum Material {
     }
 
     /**
-     * Check if the material is a block and solid (cannot be passed through by
-     * a player)
+     * Check if the material is a block and solid (can be built upon)
      *
      * @return True if this material is a block and solid
      */
@@ -905,6 +923,27 @@ public enum Material {
             case COMMAND_REPEATING:
             case COMMAND_CHAIN:
             case FROSTED_ICE:
+            case MAGMA:
+            case NETHER_WART_BLOCK:
+            case RED_NETHER_BRICK:
+            case BONE_BLOCK:
+            case OBSERVER:
+            case WHITE_SHULKER_BOX:
+            case ORANGE_SHULKER_BOX:
+            case MAGENTA_SHULKER_BOX:
+            case LIGHT_BLUE_SHULKER_BOX:
+            case YELLOW_SHULKER_BOX:
+            case LIME_SHULKER_BOX:
+            case PINK_SHULKER_BOX:
+            case GRAY_SHULKER_BOX:
+            case SILVER_SHULKER_BOX:
+            case CYAN_SHULKER_BOX:
+            case PURPLE_SHULKER_BOX:
+            case BLUE_SHULKER_BOX:
+            case BROWN_SHULKER_BOX:
+            case GREEN_SHULKER_BOX:
+            case RED_SHULKER_BOX:
+            case BLACK_SHULKER_BOX:
                 return true;
             default:
                 return false;
@@ -970,6 +1009,7 @@ public enum Material {
             case CHORUS_FLOWER:
             case BEETROOT_BLOCK:
             case END_GATEWAY:
+            case STRUCTURE_VOID:
                 return true;
             default:
                 return false;
@@ -1186,6 +1226,10 @@ public enum Material {
             case STRUCTURE_BLOCK:
             case COMMAND_REPEATING:
             case COMMAND_CHAIN:
+            case MAGMA:
+            case NETHER_WART_BLOCK:
+            case RED_NETHER_BRICK:
+            case BONE_BLOCK:
                 return true;
             default:
                 return false;

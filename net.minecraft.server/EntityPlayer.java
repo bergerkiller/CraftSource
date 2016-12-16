@@ -8,6 +8,7 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import javax.annotation.Nullable;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -19,12 +20,14 @@ import org.bukkit.craftbukkit.entity.CraftPlayer;
 import org.bukkit.craftbukkit.event.CraftEventFactory;
 import org.bukkit.craftbukkit.inventory.CraftItemStack;
 import org.bukkit.event.inventory.InventoryType;
+import org.bukkit.event.player.PlayerChangedMainHandEvent;
 import org.bukkit.event.player.PlayerTeleportEvent.TeleportCause;
+import org.bukkit.inventory.MainHand;
 // CraftBukkit end
 
 public class EntityPlayer extends EntityHuman implements ICrafting {
 
-    private static final Logger bQ = LogManager.getLogger();
+    private static final Logger bR = LogManager.getLogger();
     public String locale = "en_US"; // Spigot private -> public
     public PlayerConnection playerConnection;
     public final MinecraftServer server;
@@ -32,23 +35,23 @@ public class EntityPlayer extends EntityHuman implements ICrafting {
     public double d;
     public double e;
     public final List<Integer> removeQueue = Lists.newLinkedList();
-    private final ServerStatisticManager bT;
-    private float bU = Float.MIN_VALUE;
-    private int bV = Integer.MIN_VALUE;
+    private final ServerStatisticManager bU;
+    private float bV = Float.MIN_VALUE;
     private int bW = Integer.MIN_VALUE;
     private int bX = Integer.MIN_VALUE;
     private int bY = Integer.MIN_VALUE;
     private int bZ = Integer.MIN_VALUE;
+    private int ca = Integer.MIN_VALUE;
     private float lastHealthSent = -1.0E8F;
-    private int cb = -99999999;
-    private boolean cc = true;
+    private int cc = -99999999;
+    private boolean cd = true;
     public int lastSentExp = -99999999;
     public int invulnerableTicks = 60;
-    private EntityHuman.EnumChatVisibility cf;
-    private boolean cg = true;
-    private long ch = System.currentTimeMillis();
-    private Entity ci = null;
-    private boolean cj;
+    private EntityHuman.EnumChatVisibility cg;
+    private boolean ch = true;
+    private long ci = System.currentTimeMillis();
+    private Entity cj;
+    public boolean worldChangeInvuln;
     private int containerCounter;
     public boolean f;
     public int ping;
@@ -65,21 +68,6 @@ public class EntityPlayer extends EntityHuman implements ICrafting {
     public double maxHealthCache;
     public boolean joining = true;
     // CraftBukkit end
-    // Spigot start
-    public boolean collidesWithEntities = true;
-
-    @Override
-    public boolean isInteractable()
-    {
-        return this.collidesWithEntities && super.isInteractable(); // (first !this.isDead near bottom of EntityLiving)
-    }
-
-    @Override
-    public boolean isCollidable()
-    {
-        return this.collidesWithEntities && super.isCollidable(); // (second !this.isDead near bottom of EntityLiving)
-    }
-    // Spigot end
 
     public EntityPlayer(MinecraftServer minecraftserver, WorldServer worldserver, GameProfile gameprofile, PlayerInteractManager playerinteractmanager) {
         super(worldserver, gameprofile);
@@ -87,7 +75,7 @@ public class EntityPlayer extends EntityHuman implements ICrafting {
         this.playerInteractManager = playerinteractmanager;
         BlockPosition blockposition = worldserver.getSpawn();
 
-        if (!worldserver.worldProvider.m() && worldserver.getWorldData().getGameType() != WorldSettings.EnumGamemode.ADVENTURE) {
+        if (worldserver.worldProvider.m() && worldserver.getWorldData().getGameType() != EnumGamemode.ADVENTURE) {
             int i = Math.max(0, minecraftserver.a(worldserver));
             int j = MathHelper.floor(worldserver.getWorldBorder().b((double) blockposition.getX(), (double) blockposition.getZ()));
 
@@ -103,8 +91,8 @@ public class EntityPlayer extends EntityHuman implements ICrafting {
         }
 
         this.server = minecraftserver;
-        this.bT = minecraftserver.getPlayerList().a((EntityHuman) this);
-        this.P = 0.0F;
+        this.bU = minecraftserver.getPlayerList().a((EntityHuman) this);
+        this.P = 1.0F; // CraftBukkit - hit when sneaking
         this.setPositionRotation(blockposition, 0.0F, 0.0F);
 
         while (!worldserver.getCubes(this, this.getBoundingBox()).isEmpty() && this.locY < 255.0D) {
@@ -121,10 +109,10 @@ public class EntityPlayer extends EntityHuman implements ICrafting {
     public void a(NBTTagCompound nbttagcompound) {
         super.a(nbttagcompound);
         if (nbttagcompound.hasKeyOfType("playerGameType", 99)) {
-            if (this.h().getForceGamemode()) {
-                this.playerInteractManager.setGameMode(this.h().getGamemode());
+            if (this.B_().getForceGamemode()) {
+                this.playerInteractManager.setGameMode(this.B_().getGamemode());
             } else {
-                this.playerInteractManager.setGameMode(WorldSettings.EnumGamemode.getById(nbttagcompound.getInt("playerGameType")));
+                this.playerInteractManager.setGameMode(EnumGamemode.getById(nbttagcompound.getInt("playerGameType")));
             }
         }
 
@@ -136,12 +124,12 @@ public class EntityPlayer extends EntityHuman implements ICrafting {
         nbttagcompound.setInt("playerGameType", this.playerInteractManager.getGameMode().getId());
         Entity entity = this.getVehicle();
 
-        if (this.by() != null && entity != this & entity.b(EntityPlayer.class).size() == 1) {
+        if (this.bB() != null && entity != this & entity.b(EntityPlayer.class).size() == 1) {
             NBTTagCompound nbttagcompound1 = new NBTTagCompound();
             NBTTagCompound nbttagcompound2 = new NBTTagCompound();
 
             entity.d(nbttagcompound2);
-            nbttagcompound1.a("Attach", this.by().getUniqueID());
+            nbttagcompound1.a("Attach", this.bB().getUniqueID());
             nbttagcompound1.set("Entity", nbttagcompound2);
             nbttagcompound.set("RootVehicle", nbttagcompound1);
         }
@@ -201,7 +189,7 @@ public class EntityPlayer extends EntityHuman implements ICrafting {
         return new ItemCooldownPlayer(this);
     }
 
-    public void m() {
+    public void A_() {
         // CraftBukkit start
         if (this.joining) {
             this.joining = false;
@@ -236,27 +224,27 @@ public class EntityPlayer extends EntityHuman implements ICrafting {
         Entity entity = this.getSpecatorTarget();
 
         if (entity != this) {
-            if (!entity.isAlive()) {
-                this.setSpectatorTarget(this);
-            } else {
+            if (entity.isAlive()) {
                 this.setLocation(entity.locX, entity.locY, entity.locZ, entity.yaw, entity.pitch);
                 this.server.getPlayerList().d(this);
                 if (this.isSneaking()) {
                     this.setSpectatorTarget(this);
                 }
+            } else {
+                this.setSpectatorTarget(this);
             }
         }
 
     }
 
-    public void k_() {
+    public void playerTick() {
         try {
-            super.m();
+            super.A_();
 
             for (int i = 0; i < this.inventory.getSize(); ++i) {
                 ItemStack itemstack = this.inventory.getItem(i);
 
-                if (itemstack != null && itemstack.getItem().f()) {
+                if (!itemstack.isEmpty() && itemstack.getItem().f()) {
                     Packet packet = ((ItemWorldMapBase) itemstack.getItem()).a(itemstack, this.world, (EntityHuman) this);
 
                     if (packet != null) {
@@ -265,26 +253,26 @@ public class EntityPlayer extends EntityHuman implements ICrafting {
                 }
             }
 
-            if (this.getHealth() != this.lastHealthSent || this.cb != this.foodData.getFoodLevel() || this.foodData.getSaturationLevel() == 0.0F != this.cc) {
+            if (this.getHealth() != this.lastHealthSent || this.cc != this.foodData.getFoodLevel() || this.foodData.getSaturationLevel() == 0.0F != this.cd) {
                 this.playerConnection.sendPacket(new PacketPlayOutUpdateHealth(this.getBukkitEntity().getScaledHealth(), this.foodData.getFoodLevel(), this.foodData.getSaturationLevel())); // CraftBukkit
                 this.lastHealthSent = this.getHealth();
-                this.cb = this.foodData.getFoodLevel();
-                this.cc = this.foodData.getSaturationLevel() == 0.0F;
+                this.cc = this.foodData.getFoodLevel();
+                this.cd = this.foodData.getSaturationLevel() == 0.0F;
             }
 
-            if (this.getHealth() + this.getAbsorptionHearts() != this.bU) {
-                this.bU = this.getHealth() + this.getAbsorptionHearts();
-                this.a(IScoreboardCriteria.g, MathHelper.f(this.bU));
+            if (this.getHealth() + this.getAbsorptionHearts() != this.bV) {
+                this.bV = this.getHealth() + this.getAbsorptionHearts();
+                this.a(IScoreboardCriteria.g, MathHelper.f(this.bV));
             }
 
-            if (this.foodData.getFoodLevel() != this.bV) {
-                this.bV = this.foodData.getFoodLevel();
-                this.a(IScoreboardCriteria.h, MathHelper.f((float) this.bV));
+            if (this.foodData.getFoodLevel() != this.bW) {
+                this.bW = this.foodData.getFoodLevel();
+                this.a(IScoreboardCriteria.h, MathHelper.f((float) this.bW));
             }
 
-            if (this.getAirTicks() != this.bW) {
-                this.bW = this.getAirTicks();
-                this.a(IScoreboardCriteria.i, MathHelper.f((float) this.bW));
+            if (this.getAirTicks() != this.bX) {
+                this.bX = this.getAirTicks();
+                this.a(IScoreboardCriteria.i, MathHelper.f((float) this.bX));
             }
 
             // CraftBukkit start - Force max health updates
@@ -293,19 +281,19 @@ public class EntityPlayer extends EntityHuman implements ICrafting {
             }
             // CraftBukkit end
 
-            if (this.getArmorStrength() != this.bX) {
-                this.bX = this.getArmorStrength();
-                this.a(IScoreboardCriteria.j, MathHelper.f((float) this.bX));
+            if (this.getArmorStrength() != this.bY) {
+                this.bY = this.getArmorStrength();
+                this.a(IScoreboardCriteria.j, MathHelper.f((float) this.bY));
             }
 
-            if (this.expTotal != this.bZ) {
-                this.bZ = this.expTotal;
-                this.a(IScoreboardCriteria.k, MathHelper.f((float) this.bZ));
+            if (this.expTotal != this.ca) {
+                this.ca = this.expTotal;
+                this.a(IScoreboardCriteria.k, MathHelper.f((float) this.ca));
             }
 
-            if (this.expLevel != this.bY) {
-                this.bY = this.expLevel;
-                this.a(IScoreboardCriteria.l, MathHelper.f((float) this.bY));
+            if (this.expLevel != this.bZ) {
+                this.bZ = this.expLevel;
+                this.a(IScoreboardCriteria.l, MathHelper.f((float) this.bZ));
             }
 
             if (this.expTotal != this.lastSentExp) {
@@ -313,7 +301,7 @@ public class EntityPlayer extends EntityHuman implements ICrafting {
                 this.playerConnection.sendPacket(new PacketPlayOutExperience(this.exp, this.expTotal, this.expLevel));
             }
 
-            if (this.ticksLived % 20 * 5 == 0 && !this.getStatisticManager().hasAchievement(AchievementList.L)) {
+            if (this.ticksLived % 100 == 0 && !this.getStatisticManager().hasAchievement(AchievementList.L)) {
                 this.o();
             }
 
@@ -337,12 +325,11 @@ public class EntityPlayer extends EntityHuman implements ICrafting {
     }
 
     private void a(IScoreboardCriteria iscoreboardcriteria, int i) {
-        Collection collection = this.getScoreboard().getObjectivesForCriteria(iscoreboardcriteria);
+        Collection collection = this.world.getServer().getScoreboardManager().getScoreboardScores(iscoreboardcriteria, this.getName(), new java.util.ArrayList<ScoreboardScore>()); // CraftBukkit - Use our scores instead
         Iterator iterator = collection.iterator();
 
         while (iterator.hasNext()) {
-            ScoreboardObjective scoreboardobjective = (ScoreboardObjective) iterator.next();
-            ScoreboardScore scoreboardscore = this.getScoreboard().getPlayerScoreForObjective(this.getName(), scoreboardobjective);
+            ScoreboardScore scoreboardscore = (ScoreboardScore) iterator.next(); // CraftBukkit - Use our scores instead
 
             scoreboardscore.setScore(i);
         }
@@ -395,23 +382,13 @@ public class EntityPlayer extends EntityHuman implements ICrafting {
         if (this.dead) {
             return;
         }
-        java.util.List<org.bukkit.inventory.ItemStack> loot = new java.util.ArrayList<org.bukkit.inventory.ItemStack>();
+        java.util.List<org.bukkit.inventory.ItemStack> loot = new java.util.ArrayList<org.bukkit.inventory.ItemStack>(this.inventory.getSize());
         boolean keepInventory = this.world.getGameRules().getBoolean("keepInventory");
 
         if (!keepInventory) {
-            for (int i = 0; i < this.inventory.items.length; ++i) {
-                if (this.inventory.items[i] != null) {
-                    loot.add(CraftItemStack.asCraftMirror(this.inventory.items[i]));
-                }
-            }
-            for (int i = 0; i < this.inventory.armor.length; ++i) {
-                if (this.inventory.armor[i] != null) {
-                    loot.add(CraftItemStack.asCraftMirror(this.inventory.armor[i]));
-                }
-            }
-            for (int i = 0; i < this.inventory.extraSlots.length; ++i) {
-                if (this.inventory.extraSlots[i] != null) {
-                    loot.add(CraftItemStack.asCraftMirror(this.inventory.extraSlots[i]));
+            for (ItemStack item : this.inventory.getContents()) {
+                if (!item.isEmpty() && !EnchantmentManager.c(item)) { // PAIL: shouldNotDrop (Vanishing enchant)
+                    loot.add(CraftItemStack.asCraftMirror(item));
                 }
             }
         }
@@ -425,12 +402,12 @@ public class EntityPlayer extends EntityHuman implements ICrafting {
 
         if (deathMessage != null && deathMessage.length() > 0 && flag) { // TODO: allow plugins to override?
             if (deathMessage.equals(deathmessage)) {
-                ScoreboardTeamBase scoreboardteambase = this.aO();
+                ScoreboardTeamBase scoreboardteambase = this.aQ();
 
-                if (scoreboardteambase != null && scoreboardteambase.j() != ScoreboardTeamBase.EnumNameTagVisibility.ALWAYS) {
-                    if (scoreboardteambase.j() == ScoreboardTeamBase.EnumNameTagVisibility.HIDE_FOR_OTHER_TEAMS) {
+                if (scoreboardteambase != null && scoreboardteambase.getDeathMessageVisibility() != ScoreboardTeamBase.EnumNameTagVisibility.ALWAYS) {
+                    if (scoreboardteambase.getDeathMessageVisibility() == ScoreboardTeamBase.EnumNameTagVisibility.HIDE_FOR_OTHER_TEAMS) {
                         this.server.getPlayerList().a((EntityHuman) this, chatmessage);
-                    } else if (scoreboardteambase.j() == ScoreboardTeamBase.EnumNameTagVisibility.HIDE_FOR_OWN_TEAM) {
+                    } else if (scoreboardteambase.getDeathMessageVisibility() == ScoreboardTeamBase.EnumNameTagVisibility.HIDE_FOR_OWN_TEAM) {
                         this.server.getPlayerList().b((EntityHuman) this, chatmessage);
                     }
                 } else {
@@ -443,15 +420,7 @@ public class EntityPlayer extends EntityHuman implements ICrafting {
 
         // we clean the player's inventory after the EntityDeathEvent is called so plugins can get the exact state of the inventory.
         if (!event.getKeepInventory()) {
-            for (int i = 0; i < this.inventory.items.length; ++i) {
-                this.inventory.items[i] = null;
-            }
-            for (int i = 0; i < this.inventory.armor.length; ++i) {
-                this.inventory.armor[i] = null;
-            }
-            for (int i = 0; i < this.inventory.extraSlots.length; ++i) {
-                this.inventory.extraSlots[i] = null;
-            }
+            this.inventory.clear();
         }
 
         this.closeInventory();
@@ -468,20 +437,22 @@ public class EntityPlayer extends EntityHuman implements ICrafting {
             scoreboardscore.incrementScore();
         }
 
-        EntityLiving entityliving = this.bV();
+        EntityLiving entityliving = this.ca();
 
         if (entityliving != null) {
-            EntityTypes.MonsterEggInfo entitytypes_monsteregginfo = (EntityTypes.MonsterEggInfo) EntityTypes.eggInfo.get(EntityTypes.b((Entity) entityliving));
+            EntityTypes.MonsterEggInfo entitytypes_monsteregginfo = (EntityTypes.MonsterEggInfo) EntityTypes.eggInfo.get(EntityTypes.a((Entity) entityliving));
 
             if (entitytypes_monsteregginfo != null) {
-                this.b(entitytypes_monsteregginfo.e);
+                this.b(entitytypes_monsteregginfo.killedByEntityStatistic);
             }
 
-            entityliving.b(this, this.ba);
+            entityliving.b(this, this.bb);
         }
 
         this.b(StatisticList.A);
         this.a(StatisticList.h);
+        this.extinguish();
+        this.setFlag(0, false);
         this.getCombatTracker().g();
     }
 
@@ -524,9 +495,11 @@ public class EntityPlayer extends EntityHuman implements ICrafting {
         return this.world.pvpMode;
     }
 
+    @Nullable
     public Entity c(int i) {
-        this.cj = true;
+        // this.worldChangeInvuln = true; // CraftBukkit - Moved down and into PlayerList#changeDimension
         if (this.dimension == 1 && i == 1) {
+            this.worldChangeInvuln = true; // CraftBukkit - Moved down from above
             this.world.kill(this);
             if (!this.viewingCredits) {
                 this.viewingCredits = true;
@@ -554,7 +527,7 @@ public class EntityPlayer extends EntityHuman implements ICrafting {
             this.playerConnection.sendPacket(new PacketPlayOutWorldEvent(1032, BlockPosition.ZERO, 0, false));
             this.lastSentExp = -1;
             this.lastHealthSent = -1.0F;
-            this.cb = -1;
+            this.cc = -1;
             return this;
         }
     }
@@ -565,10 +538,10 @@ public class EntityPlayer extends EntityHuman implements ICrafting {
 
     private void a(TileEntity tileentity) {
         if (tileentity != null) {
-            Packet packet = tileentity.getUpdatePacket();
+            PacketPlayOutTileEntityData packetplayouttileentitydata = tileentity.getUpdatePacket();
 
-            if (packet != null) {
-                this.playerConnection.sendPacket(packet);
+            if (packetplayouttileentitydata != null) {
+                this.playerConnection.sendPacket(packetplayouttileentitydata);
             }
         }
 
@@ -608,12 +581,12 @@ public class EntityPlayer extends EntityHuman implements ICrafting {
     }
 
     public boolean a(Entity entity, boolean flag) {
-        Entity entity1 = this.by();
+        Entity entity1 = this.bB();
 
         if (!super.a(entity, flag)) {
             return false;
         } else {
-            Entity entity2 = this.by();
+            Entity entity2 = this.bB();
 
             if (entity2 != entity1 && this.playerConnection != null) {
                 this.playerConnection.a(this.locX, this.locY, this.locZ, this.yaw, this.pitch);
@@ -624,10 +597,10 @@ public class EntityPlayer extends EntityHuman implements ICrafting {
     }
 
     public void stopRiding() {
-        Entity entity = this.by();
+        Entity entity = this.bB();
 
         super.stopRiding();
-        Entity entity1 = this.by();
+        Entity entity1 = this.bB();
 
         if (entity1 != entity && this.playerConnection != null) {
             this.playerConnection.a(this.locX, this.locY, this.locZ, this.yaw, this.pitch);
@@ -681,17 +654,21 @@ public class EntityPlayer extends EntityHuman implements ICrafting {
 
     public void openTileEntity(ITileEntityContainer itileentitycontainer) {
         // CraftBukkit start - Inventory open hook
-        Container container = CraftEventFactory.callInventoryOpenEvent(this, itileentitycontainer.createContainer(this.inventory, this));
-        if (container == null) {
-            return;
+        if (false && itileentitycontainer instanceof ILootable && ((ILootable) itileentitycontainer).b() != null && this.isSpectator()) {
+            this.a((new ChatMessage("container.spectatorCantOpen", new Object[0])).setChatModifier((new ChatModifier()).setColor(EnumChatFormat.RED)), true);
+        } else {
+            boolean cancelled = itileentitycontainer instanceof ILootable && ((ILootable) itileentitycontainer).b() != null && this.isSpectator();
+            Container container = CraftEventFactory.callInventoryOpenEvent(this, itileentitycontainer.createContainer(this.inventory, this), cancelled);
+            if (container == null) {
+                return;
+            }
+            this.nextContainerCounter();
+            this.playerConnection.sendPacket(new PacketPlayOutOpenWindow(this.containerCounter, itileentitycontainer.getContainerName(), itileentitycontainer.getScoreboardDisplayName()));
+            this.activeContainer = container;
+            // CraftBukkit end
+            this.activeContainer.windowId = this.containerCounter;
+            this.activeContainer.addSlotListener(this);
         }
-
-        this.nextContainerCounter();
-        this.activeContainer = container;
-        this.playerConnection.sendPacket(new PacketPlayOutOpenWindow(this.containerCounter, itileentitycontainer.getContainerName(), itileentitycontainer.getScoreboardDisplayName()));
-        // CraftBukkit end
-        this.activeContainer.windowId = this.containerCounter;
-        this.activeContainer.addSlotListener(this);
     }
 
     public void openContainer(IInventory iinventory) {
@@ -700,7 +677,7 @@ public class EntityPlayer extends EntityHuman implements ICrafting {
         boolean cancelled = false;
         if (iinventory instanceof ITileInventory) {
             ITileInventory itileinventory = (ITileInventory) iinventory;
-            cancelled = itileinventory.x_() && !this.a(itileinventory.y_()) && !this.isSpectator(); // PAIL: rename
+            cancelled = itileinventory.isLocked() && !this.a(itileinventory.getLock()) && !this.isSpectator();
         }
 
         Container container;
@@ -717,7 +694,7 @@ public class EntityPlayer extends EntityHuman implements ICrafting {
         // CraftBukkit end
 
         if (iinventory instanceof ILootable && ((ILootable) iinventory).b() != null && this.isSpectator()) {
-            this.sendMessage((new ChatMessage("container.spectatorCantOpen", new Object[0])).setChatModifier((new ChatModifier()).setColor(EnumChatFormat.RED)));
+            this.a((new ChatMessage("container.spectatorCantOpen", new Object[0])).setChatModifier((new ChatModifier()).setColor(EnumChatFormat.RED)), true);
         } else {
             if (this.activeContainer != this.defaultContainer) {
                 this.closeInventory();
@@ -726,9 +703,9 @@ public class EntityPlayer extends EntityHuman implements ICrafting {
             if (iinventory instanceof ITileInventory) {
                 ITileInventory itileinventory = (ITileInventory) iinventory;
 
-                if (itileinventory.x_() && !this.a(itileinventory.y_()) && !this.isSpectator()) {
+                if (itileinventory.isLocked() && !this.a(itileinventory.getLock()) && !this.isSpectator()) {
                     this.playerConnection.sendPacket(new PacketPlayOutChat(new ChatMessage("container.isLocked", new Object[] { iinventory.getScoreboardDisplayName()}), (byte) 2));
-                    this.playerConnection.sendPacket(new PacketPlayOutNamedSoundEffect(SoundEffects.W, SoundCategory.BLOCKS, this.locX, this.locY, this.locZ, 1.0F, 1.0F));
+                    this.playerConnection.sendPacket(new PacketPlayOutNamedSoundEffect(SoundEffects.Y, SoundCategory.BLOCKS, this.locX, this.locY, this.locZ, 1.0F, 1.0F));
                     iinventory.closeContainer(this); // CraftBukkit
                     return;
                 }
@@ -777,9 +754,9 @@ public class EntityPlayer extends EntityHuman implements ICrafting {
 
     }
 
-    public void a(EntityHorse entityhorse, IInventory iinventory) {
+    public void openHorseInventory(EntityHorseAbstract entityhorseabstract, IInventory iinventory) {
         // CraftBukkit start - Inventory open hook
-        Container container = CraftEventFactory.callInventoryOpenEvent(this, new ContainerHorse(this.inventory, iinventory, entityhorse, this));
+        Container container = CraftEventFactory.callInventoryOpenEvent(this, new ContainerHorse(this.inventory, iinventory, entityhorseabstract, this));
         if (container == null) {
             iinventory.closeContainer(this);
             return;
@@ -790,8 +767,8 @@ public class EntityPlayer extends EntityHuman implements ICrafting {
         }
 
         this.nextContainerCounter();
-        this.playerConnection.sendPacket(new PacketPlayOutOpenWindow(this.containerCounter, "EntityHorse", iinventory.getScoreboardDisplayName(), iinventory.getSize(), entityhorse.getId()));
-        this.activeContainer = container;
+        this.playerConnection.sendPacket(new PacketPlayOutOpenWindow(this.containerCounter, "EntityHorse", iinventory.getScoreboardDisplayName(), iinventory.getSize(), entityhorseabstract.getId()));
+        this.activeContainer = container; // CraftBukkit
         this.activeContainer.windowId = this.containerCounter;
         this.activeContainer.addSlotListener(this);
     }
@@ -809,11 +786,8 @@ public class EntityPlayer extends EntityHuman implements ICrafting {
     }
 
     public void a(TileEntityCommand tileentitycommand) {
-        if (this.a(2, "")) {
-            tileentitycommand.d(true);
-            this.a((TileEntity) tileentitycommand);
-        }
-
+        tileentitycommand.d(true);
+        this.a((TileEntity) tileentitycommand);
     }
 
     public void a(Container container, int i, ItemStack itemstack) {
@@ -828,8 +802,8 @@ public class EntityPlayer extends EntityHuman implements ICrafting {
         this.a(container, container.a());
     }
 
-    public void a(Container container, List<ItemStack> list) {
-        this.playerConnection.sendPacket(new PacketPlayOutWindowItems(container.windowId, list));
+    public void a(Container container, NonNullList<ItemStack> nonnulllist) {
+        this.playerConnection.sendPacket(new PacketPlayOutWindowItems(container.windowId, nonnulllist));
         this.playerConnection.sendPacket(new PacketPlayOutSetSlot(-1, -1, this.inventory.getCarried()));
         // CraftBukkit start - Send a Set Slot to update the crafting result slot
         if (java.util.EnumSet.of(InventoryType.CRAFTING,InventoryType.WORKBENCH).contains(container.getBukkitView().getType())) {
@@ -843,7 +817,7 @@ public class EntityPlayer extends EntityHuman implements ICrafting {
     }
 
     public void setContainerData(Container container, IInventory iinventory) {
-        for (int i = 0; i < iinventory.g(); ++i) {
+        for (int i = 0; i < iinventory.h(); ++i) {
             this.playerConnection.sendPacket(new PacketPlayOutWindowData(container.windowId, i, iinventory.getProperty(i)));
         }
 
@@ -869,26 +843,26 @@ public class EntityPlayer extends EntityHuman implements ICrafting {
     public void a(float f, float f1, boolean flag, boolean flag1) {
         if (this.isPassenger()) {
             if (f >= -1.0F && f <= 1.0F) {
-                this.bd = f;
+                this.be = f;
             }
 
             if (f1 >= -1.0F && f1 <= 1.0F) {
-                this.be = f1;
+                this.bf = f1;
             }
 
-            this.bc = flag;
+            this.bd = flag;
             this.setSneaking(flag1);
         }
 
     }
 
     public boolean a(Achievement achievement) {
-        return this.bT.hasAchievement(achievement);
+        return this.bU.hasAchievement(achievement);
     }
 
     public void a(Statistic statistic, int i) {
         if (statistic != null) {
-            this.bT.b(this, statistic, i);
+            this.bU.b(this, statistic, i);
             Iterator iterator = this.getScoreboard().getObjectivesForCriteria(statistic.k()).iterator();
 
             while (iterator.hasNext()) {
@@ -897,8 +871,8 @@ public class EntityPlayer extends EntityHuman implements ICrafting {
                 this.getScoreboard().getPlayerScoreForObjective(this.getName(), scoreboardobjective).addScore(i);
             }
 
-            if (this.bT.e()) {
-                this.bT.a(this);
+            if (this.bU.e()) {
+                this.bU.a(this);
             }
 
         }
@@ -906,7 +880,7 @@ public class EntityPlayer extends EntityHuman implements ICrafting {
 
     public void a(Statistic statistic) {
         if (statistic != null) {
-            this.bT.setStatistic(this, statistic, 0);
+            this.bU.setStatistic(this, statistic, 0);
             Iterator iterator = this.getScoreboard().getObjectivesForCriteria(statistic.k()).iterator();
 
             while (iterator.hasNext()) {
@@ -915,8 +889,8 @@ public class EntityPlayer extends EntityHuman implements ICrafting {
                 this.getScoreboard().getPlayerScoreForObjective(this.getName(), scoreboardobjective).setScore(0);
             }
 
-            if (this.bT.e()) {
-                this.bT.a(this);
+            if (this.bU.e()) {
+                this.bU.a(this);
             }
 
         }
@@ -943,12 +917,12 @@ public class EntityPlayer extends EntityHuman implements ICrafting {
     }
     // CraftBukkit end
 
-    public void b(IChatBaseComponent ichatbasecomponent) {
-        this.playerConnection.sendPacket(new PacketPlayOutChat(ichatbasecomponent));
+    public void a(IChatBaseComponent ichatbasecomponent, boolean flag) {
+        this.playerConnection.sendPacket(new PacketPlayOutChat(ichatbasecomponent, (byte) (flag ? 2 : 0)));
     }
 
     protected void v() {
-        if (this.bm != null && this.cs()) {
+        if (!this.activeItem.isEmpty() && this.isHandRaised()) {
             this.playerConnection.sendPacket(new PacketPlayOutEntityStatus(this, (byte) 9));
             super.v();
         }
@@ -959,7 +933,7 @@ public class EntityPlayer extends EntityHuman implements ICrafting {
         super.copyTo(entityhuman, flag);
         this.lastSentExp = -1;
         this.lastHealthSent = -1.0F;
-        this.cb = -1;
+        this.cc = -1;
         this.removeQueue.addAll(((EntityPlayer) entityhuman).removeQueue);
     }
 
@@ -1001,28 +975,28 @@ public class EntityPlayer extends EntityHuman implements ICrafting {
         return (WorldServer) this.world;
     }
 
-    public void a(WorldSettings.EnumGamemode worldsettings_enumgamemode) {
-        getBukkitEntity().setGameMode(org.bukkit.GameMode.getByValue(worldsettings_enumgamemode.getId()));
+    public void a(EnumGamemode enumgamemode) {
+        getBukkitEntity().setGameMode(org.bukkit.GameMode.getByValue(enumgamemode.getId()));
         /* CraftBukkit start - defer to our setGameMode
-        this.playerInteractManager.setGameMode(worldsettings_enumgamemode);
-        this.playerConnection.sendPacket(new PacketPlayOutGameStateChange(3, (float) worldsettings_enumgamemode.getId()));
-        if (worldsettings_enumgamemode == WorldSettings.EnumGamemode.SPECTATOR) {
+        this.playerInteractManager.setGameMode(enumgamemode);
+        this.playerConnection.sendPacket(new PacketPlayOutGameStateChange(3, (float) enumgamemode.getId()));
+        if (enumgamemode == EnumGamemode.SPECTATOR) {
             this.stopRiding();
         } else {
             this.setSpectatorTarget(this);
         }
 
         this.updateAbilities();
-        this.cq();
+        this.cw();
         // CraftBukkit end */
     }
 
     public boolean isSpectator() {
-        return this.playerInteractManager.getGameMode() == WorldSettings.EnumGamemode.SPECTATOR;
+        return this.playerInteractManager.getGameMode() == EnumGamemode.SPECTATOR;
     }
 
-    public boolean l_() {
-        return this.playerInteractManager.getGameMode() == WorldSettings.EnumGamemode.CREATIVE;
+    public boolean z() {
+        return this.playerInteractManager.getGameMode() == EnumGamemode.CREATIVE;
     }
 
     public void sendMessage(IChatBaseComponent ichatbasecomponent) {
@@ -1048,7 +1022,10 @@ public class EntityPlayer extends EntityHuman implements ICrafting {
         if ("@".equals(s)) {
             return getBukkitEntity().hasPermission("minecraft.command.selector");
         }
-        return true;
+        if ("".equals(s)) {
+            return getBukkitEntity().isOp();
+        }
+        return getBukkitEntity().hasPermission("minecraft.command." + s);
         // CraftBukkit end
     }
 
@@ -1061,15 +1038,21 @@ public class EntityPlayer extends EntityHuman implements ICrafting {
     }
 
     public void a(PacketPlayInSettings packetplayinsettings) {
+        // CraftBukkit start
+        if (getMainHand() != packetplayinsettings.getMainHand()) {
+            PlayerChangedMainHandEvent event = new PlayerChangedMainHandEvent(getBukkitEntity(), getMainHand() == EnumMainHand.LEFT ? MainHand.LEFT : MainHand.RIGHT);
+            this.server.server.getPluginManager().callEvent(event);
+        }
+        // CraftBukkit end
         this.locale = packetplayinsettings.a();
-        this.cf = packetplayinsettings.c();
-        this.cg = packetplayinsettings.d();
-        this.getDataWatcher().set(EntityPlayer.bp, Byte.valueOf((byte) packetplayinsettings.e()));
-        this.getDataWatcher().set(EntityPlayer.bq, Byte.valueOf((byte) (packetplayinsettings.f() == EnumMainHand.LEFT ? 0 : 1)));
+        this.cg = packetplayinsettings.c();
+        this.ch = packetplayinsettings.d();
+        this.getDataWatcher().set(EntityPlayer.bq, Byte.valueOf((byte) packetplayinsettings.e()));
+        this.getDataWatcher().set(EntityPlayer.br, Byte.valueOf((byte) (packetplayinsettings.getMainHand() == EnumMainHand.LEFT ? 0 : 1)));
     }
 
     public EntityHuman.EnumChatVisibility getChatFlags() {
-        return this.cf;
+        return this.cg;
     }
 
     public void setResourcePack(String s, String s1) {
@@ -1081,11 +1064,11 @@ public class EntityPlayer extends EntityHuman implements ICrafting {
     }
 
     public void resetIdleTimer() {
-        this.ch = MinecraftServer.av();
+        this.ci = MinecraftServer.aw();
     }
 
     public ServerStatisticManager getStatisticManager() {
-        return this.bT;
+        return this.bU;
     }
 
     public void c(Entity entity) {
@@ -1103,7 +1086,7 @@ public class EntityPlayer extends EntityHuman implements ICrafting {
 
     protected void F() {
         if (this.isSpectator()) {
-            this.bM();
+            this.bQ();
             this.setInvisible(true);
         } else {
             super.F();
@@ -1113,29 +1096,29 @@ public class EntityPlayer extends EntityHuman implements ICrafting {
     }
 
     public Entity getSpecatorTarget() {
-        return (Entity) (this.ci == null ? this : this.ci);
+        return (Entity) (this.cj == null ? this : this.cj);
     }
 
     public void setSpectatorTarget(Entity entity) {
         Entity entity1 = this.getSpecatorTarget();
 
-        this.ci = (Entity) (entity == null ? this : entity);
-        if (entity1 != this.ci) {
-            this.playerConnection.sendPacket(new PacketPlayOutCamera(this.ci));
-            this.enderTeleportTo(this.ci.locX, this.ci.locY, this.ci.locZ);
+        this.cj = (Entity) (entity == null ? this : entity);
+        if (entity1 != this.cj) {
+            this.playerConnection.sendPacket(new PacketPlayOutCamera(this.cj));
+            this.enderTeleportTo(this.cj.locX, this.cj.locY, this.cj.locZ);
         }
 
     }
 
     protected void H() {
-        if (this.portalCooldown > 0 && !this.cj) {
+        if (this.portalCooldown > 0 && !this.worldChangeInvuln) {
             --this.portalCooldown;
         }
 
     }
 
     public void attack(Entity entity) {
-        if (this.playerInteractManager.getGameMode() == WorldSettings.EnumGamemode.SPECTATOR) {
+        if (this.playerInteractManager.getGameMode() == EnumGamemode.SPECTATOR) {
             this.setSpectatorTarget(entity);
         } else {
             super.attack(entity);
@@ -1144,33 +1127,39 @@ public class EntityPlayer extends EntityHuman implements ICrafting {
     }
 
     public long I() {
-        return this.ch;
+        return this.ci;
     }
 
+    @Nullable
     public IChatBaseComponent getPlayerListName() {
         return listName; // CraftBukkit
     }
 
     public void a(EnumHand enumhand) {
         super.a(enumhand);
-        this.cZ();
+        this.dh();
     }
 
     public boolean K() {
-        return this.cj;
+        return this.worldChangeInvuln;
     }
 
     public void L() {
-        this.cj = false;
+        this.worldChangeInvuln = false;
     }
 
     public void M() {
+        if (!CraftEventFactory.callToggleGlideEvent(this, true).isCancelled()) // CraftBukkit
         this.setFlag(7, true);
     }
 
     public void N() {
-        this.setFlag(7, true);
-        this.setFlag(7, false);
+        // CraftBukkit start
+        if (!CraftEventFactory.callToggleGlideEvent(this, false).isCancelled()) {
+            this.setFlag(7, true);
+            this.setFlag(7, false);
+        }
+        // CraftBukkit end
     }
 
     // CraftBukkit start - Add per-player time and weather.
@@ -1255,6 +1244,17 @@ public class EntityPlayer extends EntityHuman implements ICrafting {
     @Override
     public String toString() {
         return super.toString() + "(" + this.getName() + " at " + this.locX + "," + this.locY + "," + this.locZ + ")";
+    }
+
+    // SPIGOT-1903, MC-98153
+    public void forceSetPositionRotation(double x, double y, double z, float yaw, float pitch) {
+        this.setPositionRotation(x, y, z, yaw, pitch);
+        this.playerConnection.syncPosition();
+    }
+
+    @Override
+    protected boolean isFrozen() {
+        return super.isFrozen() || !getBukkitEntity().isOnline();
     }
 
     public void reset() {

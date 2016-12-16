@@ -13,7 +13,7 @@ public class BlockMobSpawner extends BlockTileEntity {
     }
 
     public Item getDropType(IBlockData iblockdata, Random random, int i) {
-        return null;
+        return Items.a;
     }
 
     public int a(Random random) {
@@ -46,6 +46,6 @@ public class BlockMobSpawner extends BlockTileEntity {
     }
 
     public ItemStack a(World world, BlockPosition blockposition, IBlockData iblockdata) {
-        return null;
+        return ItemStack.a;
     }
 }

@@ -11,14 +11,14 @@ public class BlockDaylightDetector extends BlockTileEntity {
     public BlockDaylightDetector(boolean flag) {
         super(Material.WOOD);
         this.c = flag;
-        this.w(this.blockStateList.getBlockData().set(BlockDaylightDetector.POWER, Integer.valueOf(0)));
+        this.y(this.blockStateList.getBlockData().set(BlockDaylightDetector.POWER, Integer.valueOf(0)));
         this.a(CreativeModeTab.d);
         this.c(0.2F);
         this.a(SoundEffectType.a);
         this.c("daylightDetector");
     }
 
-    public AxisAlignedBB a(IBlockData iblockdata, IBlockAccess iblockaccess, BlockPosition blockposition) {
+    public AxisAlignedBB b(IBlockData iblockdata, IBlockAccess iblockaccess, BlockPosition blockposition) {
         return BlockDaylightDetector.b;
     }
 
@@ -27,9 +27,9 @@ public class BlockDaylightDetector extends BlockTileEntity {
     }
 
     public void c(World world, BlockPosition blockposition) {
-        if (!world.worldProvider.m()) {
+        if (world.worldProvider.m()) {
             IBlockData iblockdata = world.getType(blockposition);
-            int i = world.b(EnumSkyBlock.SKY, blockposition) - world.af();
+            int i = world.getBrightness(EnumSkyBlock.SKY, blockposition) - world.af();
             float f = world.d(1.0F);
 
             if (this.c) {
@@ -52,8 +52,8 @@ public class BlockDaylightDetector extends BlockTileEntity {
         }
     }
 
-    public boolean interact(World world, BlockPosition blockposition, IBlockData iblockdata, EntityHuman entityhuman, EnumHand enumhand, ItemStack itemstack, EnumDirection enumdirection, float f, float f1, float f2) {
-        if (entityhuman.cU()) {
+    public boolean interact(World world, BlockPosition blockposition, IBlockData iblockdata, EntityHuman entityhuman, EnumHand enumhand, EnumDirection enumdirection, float f, float f1, float f2) {
+        if (entityhuman.dc()) {
             if (world.isClientSide) {
                 return true;
             } else {
@@ -68,7 +68,7 @@ public class BlockDaylightDetector extends BlockTileEntity {
                 return true;
             }
         } else {
-            return super.interact(world, blockposition, iblockdata, entityhuman, enumhand, itemstack, enumdirection, f, f1, f2);
+            return super.interact(world, blockposition, iblockdata, entityhuman, enumhand, enumdirection, f, f1, f2);
         }
     }
 

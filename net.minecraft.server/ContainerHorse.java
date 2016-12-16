@@ -8,8 +8,8 @@ import org.bukkit.inventory.InventoryView;
 
 public class ContainerHorse extends Container {
 
-    private IInventory a;
-    private EntityHorse f;
+    private final IInventory a;
+    private final EntityHorseAbstract f;
 
     // CraftBukkit start
     org.bukkit.craftbukkit.inventory.CraftInventoryView bukkitEntity;
@@ -25,45 +25,49 @@ public class ContainerHorse extends Container {
         return bukkitEntity = new CraftInventoryView(player.player.getBukkitEntity(), inventory, this);
     }
 
-    public ContainerHorse(IInventory iinventory, final IInventory iinventory1, final EntityHorse entityhorse, EntityHuman entityhuman) {
+    public ContainerHorse(IInventory iinventory, final IInventory iinventory1, final EntityHorseAbstract entityhorseabstract, EntityHuman entityhuman) {
         player = (PlayerInventory) iinventory;
         // CraftBukkit end
         this.a = iinventory1;
-        this.f = entityhorse;
-        byte b0 = 3;
+        this.f = entityhorseabstract;
+        boolean flag = true;
 
         iinventory1.startOpen(entityhuman);
-        int i = (b0 - 4) * 18;
+        boolean flag1 = true;
 
         this.a(new Slot(iinventory1, 0, 8, 18) {
             public boolean isAllowed(ItemStack itemstack) {
-                return super.isAllowed(itemstack) && itemstack.getItem() == Items.SADDLE && !this.hasItem();
+                return itemstack.getItem() == Items.SADDLE && !this.hasItem() && entityhorseabstract.dA();
             }
         });
         this.a(new Slot(iinventory1, 1, 8, 36) {
             public boolean isAllowed(ItemStack itemstack) {
-                return super.isAllowed(itemstack) && entityhorse.getType().j() && EnumHorseArmor.b(itemstack.getItem());
+                return entityhorseabstract.f(itemstack);
+            }
+
+            public int getMaxStackSize() {
+                return 1;
             }
         });
+        int i;
         int j;
-        int k;
 
-        if (entityhorse.hasChest()) {
-            for (j = 0; j < b0; ++j) {
-                for (k = 0; k < 5; ++k) {
-                    this.a(new Slot(iinventory1, 2 + k + j * 5, 80 + k * 18, 18 + j * 18));
+        if (entityhorseabstract instanceof EntityHorseChestedAbstract && ((EntityHorseChestedAbstract) entityhorseabstract).isCarryingChest()) {
+            for (i = 0; i < 3; ++i) {
+                for (j = 0; j < ((EntityHorseChestedAbstract) entityhorseabstract).dl(); ++j) {
+                    this.a(new Slot(iinventory1, 2 + j + i * ((EntityHorseChestedAbstract) entityhorseabstract).dl(), 80 + j * 18, 18 + i * 18));
                 }
             }
         }
 
-        for (j = 0; j < 3; ++j) {
-            for (k = 0; k < 9; ++k) {
-                this.a(new Slot(iinventory, k + j * 9 + 9, 8 + k * 18, 102 + j * 18 + i));
+        for (i = 0; i < 3; ++i) {
+            for (j = 0; j < 9; ++j) {
+                this.a(new Slot(iinventory, j + i * 9 + 9, 8 + j * 18, 102 + i * 18 + -18));
             }
         }
 
-        for (j = 0; j < 9; ++j) {
-            this.a(new Slot(iinventory, j, 8 + j * 18, 160 + i));
+        for (i = 0; i < 9; ++i) {
+            this.a(new Slot(iinventory, i, 8 + i * 18, 142));
         }
 
     }
@@ -73,7 +77,7 @@ public class ContainerHorse extends Container {
     }
 
     public ItemStack b(EntityHuman entityhuman, int i) {
-        ItemStack itemstack = null;
+        ItemStack itemstack = ItemStack.a;
         Slot slot = (Slot) this.c.get(i);
 
         if (slot != null && slot.hasItem()) {
@@ -82,22 +86,22 @@ public class ContainerHorse extends Container {
             itemstack = itemstack1.cloneItemStack();
             if (i < this.a.getSize()) {
                 if (!this.a(itemstack1, this.a.getSize(), this.c.size(), true)) {
-                    return null;
+                    return ItemStack.a;
                 }
             } else if (this.getSlot(1).isAllowed(itemstack1) && !this.getSlot(1).hasItem()) {
                 if (!this.a(itemstack1, 1, 2, false)) {
-                    return null;
+                    return ItemStack.a;
                 }
             } else if (this.getSlot(0).isAllowed(itemstack1)) {
                 if (!this.a(itemstack1, 0, 1, false)) {
-                    return null;
+                    return ItemStack.a;
                 }
             } else if (this.a.getSize() <= 2 || !this.a(itemstack1, 2, this.a.getSize(), false)) {
-                return null;
+                return ItemStack.a;
             }
 
-            if (itemstack1.count == 0) {
-                slot.set((ItemStack) null);
+            if (itemstack1.isEmpty()) {
+                slot.set(ItemStack.a);
             } else {
                 slot.f();
             }

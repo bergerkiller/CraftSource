@@ -2,6 +2,7 @@ package org.bukkit.entity;
 
 import org.bukkit.Location;
 import org.bukkit.EntityEffect;
+import org.bukkit.Nameable;
 import org.bukkit.Server;
 import org.bukkit.World;
 import org.bukkit.event.entity.EntityDamageEvent;
@@ -9,6 +10,7 @@ import org.bukkit.metadata.Metadatable;
 import org.bukkit.util.Vector;
 
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 import org.bukkit.command.CommandSender;
 import org.bukkit.event.player.PlayerTeleportEvent.TeleportCause;
@@ -16,7 +18,7 @@ import org.bukkit.event.player.PlayerTeleportEvent.TeleportCause;
 /**
  * Represents a base entity in the world
  */
-public interface Entity extends Metadatable, CommandSender {
+public interface Entity extends Metadatable, CommandSender, Nameable {
 
     /**
      * Gets the entity's current position
@@ -299,30 +301,6 @@ public interface Entity extends Metadatable, CommandSender {
     public Entity getVehicle();
 
     /**
-     * Sets a custom name on a mob. This name will be used in death messages
-     * and can be sent to the client as a nameplate over the mob.
-     * <p>
-     * Setting the name to null or an empty string will clear it.
-     * <p>
-     * This value has no effect on players, they will always use their real
-     * name.
-     *
-     * @param name the name to set
-     */
-    public void setCustomName(String name);
-
-    /**
-     * Gets the custom name on a mob. If there is no name this method will
-     * return null.
-     * <p>
-     * This value has no effect on players, they will always use their real
-     * name.
-     *
-     * @return name of the mob or null
-     */
-    public String getCustomName();
-
-    /**
      * Sets whether or not to display the mob's custom name client side. The
      * name will be displayed above the mob similarly to a player.
      * <p>
@@ -356,4 +334,110 @@ public interface Entity extends Metadatable, CommandSender {
      * @return whether the entity is glowing
      */
     boolean isGlowing();
+
+    /**
+     * Sets whether the entity is invulnerable or not.
+     * <p>
+     * When an entity is invulnerable it can only be damaged by players in
+     * creative mode.
+     *
+     * @param flag if the entity is invulnerable
+     */
+    public void setInvulnerable(boolean flag);
+
+    /**
+     * Gets whether the entity is invulnerable or not.
+     *
+     * @return whether the entity is
+     */
+    public boolean isInvulnerable();
+
+    /**
+     * Gets whether the entity is silent or not.
+     *
+     * @return whether the entity is silent.
+     */
+    public boolean isSilent();
+
+    /**
+     * Sets whether the entity is silent or not.
+     * <p>
+     * When an entity is silent it will not produce any sound.
+     *
+     * @param flag if the entity is silent
+     */
+    public void setSilent(boolean flag);
+
+    /**
+     * Returns whether gravity applies to this entity.
+     *
+     * @return whether gravity applies
+     */
+    boolean hasGravity();
+
+    /**
+     * Sets whether gravity applies to this entity.
+     *
+     * @param gravity whether gravity should apply
+     */
+    void setGravity(boolean gravity);
+
+    /**
+     * Gets the period of time (in ticks) before this entity can use a portal.
+     *
+     * @return portal cooldown ticks
+     */
+    int getPortalCooldown();
+
+    /**
+     * Sets the period of time (in ticks) before this entity can use a portal.
+     *
+     * @param cooldown portal cooldown ticks
+     */
+    void setPortalCooldown(int cooldown);
+
+    /**
+     * Returns a set of tags for this entity.
+     * <br>
+     * Entities can have no more than 1024 tags.
+     *
+     * @return a set of tags for this entity
+     */
+    Set<String> getScoreboardTags();
+
+    /**
+     * Add a tag to this entity.
+     * <br>
+     * Entities can have no more than 1024 tags.
+     *
+     * @param tag the tag to add
+     * @return true if the tag was successfully added
+     */
+    boolean addScoreboardTag(String tag);
+
+    /**
+     * Removes a given tag from this entity.
+     *
+     * @param tag the tag to remove
+     * @return true if the tag was successfully removed
+     */
+    boolean removeScoreboardTag(String tag);
+
+    // Spigot Start
+    public class Spigot
+    {
+
+        /**
+         * Returns whether this entity is invulnerable.
+         *
+         * @return True if the entity is invulnerable.
+         */
+        public boolean isInvulnerable()
+        {
+            throw new UnsupportedOperationException( "Not supported yet." );
+        }
+    }
+
+    Spigot spigot();
+    // Spigot End
 }

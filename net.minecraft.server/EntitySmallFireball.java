@@ -19,6 +19,10 @@ public class EntitySmallFireball extends EntityFireball {
         this.setSize(0.3125F, 0.3125F);
     }
 
+    public static void b(DataConverterManager dataconvertermanager) {
+        EntityFireball.a(dataconvertermanager, "SmallFireball");
+    }
+
     protected void a(MovingObjectPosition movingobjectposition) {
         if (!this.world.isClientSide) {
             boolean flag;

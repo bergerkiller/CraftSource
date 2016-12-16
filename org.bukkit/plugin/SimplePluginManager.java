@@ -295,6 +295,7 @@ public final class SimplePluginManager implements PluginManager {
             }
         }
 
+        org.bukkit.command.defaults.TimingsCommand.timingStart = System.nanoTime(); // Spigot
         return result.toArray(new Plugin[result.size()]);
     }
 
@@ -588,11 +589,11 @@ public final class SimplePluginManager implements PluginManager {
     }
 
     public Permission getPermission(String name) {
-        return permissions.get(name.toLowerCase());
+        return permissions.get(name.toLowerCase(java.util.Locale.ENGLISH));
     }
 
     public void addPermission(Permission perm) {
-        String name = perm.getName().toLowerCase();
+        String name = perm.getName().toLowerCase(java.util.Locale.ENGLISH);
 
         if (permissions.containsKey(name)) {
             throw new IllegalArgumentException("The permission " + name + " is already defined!");
@@ -611,11 +612,11 @@ public final class SimplePluginManager implements PluginManager {
     }
 
     public void removePermission(String name) {
-        permissions.remove(name.toLowerCase());
+        permissions.remove(name.toLowerCase(java.util.Locale.ENGLISH));
     }
 
     public void recalculatePermissionDefaults(Permission perm) {
-        if (perm != null && permissions.containsKey(perm.getName().toLowerCase())) {
+        if (perm != null && permissions.containsKey(perm.getName().toLowerCase(java.util.Locale.ENGLISH))) {
             defaultPerms.get(true).remove(perm);
             defaultPerms.get(false).remove(perm);
 
@@ -643,7 +644,7 @@ public final class SimplePluginManager implements PluginManager {
     }
 
     public void subscribeToPermission(String permission, Permissible permissible) {
-        String name = permission.toLowerCase();
+        String name = permission.toLowerCase(java.util.Locale.ENGLISH);
         Map<Permissible, Boolean> map = permSubs.get(name);
 
         if (map == null) {
@@ -655,7 +656,7 @@ public final class SimplePluginManager implements PluginManager {
     }
 
     public void unsubscribeFromPermission(String permission, Permissible permissible) {
-        String name = permission.toLowerCase();
+        String name = permission.toLowerCase(java.util.Locale.ENGLISH);
         Map<Permissible, Boolean> map = permSubs.get(name);
 
         if (map != null) {
@@ -668,7 +669,7 @@ public final class SimplePluginManager implements PluginManager {
     }
 
     public Set<Permissible> getPermissionSubscriptions(String permission) {
-        String name = permission.toLowerCase();
+        String name = permission.toLowerCase(java.util.Locale.ENGLISH);
         Map<Permissible, Boolean> map = permSubs.get(name);
 
         if (map == null) {

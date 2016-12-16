@@ -1,5 +1,7 @@
 package net.minecraft.server;
 
+import javax.annotation.Nullable;
+
 public class TileEntitySign extends TileEntity {
 
     public final IChatBaseComponent[] lines = new IChatBaseComponent[] { new ChatComponentText(""), new ChatComponentText(""), new ChatComponentText(""), new ChatComponentText("")};
@@ -10,7 +12,7 @@ public class TileEntitySign extends TileEntity {
 
     public TileEntitySign() {}
 
-    public void save(NBTTagCompound nbttagcompound) {
+    public NBTTagCompound save(NBTTagCompound nbttagcompound) {
         super.save(nbttagcompound);
 
         for (int i = 0; i < 4; ++i) {
@@ -26,6 +28,11 @@ public class TileEntitySign extends TileEntity {
         // CraftBukkit end
 
         this.i.b(nbttagcompound);
+        return nbttagcompound;
+    }
+
+    protected void b(World world) {
+        this.a(world);
     }
 
     public void a(NBTTagCompound nbttagcompound) {
@@ -68,7 +75,7 @@ public class TileEntitySign extends TileEntity {
 
             public void a(CommandObjectiveExecutor.EnumCommandResult commandobjectiveexecutor_enumcommandresult, int i) {}
 
-            public MinecraftServer h() {
+            public MinecraftServer B_() {
                 return TileEntitySign.this.world.getMinecraftServer();
             }
         };
@@ -107,18 +114,20 @@ public class TileEntitySign extends TileEntity {
         this.i.a(nbttagcompound);
     }
 
-    public Packet<?> getUpdatePacket() {
-        IChatBaseComponent[] aichatbasecomponent = new IChatBaseComponent[4];
+    @Nullable
+    public PacketPlayOutTileEntityData getUpdatePacket() {
+        return new PacketPlayOutTileEntityData(this.position, 9, this.d());
+    }
 
-        System.arraycopy(this.lines, 0, aichatbasecomponent, 0, 4);
-        return new PacketPlayOutUpdateSign(this.world, this.position, aichatbasecomponent);
+    public NBTTagCompound d() {
+        return this.save(new NBTTagCompound());
     }
 
     public boolean isFilteredNBT() {
         return true;
     }
 
-    public boolean b() {
+    public boolean a() {
         return this.isEditable;
     }
 
@@ -126,7 +135,7 @@ public class TileEntitySign extends TileEntity {
         this.h = entityhuman;
     }
 
-    public EntityHuman c() {
+    public EntityHuman e() {
         return this.h;
     }
 
@@ -173,21 +182,24 @@ public class TileEntitySign extends TileEntity {
 
             }
 
-            public MinecraftServer h() {
-                return entityhuman.h();
+            public MinecraftServer B_() {
+                return entityhuman.B_();
             }
         };
+        IChatBaseComponent[] aichatbasecomponent = this.lines;
+        int i = aichatbasecomponent.length;
 
-        for (int i = 0; i < this.lines.length; ++i) {
-            ChatModifier chatmodifier = this.lines[i] == null ? null : this.lines[i].getChatModifier();
+        for (int j = 0; j < i; ++j) {
+            IChatBaseComponent ichatbasecomponent = aichatbasecomponent[j];
+            ChatModifier chatmodifier = ichatbasecomponent == null ? null : ichatbasecomponent.getChatModifier();
 
             if (chatmodifier != null && chatmodifier.h() != null) {
                 ChatClickable chatclickable = chatmodifier.h();
 
                 if (chatclickable.a() == ChatClickable.EnumClickAction.RUN_COMMAND) {
                     // CraftBukkit start
-                    // entityhuman.h().getCommandHandler().a(icommandlistener, chatclickable.b());
-                    CommandBlockListenerAbstract.executeCommand(icommandlistener, new org.bukkit.craftbukkit.command.ProxiedNativeCommandSender(
+                    // entityhuman.B_().getCommandHandler().a(icommandlistener, chatclickable.b());
+                    CommandBlockListenerAbstract.executeSafely(icommandlistener, new org.bukkit.craftbukkit.command.ProxiedNativeCommandSender(
                             icommandlistener,
                             new org.bukkit.craftbukkit.command.CraftBlockCommandSender(icommandlistener),
                             entityhuman.getBukkitEntity()
@@ -200,7 +212,7 @@ public class TileEntitySign extends TileEntity {
         return true;
     }
 
-    public CommandObjectiveExecutor d() {
+    public CommandObjectiveExecutor f() {
         return this.i;
     }
 }

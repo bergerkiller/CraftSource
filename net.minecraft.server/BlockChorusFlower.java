@@ -2,6 +2,7 @@ package net.minecraft.server;
 
 import java.util.Iterator;
 import java.util.Random;
+import javax.annotation.Nullable;
 
 import org.bukkit.craftbukkit.event.CraftEventFactory; // CraftBukkit
 
@@ -10,14 +11,14 @@ public class BlockChorusFlower extends Block {
     public static final BlockStateInteger AGE = BlockStateInteger.of("age", 0, 5);
 
     protected BlockChorusFlower() {
-        super(Material.PLANT);
-        this.w(this.blockStateList.getBlockData().set(BlockChorusFlower.AGE, Integer.valueOf(0)));
+        super(Material.PLANT, MaterialMapColor.z);
+        this.y(this.blockStateList.getBlockData().set(BlockChorusFlower.AGE, Integer.valueOf(0)));
         this.a(CreativeModeTab.c);
         this.a(true);
     }
 
     public Item getDropType(IBlockData iblockdata, Random random, int i) {
-        return null;
+        return Items.a;
     }
 
     public void b(World world, BlockPosition blockposition, IBlockData iblockdata, Random random) {
@@ -32,7 +33,8 @@ public class BlockChorusFlower extends Block {
                 if (i < 5 && random.nextInt(1) == 0) {
                     boolean flag = false;
                     boolean flag1 = false;
-                    Block block = world.getType(blockposition.down()).getBlock();
+                    IBlockData iblockdata1 = world.getType(blockposition.down());
+                    Block block = iblockdata1.getBlock();
                     int j;
 
                     if (block == Blocks.END_STONE) {
@@ -63,7 +65,7 @@ public class BlockChorusFlower extends Block {
                         if (j < 2 || random.nextInt(k) >= j) {
                             flag = true;
                         }
-                    } else if (block == Blocks.AIR) {
+                    } else if (iblockdata1.getMaterial() == Material.AIR) {
                         flag = true;
                     }
 
@@ -187,7 +189,7 @@ public class BlockChorusFlower extends Block {
         return super.canPlace(world, blockposition) && this.b(world, blockposition);
     }
 
-    public void doPhysics(World world, BlockPosition blockposition, IBlockData iblockdata, Block block) {
+    public void a(IBlockData iblockdata, World world, BlockPosition blockposition, Block block, BlockPosition blockposition1) {
         if (!this.b(world, blockposition)) {
             world.a(blockposition, (Block) this, 1);
         }
@@ -195,20 +197,22 @@ public class BlockChorusFlower extends Block {
     }
 
     public boolean b(World world, BlockPosition blockposition) {
-        Block block = world.getType(blockposition.down()).getBlock();
+        IBlockData iblockdata = world.getType(blockposition.down());
+        Block block = iblockdata.getBlock();
 
         if (block != Blocks.CHORUS_PLANT && block != Blocks.END_STONE) {
-            if (block == Blocks.AIR) {
+            if (iblockdata.getMaterial() == Material.AIR) {
                 int i = 0;
                 Iterator iterator = EnumDirection.EnumDirectionLimit.HORIZONTAL.iterator();
 
                 while (iterator.hasNext()) {
                     EnumDirection enumdirection = (EnumDirection) iterator.next();
-                    Block block1 = world.getType(blockposition.shift(enumdirection)).getBlock();
+                    IBlockData iblockdata1 = world.getType(blockposition.shift(enumdirection));
+                    Block block1 = iblockdata1.getBlock();
 
                     if (block1 == Blocks.CHORUS_PLANT) {
                         ++i;
-                    } else if (block1 != Blocks.AIR) {
+                    } else if (iblockdata1.getMaterial() != Material.AIR) {
                         return false;
                     }
                 }
@@ -222,13 +226,13 @@ public class BlockChorusFlower extends Block {
         }
     }
 
-    public void a(World world, EntityHuman entityhuman, BlockPosition blockposition, IBlockData iblockdata, TileEntity tileentity, ItemStack itemstack) {
+    public void a(World world, EntityHuman entityhuman, BlockPosition blockposition, IBlockData iblockdata, @Nullable TileEntity tileentity, ItemStack itemstack) {
         super.a(world, entityhuman, blockposition, iblockdata, tileentity, itemstack);
         a(world, blockposition, new ItemStack(Item.getItemOf(this)));
     }
 
-    protected ItemStack u(IBlockData iblockdata) {
-        return null;
+    protected ItemStack w(IBlockData iblockdata) {
+        return ItemStack.a;
     }
 
     public IBlockData fromLegacyData(int i) {
@@ -241,10 +245,6 @@ public class BlockChorusFlower extends Block {
 
     protected BlockStateList getStateList() {
         return new BlockStateList(this, new IBlockState[] { BlockChorusFlower.AGE});
-    }
-
-    public void onPlace(World world, BlockPosition blockposition, IBlockData iblockdata) {
-        super.onPlace(world, blockposition, iblockdata);
     }
 
     public static void a(World world, BlockPosition blockposition, Random random, int i) {

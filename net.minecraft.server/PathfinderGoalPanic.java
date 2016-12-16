@@ -1,8 +1,10 @@
 package net.minecraft.server;
 
+import javax.annotation.Nullable;
+
 public class PathfinderGoalPanic extends PathfinderGoal {
 
-    private EntityCreature b;
+    private final EntityCreature b;
     protected double a;
     private double c;
     private double d;
@@ -18,26 +20,31 @@ public class PathfinderGoalPanic extends PathfinderGoal {
         if (this.b.getLastDamager() == null && !this.b.isBurning()) {
             return false;
         } else {
-            Vec3D vec3d = RandomPositionGenerator.a(this.b, 5, 4);
+            if (this.b.isBurning()) {
+                BlockPosition blockposition = this.a(this.b.world, this.b, 5, 4);
 
-            if (vec3d == null) {
-                return false;
-            } else {
-                this.c = vec3d.x;
-                this.d = vec3d.y;
-                this.e = vec3d.z;
-                if (this.b.isBurning()) {
-                    BlockPosition blockposition = this.a(this.b.world, this.b, 5, 4);
-
-                    if (blockposition != null) {
-                        this.c = (double) blockposition.getX();
-                        this.d = (double) blockposition.getY();
-                        this.e = (double) blockposition.getZ();
-                    }
+                if (blockposition != null) {
+                    this.c = (double) blockposition.getX();
+                    this.d = (double) blockposition.getY();
+                    this.e = (double) blockposition.getZ();
+                    return true;
                 }
-
-                return true;
             }
+
+            return this.f();
+        }
+    }
+
+    private boolean f() {
+        Vec3D vec3d = RandomPositionGenerator.a(this.b, 5, 4);
+
+        if (vec3d == null) {
+            return false;
+        } else {
+            this.c = vec3d.x;
+            this.d = vec3d.y;
+            this.e = vec3d.z;
+            return true;
         }
     }
 
@@ -55,23 +62,23 @@ public class PathfinderGoalPanic extends PathfinderGoal {
         return !this.b.getNavigation().n();
     }
 
+    @Nullable
     private BlockPosition a(World world, Entity entity, int i, int j) {
         BlockPosition blockposition = new BlockPosition(entity);
-        BlockPosition.MutableBlockPosition blockposition_mutableblockposition = new BlockPosition.MutableBlockPosition();
         int k = blockposition.getX();
         int l = blockposition.getY();
         int i1 = blockposition.getZ();
         float f = (float) (i * i * j * 2);
         BlockPosition blockposition1 = null;
+        BlockPosition.MutableBlockPosition blockposition_mutableblockposition = new BlockPosition.MutableBlockPosition();
 
         for (int j1 = k - i; j1 <= k + i; ++j1) {
             for (int k1 = l - j; k1 <= l + j; ++k1) {
                 for (int l1 = i1 - i; l1 <= i1 + i; ++l1) {
                     blockposition_mutableblockposition.c(j1, k1, l1);
                     IBlockData iblockdata = world.getType(blockposition_mutableblockposition);
-                    Block block = iblockdata.getBlock();
 
-                    if (block == Blocks.WATER || block == Blocks.FLOWING_WATER) {
+                    if (iblockdata.getMaterial() == Material.WATER) {
                         float f1 = (float) ((j1 - k) * (j1 - k) + (k1 - l) * (k1 - l) + (l1 - i1) * (l1 - i1));
 
                         if (f1 < f) {

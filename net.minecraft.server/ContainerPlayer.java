@@ -46,13 +46,13 @@ public class ContainerPlayer extends Container {
                 }
 
                 public boolean isAllowed(ItemStack itemstack) {
-                    if (itemstack == null) {
-                        return false;
-                    } else {
-                        EnumItemSlot enumitemslot = EntityInsentient.d(itemstack);
+                    return enumitemslot1 == EntityInsentient.d(itemstack); // CraftBukkit - decompile error
+                }
 
-                        return enumitemslot == enumitemslot1;
-                    }
+                public boolean isAllowed(EntityHuman entityhuman) {
+                    ItemStack itemstack = this.getItem();
+
+                    return !itemstack.isEmpty() && !entityhuman.z() && EnchantmentManager.b(itemstack) ? false : super.isAllowed(entityhuman);
                 }
             });
         }
@@ -68,9 +68,6 @@ public class ContainerPlayer extends Container {
         }
 
         this.a(new Slot(playerinventory, 40, 77, 62) {
-            public boolean isAllowed(ItemStack itemstack) {
-                return super.isAllowed(itemstack);
-            }
         });
         // this.a((IInventory) this.craftInventory); // CraftBukkit - unneeded since it just sets result slot to empty
     }
@@ -96,12 +93,12 @@ public class ContainerPlayer extends Container {
         for (int i = 0; i < 4; ++i) {
             ItemStack itemstack = this.craftInventory.splitWithoutUpdate(i);
 
-            if (itemstack != null) {
+            if (!itemstack.isEmpty()) {
                 entityhuman.drop(itemstack, false);
             }
         }
 
-        this.resultInventory.setItem(0, (ItemStack) null);
+        this.resultInventory.setItem(0, ItemStack.a);
     }
 
     public boolean a(EntityHuman entityhuman) {
@@ -109,7 +106,7 @@ public class ContainerPlayer extends Container {
     }
 
     public ItemStack b(EntityHuman entityhuman, int i) {
-        ItemStack itemstack = null;
+        ItemStack itemstack = ItemStack.a;
         Slot slot = (Slot) this.c.get(i);
 
         if (slot != null && slot.hasItem()) {
@@ -120,47 +117,55 @@ public class ContainerPlayer extends Container {
 
             if (i == 0) {
                 if (!this.a(itemstack1, 9, 45, true)) {
-                    return null;
+                    return ItemStack.a;
                 }
 
                 slot.a(itemstack1, itemstack);
             } else if (i >= 1 && i < 5) {
                 if (!this.a(itemstack1, 9, 45, false)) {
-                    return null;
+                    return ItemStack.a;
                 }
             } else if (i >= 5 && i < 9) {
                 if (!this.a(itemstack1, 9, 45, false)) {
-                    return null;
+                    return ItemStack.a;
                 }
             } else if (enumitemslot.a() == EnumItemSlot.Function.ARMOR && !((Slot) this.c.get(8 - enumitemslot.b())).hasItem()) {
                 int j = 8 - enumitemslot.b();
 
                 if (!this.a(itemstack1, j, j + 1, false)) {
-                    return null;
+                    return ItemStack.a;
+                }
+            } else if (enumitemslot == EnumItemSlot.OFFHAND && !((Slot) this.c.get(45)).hasItem()) {
+                if (!this.a(itemstack1, 45, 46, false)) {
+                    return ItemStack.a;
                 }
             } else if (i >= 9 && i < 36) {
                 if (!this.a(itemstack1, 36, 45, false)) {
-                    return null;
+                    return ItemStack.a;
                 }
             } else if (i >= 36 && i < 45) {
                 if (!this.a(itemstack1, 9, 36, false)) {
-                    return null;
+                    return ItemStack.a;
                 }
             } else if (!this.a(itemstack1, 9, 45, false)) {
-                return null;
+                return ItemStack.a;
             }
 
-            if (itemstack1.count == 0) {
-                slot.set((ItemStack) null);
+            if (itemstack1.isEmpty()) {
+                slot.set(ItemStack.a);
             } else {
                 slot.f();
             }
 
-            if (itemstack1.count == itemstack.count) {
-                return null;
+            if (itemstack1.getCount() == itemstack.getCount()) {
+                return ItemStack.a;
             }
 
-            slot.a(entityhuman, itemstack1);
+            ItemStack itemstack2 = slot.a(entityhuman, itemstack1);
+
+            if (i == 0) {
+                entityhuman.drop(itemstack2, false);
+            }
         }
 
         return itemstack;

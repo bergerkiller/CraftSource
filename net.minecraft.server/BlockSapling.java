@@ -19,11 +19,11 @@ public class BlockSapling extends BlockPlant implements IBlockFragilePlantElemen
     public static TreeType treeType; // CraftBukkit
 
     protected BlockSapling() {
-        this.w(this.blockStateList.getBlockData().set(BlockSapling.TYPE, BlockWood.EnumLogVariant.OAK).set(BlockSapling.STAGE, Integer.valueOf(0)));
+        this.y(this.blockStateList.getBlockData().set(BlockSapling.TYPE, BlockWood.EnumLogVariant.OAK).set(BlockSapling.STAGE, Integer.valueOf(0)));
         this.a(CreativeModeTab.c);
     }
 
-    public AxisAlignedBB a(IBlockData iblockdata, IBlockAccess iblockaccess, BlockPosition blockposition) {
+    public AxisAlignedBB b(IBlockData iblockdata, IBlockAccess iblockaccess, BlockPosition blockposition) {
         return BlockSapling.d;
     }
 
@@ -34,7 +34,7 @@ public class BlockSapling extends BlockPlant implements IBlockFragilePlantElemen
     public void b(World world, BlockPosition blockposition, IBlockData iblockdata, Random random) {
         if (!world.isClientSide) {
             super.b(world, blockposition, iblockdata, random);
-            if (world.getLightLevel(blockposition.up()) >= 9 && random.nextInt(Math.max(2, (int) (((100 / world.spigotConfig.saplingModifier) * 7) + 0.5F))) == 0) { // Spigot
+            if (world.getLightLevel(blockposition.up()) >= 9 && random.nextInt(Math.max(2, (int) (((100.0F / world.spigotConfig.saplingModifier) * 7) + 0.5F))) == 0) { // Spigot
                 // CraftBukkit start
                 world.captureTreeGeneration = true;
                 // CraftBukkit end
@@ -90,8 +90,8 @@ public class BlockSapling extends BlockPlant implements IBlockFragilePlantElemen
         boolean flag = false;
         IBlockData iblockdata1;
 
-        switch (BlockSapling.SyntheticClass_1.a[((BlockWood.EnumLogVariant) iblockdata.get(BlockSapling.TYPE)).ordinal()]) {
-        case 1:
+        switch ((BlockWood.EnumLogVariant) iblockdata.get(BlockSapling.TYPE)) {
+        case SPRUCE:
             label66:
             for (i = 0; i >= -1; --i) {
                 for (j = 0; j >= -1; --j) {
@@ -105,19 +105,19 @@ public class BlockSapling extends BlockPlant implements IBlockFragilePlantElemen
             }
 
             if (!flag) {
-                j = 0;
                 i = 0;
+                j = 0;
                 treeType = TreeType.REDWOOD; // CraftBukkit
                 object = new WorldGenTaiga2(true);
             }
             break;
 
-        case 2:
+        case BIRCH:
             treeType = TreeType.BIRCH; // CraftBukkit
             object = new WorldGenForest(true, false);
             break;
 
-        case 3:
+        case JUNGLE:
             iblockdata1 = Blocks.LOG.getBlockData().set(BlockLog1.VARIANT, BlockWood.EnumLogVariant.JUNGLE);
             IBlockData iblockdata2 = Blocks.LEAVES.getBlockData().set(BlockLeaves1.VARIANT, BlockWood.EnumLogVariant.JUNGLE).set(BlockLeaves.CHECK_DECAY, Boolean.valueOf(false));
 
@@ -134,19 +134,19 @@ public class BlockSapling extends BlockPlant implements IBlockFragilePlantElemen
             }
 
             if (!flag) {
-                j = 0;
                 i = 0;
+                j = 0;
                 treeType = TreeType.SMALL_JUNGLE; // CraftBukkit
                 object = new WorldGenTrees(true, 4 + random.nextInt(7), iblockdata1, iblockdata2, false);
             }
             break;
 
-        case 4:
+        case ACACIA:
             treeType = TreeType.ACACIA; // CraftBukkit
             object = new WorldGenAcaciaTree(true);
             break;
 
-        case 5:
+        case DARK_OAK:
             label90:
             for (i = 0; i >= -1; --i) {
                 for (j = 0; j >= -1; --j) {
@@ -163,7 +163,7 @@ public class BlockSapling extends BlockPlant implements IBlockFragilePlantElemen
                 return;
             }
 
-        case 6:
+        case OAK:
         }
 
         iblockdata1 = Blocks.AIR.getBlockData();
@@ -229,49 +229,5 @@ public class BlockSapling extends BlockPlant implements IBlockFragilePlantElemen
 
     protected BlockStateList getStateList() {
         return new BlockStateList(this, new IBlockState[] { BlockSapling.TYPE, BlockSapling.STAGE});
-    }
-
-    static class SyntheticClass_1 {
-
-        static final int[] a = new int[BlockWood.EnumLogVariant.values().length];
-
-        static {
-            try {
-                BlockSapling.SyntheticClass_1.a[BlockWood.EnumLogVariant.SPRUCE.ordinal()] = 1;
-            } catch (NoSuchFieldError nosuchfielderror) {
-                ;
-            }
-
-            try {
-                BlockSapling.SyntheticClass_1.a[BlockWood.EnumLogVariant.BIRCH.ordinal()] = 2;
-            } catch (NoSuchFieldError nosuchfielderror1) {
-                ;
-            }
-
-            try {
-                BlockSapling.SyntheticClass_1.a[BlockWood.EnumLogVariant.JUNGLE.ordinal()] = 3;
-            } catch (NoSuchFieldError nosuchfielderror2) {
-                ;
-            }
-
-            try {
-                BlockSapling.SyntheticClass_1.a[BlockWood.EnumLogVariant.ACACIA.ordinal()] = 4;
-            } catch (NoSuchFieldError nosuchfielderror3) {
-                ;
-            }
-
-            try {
-                BlockSapling.SyntheticClass_1.a[BlockWood.EnumLogVariant.DARK_OAK.ordinal()] = 5;
-            } catch (NoSuchFieldError nosuchfielderror4) {
-                ;
-            }
-
-            try {
-                BlockSapling.SyntheticClass_1.a[BlockWood.EnumLogVariant.OAK.ordinal()] = 6;
-            } catch (NoSuchFieldError nosuchfielderror5) {
-                ;
-            }
-
-        }
     }
 }

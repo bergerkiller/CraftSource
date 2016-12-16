@@ -21,50 +21,53 @@ public class EntityEgg extends EntityProjectile {
         super(world, d0, d1, d2);
     }
 
+    public static void b(DataConverterManager dataconvertermanager) {
+        EntityProjectile.a(dataconvertermanager, "ThrownEgg");
+    }
+
     protected void a(MovingObjectPosition movingobjectposition) {
         if (movingobjectposition.entity != null) {
             movingobjectposition.entity.damageEntity(DamageSource.projectile(this, this.getShooter()), 0.0F);
         }
 
-        // CraftBukkit start - Fire PlayerEggThrowEvent
-        boolean hatching = !this.world.isClientSide && this.random.nextInt(8) == 0;
-        int numHatching = (this.random.nextInt(32) == 0) ? 4 : 1;
-        if (!hatching) {
-            numHatching = 0;
-        }
-
-        EntityType hatchingType = EntityType.CHICKEN;
-
-        Entity shooter = this.getShooter();
-        if (shooter instanceof EntityPlayer) {
-            Player player = (shooter == null) ? null : (Player) shooter.getBukkitEntity();
-
-            PlayerEggThrowEvent event = new PlayerEggThrowEvent(player, (org.bukkit.entity.Egg) this.getBukkitEntity(), hatching, (byte) numHatching, hatchingType);
-            this.world.getServer().getPluginManager().callEvent(event);
-
-            hatching = event.isHatching();
-            numHatching = event.getNumHatches();
-            hatchingType = event.getHatchingType();
-        }
-
-        if (hatching) {
-            for (int k = 0; k < numHatching; k++) {
-                Entity entity = world.getWorld().createEntity(new org.bukkit.Location(world.getWorld(), this.locX, this.locY, this.locZ, this.yaw, 0.0F), hatchingType.getEntityClass());
-                if (entity.getBukkitEntity() instanceof Ageable) {
-                    ((Ageable) entity.getBukkitEntity()).setBaby();
-                }
-                world.getWorld().addEntity(entity, org.bukkit.event.entity.CreatureSpawnEvent.SpawnReason.EGG);
-             }
-        }
-        // CraftBukkit end
-
-        double d0 = 0.08D;
-
-        for (int j = 0; j < 8; ++j) {
-            this.world.addParticle(EnumParticle.ITEM_CRACK, this.locX, this.locY, this.locZ, ((double) this.random.nextFloat() - 0.5D) * 0.08D, ((double) this.random.nextFloat() - 0.5D) * 0.08D, ((double) this.random.nextFloat() - 0.5D) * 0.08D, new int[] { Item.getId(Items.EGG)});
-        }
-
         if (!this.world.isClientSide) {
+            boolean hatching = this.random.nextInt(8) == 0; // CraftBukkit
+            if (true) {
+                byte b0 = 1;
+
+                if (this.random.nextInt(32) == 0) {
+                    b0 = 4;
+                }
+
+                // CraftBukkit start
+                if (!hatching) {
+                    b0 = 0;
+                }
+                EntityType hatchingType = EntityType.CHICKEN;
+
+                Entity shooter = this.getShooter();
+                if (shooter instanceof EntityPlayer) {
+                    PlayerEggThrowEvent event = new PlayerEggThrowEvent((Player) shooter.getBukkitEntity(), (org.bukkit.entity.Egg) this.getBukkitEntity(), hatching, b0, hatchingType);
+                    this.world.getServer().getPluginManager().callEvent(event);
+
+                    b0 = event.getNumHatches();
+                    hatching = event.isHatching();
+                    hatchingType = event.getHatchingType();
+                }
+
+                if (hatching) {
+                    for (int i = 0; i < b0; ++i) {
+                        Entity entity = world.getWorld().createEntity(new org.bukkit.Location(world.getWorld(), this.locX, this.locY, this.locZ, this.yaw, 0.0F), hatchingType.getEntityClass());
+                        if (entity.getBukkitEntity() instanceof Ageable) {
+                            ((Ageable) entity.getBukkitEntity()).setBaby();
+                        }
+                        world.getWorld().addEntity(entity, org.bukkit.event.entity.CreatureSpawnEvent.SpawnReason.EGG);
+                    }
+                }
+                // CraftBukkit end
+            }
+
+            this.world.broadcastEntityEffect(this, (byte) 3);
             this.die();
         }
 

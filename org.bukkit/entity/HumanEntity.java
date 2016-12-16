@@ -2,6 +2,8 @@ package org.bukkit.entity;
 
 import org.bukkit.GameMode;
 import org.bukkit.Location;
+import org.bukkit.inventory.MainHand;
+import org.bukkit.inventory.Merchant;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.InventoryView;
@@ -35,6 +37,13 @@ public interface HumanEntity extends LivingEntity, AnimalTamer, Permissible, Inv
      * @return The EnderChest of the player
      */
     public Inventory getEnderChest();
+
+    /**
+     * Gets the player's selected main hand
+     *
+     * @return the players main hand
+     */
+    public MainHand getMainHand();
 
     /**
      * If the player currently has an inventory window open, this method will
@@ -110,6 +119,19 @@ public interface HumanEntity extends LivingEntity, AnimalTamer, Permissible, Inv
     public InventoryView openMerchant(Villager trader, boolean force);
 
     /**
+     * Starts a trade between the player and the merchant.
+     *
+     * Note that only one player may trade with a merchant at once. You must use
+     * the force parameter for this.
+     *
+     * @param merchant The merchant to trade with. Cannot be null.
+     * @param force whether to force the trade even if another player is trading
+     * @return The newly opened inventory view, or null if it could not be
+     * opened.
+     */
+    public InventoryView openMerchant(Merchant merchant, boolean force);
+
+    /**
      * Force-closes the currently open inventory view for this player, if any.
      */
     public void closeInventory();
@@ -181,11 +203,19 @@ public interface HumanEntity extends LivingEntity, AnimalTamer, Permissible, Inv
     public void setGameMode(GameMode mode);
 
     /**
-     * Check if the player is currently blocking (ie with a sword).
+     * Check if the player is currently blocking (ie with a shield).
      *
      * @return Whether they are blocking.
      */
     public boolean isBlocking();
+
+    /**
+     * Check if the player currently has their hand raised (ie about to begin
+     * blocking).
+     *
+     * @return Whether their hand is raised
+     */
+    public boolean isHandRaised();
 
     /**
      * Get the total amount of experience required for the player to level

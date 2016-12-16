@@ -3,17 +3,18 @@ package net.minecraft.server;
 import com.google.common.base.Predicate;
 import java.util.Collections;
 import java.util.List;
+import javax.annotation.Nullable;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 public class PathfinderGoalNearestAttackableTargetInsentient extends PathfinderGoal {
 
     private static final Logger a = LogManager.getLogger();
-    private EntityInsentient b;
+    private final EntityInsentient b;
     private final Predicate<EntityLiving> c;
     private final PathfinderGoalNearestAttackableTarget.DistanceComparator d;
     private EntityLiving e;
-    private Class<? extends EntityLiving> f;
+    private final Class<? extends EntityLiving> f;
 
     public PathfinderGoalNearestAttackableTargetInsentient(EntityInsentient entityinsentient, Class<? extends EntityLiving> oclass) {
         this.b = entityinsentient;
@@ -23,7 +24,7 @@ public class PathfinderGoalNearestAttackableTargetInsentient extends PathfinderG
         }
 
         this.c = new Predicate() {
-            public boolean a(EntityLiving entityliving) {
+            public boolean a(@Nullable EntityLiving entityliving) {
                 double d0 = PathfinderGoalNearestAttackableTargetInsentient.this.f();
 
                 if (entityliving.isSneaking()) {
@@ -33,7 +34,7 @@ public class PathfinderGoalNearestAttackableTargetInsentient extends PathfinderG
                 return entityliving.isInvisible() ? false : ((double) entityliving.g(PathfinderGoalNearestAttackableTargetInsentient.this.b) > d0 ? false : PathfinderGoalTarget.a(PathfinderGoalNearestAttackableTargetInsentient.this.b, entityliving, false, true));
             }
 
-            public boolean apply(Object object) {
+            public boolean apply(@Nullable Object object) {
                 return this.a((EntityLiving) object);
             }
         };

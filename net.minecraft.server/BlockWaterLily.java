@@ -1,6 +1,7 @@
 package net.minecraft.server;
 
 import java.util.List;
+import javax.annotation.Nullable;
 
 public class BlockWaterLily extends BlockPlant {
 
@@ -10,7 +11,7 @@ public class BlockWaterLily extends BlockPlant {
         this.a(CreativeModeTab.c);
     }
 
-    public void a(IBlockData iblockdata, World world, BlockPosition blockposition, AxisAlignedBB axisalignedbb, List<AxisAlignedBB> list, Entity entity) {
+    public void a(IBlockData iblockdata, World world, BlockPosition blockposition, AxisAlignedBB axisalignedbb, List<AxisAlignedBB> list, @Nullable Entity entity) {
         if (!(entity instanceof EntityBoat)) {
             a(blockposition, axisalignedbb, list, BlockWaterLily.a);
         }
@@ -19,13 +20,13 @@ public class BlockWaterLily extends BlockPlant {
 
     public void a(World world, BlockPosition blockposition, IBlockData iblockdata, Entity entity) {
         super.a(world, blockposition, iblockdata, entity);
-        if (entity instanceof EntityBoat && !org.bukkit.craftbukkit.event.CraftEventFactory.callEntityChangeBlockEvent(entity, blockposition.getX(), blockposition.getY(), blockposition.getZ(), Blocks.AIR, 0).isCancelled()) { // CraftBukkit
+        if (entity instanceof EntityBoat && !org.bukkit.craftbukkit.event.CraftEventFactory.callEntityChangeBlockEvent(entity, blockposition, Blocks.AIR, 0).isCancelled()) { // CraftBukkit
             world.setAir(new BlockPosition(blockposition), true);
         }
 
     }
 
-    public AxisAlignedBB a(IBlockData iblockdata, IBlockAccess iblockaccess, BlockPosition blockposition) {
+    public AxisAlignedBB b(IBlockData iblockdata, IBlockAccess iblockaccess, BlockPosition blockposition) {
         return BlockWaterLily.a;
     }
 

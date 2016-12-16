@@ -3,37 +3,39 @@ package net.minecraft.server;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import java.util.List;
+import javax.annotation.Nullable;
 
 // CraftBukkit start
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.event.entity.EntityCombustByEntityEvent;
-import org.bukkit.event.player.PlayerPickupItemEvent;
+import org.bukkit.event.entity.EntityCombustEvent;
+import org.bukkit.event.player.PlayerPickupArrowEvent;
 // CraftBukkit end
 
 public abstract class EntityArrow extends Entity implements IProjectile {
 
     private static final Predicate<Entity> f = Predicates.and(new Predicate[] { IEntitySelector.e, IEntitySelector.a, new Predicate() {
-        public boolean a(Entity entity) {
+        public boolean a(@Nullable Entity entity) {
             return entity.isInteractable();
         }
 
-        public boolean apply(Object object) {
+        public boolean apply(@Nullable Object object) {
             return this.a((Entity) object);
         }
     }});
     private static final DataWatcherObject<Byte> g = DataWatcher.a(EntityArrow.class, DataWatcherRegistry.a);
     private int h;
-    private int as;
     private int at;
-    private Block au;
-    private int av;
-    public boolean inGround; // Spigot - protected -> public
+    private int au;
+    private Block av;
+    private int aw;
+    public boolean inGround;
     protected int b;
     public EntityArrow.PickupStatus fromPlayer;
     public int shake;
     public Entity shooter;
-    private int aw;
     private int ax;
+    private int ay;
     private double damage;
     public int knockbackStrength;
 
@@ -43,7 +45,7 @@ public abstract class EntityArrow extends Entity implements IProjectile {
     {
         if ( this.inGround )
         {
-            this.aw += 1; // Despawn counter. First int after shooter
+            this.ax += 1; // Despawn counter. First int after shooter
         }
         super.inactiveTick();
     }
@@ -52,8 +54,8 @@ public abstract class EntityArrow extends Entity implements IProjectile {
     public EntityArrow(World world) {
         super(world);
         this.h = -1;
-        this.as = -1;
         this.at = -1;
+        this.au = -1;
         this.fromPlayer = EntityArrow.PickupStatus.DISALLOWED;
         this.damage = 2.0D;
         this.setSize(0.5F, 0.5F);
@@ -109,28 +111,32 @@ public abstract class EntityArrow extends Entity implements IProjectile {
         this.motZ = d2;
         float f3 = MathHelper.sqrt(d0 * d0 + d2 * d2);
 
-        this.lastYaw = this.yaw = (float) (MathHelper.b(d0, d2) * 57.2957763671875D);
-        this.lastPitch = this.pitch = (float) (MathHelper.b(d1, (double) f3) * 57.2957763671875D);
-        this.aw = 0;
+        this.yaw = (float) (MathHelper.c(d0, d2) * 57.2957763671875D);
+        this.pitch = (float) (MathHelper.c(d1, (double) f3) * 57.2957763671875D);
+        this.lastYaw = this.yaw;
+        this.lastPitch = this.pitch;
+        this.ax = 0;
     }
 
-    public void m() {
-        super.m();
+    public void A_() {
+        super.A_();
         if (this.lastPitch == 0.0F && this.lastYaw == 0.0F) {
             float f = MathHelper.sqrt(this.motX * this.motX + this.motZ * this.motZ);
 
-            this.lastYaw = this.yaw = (float) (MathHelper.b(this.motX, this.motZ) * 57.2957763671875D);
-            this.lastPitch = this.pitch = (float) (MathHelper.b(this.motY, (double) f) * 57.2957763671875D);
+            this.yaw = (float) (MathHelper.c(this.motX, this.motZ) * 57.2957763671875D);
+            this.pitch = (float) (MathHelper.c(this.motY, (double) f) * 57.2957763671875D);
+            this.lastYaw = this.yaw;
+            this.lastPitch = this.pitch;
         }
 
-        BlockPosition blockposition = new BlockPosition(this.h, this.as, this.at);
+        BlockPosition blockposition = new BlockPosition(this.h, this.at, this.au);
         IBlockData iblockdata = this.world.getType(blockposition);
         Block block = iblockdata.getBlock();
 
         if (iblockdata.getMaterial() != Material.AIR) {
-            AxisAlignedBB axisalignedbb = iblockdata.d(this.world, blockposition);
+            AxisAlignedBB axisalignedbb = iblockdata.c(this.world, blockposition);
 
-            if (axisalignedbb != Block.k && axisalignedbb.a(blockposition).a(new Vec3D(this.locX, this.locY, this.locZ))) {
+            if (axisalignedbb != Block.k && axisalignedbb.a(blockposition).b(new Vec3D(this.locX, this.locY, this.locZ))) {
                 this.inGround = true;
             }
         }
@@ -142,24 +148,24 @@ public abstract class EntityArrow extends Entity implements IProjectile {
         if (this.inGround) {
             int i = block.toLegacyData(iblockdata);
 
-            if (block == this.au && i == this.av) {
-                ++this.aw;
-                if (this.aw >= world.spigotConfig.arrowDespawnRate) { // Spigot - First int after shooter
-                    this.die();
-                }
-            } else {
+            if ((block != this.av || i != this.aw) && !this.world.b(this.getBoundingBox().g(0.05D))) {
                 this.inGround = false;
                 this.motX *= (double) (this.random.nextFloat() * 0.2F);
                 this.motY *= (double) (this.random.nextFloat() * 0.2F);
                 this.motZ *= (double) (this.random.nextFloat() * 0.2F);
-                this.aw = 0;
                 this.ax = 0;
+                this.ay = 0;
+            } else {
+                ++this.ax;
+                if (this.ax >= world.spigotConfig.arrowDespawnRate) { // Spigot - First int after shooter
+                    this.die();
+                }
             }
 
             ++this.b;
         } else {
             this.b = 0;
-            ++this.ax;
+            ++this.ay;
             Vec3D vec3d = new Vec3D(this.locX, this.locY, this.locZ);
             Vec3D vec3d1 = new Vec3D(this.locX + this.motX, this.locY + this.motY, this.locZ + this.motZ);
             MovingObjectPosition movingobjectposition = this.world.rayTrace(vec3d, vec3d1, false, true, false);
@@ -176,7 +182,7 @@ public abstract class EntityArrow extends Entity implements IProjectile {
                 movingobjectposition = new MovingObjectPosition(entity);
             }
 
-            if (movingobjectposition != null && movingobjectposition.entity != null && movingobjectposition.entity instanceof EntityHuman) {
+            if (movingobjectposition != null && movingobjectposition.entity instanceof EntityHuman) {
                 EntityHuman entityhuman = (EntityHuman) movingobjectposition.entity;
 
                 if (this.shooter instanceof EntityHuman && !((EntityHuman) this.shooter).a(entityhuman)) {
@@ -199,9 +205,9 @@ public abstract class EntityArrow extends Entity implements IProjectile {
             this.locZ += this.motZ;
             float f1 = MathHelper.sqrt(this.motX * this.motX + this.motZ * this.motZ);
 
-            this.yaw = (float) (MathHelper.b(this.motX, this.motZ) * 57.2957763671875D);
+            this.yaw = (float) (MathHelper.c(this.motX, this.motZ) * 57.2957763671875D);
 
-            for (this.pitch = (float) (MathHelper.b(this.motY, (double) f1) * 57.2957763671875D); this.pitch - this.lastPitch < -180.0F; this.lastPitch -= 360.0F) {
+            for (this.pitch = (float) (MathHelper.c(this.motY, (double) f1) * 57.2957763671875D); this.pitch - this.lastPitch < -180.0F; this.lastPitch -= 360.0F) {
                 ;
             }
 
@@ -226,20 +232,23 @@ public abstract class EntityArrow extends Entity implements IProjectile {
                 for (int k = 0; k < 4; ++k) {
                     float f4 = 0.25F;
 
-                    this.world.addParticle(EnumParticle.WATER_BUBBLE, this.locX - this.motX * (double) f4, this.locY - this.motY * (double) f4, this.locZ - this.motZ * (double) f4, this.motX, this.motY, this.motZ, new int[0]);
+                    this.world.addParticle(EnumParticle.WATER_BUBBLE, this.locX - this.motX * 0.25D, this.locY - this.motY * 0.25D, this.locZ - this.motZ * 0.25D, this.motX, this.motY, this.motZ, new int[0]);
                 }
 
                 f2 = 0.6F;
             }
 
-            if (this.ah()) {
+            if (this.ai()) {
                 this.extinguish();
             }
 
             this.motX *= (double) f2;
             this.motY *= (double) f2;
             this.motZ *= (double) f2;
-            this.motY -= (double) f3;
+            if (!this.isNoGravity()) {
+                this.motY -= 0.05000000074505806D;
+            }
+
             this.setPosition(this.locX, this.locY, this.locZ);
             this.checkBlockCollisions();
         }
@@ -247,7 +256,7 @@ public abstract class EntityArrow extends Entity implements IProjectile {
 
     protected void a(MovingObjectPosition movingobjectposition) {
         Entity entity = movingobjectposition.entity;
-        org.bukkit.craftbukkit.event.CraftEventFactory.callProjectileHitEvent(this); // CraftBukkit - Call event
+        org.bukkit.craftbukkit.event.CraftEventFactory.callProjectileHitEvent(this, movingobjectposition); // CraftBukkit - Call event
         if (entity != null) {
             float f = MathHelper.sqrt(this.motX * this.motX + this.motY * this.motY + this.motZ * this.motZ);
             int i = MathHelper.f((double) f * this.damage);
@@ -264,30 +273,29 @@ public abstract class EntityArrow extends Entity implements IProjectile {
                 damagesource = DamageSource.arrow(this, this.shooter);
             }
 
-            // CraftBukkit start - Moved damage call
-            if (movingobjectposition.entity.damageEntity(damagesource, (float) i)) {
             if (this.isBurning() && !(entity instanceof EntityEnderman)) {
+                // CraftBukkit start
                 EntityCombustByEntityEvent combustEvent = new EntityCombustByEntityEvent(this.getBukkitEntity(), entity.getBukkitEntity(), 5);
                 org.bukkit.Bukkit.getPluginManager().callEvent(combustEvent);
                 if (!combustEvent.isCancelled()) {
                     entity.setOnFire(combustEvent.getDuration());
                 }
-            // CraftBukkit end
+                // CraftBukkit end
             }
 
-            // if (entity.damageEntity(damagesource, (float) i)) { // CraftBukkit - moved up
+            if (entity.damageEntity(damagesource, (float) i)) {
                 if (entity instanceof EntityLiving) {
                     EntityLiving entityliving = (EntityLiving) entity;
 
                     if (!this.world.isClientSide) {
-                        entityliving.k(entityliving.bX() + 1);
+                        entityliving.f(entityliving.cc() + 1);
                     }
 
                     if (this.knockbackStrength > 0) {
                         float f1 = MathHelper.sqrt(this.motX * this.motX + this.motZ * this.motZ);
 
                         if (f1 > 0.0F) {
-                            entityliving.g(this.motX * (double) this.knockbackStrength * 0.6000000238418579D / (double) f1, 0.1D, this.motZ * (double) this.knockbackStrength * 0.6000000238418579D / (double) f1);
+                            entityliving.f(this.motX * (double) this.knockbackStrength * 0.6000000238418579D / (double) f1, 0.1D, this.motZ * (double) this.knockbackStrength * 0.6000000238418579D / (double) f1);
                         }
                     }
 
@@ -302,7 +310,7 @@ public abstract class EntityArrow extends Entity implements IProjectile {
                     }
                 }
 
-                this.a(SoundEffects.t, 1.0F, 1.2F / (this.random.nextFloat() * 0.2F + 0.9F));
+                this.a(SoundEffects.u, 1.0F, 1.2F / (this.random.nextFloat() * 0.2F + 0.9F));
                 if (!(entity instanceof EntityEnderman)) {
                     this.die();
                 }
@@ -312,7 +320,7 @@ public abstract class EntityArrow extends Entity implements IProjectile {
                 this.motZ *= -0.10000000149011612D;
                 this.yaw += 180.0F;
                 this.lastYaw += 180.0F;
-                this.ax = 0;
+                this.ay = 0;
                 if (!this.world.isClientSide && this.motX * this.motX + this.motY * this.motY + this.motZ * this.motZ < 0.0010000000474974513D) {
                     if (this.fromPlayer == EntityArrow.PickupStatus.ALLOWED) {
                         this.a(this.j(), 0.1F);
@@ -325,12 +333,12 @@ public abstract class EntityArrow extends Entity implements IProjectile {
             BlockPosition blockposition = movingobjectposition.a();
 
             this.h = blockposition.getX();
-            this.as = blockposition.getY();
-            this.at = blockposition.getZ();
+            this.at = blockposition.getY();
+            this.au = blockposition.getZ();
             IBlockData iblockdata = this.world.getType(blockposition);
 
-            this.au = iblockdata.getBlock();
-            this.av = this.au.toLegacyData(iblockdata);
+            this.av = iblockdata.getBlock();
+            this.aw = this.av.toLegacyData(iblockdata);
             this.motX = (double) ((float) (movingobjectposition.pos.x - this.locX));
             this.motY = (double) ((float) (movingobjectposition.pos.y - this.locY));
             this.motZ = (double) ((float) (movingobjectposition.pos.z - this.locZ));
@@ -339,30 +347,41 @@ public abstract class EntityArrow extends Entity implements IProjectile {
             this.locX -= this.motX / (double) f2 * 0.05000000074505806D;
             this.locY -= this.motY / (double) f2 * 0.05000000074505806D;
             this.locZ -= this.motZ / (double) f2 * 0.05000000074505806D;
-            this.a(SoundEffects.t, 1.0F, 1.2F / (this.random.nextFloat() * 0.2F + 0.9F));
+            this.a(SoundEffects.u, 1.0F, 1.2F / (this.random.nextFloat() * 0.2F + 0.9F));
             this.inGround = true;
             this.shake = 7;
             this.setCritical(false);
             if (iblockdata.getMaterial() != Material.AIR) {
-                this.au.a(this.world, blockposition, iblockdata, (Entity) this);
+                this.av.a(this.world, blockposition, iblockdata, (Entity) this);
             }
+        }
+
+    }
+
+    public void move(EnumMoveType enummovetype, double d0, double d1, double d2) {
+        super.move(enummovetype, d0, d1, d2);
+        if (this.inGround) {
+            this.h = MathHelper.floor(this.locX);
+            this.at = MathHelper.floor(this.locY);
+            this.au = MathHelper.floor(this.locZ);
         }
 
     }
 
     protected void a(EntityLiving entityliving) {}
 
+    @Nullable
     protected Entity a(Vec3D vec3d, Vec3D vec3d1) {
         Entity entity = null;
-        List list = this.world.a((Entity) this, this.getBoundingBox().a(this.motX, this.motY, this.motZ).g(1.0D), EntityArrow.f);
+        List list = this.world.getEntities(this, this.getBoundingBox().b(this.motX, this.motY, this.motZ).g(1.0D), EntityArrow.f);
         double d0 = 0.0D;
 
         for (int i = 0; i < list.size(); ++i) {
             Entity entity1 = (Entity) list.get(i);
 
-            if (entity1 != this.shooter || this.ax >= 5) {
+            if (entity1 != this.shooter || this.ay >= 5) {
                 AxisAlignedBB axisalignedbb = entity1.getBoundingBox().g(0.30000001192092896D);
-                MovingObjectPosition movingobjectposition = axisalignedbb.a(vec3d, vec3d1);
+                MovingObjectPosition movingobjectposition = axisalignedbb.b(vec3d, vec3d1);
 
                 if (movingobjectposition != null) {
                     double d1 = vec3d.distanceSquared(movingobjectposition.pos);
@@ -378,33 +397,40 @@ public abstract class EntityArrow extends Entity implements IProjectile {
         return entity;
     }
 
+    public static void a(DataConverterManager dataconvertermanager, String s) {}
+
+    public static void b(DataConverterManager dataconvertermanager) {
+        a(dataconvertermanager, "Arrow");
+    }
+
     public void b(NBTTagCompound nbttagcompound) {
         nbttagcompound.setInt("xTile", this.h);
-        nbttagcompound.setInt("yTile", this.as);
-        nbttagcompound.setInt("zTile", this.at);
-        nbttagcompound.setShort("life", (short) this.aw);
-        MinecraftKey minecraftkey = (MinecraftKey) Block.REGISTRY.b(this.au);
+        nbttagcompound.setInt("yTile", this.at);
+        nbttagcompound.setInt("zTile", this.au);
+        nbttagcompound.setShort("life", (short) this.ax);
+        MinecraftKey minecraftkey = (MinecraftKey) Block.REGISTRY.b(this.av);
 
         nbttagcompound.setString("inTile", minecraftkey == null ? "" : minecraftkey.toString());
-        nbttagcompound.setByte("inData", (byte) this.av);
+        nbttagcompound.setByte("inData", (byte) this.aw);
         nbttagcompound.setByte("shake", (byte) this.shake);
         nbttagcompound.setByte("inGround", (byte) (this.inGround ? 1 : 0));
         nbttagcompound.setByte("pickup", (byte) this.fromPlayer.ordinal());
         nbttagcompound.setDouble("damage", this.damage);
+        nbttagcompound.setBoolean("crit", this.isCritical());
     }
 
     public void a(NBTTagCompound nbttagcompound) {
         this.h = nbttagcompound.getInt("xTile");
-        this.as = nbttagcompound.getInt("yTile");
-        this.at = nbttagcompound.getInt("zTile");
-        this.aw = nbttagcompound.getShort("life");
+        this.at = nbttagcompound.getInt("yTile");
+        this.au = nbttagcompound.getInt("zTile");
+        this.ax = nbttagcompound.getShort("life");
         if (nbttagcompound.hasKeyOfType("inTile", 8)) {
-            this.au = Block.getByName(nbttagcompound.getString("inTile"));
+            this.av = Block.getByName(nbttagcompound.getString("inTile"));
         } else {
-            this.au = Block.getById(nbttagcompound.getByte("inTile") & 255);
+            this.av = Block.getById(nbttagcompound.getByte("inTile") & 255);
         }
 
-        this.av = nbttagcompound.getByte("inData") & 255;
+        this.aw = nbttagcompound.getByte("inData") & 255;
         this.shake = nbttagcompound.getByte("shake") & 255;
         this.inGround = nbttagcompound.getByte("inGround") == 1;
         if (nbttagcompound.hasKeyOfType("damage", 99)) {
@@ -417,16 +443,16 @@ public abstract class EntityArrow extends Entity implements IProjectile {
             this.fromPlayer = nbttagcompound.getBoolean("player") ? EntityArrow.PickupStatus.ALLOWED : EntityArrow.PickupStatus.DISALLOWED;
         }
 
+        this.setCritical(nbttagcompound.getBoolean("crit"));
     }
 
     public void d(EntityHuman entityhuman) {
         if (!this.world.isClientSide && this.inGround && this.shake <= 0) {
             // CraftBukkit start
-            ItemStack itemstack = new ItemStack(Items.ARROW);
+            ItemStack itemstack = this.j(); // PAIL: rename
+            EntityItem item = new EntityItem(this.world, this.locX, this.locY, this.locZ, itemstack);
             if (this.fromPlayer == PickupStatus.ALLOWED && entityhuman.inventory.canHold(itemstack) > 0) {
-                EntityItem item = new EntityItem(this.world, this.locX, this.locY, this.locZ, itemstack);
-
-                PlayerPickupItemEvent event = new PlayerPickupItemEvent((org.bukkit.entity.Player) entityhuman.getBukkitEntity(), new org.bukkit.craftbukkit.entity.CraftItem(this.world.getServer(), this, item), 0);
+                PlayerPickupArrowEvent event = new PlayerPickupArrowEvent((org.bukkit.entity.Player) entityhuman.getBukkitEntity(), new org.bukkit.craftbukkit.entity.CraftItem(this.world.getServer(), this, item), (org.bukkit.entity.Arrow) this.getBukkitEntity());
                 // event.setCancelled(!entityhuman.canPickUpLoot); TODO
                 this.world.getServer().getPluginManager().callEvent(event);
 
@@ -434,15 +460,14 @@ public abstract class EntityArrow extends Entity implements IProjectile {
                     return;
                 }
             }
-            // CraftBukkit end
             boolean flag = this.fromPlayer == EntityArrow.PickupStatus.ALLOWED || this.fromPlayer == EntityArrow.PickupStatus.CREATIVE_ONLY && entityhuman.abilities.canInstantlyBuild;
 
-            if (this.fromPlayer == EntityArrow.PickupStatus.ALLOWED && !entityhuman.inventory.pickup(this.j())) {
+            if (this.fromPlayer == EntityArrow.PickupStatus.ALLOWED && !entityhuman.inventory.pickup(item.getItemStack())) {
+                // CraftBukkit end
                 flag = false;
             }
 
             if (flag) {
-                this.a(SoundEffects.cU, 0.2F, ((this.random.nextFloat() - this.random.nextFloat()) * 0.7F + 1.0F) * 2.0F);
                 entityhuman.receive(this, 1);
                 this.die();
             }
@@ -468,7 +493,7 @@ public abstract class EntityArrow extends Entity implements IProjectile {
         this.knockbackStrength = i;
     }
 
-    public boolean aT() {
+    public boolean aV() {
         return false;
     }
 
@@ -493,11 +518,31 @@ public abstract class EntityArrow extends Entity implements IProjectile {
         return (b0 & 1) != 0;
     }
 
-    // CraftBukkit start
-    public boolean isInGround() {
-        return inGround;
+    public void a(EntityLiving entityliving, float f) {
+        int i = EnchantmentManager.a(Enchantments.ARROW_DAMAGE, entityliving);
+        int j = EnchantmentManager.a(Enchantments.ARROW_KNOCKBACK, entityliving);
+
+        this.c((double) (f * 2.0F) + this.random.nextGaussian() * 0.25D + (double) ((float) this.world.getDifficulty().a() * 0.11F));
+        if (i > 0) {
+            this.c(this.k() + (double) i * 0.5D + 0.5D);
+        }
+
+        if (j > 0) {
+            this.setKnockbackStrength(j);
+        }
+
+        if (EnchantmentManager.a(Enchantments.ARROW_FIRE, entityliving) > 0) {
+            // CraftBukkit start - call EntityCombustEvent
+            EntityCombustEvent event = new EntityCombustEvent(this.getBukkitEntity(), 100);
+            this.world.getServer().getPluginManager().callEvent(event);
+
+            if (!event.isCancelled()) {
+                this.setOnFire(event.getDuration());
+            }
+            // CraftBukkit end
+        }
+
     }
-    // CraftBukkit end
 
     public static enum PickupStatus {
 

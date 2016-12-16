@@ -12,17 +12,17 @@ public class RecipeArmorDye extends ShapelessRecipes implements IRecipe { // Cra
     // CraftBukkit end
 
     public boolean a(InventoryCrafting inventorycrafting, World world) {
-        ItemStack itemstack = null;
+        ItemStack itemstack = ItemStack.a;
         ArrayList arraylist = Lists.newArrayList();
 
         for (int i = 0; i < inventorycrafting.getSize(); ++i) {
             ItemStack itemstack1 = inventorycrafting.getItem(i);
 
-            if (itemstack1 != null) {
+            if (!itemstack1.isEmpty()) {
                 if (itemstack1.getItem() instanceof ItemArmor) {
                     ItemArmor itemarmor = (ItemArmor) itemstack1.getItem();
 
-                    if (itemarmor.d() != ItemArmor.EnumArmorMaterial.LEATHER || itemstack != null) {
+                    if (itemarmor.d() != ItemArmor.EnumArmorMaterial.LEATHER || !itemstack.isEmpty()) {
                         return false;
                     }
 
@@ -37,11 +37,11 @@ public class RecipeArmorDye extends ShapelessRecipes implements IRecipe { // Cra
             }
         }
 
-        return itemstack != null && !arraylist.isEmpty();
+        return !itemstack.isEmpty() && !arraylist.isEmpty();
     }
 
     public ItemStack craftItem(InventoryCrafting inventorycrafting) {
-        ItemStack itemstack = null;
+        ItemStack itemstack = ItemStack.a;
         int[] aint = new int[3];
         int i = 0;
         int j = 0;
@@ -56,17 +56,17 @@ public class RecipeArmorDye extends ShapelessRecipes implements IRecipe { // Cra
         for (k = 0; k < inventorycrafting.getSize(); ++k) {
             ItemStack itemstack1 = inventorycrafting.getItem(k);
 
-            if (itemstack1 != null) {
+            if (!itemstack1.isEmpty()) {
                 if (itemstack1.getItem() instanceof ItemArmor) {
                     itemarmor = (ItemArmor) itemstack1.getItem();
-                    if (itemarmor.d() != ItemArmor.EnumArmorMaterial.LEATHER || itemstack != null) {
-                        return null;
+                    if (itemarmor.d() != ItemArmor.EnumArmorMaterial.LEATHER || !itemstack.isEmpty()) {
+                        return ItemStack.a;
                     }
 
                     itemstack = itemstack1.cloneItemStack();
-                    itemstack.count = 1;
+                    itemstack.setCount(1);
                     if (itemarmor.e_(itemstack1)) {
-                        l = itemarmor.b(itemstack);
+                        l = itemarmor.c(itemstack);
                         f = (float) (l >> 16 & 255) / 255.0F;
                         f1 = (float) (l >> 8 & 255) / 255.0F;
                         float f2 = (float) (l & 255) / 255.0F;
@@ -79,7 +79,7 @@ public class RecipeArmorDye extends ShapelessRecipes implements IRecipe { // Cra
                     }
                 } else {
                     if (itemstack1.getItem() != Items.DYE) {
-                        return null;
+                        return ItemStack.a;
                     }
 
                     float[] afloat = EntitySheep.a(EnumColor.fromInvColorIndex(itemstack1.getData()));
@@ -97,7 +97,7 @@ public class RecipeArmorDye extends ShapelessRecipes implements IRecipe { // Cra
         }
 
         if (itemarmor == null) {
-            return null;
+            return ItemStack.a;
         } else {
             k = aint[0] / j;
             int l1 = aint[1] / j;
@@ -120,20 +120,20 @@ public class RecipeArmorDye extends ShapelessRecipes implements IRecipe { // Cra
     }
 
     public ItemStack b() {
-        return null;
+        return ItemStack.a;
     }
 
-    public ItemStack[] b(InventoryCrafting inventorycrafting) {
-        ItemStack[] aitemstack = new ItemStack[inventorycrafting.getSize()];
+    public NonNullList<ItemStack> b(InventoryCrafting inventorycrafting) {
+        NonNullList nonnulllist = NonNullList.a(inventorycrafting.getSize(), ItemStack.a);
 
-        for (int i = 0; i < aitemstack.length; ++i) {
+        for (int i = 0; i < nonnulllist.size(); ++i) {
             ItemStack itemstack = inventorycrafting.getItem(i);
 
-            if (itemstack != null && itemstack.getItem().r()) {
-                aitemstack[i] = new ItemStack(itemstack.getItem().q());
+            if (itemstack.getItem().s()) {
+                nonnulllist.set(i, new ItemStack(itemstack.getItem().r()));
             }
         }
 
-        return aitemstack;
+        return nonnulllist;
     }
 }

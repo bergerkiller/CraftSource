@@ -1,6 +1,5 @@
 package org.bukkit.craftbukkit.entity;
 
-import com.google.common.base.Optional;
 import net.minecraft.server.EntityFireworks;
 import net.minecraft.server.ItemStack;
 import net.minecraft.server.Items;
@@ -22,11 +21,11 @@ public class CraftFirework extends CraftEntity implements Firework {
     public CraftFirework(CraftServer server, EntityFireworks entity) {
         super(server, entity);
 
-        ItemStack item = getHandle().getDataWatcher().get(EntityFireworks.FIREWORK_ITEM).orNull();
+        ItemStack item = getHandle().getDataWatcher().get(EntityFireworks.FIREWORK_ITEM);
 
-        if (item == null) {
+        if (item.isEmpty()) {
             item = new ItemStack(Items.FIREWORKS);
-            getHandle().getDataWatcher().set(EntityFireworks.FIREWORK_ITEM, Optional.of(item));
+            getHandle().getDataWatcher().set(EntityFireworks.FIREWORK_ITEM, item);
         }
 
         this.item = CraftItemStack.asCraftMirror(item);

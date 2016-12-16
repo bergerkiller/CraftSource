@@ -10,6 +10,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
+import javax.annotation.Nullable;
 
 public class CommandSpreadPlayers extends CommandAbstract {
 
@@ -49,7 +50,7 @@ public class CommandSpreadPlayers extends CommandAbstract {
                     List list = PlayerSelector.getPlayers(icommandlistener, s, Entity.class);
 
                     if (list.isEmpty()) {
-                        throw new ExceptionEntityNotFound();
+                        throw new ExceptionEntityNotFound("commands.generic.selector.notFound", new Object[] { s});
                     }
 
                     arraylist.addAll(list);
@@ -57,7 +58,7 @@ public class CommandSpreadPlayers extends CommandAbstract {
                     EntityPlayer entityplayer = minecraftserver.getPlayerList().getPlayer(s);
 
                     if (entityplayer == null) {
-                        throw new ExceptionPlayerNotFound();
+                        throw new ExceptionPlayerNotFound("commands.generic.player.notFound", new Object[] { s});
                     }
 
                     arraylist.add(entityplayer);
@@ -66,7 +67,7 @@ public class CommandSpreadPlayers extends CommandAbstract {
 
             icommandlistener.a(CommandObjectiveExecutor.EnumCommandResult.AFFECTED_ENTITIES, arraylist.size());
             if (arraylist.isEmpty()) {
-                throw new ExceptionEntityNotFound();
+                throw new ExceptionEntityNotFound("commands.spreadplayers.noop");
             } else {
                 icommandlistener.sendMessage(new ChatMessage("commands.spreadplayers.spreading." + (flag ? "teams" : "players"), new Object[] { Integer.valueOf(arraylist.size()), Double.valueOf(d4), Double.valueOf(d1), Double.valueOf(d2), Double.valueOf(d3)}));
                 this.a(icommandlistener, arraylist, new CommandSpreadPlayers.Location2D(d1, d2), d3, d4, ((Entity) arraylist.get(0)).world, flag);
@@ -99,7 +100,7 @@ public class CommandSpreadPlayers extends CommandAbstract {
             Entity entity = (Entity) iterator.next();
 
             if (entity instanceof EntityHuman) {
-                hashset.add(((EntityHuman) entity).aO());
+                hashset.add(entity.aQ());
             } else {
                 hashset.add((Object) null);
             }
@@ -192,7 +193,7 @@ public class CommandSpreadPlayers extends CommandAbstract {
             CommandSpreadPlayers.Location2D commandspreadplayers_location2d;
 
             if (flag) {
-                ScoreboardTeamBase scoreboardteambase = entity instanceof EntityHuman ? ((EntityHuman) entity).aO() : null;
+                ScoreboardTeamBase scoreboardteambase = entity instanceof EntityHuman ? entity.aQ() : null;
 
                 if (!hashmap.containsKey(scoreboardteambase)) {
                     hashmap.put(scoreboardteambase, acommandspreadplayers_location2d[i++]);
@@ -205,10 +206,14 @@ public class CommandSpreadPlayers extends CommandAbstract {
 
             entity.enderTeleportTo((double) ((float) MathHelper.floor(commandspreadplayers_location2d.a) + 0.5F), (double) commandspreadplayers_location2d.a(world), (double) MathHelper.floor(commandspreadplayers_location2d.b) + 0.5D);
             double d1 = Double.MAX_VALUE;
+            CommandSpreadPlayers.Location2D[] acommandspreadplayers_location2d1 = acommandspreadplayers_location2d;
+            int k = acommandspreadplayers_location2d.length;
 
-            for (int k = 0; k < acommandspreadplayers_location2d.length; ++k) {
-                if (commandspreadplayers_location2d != acommandspreadplayers_location2d[k]) {
-                    double d2 = commandspreadplayers_location2d.a(acommandspreadplayers_location2d[k]);
+            for (int l = 0; l < k; ++l) {
+                CommandSpreadPlayers.Location2D commandspreadplayers_location2d1 = acommandspreadplayers_location2d1[l];
+
+                if (commandspreadplayers_location2d != commandspreadplayers_location2d1) {
+                    double d2 = commandspreadplayers_location2d.a(commandspreadplayers_location2d1);
 
                     d1 = Math.min(d2, d1);
                 }
@@ -234,7 +239,7 @@ public class CommandSpreadPlayers extends CommandAbstract {
         return acommandspreadplayers_location2d;
     }
 
-    public List<String> tabComplete(MinecraftServer minecraftserver, ICommandListener icommandlistener, String[] astring, BlockPosition blockposition) {
+    public List<String> tabComplete(MinecraftServer minecraftserver, ICommandListener icommandlistener, String[] astring, @Nullable BlockPosition blockposition) {
         return astring.length >= 1 && astring.length <= 2 ? b(astring, 0, blockposition) : Collections.<String>emptyList(); // CraftBukkit - decompile error
     }
 

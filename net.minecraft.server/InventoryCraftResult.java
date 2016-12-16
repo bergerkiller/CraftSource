@@ -1,5 +1,6 @@
 package net.minecraft.server;
 
+import java.util.Iterator;
 // CraftBukkit start
 import org.bukkit.Location;
 import org.bukkit.craftbukkit.entity.CraftHumanEntity;
@@ -8,12 +9,12 @@ import org.bukkit.entity.HumanEntity;
 
 public class InventoryCraftResult implements IInventory {
 
-    private ItemStack[] items = new ItemStack[1];
+    private final NonNullList<ItemStack> items;
 
     // CraftBukkit start
     private int maxStack = MAX_STACK;
 
-    public ItemStack[] getContents() {
+    public java.util.List<ItemStack> getContents() {
         return this.items;
     }
 
@@ -38,14 +39,32 @@ public class InventoryCraftResult implements IInventory {
     }
     // CraftBukkit end
 
-    public InventoryCraftResult() {}
+    public InventoryCraftResult() {
+        this.items = NonNullList.a(1, ItemStack.a);
+    }
 
     public int getSize() {
         return 1;
     }
 
+    public boolean w_() {
+        Iterator iterator = this.items.iterator();
+
+        ItemStack itemstack;
+
+        do {
+            if (!iterator.hasNext()) {
+                return true;
+            }
+
+            itemstack = (ItemStack) iterator.next();
+        } while (itemstack.isEmpty());
+
+        return false;
+    }
+
     public ItemStack getItem(int i) {
-        return this.items[0];
+        return (ItemStack) this.items.get(0);
     }
 
     public String getName() {
@@ -69,7 +88,7 @@ public class InventoryCraftResult implements IInventory {
     }
 
     public void setItem(int i, ItemStack itemstack) {
-        this.items[0] = itemstack;
+        this.items.set(0, itemstack);
     }
 
     public int getMaxStackSize() {
@@ -96,14 +115,11 @@ public class InventoryCraftResult implements IInventory {
 
     public void setProperty(int i, int j) {}
 
-    public int g() {
+    public int h() {
         return 0;
     }
 
-    public void l() {
-        for (int i = 0; i < this.items.length; ++i) {
-            this.items[i] = null;
-        }
-
+    public void clear() {
+        this.items.clear();
     }
 }

@@ -22,8 +22,8 @@ public class HandshakeListener implements PacketHandshakingInListener {
     }
 
     public void a(PacketHandshakingInSetProtocol packethandshakinginsetprotocol) {
-        switch (HandshakeListener.SyntheticClass_1.a[packethandshakinginsetprotocol.a().ordinal()]) {
-        case 1:
+        switch (packethandshakinginsetprotocol.a()) {
+        case LOGIN:
             this.b.setProtocol(EnumProtocol.LOGIN);
             ChatComponentText chatcomponenttext;
 
@@ -62,12 +62,12 @@ public class HandshakeListener implements PacketHandshakingInListener {
             }
             // CraftBukkit end
 
-            if (packethandshakinginsetprotocol.b() > 107) {
-                chatcomponenttext = new ChatComponentText( java.text.MessageFormat.format( org.spigotmc.SpigotConfig.outdatedServerMessage.replaceAll("'", "''"), "1.9" ) ); // Spigot
+            if (packethandshakinginsetprotocol.b() > 315) {
+                chatcomponenttext = new ChatComponentText( java.text.MessageFormat.format( org.spigotmc.SpigotConfig.outdatedServerMessage.replaceAll("'", "''"), "1.11" ) ); // Spigot
                 this.b.sendPacket(new PacketLoginOutDisconnect(chatcomponenttext));
                 this.b.close(chatcomponenttext);
-            } else if (packethandshakinginsetprotocol.b() < 107) {
-                chatcomponenttext = new ChatComponentText( java.text.MessageFormat.format( org.spigotmc.SpigotConfig.outdatedClientMessage.replaceAll("'", "''"), "1.9" ) ); // Spigot
+            } else if (packethandshakinginsetprotocol.b() < 315) {
+                chatcomponenttext = new ChatComponentText( java.text.MessageFormat.format( org.spigotmc.SpigotConfig.outdatedClientMessage.replaceAll("'", "''"), "1.11" ) ); // Spigot
                 this.b.sendPacket(new PacketLoginOutDisconnect(chatcomponenttext));
                 this.b.close(chatcomponenttext);
             } else {
@@ -96,7 +96,7 @@ public class HandshakeListener implements PacketHandshakingInListener {
             }
             break;
 
-        case 2:
+        case STATUS:
             this.b.setProtocol(EnumProtocol.STATUS);
             this.b.setPacketListener(new PacketStatusListener(this.a, this.b));
             break;
@@ -108,24 +108,4 @@ public class HandshakeListener implements PacketHandshakingInListener {
     }
 
     public void a(IChatBaseComponent ichatbasecomponent) {}
-
-    static class SyntheticClass_1 {
-
-        static final int[] a = new int[EnumProtocol.values().length];
-
-        static {
-            try {
-                HandshakeListener.SyntheticClass_1.a[EnumProtocol.LOGIN.ordinal()] = 1;
-            } catch (NoSuchFieldError nosuchfielderror) {
-                ;
-            }
-
-            try {
-                HandshakeListener.SyntheticClass_1.a[EnumProtocol.STATUS.ordinal()] = 2;
-            } catch (NoSuchFieldError nosuchfielderror1) {
-                ;
-            }
-
-        }
-    }
 }

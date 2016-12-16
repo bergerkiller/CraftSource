@@ -1,5 +1,8 @@
 package org.bukkit.craftbukkit.inventory;
 
+import java.util.Arrays;
+import java.util.List;
+
 import net.minecraft.server.IRecipe;
 import net.minecraft.server.IInventory;
 import net.minecraft.server.InventoryCrafting;
@@ -7,7 +10,6 @@ import net.minecraft.server.InventoryCrafting;
 import org.bukkit.inventory.CraftingInventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.Recipe;
-import org.bukkit.util.Java15Compat;
 
 public class CraftInventoryCrafting extends CraftInventory implements CraftingInventory {
     private final IInventory resultInventory;
@@ -32,28 +34,28 @@ public class CraftInventoryCrafting extends CraftInventory implements CraftingIn
 
     @Override
     public void setContents(ItemStack[] items) {
-        int resultLen = getResultInventory().getContents().length;
-        int len = getMatrixInventory().getContents().length + resultLen;
+        int resultLen = getResultInventory().getContents().size();
+        int len = getMatrixInventory().getContents().size() + resultLen;
         if (len > items.length) {
             throw new IllegalArgumentException("Invalid inventory size; expected " + len + " or less");
         }
-        setContents(items[0], Java15Compat.Arrays_copyOfRange(items, 1, items.length));
+        setContents(items[0], Arrays.copyOfRange(items, 1, items.length));
     }
 
     @Override
     public ItemStack[] getContents() {
         ItemStack[] items = new ItemStack[getSize()];
-        net.minecraft.server.ItemStack[] mcResultItems = getResultInventory().getContents();
+        List<net.minecraft.server.ItemStack> mcResultItems = getResultInventory().getContents();
 
         int i = 0;
-        for (i = 0; i < mcResultItems.length; i++ ) {
-            items[i] = CraftItemStack.asCraftMirror(mcResultItems[i]);
+        for (i = 0; i < mcResultItems.size(); i++ ) {
+            items[i] = CraftItemStack.asCraftMirror(mcResultItems.get(i));
         }
 
-        net.minecraft.server.ItemStack[] mcItems = getMatrixInventory().getContents();
+        List<net.minecraft.server.ItemStack> mcItems = getMatrixInventory().getContents();
 
-        for (int j = 0; j < mcItems.length; j++) {
-            items[i + j] = CraftItemStack.asCraftMirror(mcItems[j]);
+        for (int j = 0; j < mcItems.size(); j++) {
+            items[i + j] = CraftItemStack.asCraftMirror(mcItems.get(j));
         }
 
         return items;
@@ -68,28 +70,28 @@ public class CraftInventoryCrafting extends CraftInventory implements CraftingIn
     public CraftItemStack getItem(int index) {
         if (index < getResultInventory().getSize()) {
             net.minecraft.server.ItemStack item = getResultInventory().getItem(index);
-            return item == null ? null : CraftItemStack.asCraftMirror(item);
+            return item.isEmpty() ? null : CraftItemStack.asCraftMirror(item);
         } else {
             net.minecraft.server.ItemStack item = getMatrixInventory().getItem(index - getResultInventory().getSize());
-            return item == null ? null : CraftItemStack.asCraftMirror(item);
+            return item.isEmpty() ? null : CraftItemStack.asCraftMirror(item);
         }
     }
 
     @Override
     public void setItem(int index, ItemStack item) {
         if (index < getResultInventory().getSize()) {
-            getResultInventory().setItem(index, (item == null ? null : CraftItemStack.asNMSCopy(item)));
+            getResultInventory().setItem(index, CraftItemStack.asNMSCopy(item));
         } else {
-            getMatrixInventory().setItem((index - getResultInventory().getSize()), (item == null ? null : CraftItemStack.asNMSCopy(item)));
+            getMatrixInventory().setItem((index - getResultInventory().getSize()), CraftItemStack.asNMSCopy(item));
         }
     }
 
     public ItemStack[] getMatrix() {
-        net.minecraft.server.ItemStack[] matrix = getMatrixInventory().getContents();
-        ItemStack[] items = new ItemStack[matrix.length];
+        List<net.minecraft.server.ItemStack> matrix = getMatrixInventory().getContents();
+        ItemStack[] items = new ItemStack[matrix.size()];
 
-        for (int i = 0; i < matrix.length; i++) {
-            items[i] = CraftItemStack.asCraftMirror(matrix[i]);
+        for (int i = 0; i < matrix.size(); i++) {
+            items[i] = CraftItemStack.asCraftMirror(matrix.get(i));
         }
 
         return items;
@@ -97,38 +99,29 @@ public class CraftInventoryCrafting extends CraftInventory implements CraftingIn
 
     public ItemStack getResult() {
         net.minecraft.server.ItemStack item = getResultInventory().getItem(0);
-        if(item != null) return CraftItemStack.asCraftMirror(item);
+        if (!item.isEmpty()) return CraftItemStack.asCraftMirror(item);
         return null;
     }
 
     public void setMatrix(ItemStack[] contents) {
-        if (getMatrixInventory().getContents().length > contents.length) {
-            throw new IllegalArgumentException("Invalid inventory size; expected " + getMatrixInventory().getContents().length + " or less");
+        if (getMatrixInventory().getContents().size() > contents.length) {
+            throw new IllegalArgumentException("Invalid inventory size; expected " + getMatrixInventory().getContents().size() + " or less");
         }
 
-        net.minecraft.server.ItemStack[] mcItems = getMatrixInventory().getContents();
+        List<net.minecraft.server.ItemStack> mcItems = getMatrixInventory().getContents();
 
-        for (int i = 0; i < mcItems.length; i++) {
+        for (int i = 0; i < mcItems.size(); i++) {
             if (i < contents.length) {
-                ItemStack item = contents[i];
-                if (item == null || item.getTypeId() <= 0) {
-                    getMatrixInventory().setItem(i, null);
-                } else {
-                    getMatrixInventory().setItem(i, CraftItemStack.asNMSCopy(item));
-                }
+                getMatrixInventory().setItem(i, CraftItemStack.asNMSCopy(contents[i]));
             } else {
-                getMatrixInventory().setItem(i, null);
+                getMatrixInventory().setItem(i, net.minecraft.server.ItemStack.a);
             }
         }
     }
 
     public void setResult(ItemStack item) {
-        net.minecraft.server.ItemStack[] contents = getResultInventory().getContents();
-        if (item == null || item.getTypeId() <= 0) {
-            contents[0] = null;
-        } else {
-            contents[0] = CraftItemStack.asNMSCopy(item);
-        }
+        List<net.minecraft.server.ItemStack> contents = getResultInventory().getContents();
+        contents.set(0, CraftItemStack.asNMSCopy(item));
     }
 
     public Recipe getRecipe() {

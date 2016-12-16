@@ -13,7 +13,7 @@ public class BlockCactus extends Block {
 
     protected BlockCactus() {
         super(Material.CACTUS);
-        this.w(this.blockStateList.getBlockData().set(BlockCactus.AGE, Integer.valueOf(0)));
+        this.y(this.blockStateList.getBlockData().set(BlockCactus.AGE, Integer.valueOf(0)));
         this.a(true);
         this.a(CreativeModeTab.c);
     }
@@ -31,13 +31,13 @@ public class BlockCactus extends Block {
             if (i < 3) {
                 int j = ((Integer) iblockdata.get(BlockCactus.AGE)).intValue();
 
-                if (j >= (byte) range(3, ((100 / world.spigotConfig.cactusModifier) * 15) + 0.5F, 15)) { // Spigot
+                if (j >= (byte) range(3, ((100.0F / world.spigotConfig.cactusModifier) * 15) + 0.5F, 15)) { // Spigot
                     // world.setTypeUpdate(blockposition1, this.getBlockData()); // CraftBukkit
                     IBlockData iblockdata1 = iblockdata.set(BlockCactus.AGE, Integer.valueOf(0));
 
                     CraftEventFactory.handleBlockGrowEvent(world, blockposition1.getX(), blockposition1.getY(), blockposition1.getZ(), this, 0); // CraftBukkit
                     world.setTypeAndData(blockposition, iblockdata1, 4);
-                    this.doPhysics(world, blockposition1, iblockdata1, this);
+                    iblockdata1.doPhysics(world, blockposition1, this, blockposition);
                 } else {
                     world.setTypeAndData(blockposition, iblockdata.set(BlockCactus.AGE, Integer.valueOf(j + 1)), 4);
                 }
@@ -46,7 +46,7 @@ public class BlockCactus extends Block {
         }
     }
 
-    public AxisAlignedBB a(IBlockData iblockdata, World world, BlockPosition blockposition) {
+    public AxisAlignedBB a(IBlockData iblockdata, IBlockAccess iblockaccess, BlockPosition blockposition) {
         return BlockCactus.b;
     }
 
@@ -62,7 +62,7 @@ public class BlockCactus extends Block {
         return super.canPlace(world, blockposition) ? this.b(world, blockposition) : false;
     }
 
-    public void doPhysics(World world, BlockPosition blockposition, IBlockData iblockdata, Block block) {
+    public void a(IBlockData iblockdata, World world, BlockPosition blockposition, Block block, BlockPosition blockposition1) {
         if (!this.b(world, blockposition)) {
             world.setAir(blockposition, true);
         }

@@ -1,5 +1,6 @@
 package net.minecraft.server;
 
+import javax.annotation.Nullable;
 // CraftBukkit start
 import org.bukkit.craftbukkit.event.CraftEventFactory;
 import org.bukkit.craftbukkit.util.CraftMagicNumbers;
@@ -15,9 +16,13 @@ public class EntitySnowman extends EntityGolem implements IRangedEntity {
         this.setSize(0.7F, 1.9F);
     }
 
+    public static void b(DataConverterManager dataconvertermanager) {
+        EntityInsentient.a(dataconvertermanager, EntitySnowman.class);
+    }
+
     protected void r() {
         this.goalSelector.a(1, new PathfinderGoalArrowAttack(this, 1.25D, 20, 10.0F));
-        this.goalSelector.a(2, new PathfinderGoalRandomStroll(this, 1.0D));
+        this.goalSelector.a(2, new PathfinderGoalRandomStrollLand(this, 1.0D, 1.0000001E-5F));
         this.goalSelector.a(3, new PathfinderGoalLookAtPlayer(this, EntityHuman.class, 6.0F));
         this.goalSelector.a(4, new PathfinderGoalRandomLookaround(this));
         this.targetSelector.a(1, new PathfinderGoalNearestAttackableTarget(this, EntityInsentient.class, 10, true, false, IMonster.d));
@@ -31,7 +36,20 @@ public class EntitySnowman extends EntityGolem implements IRangedEntity {
 
     protected void i() {
         super.i();
-        this.datawatcher.register(EntitySnowman.a, Byte.valueOf((byte) 0));
+        this.datawatcher.register(EntitySnowman.a, Byte.valueOf((byte) 16));
+    }
+
+    public void b(NBTTagCompound nbttagcompound) {
+        super.b(nbttagcompound);
+        nbttagcompound.setBoolean("Pumpkin", this.hasPumpkin());
+    }
+
+    public void a(NBTTagCompound nbttagcompound) {
+        super.a(nbttagcompound);
+        if (nbttagcompound.hasKey("Pumpkin")) {
+            this.setHasPumpkin(nbttagcompound.getBoolean("Pumpkin"));
+        }
+
     }
 
     public void n() {
@@ -41,7 +59,7 @@ public class EntitySnowman extends EntityGolem implements IRangedEntity {
             int j = MathHelper.floor(this.locY);
             int k = MathHelper.floor(this.locZ);
 
-            if (this.ah()) {
+            if (this.ai()) {
                 this.damageEntity(DamageSource.DROWN, 1.0F);
             }
 
@@ -59,26 +77,17 @@ public class EntitySnowman extends EntityGolem implements IRangedEntity {
                 k = MathHelper.floor(this.locZ + (double) ((float) (l / 2 % 2 * 2 - 1) * 0.25F));
                 BlockPosition blockposition = new BlockPosition(i, j, k);
 
-                if (this.world.getType(blockposition).getMaterial() == Material.AIR && this.world.getBiome(new BlockPosition(i, 0, k)).a(blockposition) < 0.8F && Blocks.SNOW_LAYER.canPlace(this.world, blockposition)) {
-                    // CraftBukkit start
-                    org.bukkit.block.BlockState blockState = this.world.getWorld().getBlockAt(i, j, k).getState();
-                    blockState.setType(CraftMagicNumbers.getMaterial(Blocks.SNOW_LAYER));
-
-                    EntityBlockFormEvent event = new EntityBlockFormEvent(this.getBukkitEntity(), blockState.getBlock(), blockState);
-                    this.world.getServer().getPluginManager().callEvent(event);
-
-                    if(!event.isCancelled()) {
-                        blockState.update(true);
-                    }
-                    // CraftBukkit end
+                if (this.world.getType(blockposition).getMaterial() == Material.AIR && this.world.getBiome(blockposition).a(blockposition) < 0.8F && Blocks.SNOW_LAYER.canPlace(this.world, blockposition)) {
+                    org.bukkit.craftbukkit.event.CraftEventFactory.handleBlockFormEvent(this.world, blockposition, Blocks.SNOW_LAYER, this); // CraftBukkit
                 }
             }
         }
 
     }
 
+    @Nullable
     protected MinecraftKey J() {
-        return LootTables.z;
+        return LootTables.B;
     }
 
     public void a(EntityLiving entityliving, float f) {
@@ -90,7 +99,7 @@ public class EntitySnowman extends EntityGolem implements IRangedEntity {
         float f1 = MathHelper.sqrt(d1 * d1 + d3 * d3) * 0.2F;
 
         entitysnowball.shoot(d1, d2 + (double) f1, d3, 1.6F, 12.0F);
-        this.a(SoundEffects.fK, 1.0F, 1.0F / (this.getRandom().nextFloat() * 0.4F + 0.8F));
+        this.a(SoundEffects.gs, 1.0F, 1.0F / (this.getRandom().nextFloat() * 0.4F + 0.8F));
         this.world.addEntity(entitysnowball);
     }
 
@@ -98,20 +107,22 @@ public class EntitySnowman extends EntityGolem implements IRangedEntity {
         return 1.7F;
     }
 
-    protected boolean a(EntityHuman entityhuman, EnumHand enumhand, ItemStack itemstack) {
-        if (itemstack != null && itemstack.getItem() == Items.SHEARS && !this.o() && !this.world.isClientSide) {
-            this.a(true);
+    protected boolean a(EntityHuman entityhuman, EnumHand enumhand) {
+        ItemStack itemstack = entityhuman.b(enumhand);
+
+        if (itemstack.getItem() == Items.SHEARS && this.hasPumpkin() && !this.world.isClientSide) {
+            this.setHasPumpkin(false);
             itemstack.damage(1, entityhuman);
         }
 
-        return super.a(entityhuman, enumhand, itemstack);
+        return super.a(entityhuman, enumhand);
     }
 
-    public boolean o() {
+    public boolean hasPumpkin() {
         return (((Byte) this.datawatcher.get(EntitySnowman.a)).byteValue() & 16) != 0;
     }
 
-    public void a(boolean flag) {
+    public void setHasPumpkin(boolean flag) {
         byte b0 = ((Byte) this.datawatcher.get(EntitySnowman.a)).byteValue();
 
         if (flag) {
@@ -122,15 +133,18 @@ public class EntitySnowman extends EntityGolem implements IRangedEntity {
 
     }
 
+    @Nullable
     protected SoundEffect G() {
-        return SoundEffects.fH;
+        return SoundEffects.gp;
     }
 
-    protected SoundEffect bR() {
-        return SoundEffects.fJ;
+    @Nullable
+    protected SoundEffect bW() {
+        return SoundEffects.gr;
     }
 
-    protected SoundEffect bS() {
-        return SoundEffects.fI;
+    @Nullable
+    protected SoundEffect bX() {
+        return SoundEffects.gq;
     }
 }

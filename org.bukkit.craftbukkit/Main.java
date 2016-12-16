@@ -4,7 +4,11 @@ import java.io.File;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
+import java.util.TimeZone;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import joptsimple.OptionParser;
@@ -171,6 +175,19 @@ public class Main {
 
                 if (options.has("noconsole")) {
                     useConsole = false;
+                }
+
+                if (Main.class.getPackage().getImplementationVendor() != null && System.getProperty("IReallyKnowWhatIAmDoingISwear") == null) {
+                    Date buildDate = new SimpleDateFormat("yyyyMMdd-HHmm").parse(Main.class.getPackage().getImplementationVendor());
+
+                    Calendar deadline = Calendar.getInstance();
+                    deadline.add(Calendar.DAY_OF_YEAR, -10);
+                    if (buildDate.before(deadline.getTime())) {
+                        System.err.println("*** Error, this build is outdated ***");
+                        System.err.println("*** Please download a new build as per instructions from https://www.spigotmc.org/ ***");
+                        System.err.println("*** Server will start in 15 seconds ***");
+                        Thread.sleep(TimeUnit.SECONDS.toMillis(15));
+                    }
                 }
 
                 // Spigot Start

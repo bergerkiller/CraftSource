@@ -22,6 +22,7 @@ public final class CraftItemFactory implements ItemFactory {
         ConfigurationSerialization.registerClass(CraftMetaItem.SerializableMeta.class);
         KNOWN_NBT_ATTRIBUTE_NAMES = ImmutableSet.<String>builder()
             .add("generic.armor")
+            .add("generic.armorToughness")
             .add("generic.attackDamage")
             .add("generic.followRange")
             .add("generic.knockbackResistance")
@@ -90,6 +91,8 @@ public final class CraftItemFactory implements ItemFactory {
             return meta instanceof CraftMetaEnchantedBook ? meta : new CraftMetaEnchantedBook(meta);
         case BANNER:
             return meta instanceof CraftMetaBanner ? meta : new CraftMetaBanner(meta);
+        case MONSTER_EGG:
+            return meta instanceof CraftMetaSpawnEgg ? meta : new CraftMetaSpawnEgg(meta);
         case FURNACE:
         case CHEST:
         case TRAPPED_CHEST:
@@ -112,6 +115,24 @@ public final class CraftItemFactory implements ItemFactory {
         case REDSTONE_COMPARATOR:
         case FLOWER_POT_ITEM:
         case SHIELD:
+        case STRUCTURE_BLOCK:
+        case WHITE_SHULKER_BOX:
+        case ORANGE_SHULKER_BOX:
+        case MAGENTA_SHULKER_BOX:
+        case LIGHT_BLUE_SHULKER_BOX:
+        case YELLOW_SHULKER_BOX:
+        case LIME_SHULKER_BOX:
+        case PINK_SHULKER_BOX:
+        case GRAY_SHULKER_BOX:
+        case SILVER_SHULKER_BOX:
+        case CYAN_SHULKER_BOX:
+        case PURPLE_SHULKER_BOX:
+        case BLUE_SHULKER_BOX:
+        case BROWN_SHULKER_BOX:
+        case GREEN_SHULKER_BOX:
+        case RED_SHULKER_BOX:
+        case BLACK_SHULKER_BOX:
+        case ENDER_CHEST:
             return new CraftMetaBlockState(meta, material);
         default:
             return new CraftMetaItem(meta);

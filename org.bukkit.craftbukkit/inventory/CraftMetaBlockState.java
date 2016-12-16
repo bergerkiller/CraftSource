@@ -4,7 +4,6 @@ import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableMap;
 import java.util.Map;
 import net.minecraft.server.BlockJukeBox;
-import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.NBTBase;
 import net.minecraft.server.NBTTagCompound;
 import net.minecraft.server.TileEntity;
@@ -13,14 +12,22 @@ import net.minecraft.server.TileEntityBeacon;
 import net.minecraft.server.TileEntityBrewingStand;
 import net.minecraft.server.TileEntityChest;
 import net.minecraft.server.TileEntityCommand;
+import net.minecraft.server.TileEntityComparator;
 import net.minecraft.server.TileEntityDispenser;
 import net.minecraft.server.TileEntityDropper;
+import net.minecraft.server.TileEntityEnchantTable;
+import net.minecraft.server.TileEntityEndGateway;
+import net.minecraft.server.TileEntityEnderChest;
+import net.minecraft.server.TileEntityFlowerPot;
 import net.minecraft.server.TileEntityFurnace;
 import net.minecraft.server.TileEntityHopper;
+import net.minecraft.server.TileEntityLightDetector;
 import net.minecraft.server.TileEntityMobSpawner;
 import net.minecraft.server.TileEntityNote;
+import net.minecraft.server.TileEntityShulkerBox;
 import net.minecraft.server.TileEntitySign;
 import net.minecraft.server.TileEntitySkull;
+import net.minecraft.server.TileEntityStructure;
 import org.apache.commons.lang.Validate;
 import org.bukkit.Material;
 import org.bukkit.block.BlockState;
@@ -31,23 +38,31 @@ import org.bukkit.craftbukkit.block.CraftBlockState;
 import org.bukkit.craftbukkit.block.CraftBrewingStand;
 import org.bukkit.craftbukkit.block.CraftChest;
 import org.bukkit.craftbukkit.block.CraftCommandBlock;
+import org.bukkit.craftbukkit.block.CraftComparator;
 import org.bukkit.craftbukkit.block.CraftCreatureSpawner;
+import org.bukkit.craftbukkit.block.CraftDaylightDetector;
 import org.bukkit.craftbukkit.block.CraftDispenser;
 import org.bukkit.craftbukkit.block.CraftDropper;
+import org.bukkit.craftbukkit.block.CraftEnchantingTable;
+import org.bukkit.craftbukkit.block.CraftEndGateway;
+import org.bukkit.craftbukkit.block.CraftEnderChest;
+import org.bukkit.craftbukkit.block.CraftFlowerPot;
 import org.bukkit.craftbukkit.block.CraftFurnace;
 import org.bukkit.craftbukkit.block.CraftHopper;
 import org.bukkit.craftbukkit.block.CraftJukebox;
 import org.bukkit.craftbukkit.block.CraftNoteBlock;
+import org.bukkit.craftbukkit.block.CraftShulkerBox;
 import org.bukkit.craftbukkit.block.CraftSign;
 import org.bukkit.craftbukkit.block.CraftSkull;
+import org.bukkit.craftbukkit.block.CraftStructureBlock;
 import org.bukkit.inventory.meta.BlockStateMeta;
 
 @DelegateDeserialization(CraftMetaItem.SerializableMeta.class)
 public class CraftMetaBlockState extends CraftMetaItem implements BlockStateMeta {
-    
+
     @ItemMetaKey.Specific(ItemMetaKey.Specific.To.NBT)
     static final ItemMetaKey BLOCK_ENTITY_TAG = new ItemMetaKey("BlockEntityTag");
-    
+
     final Material material;
     NBTTagCompound blockEntityTag;
 
@@ -68,7 +83,7 @@ public class CraftMetaBlockState extends CraftMetaItem implements BlockStateMeta
     CraftMetaBlockState(NBTTagCompound tag, Material material) {
         super(tag);
         this.material = material;
-        
+
         if (tag.hasKeyOfType(BLOCK_ENTITY_TAG.NBT, 10)) {
             blockEntityTag = tag.getCompound(BLOCK_ENTITY_TAG.NBT);
         } else {
@@ -90,7 +105,7 @@ public class CraftMetaBlockState extends CraftMetaItem implements BlockStateMeta
     @Override
     void applyToItem(NBTTagCompound tag) {
         super.applyToItem(tag);
-        
+
         if (blockEntityTag != null) {
             tag.set(BLOCK_ENTITY_TAG.NBT, blockEntityTag);
         }
@@ -175,6 +190,24 @@ public class CraftMetaBlockState extends CraftMetaItem implements BlockStateMeta
             case REDSTONE_COMPARATOR:
             case FLOWER_POT_ITEM:
             case SHIELD:
+            case STRUCTURE_BLOCK:
+            case WHITE_SHULKER_BOX:
+            case ORANGE_SHULKER_BOX:
+            case MAGENTA_SHULKER_BOX:
+            case LIGHT_BLUE_SHULKER_BOX:
+            case YELLOW_SHULKER_BOX:
+            case LIME_SHULKER_BOX:
+            case PINK_SHULKER_BOX:
+            case GRAY_SHULKER_BOX:
+            case SILVER_SHULKER_BOX:
+            case CYAN_SHULKER_BOX:
+            case PURPLE_SHULKER_BOX:
+            case BLUE_SHULKER_BOX:
+            case BROWN_SHULKER_BOX:
+            case GREEN_SHULKER_BOX:
+            case RED_SHULKER_BOX:
+            case BLACK_SHULKER_BOX:
+            case ENDER_CHEST:
                 return true;
         }
         return false;
@@ -187,7 +220,32 @@ public class CraftMetaBlockState extends CraftMetaItem implements BlockStateMeta
 
     @Override
     public BlockState getBlockState() {
-        TileEntity te = blockEntityTag == null ? null : TileEntity.a(MinecraftServer.getServer(), blockEntityTag);
+        if (blockEntityTag != null) {
+            switch (material) {
+                case SHIELD:
+                    blockEntityTag.setString("id", "banner");
+                    break;
+                case WHITE_SHULKER_BOX:
+                case ORANGE_SHULKER_BOX:
+                case MAGENTA_SHULKER_BOX:
+                case LIGHT_BLUE_SHULKER_BOX:
+                case YELLOW_SHULKER_BOX:
+                case LIME_SHULKER_BOX:
+                case PINK_SHULKER_BOX:
+                case GRAY_SHULKER_BOX:
+                case SILVER_SHULKER_BOX:
+                case CYAN_SHULKER_BOX:
+                case PURPLE_SHULKER_BOX:
+                case BLUE_SHULKER_BOX:
+                case BROWN_SHULKER_BOX:
+                case GREEN_SHULKER_BOX:
+                case RED_SHULKER_BOX:
+                case BLACK_SHULKER_BOX:
+                    blockEntityTag.setString("id", "shulker_box");
+                    break;
+            }
+        }
+        TileEntity te = (blockEntityTag == null) ? null : TileEntity.a(null, blockEntityTag);
 
         switch (material) {
         case SIGN:
@@ -216,9 +274,14 @@ public class CraftMetaBlockState extends CraftMetaItem implements BlockStateMeta
             return new CraftDispenser(material, (TileEntityDispenser) te);
         case DROPPER:
             if (te == null) {
-                te = new TileEntityDispenser();
+                te = new TileEntityDropper();
             }
             return new CraftDropper(material, (TileEntityDropper) te);
+        case END_GATEWAY:
+            if (te == null) {
+                te = new TileEntityEndGateway();
+            }
+            return new CraftEndGateway(material, (TileEntityEndGateway) te);
         case HOPPER:
             if (te == null) {
                 te = new TileEntityHopper();
@@ -239,7 +302,7 @@ public class CraftMetaBlockState extends CraftMetaItem implements BlockStateMeta
                 te = new BlockJukeBox.TileEntityRecordPlayer();
             }
             return new CraftJukebox(material, (BlockJukeBox.TileEntityRecordPlayer) te);
-        case BREWING_STAND:
+        case BREWING_STAND_ITEM:
             if (te == null) {
                 te = new TileEntityBrewingStand();
             }
@@ -269,6 +332,57 @@ public class CraftMetaBlockState extends CraftMetaItem implements BlockStateMeta
                 te = new TileEntityBanner();
             }
             return new CraftBanner(material, (TileEntityBanner) te);
+        case FLOWER_POT_ITEM:
+            if (te == null) {
+                te = new TileEntityFlowerPot();
+            }
+            return new CraftFlowerPot(material, (TileEntityFlowerPot) te);
+        case STRUCTURE_BLOCK:
+            if (te == null) {
+                te = new TileEntityStructure();
+            }
+            return new CraftStructureBlock(material, (TileEntityStructure) te);
+        case WHITE_SHULKER_BOX:
+        case ORANGE_SHULKER_BOX:
+        case MAGENTA_SHULKER_BOX:
+        case LIGHT_BLUE_SHULKER_BOX:
+        case YELLOW_SHULKER_BOX:
+        case LIME_SHULKER_BOX:
+        case PINK_SHULKER_BOX:
+        case GRAY_SHULKER_BOX:
+        case SILVER_SHULKER_BOX:
+        case CYAN_SHULKER_BOX:
+        case PURPLE_SHULKER_BOX:
+        case BLUE_SHULKER_BOX:
+        case BROWN_SHULKER_BOX:
+        case GREEN_SHULKER_BOX:
+        case RED_SHULKER_BOX:
+        case BLACK_SHULKER_BOX:
+            if (te == null) {
+                te = new TileEntityShulkerBox();
+            }
+            return new CraftShulkerBox(material, (TileEntityShulkerBox) te);
+        case ENCHANTMENT_TABLE:
+            if (te == null) {
+                te = new TileEntityEnchantTable();
+            }
+            return new CraftEnchantingTable(material, (TileEntityEnchantTable) te);
+        case ENDER_CHEST:
+            if (te == null){
+                te = new TileEntityEnderChest();
+            }
+            return new CraftEnderChest(material, (TileEntityEnderChest) te);
+        case DAYLIGHT_DETECTOR:
+        case DAYLIGHT_DETECTOR_INVERTED:
+            if (te == null){
+                te = new TileEntityLightDetector();
+            }
+            return new CraftDaylightDetector(material, (TileEntityLightDetector) te);
+        case REDSTONE_COMPARATOR:
+            if (te == null){
+                te = new TileEntityComparator();
+            }
+            return new CraftComparator(material, (TileEntityComparator) te);
         default:
             throw new IllegalStateException("Missing blockState for " + material);
         }
@@ -278,7 +392,7 @@ public class CraftMetaBlockState extends CraftMetaItem implements BlockStateMeta
     public void setBlockState(BlockState blockState) {
         Validate.notNull(blockState, "blockState must not be null");
         TileEntity te = ((CraftBlockState) blockState).getTileEntity();
-        Validate.notNull(te, "Invalid blockState");
+        Validate.notNull(te, "Invalid tile for " + blockState);
 
         boolean valid;
         switch (material) {
@@ -301,6 +415,9 @@ public class CraftMetaBlockState extends CraftMetaItem implements BlockStateMeta
         case DROPPER:
             valid = te instanceof TileEntityDropper;
             break;
+        case END_GATEWAY:
+            valid = te instanceof TileEntityEndGateway;
+            break;
         case HOPPER:
             valid = te instanceof TileEntityHopper;
             break;
@@ -313,7 +430,7 @@ public class CraftMetaBlockState extends CraftMetaItem implements BlockStateMeta
         case JUKEBOX:
             valid = te instanceof BlockJukeBox.TileEntityRecordPlayer;
             break;
-        case BREWING_STAND:
+        case BREWING_STAND_ITEM:
             valid = te instanceof TileEntityBrewingStand;
             break;
         case SKULL:
@@ -332,6 +449,43 @@ public class CraftMetaBlockState extends CraftMetaItem implements BlockStateMeta
         case WALL_BANNER:
         case STANDING_BANNER:
             valid = te instanceof TileEntityBanner;
+            break;
+        case FLOWER_POT_ITEM:
+            valid = te instanceof TileEntityFlowerPot;
+            break;
+        case STRUCTURE_BLOCK:
+            valid = te instanceof TileEntityStructure;
+            break;
+        case WHITE_SHULKER_BOX:
+        case ORANGE_SHULKER_BOX:
+        case MAGENTA_SHULKER_BOX:
+        case LIGHT_BLUE_SHULKER_BOX:
+        case YELLOW_SHULKER_BOX:
+        case LIME_SHULKER_BOX:
+        case PINK_SHULKER_BOX:
+        case GRAY_SHULKER_BOX:
+        case SILVER_SHULKER_BOX:
+        case CYAN_SHULKER_BOX:
+        case PURPLE_SHULKER_BOX:
+        case BLUE_SHULKER_BOX:
+        case BROWN_SHULKER_BOX:
+        case GREEN_SHULKER_BOX:
+        case RED_SHULKER_BOX:
+        case BLACK_SHULKER_BOX:
+            valid = te instanceof TileEntityShulkerBox;
+            break;
+        case ENCHANTMENT_TABLE:
+            valid = te instanceof TileEntityEnchantTable;
+            break;
+        case ENDER_CHEST:
+            valid = te instanceof TileEntityEnderChest;
+            break;
+        case DAYLIGHT_DETECTOR:
+        case DAYLIGHT_DETECTOR_INVERTED:
+            valid = te instanceof TileEntityLightDetector;
+            break;
+        case REDSTONE_COMPARATOR:
+            valid = te instanceof TileEntityComparator;
             break;
         default:
             valid = false;

@@ -7,6 +7,7 @@ import net.minecraft.server.*;
 
 import org.apache.commons.lang.Validate;
 import org.apache.logging.log4j.Level;
+import org.bukkit.Location;
 import org.bukkit.command.BlockCommandSender;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.ConsoleCommandSender;
@@ -22,16 +23,9 @@ import org.bukkit.entity.minecart.CommandMinecart;
 public final class VanillaCommandWrapper extends VanillaCommand {
     protected final CommandAbstract vanillaCommand;
 
-    public VanillaCommandWrapper(CommandAbstract vanillaCommand) {
-        super(vanillaCommand.getCommand());
-        this.vanillaCommand = vanillaCommand;
-    }
-
     public VanillaCommandWrapper(CommandAbstract vanillaCommand, String usage) {
-        super(vanillaCommand.getCommand());
+        super(vanillaCommand.getCommand(), "A Mojang provided command.", usage, vanillaCommand.getAliases());
         this.vanillaCommand = vanillaCommand;
-        this.description = "A Mojang provided command.";
-        this.usageMessage = usage;
         this.setPermission("minecraft.command." + vanillaCommand.getCommand());
     }
 
@@ -40,21 +34,28 @@ public final class VanillaCommandWrapper extends VanillaCommand {
         if (!testPermission(sender)) return true;
 
         ICommandListener icommandlistener = getListener(sender);
-        dispatchVanillaCommand(sender, icommandlistener, args);
+        try {
+            dispatchVanillaCommand(sender, icommandlistener, args);
+        } catch (CommandException commandexception) {
+            // Taken from CommandHandler
+            ChatMessage chatmessage = new ChatMessage(commandexception.getMessage(), commandexception.getArgs());
+            chatmessage.getChatModifier().setColor(EnumChatFormat.RED);
+            icommandlistener.sendMessage(chatmessage);
+        }
         return true;
     }
 
     @Override
-    public List<String> tabComplete(CommandSender sender, String alias, String[] args) throws IllegalArgumentException {
+    public List<String> tabComplete(CommandSender sender, String alias, String[] args, Location location) throws IllegalArgumentException {
         Validate.notNull(sender, "Sender cannot be null");
         Validate.notNull(args, "Arguments cannot be null");
         Validate.notNull(alias, "Alias cannot be null");
-        return (List<String>) vanillaCommand.tabComplete(MinecraftServer.getServer(), getListener(sender), args, new BlockPosition(0, 0, 0));
+        return (List<String>) vanillaCommand.tabComplete(MinecraftServer.getServer(), getListener(sender), args, (location) == null ? null : new BlockPosition(location.getX(), location.getY(), location.getZ()));
     }
 
     public static CommandSender lastSender = null; // Nasty :(
 
-    public final int dispatchVanillaCommand(CommandSender bSender, ICommandListener icommandlistener, String[] as) {
+    public final int dispatchVanillaCommand(CommandSender bSender, ICommandListener icommandlistener, String[] as) throws CommandException {
         // Copied from net.minecraft.server.CommandHandler
         int i = getPlayerListSize(as);
         int j = 0;
@@ -79,7 +80,7 @@ public final class VanillaCommandWrapper extends VanillaCommand {
                 if (i > -1) {
                     List<Entity> list = ((List<Entity>)PlayerSelector.getPlayers(icommandlistener, as[i], Entity.class));
                     String s2 = as[i];
-                    
+
                     icommandlistener.a(CommandObjectiveExecutor.EnumCommandResult.AFFECTED_ENTITIES, list.size());
                     Iterator<Entity> iterator = list.iterator();
 
@@ -160,7 +161,7 @@ public final class VanillaCommandWrapper extends VanillaCommand {
         throw new IllegalArgumentException("Cannot make " + sender + " a vanilla command listener");
     }
 
-    private int getPlayerListSize(String as[]) {
+    private int getPlayerListSize(String as[]) throws CommandException {
         for (int i = 0; i < as.length; i++) {
             if (vanillaCommand.isListStart(as, i) && PlayerSelector.isList(as[i])) {
                 return i;

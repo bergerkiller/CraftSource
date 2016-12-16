@@ -3,12 +3,13 @@ package net.minecraft.server;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.UUID;
+import javax.annotation.Nullable;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 public class GenericAttributes {
 
-    private static final Logger i = LogManager.getLogger();
+    private static final Logger j = LogManager.getLogger();
     // Spigot start
     public static final IAttribute maxHealth = (new AttributeRanged((IAttribute) null, "generic.maxHealth", 20.0D, 0.0D, org.spigotmc.SpigotConfig.maxHealth)).a("Max Health").a(true);
     public static final IAttribute FOLLOW_RANGE = (new AttributeRanged((IAttribute) null, "generic.followRange", 32.0D, 0.0D, 2048.0D)).a("Follow Range");
@@ -17,7 +18,8 @@ public class GenericAttributes {
     public static final IAttribute ATTACK_DAMAGE = new AttributeRanged((IAttribute) null, "generic.attackDamage", 2.0D, 0.0D, org.spigotmc.SpigotConfig.attackDamage);
     public static final IAttribute f = (new AttributeRanged((IAttribute) null, "generic.attackSpeed", 4.0D, 0.0D, 1024.0D)).a(true);
     public static final IAttribute g = (new AttributeRanged((IAttribute) null, "generic.armor", 0.0D, 0.0D, 30.0D)).a(true);
-    public static final IAttribute h = (new AttributeRanged((IAttribute) null, "generic.luck", 0.0D, -1024.0D, 1024.0D)).a(true);
+    public static final IAttribute h = (new AttributeRanged((IAttribute) null, "generic.armorToughness", 0.0D, 0.0D, 20.0D)).a(true);
+    public static final IAttribute i = (new AttributeRanged((IAttribute) null, "generic.luck", 0.0D, -1024.0D, 1024.0D)).a(true);
     // Spigot end
 
     public static NBTTagList a(AttributeMapBase attributemapbase) {
@@ -74,10 +76,10 @@ public class GenericAttributes {
             NBTTagCompound nbttagcompound = nbttaglist.get(i);
             AttributeInstance attributeinstance = attributemapbase.a(nbttagcompound.getString("Name"));
 
-            if (attributeinstance != null) {
-                a(attributeinstance, nbttagcompound);
+            if (attributeinstance == null) {
+                GenericAttributes.j.warn("Ignoring unknown attribute \'{}\'", new Object[] { nbttagcompound.getString("Name")});
             } else {
-                GenericAttributes.i.warn("Ignoring unknown attribute \'" + nbttagcompound.getString("Name") + "\'");
+                a(attributeinstance, nbttagcompound);
             }
         }
 
@@ -105,13 +107,14 @@ public class GenericAttributes {
 
     }
 
+    @Nullable
     public static AttributeModifier a(NBTTagCompound nbttagcompound) {
         UUID uuid = nbttagcompound.a("UUID");
 
         try {
             return new AttributeModifier(uuid, nbttagcompound.getString("Name"), nbttagcompound.getDouble("Amount"), nbttagcompound.getInt("Operation"));
         } catch (Exception exception) {
-            GenericAttributes.i.warn("Unable to create attribute: " + exception.getMessage());
+            GenericAttributes.j.warn("Unable to create attribute: {}", new Object[] { exception.getMessage()});
             return null;
         }
     }

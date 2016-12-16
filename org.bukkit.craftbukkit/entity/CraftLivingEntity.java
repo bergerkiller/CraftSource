@@ -26,6 +26,7 @@ import net.minecraft.server.EntitySmallFireball;
 import net.minecraft.server.EntitySnowball;
 import net.minecraft.server.EntityThrownExpBottle;
 import net.minecraft.server.EntityTippedArrow;
+import net.minecraft.server.EntitySpectralArrow;
 import net.minecraft.server.EntityWither;
 import net.minecraft.server.EntityWitherSkull;
 import net.minecraft.server.GenericAttributes;
@@ -42,6 +43,7 @@ import org.bukkit.craftbukkit.CraftServer;
 import org.bukkit.craftbukkit.CraftWorld;
 import org.bukkit.craftbukkit.inventory.CraftEntityEquipment;
 import org.bukkit.craftbukkit.inventory.CraftItemStack;
+import org.bukkit.craftbukkit.potion.CraftPotionUtil;
 import org.bukkit.entity.Arrow;
 import org.bukkit.entity.DragonFireball;
 import org.bukkit.entity.Egg;
@@ -51,19 +53,24 @@ import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Fireball;
 import org.bukkit.entity.Fish;
 import org.bukkit.entity.HumanEntity;
+import org.bukkit.entity.LingeringPotion;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Projectile;
 import org.bukkit.entity.SmallFireball;
 import org.bukkit.entity.Snowball;
+import org.bukkit.entity.SpectralArrow;
 import org.bukkit.entity.ThrownExpBottle;
 import org.bukkit.entity.ThrownPotion;
+import org.bukkit.entity.TippedArrow;
 import org.bukkit.entity.WitherSkull;
 import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.inventory.EntityEquipment;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.potion.PotionData;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
+import org.bukkit.potion.PotionType;
 import org.bukkit.util.BlockIterator;
 import org.bukkit.util.NumberConversions;
 import org.bukkit.util.Vector;
@@ -88,8 +95,8 @@ public class CraftLivingEntity extends CraftEntity implements LivingEntity {
             throw new IllegalArgumentException("Health must be between 0 and " + getMaxHealth());
         }
 
-        if (entity instanceof EntityPlayer && health == 0) {
-            ((EntityPlayer) entity).die(DamageSource.GENERIC);
+        if (health == 0) {
+            getHandle().die(DamageSource.GENERIC);
         }
 
         getHandle().setHealth((float) health);
@@ -110,7 +117,7 @@ public class CraftLivingEntity extends CraftEntity implements LivingEntity {
     }
 
     public void resetMaxHealth() {
-        setMaxHealth(getHandle().getMaxHealth());
+        setMaxHealth(getHandle().getAttributeInstance(GenericAttributes.maxHealth).getAttribute().getDefault());
     }
 
     public double getEyeHeight() {
@@ -306,6 +313,12 @@ public class CraftLivingEntity extends CraftEntity implements LivingEntity {
         return getHandle().hasEffect(MobEffectList.fromId(type.getId()));
     }
 
+    @Override
+    public PotionEffect getPotionEffect(PotionEffectType type) {
+        MobEffect handle = getHandle().getEffect(MobEffectList.fromId(type.getId()));
+        return (handle == null) ? null : new PotionEffect(PotionEffectType.getById(MobEffectList.getId(handle.getMobEffect())), handle.getDuration(), handle.getAmplifier(), handle.isAmbient(), handle.isShowParticles());
+    }
+
     public void removePotionEffect(PotionEffectType type) {
         getHandle().removeEffect(MobEffectList.fromId(type.getId()));
     }
@@ -337,10 +350,21 @@ public class CraftLivingEntity extends CraftEntity implements LivingEntity {
             launch = new EntityEnderPearl(world, getHandle());
             ((EntityProjectile) launch).a(getHandle(), getHandle().pitch, getHandle().yaw, 0.0F, 1.5F, 1.0F); // ItemEnderPearl
         } else if (Arrow.class.isAssignableFrom(projectile)) {
-            launch = new EntityTippedArrow(world, getHandle());
+            if (TippedArrow.class.isAssignableFrom(projectile)) {
+                launch = new EntityTippedArrow(world, getHandle());
+                ((EntityTippedArrow) launch).setType(CraftPotionUtil.fromBukkit(new PotionData(PotionType.WATER, false, false)));
+            } else if (SpectralArrow.class.isAssignableFrom(projectile)) {
+                launch = new EntitySpectralArrow(world, getHandle());
+            } else {
+                launch = new EntityTippedArrow(world, getHandle());
+            }
             ((EntityArrow) launch).a(getHandle(), getHandle().pitch, getHandle().yaw, 0.0F, 3.0F, 1.0F); // ItemBow
         } else if (ThrownPotion.class.isAssignableFrom(projectile)) {
-            launch = new EntityPotion(world, getHandle(), CraftItemStack.asNMSCopy(new ItemStack(Material.POTION, 1)));
+            if (LingeringPotion.class.isAssignableFrom(projectile)) {
+                launch = new EntityPotion(world, getHandle(), CraftItemStack.asNMSCopy(new ItemStack(org.bukkit.Material.LINGERING_POTION, 1)));
+            } else {
+                launch = new EntityPotion(world, getHandle(), CraftItemStack.asNMSCopy(new ItemStack(org.bukkit.Material.SPLASH_POTION, 1)));
+            }
             ((EntityProjectile) launch).a(getHandle(), getHandle().pitch, getHandle().yaw, -20.0F, 0.5F, 1.0F); // ItemSplashPotion
         } else if (ThrownExpBottle.class.isAssignableFrom(projectile)) {
             launch = new EntityThrownExpBottle(world, getHandle());
@@ -456,6 +480,16 @@ public class CraftLivingEntity extends CraftEntity implements LivingEntity {
         return true;
     }
 
+    @Override
+    public boolean isGliding() {
+        return getHandle().getFlag(7);
+    }
+
+    @Override
+    public void setGliding(boolean gliding) {
+        getHandle().setFlag(7, gliding);
+    }
+
     @Deprecated
     public int _INVALID_getLastDamage() {
         return NumberConversions.ceil(getLastDamage());
@@ -499,5 +533,27 @@ public class CraftLivingEntity extends CraftEntity implements LivingEntity {
     @Override
     public AttributeInstance getAttribute(Attribute attribute) {
         return getHandle().craftAttributes.getAttribute(attribute);
+    }
+
+    @Override
+    public void setAI(boolean ai) {
+        if (this.getHandle() instanceof EntityInsentient) {
+            ((EntityInsentient) this.getHandle()).setAI(!ai);
+        }
+    }
+
+    @Override
+    public boolean hasAI() {
+        return (this.getHandle() instanceof EntityInsentient) ? !((EntityInsentient) this.getHandle()).hasAI(): false;
+    }
+
+    @Override
+    public void setCollidable(boolean collidable) {
+        getHandle().collides = collidable;
+    }
+
+    @Override
+    public boolean isCollidable() {
+        return getHandle().collides;
     }
 }

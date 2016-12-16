@@ -179,6 +179,10 @@ public class CraftMetaBook extends CraftMetaItem implements BookMeta {
         return !pages.isEmpty();
     }
 
+    public boolean hasGeneration() {
+        return generation != null;
+    }
+
     public String getTitle() {
         return this.title;
     }
@@ -201,6 +205,16 @@ public class CraftMetaBook extends CraftMetaItem implements BookMeta {
 
     public void setAuthor(final String author) {
         this.author = author;
+    }
+
+    @Override
+    public Generation getGeneration() {
+        return (generation == null) ? null : Generation.values()[generation];
+    }
+
+    @Override
+    public void setGeneration(Generation generation) {
+        this.generation = (generation == null) ? null : generation.ordinal();
     }
 
     public String getPage(final int page) {
@@ -286,6 +300,9 @@ public class CraftMetaBook extends CraftMetaItem implements BookMeta {
         if (hasPages()) {
             hash = 61 * hash + 17 * this.pages.hashCode();
         }
+        if (hasGeneration()) {
+            hash = 61 * hash + 19 * this.generation.hashCode();
+        }
         return original != hash ? CraftMetaBook.class.hashCode() ^ hash : hash;
     }
 
@@ -299,7 +316,8 @@ public class CraftMetaBook extends CraftMetaItem implements BookMeta {
 
             return (hasTitle() ? that.hasTitle() && this.title.equals(that.title) : !that.hasTitle())
                     && (hasAuthor() ? that.hasAuthor() && this.author.equals(that.author) : !that.hasAuthor())
-                    && (hasPages() ? that.hasPages() && this.pages.equals(that.pages) : !that.hasPages());
+                    && (hasPages() ? that.hasPages() && this.pages.equals(that.pages) : !that.hasPages())
+                    && (hasGeneration() ? that.hasGeneration() && this.generation.equals(that.generation) : !that.hasGeneration());
         }
         return true;
     }

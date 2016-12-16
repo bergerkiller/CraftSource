@@ -1,6 +1,7 @@
 package net.minecraft.server;
 
 import java.util.Random;
+import javax.annotation.Nullable;
 
 public class EntityGhast extends EntityFlying implements IMonster {
 
@@ -30,8 +31,8 @@ public class EntityGhast extends EntityFlying implements IMonster {
         return this.b;
     }
 
-    public void m() {
-        super.m();
+    public void A_() {
+        super.A_();
         if (!this.world.isClientSide && this.world.getDifficulty() == EnumDifficulty.PEACEFUL) {
             this.die();
         }
@@ -61,36 +62,41 @@ public class EntityGhast extends EntityFlying implements IMonster {
         this.getAttributeInstance(GenericAttributes.FOLLOW_RANGE).setValue(100.0D);
     }
 
-    public SoundCategory bz() {
+    public SoundCategory bC() {
         return SoundCategory.HOSTILE;
     }
 
     protected SoundEffect G() {
-        return SoundEffects.bJ;
+        return SoundEffects.bV;
     }
 
-    protected SoundEffect bR() {
-        return SoundEffects.bL;
+    protected SoundEffect bW() {
+        return SoundEffects.bX;
     }
 
-    protected SoundEffect bS() {
-        return SoundEffects.bK;
+    protected SoundEffect bX() {
+        return SoundEffects.bW;
     }
 
+    @Nullable
     protected MinecraftKey J() {
-        return LootTables.ae;
+        return LootTables.aj;
     }
 
-    protected float cd() {
+    protected float ci() {
         return 10.0F;
     }
 
-    public boolean cF() {
-        return this.random.nextInt(20) == 0 && super.cF() && this.world.getDifficulty() != EnumDifficulty.PEACEFUL;
+    public boolean cM() {
+        return this.random.nextInt(20) == 0 && super.cM() && this.world.getDifficulty() != EnumDifficulty.PEACEFUL;
     }
 
-    public int cJ() {
+    public int cQ() {
         return 1;
+    }
+
+    public static void b(DataConverterManager dataconvertermanager) {
+        EntityInsentient.a(dataconvertermanager, EntityGhast.class);
     }
 
     public void b(NBTTagCompound nbttagcompound) {
@@ -112,7 +118,7 @@ public class EntityGhast extends EntityFlying implements IMonster {
 
     static class PathfinderGoalGhastAttackTarget extends PathfinderGoal {
 
-        private EntityGhast ghast;
+        private final EntityGhast ghast;
         public int a;
 
         public PathfinderGoalGhastAttackTarget(EntityGhast entityghast) {
@@ -135,7 +141,7 @@ public class EntityGhast extends EntityFlying implements IMonster {
             EntityLiving entityliving = this.ghast.getGoalTarget();
             double d0 = 64.0D;
 
-            if (entityliving.h(this.ghast) < d0 * d0 && this.ghast.hasLineOfSight(entityliving)) {
+            if (entityliving.h(this.ghast) < 4096.0D && this.ghast.hasLineOfSight(entityliving)) {
                 World world = this.ghast.world;
 
                 ++this.a;
@@ -146,18 +152,18 @@ public class EntityGhast extends EntityFlying implements IMonster {
                 if (this.a == 20) {
                     double d1 = 4.0D;
                     Vec3D vec3d = this.ghast.f(1.0F);
-                    double d2 = entityliving.locX - (this.ghast.locX + vec3d.x * d1);
+                    double d2 = entityliving.locX - (this.ghast.locX + vec3d.x * 4.0D);
                     double d3 = entityliving.getBoundingBox().b + (double) (entityliving.length / 2.0F) - (0.5D + this.ghast.locY + (double) (this.ghast.length / 2.0F));
-                    double d4 = entityliving.locZ - (this.ghast.locZ + vec3d.z * d1);
+                    double d4 = entityliving.locZ - (this.ghast.locZ + vec3d.z * 4.0D);
 
                     world.a((EntityHuman) null, 1016, new BlockPosition(this.ghast), 0);
                     EntityLargeFireball entitylargefireball = new EntityLargeFireball(world, this.ghast, d2, d3, d4);
 
                     // CraftBukkit - set bukkitYield when setting explosionpower
                     entitylargefireball.bukkitYield = entitylargefireball.yield = this.ghast.getPower();
-                    entitylargefireball.locX = this.ghast.locX + vec3d.x * d1;
+                    entitylargefireball.locX = this.ghast.locX + vec3d.x * 4.0D;
                     entitylargefireball.locY = this.ghast.locY + (double) (this.ghast.length / 2.0F) + 0.5D;
-                    entitylargefireball.locZ = this.ghast.locZ + vec3d.z * d1;
+                    entitylargefireball.locZ = this.ghast.locZ + vec3d.z * 4.0D;
                     world.addEntity(entitylargefireball);
                     this.a = -40;
                 }
@@ -171,7 +177,7 @@ public class EntityGhast extends EntityFlying implements IMonster {
 
     static class PathfinderGoalGhastMoveTowardsTarget extends PathfinderGoal {
 
-        private EntityGhast a;
+        private final EntityGhast a;
 
         public PathfinderGoalGhastMoveTowardsTarget(EntityGhast entityghast) {
             this.a = entityghast;
@@ -184,16 +190,18 @@ public class EntityGhast extends EntityFlying implements IMonster {
 
         public void e() {
             if (this.a.getGoalTarget() == null) {
-                this.a.aM = this.a.yaw = -((float) MathHelper.b(this.a.motX, this.a.motZ)) * 57.295776F;
+                this.a.yaw = -((float) MathHelper.c(this.a.motX, this.a.motZ)) * 57.295776F;
+                this.a.aN = this.a.yaw;
             } else {
                 EntityLiving entityliving = this.a.getGoalTarget();
                 double d0 = 64.0D;
 
-                if (entityliving.h(this.a) < d0 * d0) {
+                if (entityliving.h(this.a) < 4096.0D) {
                     double d1 = entityliving.locX - this.a.locX;
                     double d2 = entityliving.locZ - this.a.locZ;
 
-                    this.a.aM = this.a.yaw = -((float) MathHelper.b(d1, d2)) * 57.295776F;
+                    this.a.yaw = -((float) MathHelper.c(d1, d2)) * 57.295776F;
+                    this.a.aN = this.a.yaw;
                 }
             }
 
@@ -202,7 +210,7 @@ public class EntityGhast extends EntityFlying implements IMonster {
 
     static class PathfinderGoalGhastIdleMove extends PathfinderGoal {
 
-        private EntityGhast a;
+        private final EntityGhast a;
 
         public PathfinderGoalGhastIdleMove(EntityGhast entityghast) {
             this.a = entityghast;
@@ -240,7 +248,7 @@ public class EntityGhast extends EntityFlying implements IMonster {
 
     static class ControllerGhast extends ControllerMove {
 
-        private EntityGhast i;
+        private final EntityGhast i;
         private int j;
 
         public ControllerGhast(EntityGhast entityghast) {
@@ -277,7 +285,7 @@ public class EntityGhast extends EntityFlying implements IMonster {
             AxisAlignedBB axisalignedbb = this.i.getBoundingBox();
 
             for (int i = 1; (double) i < d3; ++i) {
-                axisalignedbb = axisalignedbb.c(d4, d5, d6);
+                axisalignedbb = axisalignedbb.d(d4, d5, d6);
                 if (!this.i.world.getCubes(this.i, axisalignedbb).isEmpty()) {
                     return false;
                 }

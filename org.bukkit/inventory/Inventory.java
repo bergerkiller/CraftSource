@@ -85,6 +85,10 @@ public interface Inventory extends Iterable<ItemStack> {
      * Material.getMaxStackSize(). When there are no partial stacks left
      * stacks will be split on Inventory.getMaxStackSize() allowing you to
      * exceed the maximum stack size for that material.
+     * <p>
+     * It is known that in some implementations this method will also set
+     * the inputted argument amount to the number of that item not placed in
+     * slots.
      *
      * @param items The ItemStacks to add
      * @return A HashMap containing items that didn't fit.
@@ -102,6 +106,10 @@ public interface Inventory extends Iterable<ItemStack> {
      * the index of the parameter, and the value is the ItemStack at that
      * index of the varargs parameter. If all the given ItemStacks are
      * removed, it will return an empty HashMap.
+     * <p>
+     * It is known that in some implementations this method will also set the
+     * inputted argument amount to the number of that item not removed from
+     * slots.
      *
      * @param items The ItemStacks to remove
      * @return A HashMap containing items that couldn't be removed.
@@ -126,6 +134,28 @@ public interface Inventory extends Iterable<ItemStack> {
      *     inventory.
      */
     public void setContents(ItemStack[] items) throws IllegalArgumentException;
+
+    /**
+     * Return the contents from the section of the inventory where items can
+     * reasonably be expected to be stored. In most cases this will represent
+     * the entire inventory, but in some cases it may exclude armor or result
+     * slots.
+     * <br>
+     * It is these contents which will be used for add / contains / remove
+     * methods which look for a specific stack.
+     *
+     * @return inventory storage contents
+     */
+    public ItemStack[] getStorageContents();
+
+    /**
+     * Put the given ItemStacks into the storage slots
+     *
+     * @param items The ItemStacks to use as storage contents
+     * @throws IllegalArgumentException If the array has more items than the
+     * inventory.
+     */
+    public void setStorageContents(ItemStack[] items) throws IllegalArgumentException;
 
     /**
      * Checks if the inventory contains any ItemStacks with the given

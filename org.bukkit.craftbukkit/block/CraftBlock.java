@@ -135,11 +135,17 @@ public class CraftBlock implements Block {
     public boolean setTypeIdAndData(final int type, final byte data, final boolean applyPhysics) {
         IBlockData blockData = getNMSBlock(type).fromLegacyData(data);
         BlockPosition position = new BlockPosition(x, y, z);
+
+        // SPIGOT-611: need to do this to prevent glitchiness. Easier to handle this here (like /setblock) than to fix weirdness in tile entity cleanup
+        if (type != 0 && blockData.getBlock() instanceof BlockTileEntity && type != getTypeId()) {
+            chunk.getHandle().getWorld().setTypeAndData(position, Blocks.AIR.getBlockData(), 0);
+        }
+
         if (applyPhysics) {
             return chunk.getHandle().getWorld().setTypeAndData(position, blockData, 3);
         } else {
             IBlockData old = chunk.getHandle().getBlockData(position);
-            boolean success = chunk.getHandle().getWorld().setTypeAndData(position, blockData, 2);
+            boolean success = chunk.getHandle().getWorld().setTypeAndData(position, blockData, 18); // NOTIFY | NO_OBSERVER
             if (success) {
                 chunk.getHandle().getWorld().notify(
                         position,
@@ -167,11 +173,11 @@ public class CraftBlock implements Block {
     }
 
     public byte getLightFromSky() {
-        return (byte) chunk.getHandle().getBrightness(EnumSkyBlock.SKY, new BlockPosition(this.x, this.y, this.z));
+        return (byte) chunk.getHandle().getWorld().getBrightness(EnumSkyBlock.SKY, new BlockPosition(this.x, this.y, this.z));
     }
 
     public byte getLightFromBlocks() {
-        return (byte) chunk.getHandle().getBrightness(EnumSkyBlock.BLOCK, new BlockPosition(this.x, this.y, this.z));
+        return (byte) chunk.getHandle().getWorld().getBrightness(EnumSkyBlock.BLOCK, new BlockPosition(this.x, this.y, this.z));
     }
 
 
@@ -272,6 +278,8 @@ public class CraftBlock implements Block {
             return new CraftDispenser(this);
         case DROPPER:
             return new CraftDropper(this);
+        case END_GATEWAY:
+            return new CraftEndGateway(this);
         case HOPPER:
             return new CraftHopper(this);
         case MOB_SPAWNER:
@@ -285,6 +293,8 @@ public class CraftBlock implements Block {
         case SKULL:
             return new CraftSkull(this);
         case COMMAND:
+        case COMMAND_CHAIN:
+        case COMMAND_REPEATING:
             return new CraftCommandBlock(this);
         case BEACON:
             return new CraftBeacon(this);
@@ -292,6 +302,37 @@ public class CraftBlock implements Block {
         case WALL_BANNER:
         case STANDING_BANNER:
             return new CraftBanner(this);
+        case FLOWER_POT:
+            return new CraftFlowerPot(this);
+        case STRUCTURE_BLOCK:
+            return new CraftStructureBlock(this);
+        case WHITE_SHULKER_BOX:
+        case ORANGE_SHULKER_BOX:
+        case MAGENTA_SHULKER_BOX:
+        case LIGHT_BLUE_SHULKER_BOX:
+        case YELLOW_SHULKER_BOX:
+        case LIME_SHULKER_BOX:
+        case PINK_SHULKER_BOX:
+        case GRAY_SHULKER_BOX:
+        case SILVER_SHULKER_BOX:
+        case CYAN_SHULKER_BOX:
+        case PURPLE_SHULKER_BOX:
+        case BLUE_SHULKER_BOX:
+        case BROWN_SHULKER_BOX:
+        case GREEN_SHULKER_BOX:
+        case RED_SHULKER_BOX:
+        case BLACK_SHULKER_BOX:
+            return new CraftShulkerBox(this);
+        case ENCHANTMENT_TABLE:
+            return new CraftEnchantingTable(this);
+        case ENDER_CHEST:
+            return new CraftEnderChest(this);
+        case DAYLIGHT_DETECTOR:
+        case DAYLIGHT_DETECTOR_INVERTED:
+            return new CraftDaylightDetector(this);
+        case REDSTONE_COMPARATOR_OFF:
+        case REDSTONE_COMPARATOR_ON:
+            return new CraftComparator(this);
         default:
             return new CraftBlockState(this);
         }
@@ -310,7 +351,7 @@ public class CraftBlock implements Block {
             return null;
         }
 
-        return Biome.valueOf(BiomeBase.REGISTRY_ID.b(base).a().toUpperCase());
+        return Biome.valueOf(BiomeBase.REGISTRY_ID.b(base).a().toUpperCase(java.util.Locale.ENGLISH));
     }
 
     public static BiomeBase biomeToBiomeBase(Biome bio) {
@@ -318,7 +359,7 @@ public class CraftBlock implements Block {
             return null;
         }
 
-        return BiomeBase.REGISTRY_ID.get(new MinecraftKey(bio.name().toLowerCase()));
+        return BiomeBase.REGISTRY_ID.get(new MinecraftKey(bio.name().toLowerCase(java.util.Locale.ENGLISH)));
     }
 
     public double getTemperature() {
@@ -434,7 +475,7 @@ public class CraftBlock implements Block {
             int count = block.getDropCount(0, chunk.getHandle().getWorld().random);
             for (int i = 0; i < count; ++i) {
                 Item item = block.getDropType(data, chunk.getHandle().getWorld().random, 0);
-                if (item != null) {
+                if (item != Items.a) {
                     // Skulls are special, their data is based on the tile entity
                     if (Blocks.SKULL == block) {
                         net.minecraft.server.ItemStack nmsStack = new net.minecraft.server.ItemStack(item, 1, block.getDropData(data));

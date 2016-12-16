@@ -2,46 +2,63 @@ package net.minecraft.server;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+// CraftBukkit start
+import org.bukkit.craftbukkit.entity.CraftEnderDragon;
+import org.bukkit.event.entity.EnderDragonChangePhaseEvent;
+// CraftBukkit end
 
 public class DragonControllerManager {
 
     private static final Logger a = LogManager.getLogger();
-    private final EntityEnderDragon b;
-    private final IDragonController[] c = new IDragonController[DragonControllerPhase.c()];
-    private IDragonController d;
+    private final EntityEnderDragon enderDragon;
+    private final IDragonController[] dragonControllers = new IDragonController[DragonControllerPhase.c()];
+    private IDragonController currentDragonController;
 
     public DragonControllerManager(EntityEnderDragon entityenderdragon) {
-        this.b = entityenderdragon;
-        this.a(DragonControllerPhase.k);
+        this.enderDragon = entityenderdragon;
+        this.setControllerPhase(DragonControllerPhase.k);
     }
 
-    public void a(DragonControllerPhase<?> dragoncontrollerphase) {
-        if (this.d == null || dragoncontrollerphase != this.d.i()) {
-            if (this.d != null) {
-                this.d.e();
+    public void setControllerPhase(DragonControllerPhase<?> dragoncontrollerphase) {
+        if (this.currentDragonController == null || dragoncontrollerphase != this.currentDragonController.getControllerPhase()) {
+            if (this.currentDragonController != null) {
+                this.currentDragonController.e();
             }
 
-            this.d = this.b(dragoncontrollerphase);
-            if (!this.b.world.isClientSide) {
-                this.b.getDataWatcher().set(EntityEnderDragon.a, Integer.valueOf(dragoncontrollerphase.b()));
+            // CraftBukkit start - Call EnderDragonChangePhaseEvent
+            EnderDragonChangePhaseEvent event = new EnderDragonChangePhaseEvent(
+                    (CraftEnderDragon) this.enderDragon.getBukkitEntity(),
+                    (this.currentDragonController == null) ? null : CraftEnderDragon.getBukkitPhase(this.currentDragonController.getControllerPhase()),
+                    CraftEnderDragon.getBukkitPhase(dragoncontrollerphase)
+            );
+            this.enderDragon.world.getServer().getPluginManager().callEvent(event);
+            if (event.isCancelled()) {
+                return;
+            }
+            dragoncontrollerphase = CraftEnderDragon.getMinecraftPhase(event.getNewPhase());
+            // CraftBukkit end
+
+            this.currentDragonController = this.b(dragoncontrollerphase);
+            if (!this.enderDragon.world.isClientSide) {
+                this.enderDragon.getDataWatcher().set(EntityEnderDragon.PHASE, Integer.valueOf(dragoncontrollerphase.b()));
             }
 
-            DragonControllerManager.a.debug("Dragon is now in phase {} on the {}", new Object[] { dragoncontrollerphase, this.b.world.isClientSide ? "client" : "server"});
-            this.d.d();
+            DragonControllerManager.a.debug("Dragon is now in phase {} on the {}", new Object[] { dragoncontrollerphase, this.enderDragon.world.isClientSide ? "client" : "server"});
+            this.currentDragonController.d();
         }
     }
 
     public IDragonController a() {
-        return this.d;
+        return this.currentDragonController;
     }
 
     public <T extends IDragonController> T b(DragonControllerPhase<T> dragoncontrollerphase) {
         int i = dragoncontrollerphase.b();
 
-        if (this.c[i] == null) {
-            this.c[i] = dragoncontrollerphase.a(this.b);
+        if (this.dragonControllers[i] == null) {
+            this.dragonControllers[i] = dragoncontrollerphase.a(this.enderDragon);
         }
 
-        return this.c[i];
+        return (T) this.dragonControllers[i]; // CraftBukkit - decompile error
     }
 }

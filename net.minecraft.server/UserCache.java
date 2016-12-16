@@ -30,12 +30,13 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.Deque;
 import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
+import javax.annotation.Nullable;
 import org.apache.commons.io.IOUtils;
 
 public class UserCache {
@@ -44,7 +45,7 @@ public class UserCache {
     private static boolean c;
     private final Map<String, UserCache.UserCacheEntry> d = Maps.newHashMap();
     private final Map<UUID, UserCache.UserCacheEntry> e = Maps.newHashMap();
-    private final java.util.Deque<GameProfile> f = new java.util.concurrent.LinkedBlockingDeque<GameProfile>(); // CraftBukkit
+    private final Deque<GameProfile> f = new java.util.concurrent.LinkedBlockingDeque<GameProfile>(); // CraftBukkit
     private final GameProfileRepository g;
     protected final Gson b;
     private final File h;
@@ -134,6 +135,7 @@ public class UserCache {
         if( !org.spigotmc.SpigotConfig.saveUserCacheOnStopOnly ) this.c(); // Spigot - skip saving if disabled
     }
 
+    @Nullable
     public GameProfile getProfile(String s) {
         String s1 = s.toLowerCase(Locale.ROOT);
         UserCache.UserCacheEntry usercache_usercacheentry = (UserCache.UserCacheEntry) this.d.get(s1);
@@ -169,6 +171,7 @@ public class UserCache {
         return (String[]) arraylist.toArray(new String[arraylist.size()]);
     }
 
+    @Nullable
     public GameProfile a(UUID uuid) {
         UserCache.UserCacheEntry usercache_usercacheentry = (UserCache.UserCacheEntry) this.e.get(uuid);
 
@@ -326,9 +329,7 @@ public class UserCache {
                             return null;
                         }
 
-                        UserCache.UserCacheEntry usercache_usercacheentry = UserCache.this.new UserCacheEntry(new GameProfile(uuid, s1), date, null);
-
-                        return usercache_usercacheentry;
+                        return UserCache.this.new UserCacheEntry(new GameProfile(uuid, s1), date, null);
                     } else {
                         return null;
                     }

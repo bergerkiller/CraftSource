@@ -9,12 +9,12 @@ public class BlockNetherWart extends BlockPlant {
 
     protected BlockNetherWart() {
         super(Material.PLANT, MaterialMapColor.D);
-        this.w(this.blockStateList.getBlockData().set(BlockNetherWart.AGE, Integer.valueOf(0)));
+        this.y(this.blockStateList.getBlockData().set(BlockNetherWart.AGE, Integer.valueOf(0)));
         this.a(true);
         this.a((CreativeModeTab) null);
     }
 
-    public AxisAlignedBB a(IBlockData iblockdata, IBlockAccess iblockaccess, BlockPosition blockposition) {
+    public AxisAlignedBB b(IBlockData iblockdata, IBlockAccess iblockaccess, BlockPosition blockposition) {
         return BlockNetherWart.c[((Integer) iblockdata.get(BlockNetherWart.AGE)).intValue()];
     }
 
@@ -29,7 +29,7 @@ public class BlockNetherWart extends BlockPlant {
     public void b(World world, BlockPosition blockposition, IBlockData iblockdata, Random random) {
         int i = ((Integer) iblockdata.get(BlockNetherWart.AGE)).intValue();
 
-        if (i < 3 && random.nextInt(Math.max(1, (int) (100 / world.spigotConfig.wartModifier) * 10)) == 0) { // Spigot
+        if (i < 3 && random.nextInt(Math.max(1, (int) (100.0F / world.spigotConfig.wartModifier) * 10)) == 0) { // Spigot
             iblockdata = iblockdata.set(BlockNetherWart.AGE, Integer.valueOf(i + 1));
             // world.setTypeAndData(blockposition, iblockdata, 2); // CraftBukkit
             org.bukkit.craftbukkit.event.CraftEventFactory.handleBlockGrowEvent(world, blockposition.getX(), blockposition.getY(), blockposition.getZ(), this, toLegacyData(iblockdata)); // CraftBukkit
@@ -57,7 +57,7 @@ public class BlockNetherWart extends BlockPlant {
     }
 
     public Item getDropType(IBlockData iblockdata, Random random, int i) {
-        return null;
+        return Items.a;
     }
 
     public int a(Random random) {

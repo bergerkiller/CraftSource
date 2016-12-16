@@ -22,7 +22,7 @@ public class BlockOre extends Block {
     }
 
     public int getDropCount(int i, Random random) {
-        if (i > 0 && Item.getItemOf(this) != this.getDropType((IBlockData) this.t().a().iterator().next(), random, i)) {
+        if (i > 0 && Item.getItemOf(this) != this.getDropType((IBlockData) this.s().a().iterator().next(), random, i)) {
             int j = random.nextInt(i + 2) - 1;
 
             if (j < 0) {
@@ -85,10 +85,6 @@ public class BlockOre extends Block {
 
     public ItemStack a(World world, BlockPosition blockposition, IBlockData iblockdata) {
         return new ItemStack(this);
-    }
-
-    public int getDropData(World world, BlockPosition blockposition) {
-        return 0;
     }
 
     public int getDropData(IBlockData iblockdata) {

@@ -10,7 +10,7 @@ public interface IRecipe {
 
     ItemStack b();
 
-    ItemStack[] b(InventoryCrafting inventorycrafting);
+    NonNullList<ItemStack> b(InventoryCrafting inventorycrafting);
 
     org.bukkit.inventory.Recipe toBukkitRecipe(); // CraftBukkit
 

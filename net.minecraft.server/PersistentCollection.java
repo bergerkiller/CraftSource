@@ -13,19 +13,21 @@ import java.io.OutputStream;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import javax.annotation.Nullable;
 
 public class PersistentCollection {
 
-    private IDataManager b;
+    private final IDataManager b;
     protected Map<String, PersistentBase> a = Maps.newHashMap();
-    public List<PersistentBase> c = Lists.newArrayList(); // Spigot
-    private Map<String, Short> d = Maps.newHashMap();
+    public final List<PersistentBase> c = Lists.newArrayList(); // Spigot
+    private final Map<String, Short> d = Maps.newHashMap();
 
     public PersistentCollection(IDataManager idatamanager) {
         this.b = idatamanager;
         this.b();
     }
 
+    @Nullable
     public PersistentBase get(Class<? extends PersistentBase> oclass, String s) {
         PersistentBase persistentbase = (PersistentBase) this.a.get(s);
 
@@ -40,7 +42,7 @@ public class PersistentCollection {
                         try {
                             persistentbase = (PersistentBase) oclass.getConstructor(new Class[] { String.class}).newInstance(new Object[] { s});
                         } catch (Exception exception) {
-                            throw new RuntimeException("Failed to instantiate " + oclass.toString(), exception);
+                            throw new RuntimeException("Failed to instantiate " + oclass, exception);
                         }
 
                         FileInputStream fileinputstream = new FileInputStream(file);
@@ -92,13 +94,10 @@ public class PersistentCollection {
                 if (file != null) {
                     NBTTagCompound nbttagcompound = new NBTTagCompound();
 
-                    persistentbase.b(nbttagcompound);
-                    NBTTagCompound nbttagcompound1 = new NBTTagCompound();
-
-                    nbttagcompound1.set("data", nbttagcompound);
+                    nbttagcompound.set("data", persistentbase.b(new NBTTagCompound()));
                     FileOutputStream fileoutputstream = new FileOutputStream(file);
 
-                    NBTCompressedStreamTools.a(nbttagcompound1, (OutputStream) fileoutputstream);
+                    NBTCompressedStreamTools.a(nbttagcompound, (OutputStream) fileoutputstream);
                     fileoutputstream.close();
                 }
             } catch (Exception exception) {
@@ -130,7 +129,7 @@ public class PersistentCollection {
 
                     if (nbtbase instanceof NBTTagShort) {
                         NBTTagShort nbttagshort = (NBTTagShort) nbtbase;
-                        short short0 = nbttagshort.e();
+                        short short0 = nbttagshort.f();
 
                         this.d.put(s, Short.valueOf(short0));
                     }

@@ -205,7 +205,7 @@ public class ItemStack implements Cloneable, ConfigurationSerializable {
     /**
      * Gets the amount of items in this stack
      *
-     * @return Amount of items in this stick
+     * @return Amount of items in this stack
      */
     public int getAmount() {
         return amount;
@@ -359,7 +359,7 @@ public class ItemStack implements Cloneable, ConfigurationSerializable {
 
     @Override
     @Utility
-    public final int hashCode() {
+    public int hashCode() {
         int hash = 1;
 
         hash = hash * 31 + getTypeId();

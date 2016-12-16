@@ -121,6 +121,7 @@ class CraftMetaItem implements ItemMeta, Repairable {
                     .put(CraftMetaLeatherArmor.class, "LEATHER_ARMOR")
                     .put(CraftMetaMap.class, "MAP")
                     .put(CraftMetaPotion.class, "POTION")
+                    .put(CraftMetaSpawnEgg.class, "SPAWN_EGG")
                     .put(CraftMetaEnchantedBook.class, "ENCHANTED")
                     .put(CraftMetaFirework.class, "FIREWORK")
                     .put(CraftMetaCharge.class, "FIREWORK_EFFECT")
@@ -218,13 +219,14 @@ class CraftMetaItem implements ItemMeta, Repairable {
     @Specific(Specific.To.NBT)
     static final ItemMetaKey HIDEFLAGS = new ItemMetaKey("HideFlags", "ItemFlags");
     @Specific(Specific.To.NBT)
-    static final ItemMetaKey UNBREAKABLE = new ItemMetaKey("Unbreakable"); // Spigot
+    static final ItemMetaKey UNBREAKABLE = new ItemMetaKey("Unbreakable");
 
     private String displayName;
     private List<String> lore;
     private Map<Enchantment, Integer> enchantments;
     private int repairCost;
     private int hideFlag;
+    private boolean unbreakable;
 
     private static final Set<String> HANDLED_TAGS = Sets.newHashSet();
 
@@ -247,8 +249,8 @@ class CraftMetaItem implements ItemMeta, Repairable {
 
         this.repairCost = meta.repairCost;
         this.hideFlag = meta.hideFlag;
+        this.unbreakable = meta.unbreakable;
         this.unhandledTags.putAll(meta.unhandledTags);
-        spigot.setUnbreakable( meta.spigot.isUnbreakable() ); // Spigot
     }
 
     CraftMetaItem(NBTTagCompound tag) {
@@ -278,6 +280,9 @@ class CraftMetaItem implements ItemMeta, Repairable {
 
         if (tag.hasKey(HIDEFLAGS.NBT)) {
             hideFlag = tag.getInt(HIDEFLAGS.NBT);
+        }
+        if (tag.hasKey(UNBREAKABLE.NBT)) {
+            unbreakable = tag.getBoolean(UNBREAKABLE.NBT);
         }
 
         if (tag.get(ATTRIBUTES.NBT) instanceof NBTTagList) {
@@ -449,12 +454,6 @@ class CraftMetaItem implements ItemMeta, Repairable {
                 unhandledTags.put(key, tag.get(key));
             }
         }
-        // Spigot start
-        if ( tag.hasKey( UNBREAKABLE.NBT ) )
-        {
-            spigot.setUnbreakable( tag.getBoolean( UNBREAKABLE.NBT ) );
-        }
-        // Spigot end
     }
 
     static Map<Enchantment, Integer> buildEnchantments(NBTTagCompound tag, ItemMetaKey key) {
@@ -507,13 +506,10 @@ class CraftMetaItem implements ItemMeta, Repairable {
             }
         }
 
-        // Spigot start
-        Boolean unbreakable = SerializableMeta.getObject( Boolean.class, map, UNBREAKABLE.BUKKIT, true );
-        if ( unbreakable != null )
-        {
-            spigot.setUnbreakable( unbreakable );
+        Boolean unbreakable = SerializableMeta.getObject(Boolean.class, map, UNBREAKABLE.BUKKIT, true);
+        if (unbreakable != null) {
+            setUnbreakable(unbreakable);
         }
-        // Spigot end
 
         String internal = SerializableMeta.getString(map, "internal", true);
         if (internal != null) {
@@ -569,17 +565,13 @@ class CraftMetaItem implements ItemMeta, Repairable {
         }
 
         applyEnchantments(enchantments, itemTag, ENCHANTMENTS);
- 
-        // Spigot start
-        if ( spigot.isUnbreakable() )
-        {
-            itemTag.setBoolean( UNBREAKABLE.NBT, true );
-        }
-        // Spigot end
-
 
         if (hasRepairCost()) {
             itemTag.setInt(REPAIR.NBT, repairCost);
+        }
+
+        if (isUnbreakable()) {
+            itemTag.setBoolean(UNBREAKABLE.NBT, unbreakable);
         }
 
         for (Map.Entry<String, NBTBase> e : unhandledTags.entrySet()) {
@@ -636,7 +628,7 @@ class CraftMetaItem implements ItemMeta, Repairable {
 
     @Overridden
     boolean isEmpty() {
-        return !(hasDisplayName() || hasEnchants() || hasLore() || hasRepairCost() || !unhandledTags.isEmpty() || hideFlag != 0 || spigot.isUnbreakable()); // Spigot
+        return !(hasDisplayName() || hasEnchants() || hasLore() || hasRepairCost() || !unhandledTags.isEmpty() || hideFlag != 0 || isUnbreakable());
     }
 
     public String getDisplayName() {
@@ -769,6 +761,16 @@ class CraftMetaItem implements ItemMeta, Repairable {
     }
 
     @Override
+    public boolean isUnbreakable() {
+        return unbreakable;
+    }
+
+    @Override
+    public void setUnbreakable(boolean unbreakable) {
+        this.unbreakable = unbreakable;
+    }
+
+    @Override
     public final boolean equals(Object object) {
         if (object == null) {
             return false;
@@ -795,7 +797,7 @@ class CraftMetaItem implements ItemMeta, Repairable {
                 && (this.hasRepairCost() ? that.hasRepairCost() && this.repairCost == that.repairCost : !that.hasRepairCost())
                 && (this.unhandledTags.equals(that.unhandledTags))
                 && (this.hideFlag == that.hideFlag)
-                && (this.spigot.isUnbreakable() == that.spigot.isUnbreakable()); // Spigot
+                && (this.isUnbreakable() == that.isUnbreakable());
     }
 
     /**
@@ -822,7 +824,7 @@ class CraftMetaItem implements ItemMeta, Repairable {
         hash = 61 * hash + (hasRepairCost() ? this.repairCost : 0);
         hash = 61 * hash + unhandledTags.hashCode();
         hash = 61 * hash + hideFlag;
-        hash = 61 * hash + (spigot.isUnbreakable() ? 1231 : 1237); // Spigot
+        hash = 61 * hash + (isUnbreakable() ? 1231 : 1237);
         return hash;
     }
 
@@ -838,6 +840,7 @@ class CraftMetaItem implements ItemMeta, Repairable {
                 clone.enchantments = new HashMap<Enchantment, Integer>(this.enchantments);
             }
             clone.hideFlag = this.hideFlag;
+            clone.unbreakable = this.unbreakable;
             return clone;
         } catch (CloneNotSupportedException e) {
             throw new Error(e);
@@ -866,14 +869,6 @@ class CraftMetaItem implements ItemMeta, Repairable {
         if (hasRepairCost()) {
             builder.put(REPAIR.BUKKIT, repairCost);
         }
- 
-        // Spigot start
-        if ( spigot.isUnbreakable() )
-        {
-            builder.put( UNBREAKABLE.BUKKIT, true );
-        }
-        // Spigot end
-
 
         Set<String> hideFlags = new HashSet<String>();
         for (ItemFlag hideFlagEnum : getItemFlags()) {
@@ -881,6 +876,10 @@ class CraftMetaItem implements ItemMeta, Repairable {
         }
         if (!hideFlags.isEmpty()) {
             builder.put(HIDEFLAGS.BUKKIT, hideFlags);
+        }
+
+        if (isUnbreakable()) {
+            builder.put(UNBREAKABLE.BUKKIT, unbreakable);
         }
 
         final Map<String, NBTBase> internalTags = new HashMap<String, NBTBase>(unhandledTags);
@@ -965,15 +964,17 @@ class CraftMetaItem implements ItemMeta, Repairable {
         synchronized (HANDLED_TAGS) {
             if (HANDLED_TAGS.isEmpty()) {
                 HANDLED_TAGS.addAll(Arrays.asList(
-                        UNBREAKABLE.NBT, // Spigot
                         DISPLAY.NBT,
                         REPAIR.NBT,
                         ENCHANTMENTS.NBT,
                         HIDEFLAGS.NBT,
+                        UNBREAKABLE.NBT,
                         CraftMetaMap.MAP_SCALING.NBT,
                         CraftMetaPotion.POTION_EFFECTS.NBT,
+                        CraftMetaPotion.DEFAULT_POTION.NBT,
                         CraftMetaSkull.SKULL_OWNER.NBT,
                         CraftMetaSkull.SKULL_PROFILE.NBT,
+                        CraftMetaSpawnEgg.ENTITY_TAG.NBT,
                         CraftMetaBlockState.BLOCK_ENTITY_TAG.NBT,
                         CraftMetaBook.BOOK_TITLE.NBT,
                         CraftMetaBook.BOOK_AUTHOR.NBT,
@@ -993,18 +994,16 @@ class CraftMetaItem implements ItemMeta, Repairable {
     // Spigot start
     private final Spigot spigot = new Spigot()
     {
-        private boolean unbreakable;
-
         @Override
         public void setUnbreakable(boolean setUnbreakable)
         {
-            unbreakable = setUnbreakable;
+            CraftMetaItem.this.setUnbreakable(setUnbreakable);
         }
 
         @Override
         public boolean isUnbreakable()
         {
-            return unbreakable;
+            return CraftMetaItem.this.unbreakable;
         }
     };
 

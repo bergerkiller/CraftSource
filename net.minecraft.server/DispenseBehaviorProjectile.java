@@ -12,10 +12,10 @@ public abstract class DispenseBehaviorProjectile extends DispenseBehaviorItem {
     public ItemStack b(ISourceBlock isourceblock, ItemStack itemstack) {
         World world = isourceblock.getWorld();
         IPosition iposition = BlockDispenser.a(isourceblock);
-        EnumDirection enumdirection = BlockDispenser.e(isourceblock.f());
+        EnumDirection enumdirection = (EnumDirection) isourceblock.e().get(BlockDispenser.FACING);
         IProjectile iprojectile = this.a(world, iposition, itemstack);
 
-        // iprojectile.shoot((double) enumdirection.getAdjacentX(), (double) ((float) enumdirection.getAdjacentY() + 0.1F), (double) enumdirection.getAdjacentZ(), this.b(), this.a());
+        // iprojectile.shoot((double) enumdirection.getAdjacentX(), (double) ((float) enumdirection.getAdjacentY() + 0.1F), (double) enumdirection.getAdjacentZ(), this.getPower(), this.a());
         // CraftBukkit start
         ItemStack itemstack1 = itemstack.cloneAndSubtract(1);
         org.bukkit.block.Block block = world.getWorld().getBlockAt(isourceblock.getBlockPosition().getX(), isourceblock.getBlockPosition().getY(), isourceblock.getBlockPosition().getZ());
@@ -27,12 +27,12 @@ public abstract class DispenseBehaviorProjectile extends DispenseBehaviorItem {
         }
 
         if (event.isCancelled()) {
-            itemstack.count++;
+            itemstack.add(1);
             return itemstack;
         }
 
         if (!event.getItem().equals(craftItem)) {
-            itemstack.count++;
+            itemstack.add(1);
             // Chain to handler for new item
             ItemStack eventStack = CraftItemStack.asNMSCopy(event.getItem());
             IDispenseBehavior idispensebehavior = (IDispenseBehavior) BlockDispenser.REGISTRY.get(eventStack.getItem());
@@ -46,7 +46,7 @@ public abstract class DispenseBehaviorProjectile extends DispenseBehaviorItem {
         ((Entity) iprojectile).projectileSource = new org.bukkit.craftbukkit.projectiles.CraftBlockProjectileSource((TileEntityDispenser) isourceblock.getTileEntity());
         // CraftBukkit end
         world.addEntity((Entity) iprojectile);
-        // itemstack.a(1); // CraftBukkit - Handled during event processing
+        // itemstack.subtract(1); // CraftBukkit - Handled during event processing
         return itemstack;
     }
 

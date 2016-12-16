@@ -26,7 +26,7 @@ public class ServerStatisticManager extends StatisticManager {
     private final File d;
     private final Set<Statistic> e = Sets.newHashSet();
     private int f = -300;
-    private boolean g = false;
+    private boolean g;
 
     public ServerStatisticManager(MinecraftServer minecraftserver, File file) {
         this.c = minecraftserver;
@@ -47,9 +47,9 @@ public class ServerStatisticManager extends StatisticManager {
                 this.a.clear();
                 this.a.putAll(this.a(FileUtils.readFileToString(this.d)));
             } catch (IOException ioexception) {
-                ServerStatisticManager.b.error("Couldn\'t read statistics file " + this.d, ioexception);
+                ServerStatisticManager.b.error("Couldn\'t read statistics file {}", new Object[] { this.d, ioexception});
             } catch (JsonParseException jsonparseexception) {
-                ServerStatisticManager.b.error("Couldn\'t parse statistics file " + this.d, jsonparseexception);
+                ServerStatisticManager.b.error("Couldn\'t parse statistics file {}", new Object[] { this.d, jsonparseexception});
             }
         }
 
@@ -73,14 +73,14 @@ public class ServerStatisticManager extends StatisticManager {
         this.e.add(statistic);
         if (statistic.d() && j == 0 && i > 0) {
             this.g = true;
-            if (this.c.ax()) {
+            if (this.c.ay()) {
                 this.c.getPlayerList().sendMessage(new ChatMessage("chat.type.achievement", new Object[] { entityhuman.getScoreboardDisplayName(), statistic.j()}));
             }
         }
 
         if (statistic.d() && j > 0 && i == 0) {
             this.g = true;
-            if (this.c.ax()) {
+            if (this.c.ay()) {
                 this.c.getPlayerList().sendMessage(new ChatMessage("chat.type.achievement.taken", new Object[] { entityhuman.getScoreboardDisplayName(), statistic.j()}));
             }
         }
@@ -129,14 +129,14 @@ public class ServerStatisticManager extends StatisticManager {
                                 ijsonstatistic.a(jsonobject1.get("progress"));
                                 statisticwrapper.a(ijsonstatistic);
                             } catch (Throwable throwable) {
-                                ServerStatisticManager.b.warn("Invalid statistic progress in " + this.d, throwable);
+                                ServerStatisticManager.b.warn("Invalid statistic progress in {}", new Object[] { this.d, throwable});
                             }
                         }
                     }
 
                     hashmap.put(statistic, statisticwrapper);
                 } else {
-                    ServerStatisticManager.b.warn("Invalid statistic in " + this.d + ": Don\'t know what " + (String) entry.getKey() + " is");
+                    ServerStatisticManager.b.warn("Invalid statistic in {}: Don\'t know what {} is", new Object[] { this.d, entry.getKey()});
                 }
             }
 
@@ -159,7 +159,7 @@ public class ServerStatisticManager extends StatisticManager {
                 try {
                     jsonobject1.add("progress", ((StatisticWrapper) entry.getValue()).b().a());
                 } catch (Throwable throwable) {
-                    ServerStatisticManager.b.warn("Couldn\'t save statistic " + ((Statistic) entry.getKey()).e() + ": error serializing progress", throwable);
+                    ServerStatisticManager.b.warn("Couldn\'t save statistic {}: error serializing progress", new Object[] { ((Statistic) entry.getKey()).e(), throwable});
                 }
 
                 jsonobject.add(((Statistic) entry.getKey()).name, jsonobject1);
@@ -183,7 +183,7 @@ public class ServerStatisticManager extends StatisticManager {
     }
 
     public void a(EntityPlayer entityplayer) {
-        int i = this.c.ap();
+        int i = this.c.aq();
         HashMap hashmap = Maps.newHashMap();
 
         if (this.g || i - this.f > 300) {

@@ -14,6 +14,10 @@ public class EntityThrownExpBottle extends EntityProjectile {
         super(world, d0, d1, d2);
     }
 
+    public static void b(DataConverterManager dataconvertermanager) {
+        EntityProjectile.a(dataconvertermanager, "ThrowableExpBottle");
+    }
+
     protected float j() {
         return 0.07F;
     }
@@ -21,14 +25,14 @@ public class EntityThrownExpBottle extends EntityProjectile {
     protected void a(MovingObjectPosition movingobjectposition) {
         if (!this.world.isClientSide) {
             // CraftBukkit - moved to after event
-            // this.world.triggerEffect(2002, new BlockPosition(this), 0);
+            // this.world.triggerEffect(2002, new BlockPosition(this), PotionUtil.a(Potions.b));
             int i = 3 + this.world.random.nextInt(5) + this.world.random.nextInt(5);
 
             // CraftBukkit start
             org.bukkit.event.entity.ExpBottleEvent event = org.bukkit.craftbukkit.event.CraftEventFactory.callExpBottleEvent(this, i);
             i = event.getExperience();
             if (event.getShowEffect()) {
-                this.world.triggerEffect(2002, new BlockPosition(this), 0);
+                this.world.triggerEffect(2002, new BlockPosition(this), PotionUtil.a(Potions.b));
             }
             // CraftBukkit end
 

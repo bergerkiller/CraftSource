@@ -13,6 +13,7 @@ import org.bukkit.Note;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.Particle;
 import org.bukkit.Sound;
+import org.bukkit.SoundCategory;
 import org.bukkit.Statistic;
 import org.bukkit.WeatherType;
 import org.bukkit.command.CommandSender;
@@ -242,6 +243,64 @@ public interface Player extends HumanEntity, Conversable, CommandSender, Offline
     public void playSound(Location location, String sound, float volume, float pitch);
 
     /**
+     * Play a sound for a player at the location.
+     * <p>
+     * This function will fail silently if Location or Sound are null.
+     *
+     * @param location The location to play the sound
+     * @param sound The sound to play
+     * @param category The category of the sound
+     * @param volume The volume of the sound
+     * @param pitch The pitch of the sound
+     */
+    public void playSound(Location location, Sound sound, SoundCategory category, float volume, float pitch);
+
+    /**
+     * Play a sound for a player at the location.
+     * <p>
+     * This function will fail silently if Location or Sound are null. No sound
+     * will be heard by the player if their client does not have the respective
+     * sound for the value passed.
+     *
+     * @param location the location to play the sound
+     * @param sound the internal sound name to play
+     * @param category The category of the sound
+     * @param volume the volume of the sound
+     * @param pitch the pitch of the sound
+     */
+    public void playSound(Location location, String sound, SoundCategory category, float volume, float pitch);
+
+    /**
+     * Stop the specified sound from playing.
+     *
+     * @param sound the sound to stop
+     */
+    public void stopSound(Sound sound);
+
+    /**
+     * Stop the specified sound from playing.
+     *
+     * @param sound the sound to stop
+     */
+    public void stopSound(String sound);
+
+    /**
+     * Stop the specified sound from playing.
+     *
+     * @param sound the sound to stop
+     * @param category the category of the sound
+     */
+    public void stopSound(Sound sound, SoundCategory category);
+
+    /**
+     * Stop the specified sound from playing.
+     *
+     * @param sound the sound to stop
+     * @param category the category of the sound
+     */
+    public void stopSound(String sound, SoundCategory category);
+
+    /**
      * Plays an effect to just this player.
      *
      * @param loc the location to play the effect at
@@ -334,10 +393,8 @@ public interface Player extends HumanEntity, Conversable, CommandSender, Offline
     /**
      * Forces an update of the player's entire inventory.
      *
-     * @deprecated This method should not be relied upon as it is a temporary
-     *     work-around for a larger, more complicated issue.
      */
-    @Deprecated
+    //@Deprecated // Spigot - undeprecate
     public void updateInventory();
 
     /**
@@ -1062,22 +1119,37 @@ public interface Player extends HumanEntity, Conversable, CommandSender, Offline
      * values are null, they will not be sent and the display will remain
      * unchanged. If they are empty strings, the display will be updated as
      * such. If the strings contain a new line, only the first line will be
-     * sent.
+     * sent. The titles will be displayed with the client's default timings.
      *
      * @param title Title text
      * @param subtitle Subtitle text
-     * @deprecated API subject to change
+     * @deprecated API behavior subject to change
      */
     @Deprecated
     public void sendTitle(String title, String subtitle);
 
     /**
-     * Resets the title displayed to the player.
-     * @deprecated API subject to change.
+     * Sends a title and a subtitle message to the player. If either of these
+     * values are null, they will not be sent and the display will remain
+     * unchanged. If they are empty strings, the display will be updated as
+     * such. If the strings contain a new line, only the first line will be
+     * sent. All timings values may take a value of -1 to indicate that they
+     * will use the last value sent (or the defaults if no title has been
+     * displayed).
+     *
+     * @param title Title text
+     * @param subtitle Subtitle text
+     * @param fadeIn time in ticks for titles to fade in. Defaults to 10.
+     * @param stay time in ticks for titles to stay. Defaults to 70.
+     * @param fadeOut time in ticks for titles to fade out. Defaults to 20.
      */
-    @Deprecated
-    public void resetTitle();
+    public void sendTitle(String title, String subtitle, int fadeIn, int stay, int fadeOut);
 
+    /**
+     * Resets the title displayed to the player. This will clear the displayed
+     * title / subtitle and reset timings to their default values.
+     */
+    public void resetTitle();
 
     /**
      * Spawns the particle (the number of times specified by count)
@@ -1272,4 +1344,119 @@ public interface Player extends HumanEntity, Conversable, CommandSender, Offline
      */
     public <T> void spawnParticle(Particle particle, double x, double y, double z, int count, double offsetX, double offsetY, double offsetZ, double extra, T data);
 
+    // Spigot start
+    public class Spigot extends Entity.Spigot
+    {
+
+        /**
+         * Gets the connection address of this player, regardless of whether it
+         * has been spoofed or not.
+         *
+         * @return the player's connection address
+         */
+        public InetSocketAddress getRawAddress()
+        {
+            throw new UnsupportedOperationException( "Not supported yet." );
+        }
+
+        @Deprecated
+        public void playEffect(Location location, Effect effect, int id, int data, float offsetX, float offsetY, float offsetZ, float speed, int particleCount, int radius)
+        {
+            throw new UnsupportedOperationException( "Not supported yet." );
+        }
+
+        /**
+         * Gets whether the player collides with entities
+         *
+         * @return the player's collision toggle state
+         * @deprecated see {@link LivingEntity#isCollidable()}
+         */
+        @Deprecated
+        public boolean getCollidesWithEntities()
+        {
+            throw new UnsupportedOperationException( "Not supported yet." );
+        }
+
+        /**
+         * Sets whether the player collides with entities
+         *
+         * @param collides whether the player should collide with entities or
+         * not.
+         * @deprecated {@link LivingEntity#setCollidable(boolean)}
+         */
+        @Deprecated
+        public void setCollidesWithEntities(boolean collides)
+        {
+            throw new UnsupportedOperationException( "Not supported yet." );
+        }
+
+        /**
+         * Respawns the player if dead.
+         */
+        public void respawn()
+        {
+            throw new UnsupportedOperationException( "Not supported yet." );
+        }
+
+        /**
+         * Gets player locale language.
+         *
+         * @return the player's client language settings
+         */
+        public String getLocale()
+        {
+            throw new UnsupportedOperationException( "Not supported yet." );
+        }
+
+        /**
+         * Gets all players hidden with {@link #hidePlayer(org.bukkit.entity.Player)}.
+         *
+         * @return a Set with all hidden players
+         */
+        public java.util.Set<Player> getHiddenPlayers()
+        {
+            throw new UnsupportedOperationException( "Not supported yet." );
+        }
+
+        /**
+         * Sends the component to the player
+         *
+         * @param component the components to send
+         */
+        public void sendMessage(net.md_5.bungee.api.chat.BaseComponent component) {
+            throw new UnsupportedOperationException("Not supported yet.");
+        }
+
+        /**
+         * Sends an array of components as a single message to the player
+         *
+         * @param components the components to send
+         */
+        public void sendMessage(net.md_5.bungee.api.chat.BaseComponent... components) {
+            throw new UnsupportedOperationException("Not supported yet.");
+        }
+
+        /**
+         * Sends the component to the specified screen position of this player
+         *
+         * @param position the screen position
+         * @param component the components to send
+         */
+        public void sendMessage(net.md_5.bungee.api.ChatMessageType position, net.md_5.bungee.api.chat.BaseComponent component) {
+            throw new UnsupportedOperationException("Not supported yet.");
+        }
+
+        /**
+         * Sends an array of components as a single message to the specified screen position of this player
+         *
+         * @param position the screen position
+         * @param component the components to send
+         */
+        public void sendMessage(net.md_5.bungee.api.ChatMessageType position, net.md_5.bungee.api.chat.BaseComponent... components) {
+            throw new UnsupportedOperationException("Not supported yet.");
+        }
+    }
+
+    Spigot spigot();
+    // Spigot end
 }

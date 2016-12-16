@@ -31,7 +31,6 @@ public class BlockRedstoneOre extends Block {
 
     public void stepOn(World world, BlockPosition blockposition, Entity entity) {
         // CraftBukkit start
-        // PAIL: Rename this method
         // this.interact(world, blockposition);
         // super.stepOn(world, blockposition, entity);
         if (entity instanceof EntityHuman) {
@@ -52,16 +51,16 @@ public class BlockRedstoneOre extends Block {
     }
 
 
-    public boolean interact(World world, BlockPosition blockposition, IBlockData iblockdata, EntityHuman entityhuman, EnumHand enumhand, ItemStack itemstack, EnumDirection enumdirection, float f, float f1, float f2) {
+    public boolean interact(World world, BlockPosition blockposition, IBlockData iblockdata, EntityHuman entityhuman, EnumHand enumhand, EnumDirection enumdirection, float f, float f1, float f2) {
         this.interact(world, blockposition, entityhuman); // CraftBukkit - add entityhuman
-        return super.interact(world, blockposition, iblockdata, entityhuman, enumhand, itemstack, enumdirection, f, f1, f2);
+        return super.interact(world, blockposition, iblockdata, entityhuman, enumhand, enumdirection, f, f1, f2);
     }
 
     private void interact(World world, BlockPosition blockposition, Entity entity) { // CraftBukkit - add Entity
         this.playEffect(world, blockposition);
         if (this == Blocks.REDSTONE_ORE) {
             // CraftBukkit start
-            if (CraftEventFactory.callEntityChangeBlockEvent(entity, blockposition.getX(), blockposition.getY(), blockposition.getZ(), Blocks.LIT_REDSTONE_ORE, 0).isCancelled()) {
+            if (CraftEventFactory.callEntityChangeBlockEvent(entity, blockposition, Blocks.LIT_REDSTONE_ORE, 0).isCancelled()) {
                 return;
             }
             // CraftBukkit end
@@ -103,6 +102,7 @@ public class BlockRedstoneOre extends Block {
             this.dropExperience(world, blockposition, j);
         }
         // */
+
     }
 
     @Override
@@ -125,28 +125,28 @@ public class BlockRedstoneOre extends Block {
             double d2 = (double) ((float) blockposition.getY() + random.nextFloat());
             double d3 = (double) ((float) blockposition.getZ() + random.nextFloat());
 
-            if (i == 0 && !world.getType(blockposition.up()).p()) {
-                d2 = (double) blockposition.getY() + d0 + 1.0D;
+            if (i == 0 && !world.getType(blockposition.up()).q()) {
+                d2 = (double) blockposition.getY() + 0.0625D + 1.0D;
             }
 
-            if (i == 1 && !world.getType(blockposition.down()).p()) {
-                d2 = (double) blockposition.getY() - d0;
+            if (i == 1 && !world.getType(blockposition.down()).q()) {
+                d2 = (double) blockposition.getY() - 0.0625D;
             }
 
-            if (i == 2 && !world.getType(blockposition.south()).p()) {
-                d3 = (double) blockposition.getZ() + d0 + 1.0D;
+            if (i == 2 && !world.getType(blockposition.south()).q()) {
+                d3 = (double) blockposition.getZ() + 0.0625D + 1.0D;
             }
 
-            if (i == 3 && !world.getType(blockposition.north()).p()) {
-                d3 = (double) blockposition.getZ() - d0;
+            if (i == 3 && !world.getType(blockposition.north()).q()) {
+                d3 = (double) blockposition.getZ() - 0.0625D;
             }
 
-            if (i == 4 && !world.getType(blockposition.east()).p()) {
-                d1 = (double) blockposition.getX() + d0 + 1.0D;
+            if (i == 4 && !world.getType(blockposition.east()).q()) {
+                d1 = (double) blockposition.getX() + 0.0625D + 1.0D;
             }
 
-            if (i == 5 && !world.getType(blockposition.west()).p()) {
-                d1 = (double) blockposition.getX() - d0;
+            if (i == 5 && !world.getType(blockposition.west()).q()) {
+                d1 = (double) blockposition.getX() - 0.0625D;
             }
 
             if (d1 < (double) blockposition.getX() || d1 > (double) (blockposition.getX() + 1) || d2 < 0.0D || d2 > (double) (blockposition.getY() + 1) || d3 < (double) blockposition.getZ() || d3 > (double) (blockposition.getZ() + 1)) {
@@ -156,7 +156,7 @@ public class BlockRedstoneOre extends Block {
 
     }
 
-    protected ItemStack u(IBlockData iblockdata) {
+    protected ItemStack w(IBlockData iblockdata) {
         return new ItemStack(Blocks.REDSTONE_ORE);
     }
 

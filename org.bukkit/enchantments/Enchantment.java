@@ -61,6 +61,11 @@ public abstract class Enchantment {
     public static final Enchantment FROST_WALKER = new EnchantmentWrapper(9);
 
     /**
+     * Item cannot be removed
+     */
+    public static final Enchantment BINDING_CURSE = new EnchantmentWrapper(10);
+
+    /**
      * Increases damage against all targets
      */
     public static final Enchantment DAMAGE_ALL = new EnchantmentWrapper(16);
@@ -146,6 +151,11 @@ public abstract class Enchantment {
      */
     public static final Enchantment MENDING = new EnchantmentWrapper(70);
 
+    /**
+     * Item disappears instead of dropping
+     */
+    public static final Enchantment VANISHING_CURSE = new EnchantmentWrapper(71);
+
     private static final Map<Integer, Enchantment> byId = new HashMap<Integer, Enchantment>();
     private static final Map<String, Enchantment> byName = new HashMap<String, Enchantment>();
     private static boolean acceptingNew = true;
@@ -193,6 +203,25 @@ public abstract class Enchantment {
      * @return Target type of the Enchantment
      */
     public abstract EnchantmentTarget getItemTarget();
+
+    /**
+     * Checks if this enchantment is a treasure enchantment.
+     * <br>
+     * Treasure enchantments can only be received via looting, trading, or
+     * fishing.
+     *
+     * @return true if the enchantment is a treasure enchantment
+     */
+    public abstract boolean isTreasure();
+
+    /**
+     * Checks if this enchantment is a cursed enchantment
+     * <br>
+     * Cursed enchantments are found the same way treasure enchantments are
+     *
+     * @return true if the enchantment is cursed
+     */
+    public abstract boolean isCursed();
 
     /**
      * Check if this enchantment conflicts with another enchantment.

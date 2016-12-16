@@ -49,7 +49,10 @@ public enum Particle {
     DRAGON_BREATH,
     END_ROD,
     DAMAGE_INDICATOR,
-    SWEEP_ATTACK;
+    SWEEP_ATTACK,
+    FALLING_DUST(MaterialData.class),
+    TOTEM,
+    SPIT;
 
     private final Class<?> dataType;
 

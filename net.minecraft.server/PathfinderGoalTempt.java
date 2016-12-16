@@ -2,21 +2,27 @@ package net.minecraft.server;
 
 import com.google.common.collect.Sets;
 import java.util.Set;
+// CraftBukkit start
+import org.bukkit.craftbukkit.entity.CraftLivingEntity;
+import org.bukkit.craftbukkit.event.CraftEventFactory;
+import org.bukkit.event.entity.EntityTargetEvent;
+import org.bukkit.event.entity.EntityTargetLivingEntityEvent;
+// CraftBukkit end
 
 public class PathfinderGoalTempt extends PathfinderGoal {
 
-    private EntityCreature a;
-    private double b;
+    private final EntityCreature a;
+    private final double b;
     private double c;
     private double d;
     private double e;
     private double f;
     private double g;
-    private EntityHuman h;
+    private EntityLiving h; // CraftBukkit
     private int i;
     private boolean j;
-    private Set<Item> k;
-    private boolean l;
+    private final Set<Item> k;
+    private final boolean l;
 
     public PathfinderGoalTempt(EntityCreature entitycreature, double d0, Item item, boolean flag) {
         this(entitycreature, d0, flag, Sets.newHashSet(new Item[] { item}));
@@ -39,18 +45,29 @@ public class PathfinderGoalTempt extends PathfinderGoal {
             return false;
         } else {
             this.h = this.a.world.findNearbyPlayer(this.a, 10.0D);
-            return this.h == null ? false : this.a(this.h.getItemInMainHand()) || this.a(this.h.getItemInOffHand());
+            // CraftBukkit start
+            // PAIL: rename
+            boolean tempt = this.h == null ? false : this.a(this.h.getItemInMainHand()) || this.a(this.h.getItemInOffHand());
+            if (tempt) {
+                EntityTargetLivingEntityEvent event = CraftEventFactory.callEntityTargetLivingEvent(this.a, this.h, EntityTargetEvent.TargetReason.TEMPT);
+                if (event.isCancelled()) {
+                    return false;
+                }
+                this.h = ((CraftLivingEntity) event.getTarget()).getHandle();
+            }
+            return tempt;
+            // CraftBukkit end
         }
     }
 
     protected boolean a(ItemStack itemstack) {
-        return itemstack == null ? false : this.k.contains(itemstack.getItem());
+        return this.k.contains(itemstack.getItem());
     }
 
     public boolean b() {
         if (this.l) {
             if (this.a.h(this.h) < 36.0D) {
-                if (this.h.e(this.c, this.d, this.e) > 0.010000000000000002D) {
+                if (this.h.d(this.c, this.d, this.e) > 0.010000000000000002D) {
                     return false;
                 }
 
@@ -85,7 +102,7 @@ public class PathfinderGoalTempt extends PathfinderGoal {
     }
 
     public void e() {
-        this.a.getControllerLook().a(this.h, (float) (this.a.cE() + 20), (float) this.a.N());
+        this.a.getControllerLook().a(this.h, (float) (this.a.cL() + 20), (float) this.a.N());
         if (this.a.h(this.h) < 6.25D) {
             this.a.getNavigation().o();
         } else {

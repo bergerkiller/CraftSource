@@ -277,6 +277,16 @@ public interface LivingEntity extends Attributable, Entity, Damageable, Projecti
     public boolean hasPotionEffect(PotionEffectType type);
 
     /**
+     * Returns the active {@link PotionEffect} of the specified type.
+     * <p>
+     * If the effect is not present on the entity then null will be returned.
+     *
+     * @param type the potion type to check
+     * @return the effect active on this entity, or null if not active.
+     */
+    public PotionEffect getPotionEffect(PotionEffectType type);
+
+    /**
      * Removes any effects present of the given {@link PotionEffectType}.
      *
      * @param type the potion type to remove
@@ -328,6 +338,8 @@ public interface LivingEntity extends Attributable, Entity, Damageable, Projecti
 
     /**
      * Sets whether or not the living entity can pick up items.
+     * <p>
+     * This method has no effect on a {@link HumanEntity}.
      *
      * @param pickup whether or not the living entity can pick up items
      */
@@ -366,4 +378,54 @@ public interface LivingEntity extends Attributable, Entity, Damageable, Projecti
      * @return whether the operation was successful
      */
     public boolean setLeashHolder(Entity holder);
+
+    /**
+     * Checks to see if an entity is gliding, such as using an Elytra.
+     * @return True if this entity is gliding.
+     */
+    public boolean isGliding();
+
+    /**
+     * Makes entity start or stop gliding. This will work even if an Elytra
+     * is not equipped, but will be reverted by the server immediately after
+     * unless an event-cancelling mechanism is put in place.
+     * @param gliding True if the entity is gliding.
+     */
+    public void setGliding(boolean gliding);
+
+    /**
+     * Sets whether an entity will have AI.
+     *
+     * @param ai whether the mob will have AI or not.
+     */
+    void setAI(boolean ai);
+
+    /**
+     * Checks whether an entity has AI.
+     *
+     * @return true if the entity has AI, otherwise false.
+     */
+    boolean hasAI();
+
+    /**
+     * Set if this entity will be subject to collisions other entities.
+     * <p>
+     * Note that collisions are bidirectional, so this method would need to be
+     * set to false on both the collidee and the collidant to ensure no
+     * collisions take place.
+     *
+     * @param collidable collision status
+     */
+    void setCollidable(boolean collidable);
+
+    /**
+     * Gets if this entity is subject to collisions with other entities.
+     * <p>
+     * Please note that this method returns only the custom collidable state,
+     * not whether the entity is non-collidable for other reasons such as being
+     * dead.
+     *
+     * @return collision status
+     */
+    boolean isCollidable();
 }

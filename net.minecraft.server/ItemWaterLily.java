@@ -6,7 +6,8 @@ public class ItemWaterLily extends ItemWithAuxData {
         super(block, false);
     }
 
-    public InteractionResultWrapper<ItemStack> a(ItemStack itemstack, World world, EntityHuman entityhuman, EnumHand enumhand) {
+    public InteractionResultWrapper<ItemStack> a(World world, EntityHuman entityhuman, EnumHand enumhand) {
+        ItemStack itemstack = entityhuman.b(enumhand);
         MovingObjectPosition movingobjectposition = this.a(world, entityhuman, true);
 
         if (movingobjectposition == null) {
@@ -33,11 +34,11 @@ public class ItemWaterLily extends ItemWithAuxData {
                     }
                     // CraftBukkit end
                     if (!entityhuman.abilities.canInstantlyBuild) {
-                        --itemstack.count;
+                        itemstack.subtract(1);
                     }
 
                     entityhuman.b(StatisticList.b((Item) this));
-                    world.a(entityhuman, blockposition, SoundEffects.gv, SoundCategory.BLOCKS, 1.0F, 1.0F);
+                    world.a(entityhuman, blockposition, SoundEffects.hp, SoundCategory.BLOCKS, 1.0F, 1.0F);
                     return new InteractionResultWrapper(EnumInteractionResult.SUCCESS, itemstack);
                 }
             }

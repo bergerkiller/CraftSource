@@ -24,14 +24,14 @@ public class BlockDropper extends BlockDispenser {
         TileEntityDispenser tileentitydispenser = (TileEntityDispenser) sourceblock.getTileEntity();
 
         if (tileentitydispenser != null) {
-            int i = tileentitydispenser.m();
+            int i = tileentitydispenser.o();
 
             if (i < 0) {
                 world.triggerEffect(1001, blockposition, 0);
             } else {
                 ItemStack itemstack = tileentitydispenser.getItem(i);
 
-                if (itemstack != null) {
+                if (!itemstack.isEmpty()) {
                     EnumDirection enumdirection = (EnumDirection) world.getType(blockposition).get(BlockDropper.FACING);
                     BlockPosition blockposition1 = blockposition.shift(enumdirection);
                     IInventory iinventory = TileEntityHopper.b(world, (double) blockposition1.getX(), (double) blockposition1.getY(), (double) blockposition1.getZ());
@@ -39,9 +39,6 @@ public class BlockDropper extends BlockDispenser {
 
                     if (iinventory == null) {
                         itemstack1 = this.e.a(sourceblock, itemstack);
-                        if (itemstack1 != null && itemstack1.count <= 0) {
-                            itemstack1 = null;
-                        }
                     } else {
                         // CraftBukkit start - Fire event when pushing items into other inventories
                         CraftItemStack oitemstack = CraftItemStack.asCraftMirror(itemstack.cloneItemStack().cloneAndSubtract(1));
@@ -59,13 +56,11 @@ public class BlockDropper extends BlockDispenser {
                         if (event.isCancelled()) {
                             return;
                         }
-                        itemstack1 = TileEntityHopper.addItem(iinventory, CraftItemStack.asNMSCopy(event.getItem()), enumdirection.opposite());
-                        if (event.getItem().equals(oitemstack) && itemstack1 == null) {
+                        itemstack1 = TileEntityHopper.addItem(tileentitydispenser, iinventory, CraftItemStack.asNMSCopy(event.getItem()), enumdirection.opposite());
+                        if (event.getItem().equals(oitemstack) && itemstack1.isEmpty()) {
                             // CraftBukkit end
                             itemstack1 = itemstack.cloneItemStack();
-                            if (--itemstack1.count <= 0) {
-                                itemstack1 = null;
-                            }
+                            itemstack1.subtract(1);
                         } else {
                             itemstack1 = itemstack.cloneItemStack();
                         }

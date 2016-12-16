@@ -1,51 +1,27 @@
 package net.minecraft.server;
 
-// CraftBukkit start
-import java.util.List;
-import org.bukkit.craftbukkit.entity.CraftHumanEntity;
-import org.bukkit.entity.HumanEntity;
-// CraftBukkit end
+import org.bukkit.Location;
+import org.bukkit.inventory.InventoryHolder;
 
 public class InventoryEnderChest extends InventorySubcontainer {
 
     private TileEntityEnderChest a;
+    // CraftBukkit start
+    private final EntityHuman owner;
 
-    // CraftBukkit start - add fields and methods
-    public List<HumanEntity> transaction = new java.util.ArrayList<HumanEntity>();
-    public org.bukkit.entity.Player player;
-    private int maxStack = MAX_STACK;
-
-    public ItemStack[] getContents() {
-        return this.items;
+    public InventoryHolder getBukkitOwner() {
+        return owner.getBukkitEntity();
     }
 
-    public void onOpen(CraftHumanEntity who) {
-        transaction.add(who);
+    @Override
+    public Location getLocation() {
+        return new Location(this.a.getWorld().getWorld(), this.a.getPosition().getX(), this.a.getPosition().getY(), this.a.getPosition().getZ());
     }
 
-    public void onClose(CraftHumanEntity who) {
-        transaction.remove(who);
-    }
-
-    public List<HumanEntity> getViewers() {
-        return transaction;
-    }
-
-    public org.bukkit.inventory.InventoryHolder getOwner() {
-        return this.player;
-    }
-
-    public void setMaxStackSize(int size) {
-        maxStack = size;
-    }
-
-    public int getMaxStackSize() {
-        return maxStack;
-    }
-    // CraftBukkit end
-
-    public InventoryEnderChest() {
+    public InventoryEnderChest(EntityHuman owner) {
         super("container.enderchest", false, 27);
+        this.owner = owner;
+        // CraftBukkit end
     }
 
     public void a(TileEntityEnderChest tileentityenderchest) {
@@ -56,7 +32,7 @@ public class InventoryEnderChest extends InventorySubcontainer {
         int i;
 
         for (i = 0; i < this.getSize(); ++i) {
-            this.setItem(i, (ItemStack) null);
+            this.setItem(i, ItemStack.a);
         }
 
         for (i = 0; i < nbttaglist.size(); ++i) {
@@ -64,19 +40,19 @@ public class InventoryEnderChest extends InventorySubcontainer {
             int j = nbttagcompound.getByte("Slot") & 255;
 
             if (j >= 0 && j < this.getSize()) {
-                this.setItem(j, ItemStack.createStack(nbttagcompound));
+                this.setItem(j, new ItemStack(nbttagcompound));
             }
         }
 
     }
 
-    public NBTTagList h() {
+    public NBTTagList i() {
         NBTTagList nbttaglist = new NBTTagList();
 
         for (int i = 0; i < this.getSize(); ++i) {
             ItemStack itemstack = this.getItem(i);
 
-            if (itemstack != null) {
+            if (!itemstack.isEmpty()) {
                 NBTTagCompound nbttagcompound = new NBTTagCompound();
 
                 nbttagcompound.setByte("Slot", (byte) i);
@@ -94,7 +70,7 @@ public class InventoryEnderChest extends InventorySubcontainer {
 
     public void startOpen(EntityHuman entityhuman) {
         if (this.a != null) {
-            this.a.b();
+            this.a.a();
         }
 
         super.startOpen(entityhuman);
@@ -102,7 +78,7 @@ public class InventoryEnderChest extends InventorySubcontainer {
 
     public void closeContainer(EntityHuman entityhuman) {
         if (this.a != null) {
-            this.a.d();
+            this.a.e();
         }
 
         super.closeContainer(entityhuman);

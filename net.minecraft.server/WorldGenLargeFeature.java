@@ -11,9 +11,9 @@ import java.util.Map.Entry;
 public class WorldGenLargeFeature extends StructureGenerator {
 
     private static final List<BiomeBase> a = Arrays.asList(new BiomeBase[] { Biomes.d, Biomes.s, Biomes.w, Biomes.x, Biomes.h, Biomes.n, Biomes.F});
-    private List<BiomeBase.BiomeMeta> b;
+    private final List<BiomeBase.BiomeMeta> b;
     private int d;
-    private int h;
+    private final int h;
 
     public WorldGenLargeFeature() {
         this.b = Lists.newArrayList();
@@ -30,7 +30,7 @@ public class WorldGenLargeFeature extends StructureGenerator {
             Entry entry = (Entry) iterator.next();
 
             if (((String) entry.getKey()).equals("distance")) {
-                this.d = MathHelper.a((String) entry.getValue(), this.d, this.h + 1);
+                this.d = MathHelper.a((String) entry.getValue(), this.d, 9);
             }
         }
 
@@ -58,8 +58,8 @@ public class WorldGenLargeFeature extends StructureGenerator {
 
         i1 *= this.d;
         j1 *= this.d;
-        i1 += random.nextInt(this.d - this.h);
-        j1 += random.nextInt(this.d - this.h);
+        i1 += random.nextInt(this.d - 8);
+        j1 += random.nextInt(this.d - 8);
         if (k == i1 && l == j1) {
             BiomeBase biomebase = this.g.getWorldChunkManager().getBiome(new BlockPosition(k * 16 + 8, 0, l * 16 + 8));
 
@@ -79,6 +79,11 @@ public class WorldGenLargeFeature extends StructureGenerator {
         }
 
         return false;
+    }
+
+    public BlockPosition getNearestGeneratedFeature(World world, BlockPosition blockposition, boolean flag) {
+        this.g = world;
+        return a(world, this, blockposition, this.d, 8, 14357617, false, 100, flag);
     }
 
     protected StructureStart b(int i, int j) {

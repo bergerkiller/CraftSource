@@ -1,11 +1,12 @@
 package net.minecraft.server;
 
 import java.util.Iterator;
+import javax.annotation.Nullable;
 
 public class WorldManager implements IWorldAccess {
 
-    private MinecraftServer a;
-    private WorldServer world;
+    private final MinecraftServer a;
+    private final WorldServer world;
 
     public WorldManager(MinecraftServer minecraftserver, WorldServer worldserver) {
         this.a = minecraftserver;
@@ -13,6 +14,8 @@ public class WorldManager implements IWorldAccess {
     }
 
     public void a(int i, boolean flag, double d0, double d1, double d2, double d3, double d4, double d5, int... aint) {}
+
+    public void a(int i, boolean flag, boolean flag1, double d0, double d1, double d2, double d3, double d4, double d5, int... aint) {}
 
     public void a(Entity entity) {
         this.world.getTracker().track(entity);
@@ -31,7 +34,7 @@ public class WorldManager implements IWorldAccess {
 
     }
 
-    public void a(EntityHuman entityhuman, SoundEffect soundeffect, SoundCategory soundcategory, double d0, double d1, double d2, float f, float f1) {
+    public void a(@Nullable EntityHuman entityhuman, SoundEffect soundeffect, SoundCategory soundcategory, double d0, double d1, double d2, float f, float f1) {
         // CraftBukkit - this.world.dimension
         this.a.getPlayerList().sendPacketNearby(entityhuman, d0, d1, d2, f > 1.0F ? (double) (16.0F * f) : 16.0D, this.world.dimension, new PacketPlayOutNamedSoundEffect(soundeffect, soundcategory, d0, d1, d2, f, f1));
     }

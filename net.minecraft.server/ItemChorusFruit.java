@@ -37,17 +37,21 @@ public class ItemChorusFruit extends ItemFood {
                     d4 = teleEvent.getTo().getY();
                     d5 = teleEvent.getTo().getZ();
                 }
+                // CraftBukkit end
 
-                if (entityliving.k(d3, d4, d5)) {
-                    // CraftBukkit end
-                    world.a((EntityHuman) null, d0, d1, d2, SoundEffects.af, SoundCategory.PLAYERS, 1.0F, 1.0F);
-                    entityliving.a(SoundEffects.af, 1.0F, 1.0F);
+                if (entityliving.isPassenger()) {
+                    entityliving.stopRiding();
+                }
+
+                if (entityliving.j(d3, d4, d5)) {
+                    world.a((EntityHuman) null, d0, d1, d2, SoundEffects.ah, SoundCategory.PLAYERS, 1.0F, 1.0F);
+                    entityliving.a(SoundEffects.ah, 1.0F, 1.0F);
                     break;
                 }
             }
 
             if (entityliving instanceof EntityHuman) {
-                ((EntityHuman) entityliving).da().a(this, 20);
+                ((EntityHuman) entityliving).di().a(this, 20);
             }
         }
 

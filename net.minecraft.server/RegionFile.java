@@ -14,10 +14,11 @@ import java.util.List;
 import java.util.zip.DeflaterOutputStream;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.InflaterInputStream;
+import javax.annotation.Nullable;
 
 public class RegionFile {
 
-    private static final byte[] a = new byte[4096]; // Spigot - note: if this ever changes to not be 4096 bytes, update constructor! // PAIL: empty 4k block
+    private static final byte[] a = new byte[4096];
     private final File b;
     private RandomAccessFile c;
     private final int[] d = new int[1024];
@@ -37,9 +38,8 @@ public class RegionFile {
 
             this.c = new RandomAccessFile(file, "rw");
             if (this.c.length() < 4096L) {
-                // Spigot - more effecient chunk zero'ing
-                this.c.write(RegionFile.a); // Spigot
-                this.c.write(RegionFile.a); // Spigot
+                this.c.write(RegionFile.a);
+                this.c.write(RegionFile.a);
                 this.g += 8192;
             }
 
@@ -125,6 +125,7 @@ public class RegionFile {
     }
     // CraftBukkit end
 
+    @Nullable
     public synchronized DataInputStream a(int i, int j) {
         if (this.d(i, j)) {
             return null;
@@ -172,9 +173,9 @@ public class RegionFile {
         }
     }
 
-    public DataOutputStream b(int i, int j) { // PAIL: getChunkOutputStream
-        // PAIL: isInvalidRegion
-        return this.d(i, j) ? null : new DataOutputStream(new java.io.BufferedOutputStream(new DeflaterOutputStream(new RegionFile.ChunkBuffer(i, j)))); // Spigot - use a BufferedOutputStream to greatly improve file write performance
+    @Nullable
+    public DataOutputStream b(int i, int j) {
+        return this.d(i, j) ? null : new DataOutputStream(new BufferedOutputStream(new DeflaterOutputStream(new RegionFile.ChunkBuffer(i, j))));
     }
 
     protected synchronized void a(int i, int j, byte[] abyte, int k) {
@@ -244,7 +245,7 @@ public class RegionFile {
                 }
             }
 
-            this.b(i, j, (int) (MinecraftServer.av() / 1000L));
+            this.b(i, j, (int) (MinecraftServer.aw() / 1000L));
         } catch (IOException ioexception) {
             ioexception.printStackTrace();
         }
@@ -291,8 +292,8 @@ public class RegionFile {
 
     class ChunkBuffer extends ByteArrayOutputStream {
 
-        private int b;
-        private int c;
+        private final int b;
+        private final int c;
 
         public ChunkBuffer(int i, int j) {
             super(8096);

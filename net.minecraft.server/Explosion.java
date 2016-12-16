@@ -8,6 +8,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import javax.annotation.Nullable;
 
 // CraftBukkit start
 import org.bukkit.craftbukkit.event.CraftEventFactory;
@@ -109,8 +110,8 @@ public class Explosion {
         for (int l1 = 0; l1 < list.size(); ++l1) {
             Entity entity = (Entity) list.get(l1);
 
-            if (!entity.bq()) {
-                double d7 = entity.f(this.posX, this.posY, this.posZ) / (double) f3;
+            if (!entity.bt()) {
+                double d7 = entity.e(this.posX, this.posY, this.posZ) / (double) f3;
 
                 if (d7 <= 1.0D) {
                     double d8 = entity.locX - this.posX;
@@ -135,7 +136,7 @@ public class Explosion {
                             continue;
                         }
                         // CraftBukkit end
-                        double d14 = 1.0D;
+                        double d14 = d13;
 
                         if (entity instanceof EntityLiving) {
                             d14 = EnchantmentProtection.a((EntityLiving) entity, d13);
@@ -147,7 +148,7 @@ public class Explosion {
                         if (entity instanceof EntityHuman) {
                             EntityHuman entityhuman = (EntityHuman) entity;
 
-                            if (!entityhuman.isSpectator() && (!entityhuman.l_() || !entityhuman.abilities.isFlying)) {
+                            if (!entityhuman.isSpectator() && (!entityhuman.z() || !entityhuman.abilities.isFlying)) {
                                 this.k.put(entityhuman, new Vec3D(d8 * d13, d9 * d13, d10 * d13));
                             }
                         }
@@ -159,7 +160,7 @@ public class Explosion {
     }
 
     public void a(boolean flag) {
-        this.world.a((EntityHuman) null, this.posX, this.posY, this.posZ, SoundEffects.bD, SoundCategory.BLOCKS, 4.0F, (1.0F + (this.world.random.nextFloat() - this.world.random.nextFloat()) * 0.2F) * 0.7F);
+        this.world.a((EntityHuman) null, this.posX, this.posY, this.posZ, SoundEffects.bP, SoundCategory.BLOCKS, 4.0F, (1.0F + (this.world.random.nextFloat() - this.world.random.nextFloat()) * 0.2F) * 0.7F);
         if (this.size >= 2.0F && this.b) {
             this.world.addParticle(EnumParticle.EXPLOSION_HUGE, this.posX, this.posY, this.posZ, 1.0D, 0.0D, 0.0D, new int[0]);
         } else {
@@ -189,13 +190,13 @@ public class Explosion {
             float yield;
 
             if (explode != null) {
-                EntityExplodeEvent event = new EntityExplodeEvent(explode, location, blockList, 0.3F);
+                EntityExplodeEvent event = new EntityExplodeEvent(explode, location, blockList, 1.0F / this.size);
                 this.world.getServer().getPluginManager().callEvent(event);
                 cancelled = event.isCancelled();
                 bukkitBlocks = event.blockList();
                 yield = event.getYield();
             } else {
-                BlockExplodeEvent event = new BlockExplodeEvent(location.getBlock(), blockList, 0.3F);
+                BlockExplodeEvent event = new BlockExplodeEvent(location.getBlock(), blockList, 1.0F / this.size);
                 this.world.getServer().getPluginManager().callEvent(event);
                 cancelled = event.isCancelled();
                 bukkitBlocks = event.blockList();
@@ -276,6 +277,7 @@ public class Explosion {
         return this.k;
     }
 
+    @Nullable
     public EntityLiving getSource() {
         // CraftBukkit start - obtain Fireball shooter for explosion tracking
         return this.source == null ? null : (this.source instanceof EntityTNTPrimed ? ((EntityTNTPrimed) this.source).getSource() : (this.source instanceof EntityLiving ? (EntityLiving) this.source : (this.source instanceof EntityFireball ? ((EntityFireball) this.source).shooter : null)));
