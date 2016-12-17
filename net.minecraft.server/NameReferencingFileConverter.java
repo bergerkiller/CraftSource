@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
+import javax.annotation.Nullable;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -54,11 +55,11 @@ public class NameReferencingFileConverter {
 
     private static void a(MinecraftServer minecraftserver, Collection<String> collection, ProfileLookupCallback profilelookupcallback) {
         String[] astring = (String[]) Iterators.toArray(Iterators.filter(collection.iterator(), new Predicate() {
-            public boolean a(String s) {
+            public boolean a(@Nullable String s) {
                 return !UtilColor.b(s);
             }
 
-            public boolean apply(Object object) {
+            public boolean apply(@Nullable Object object) {
                 return this.a((String) object);
             }
         }), String.class);
@@ -89,7 +90,7 @@ public class NameReferencingFileConverter {
                     gameprofilebanlist.load();
                 // CraftBukkit start - FileNotFoundException -> IOException, don't print stacetrace
                 } catch (IOException filenotfoundexception) {
-                    NameReferencingFileConverter.e.warn("Could not load existing file " + gameprofilebanlist.c().getName());
+                    NameReferencingFileConverter.e.warn("Could not load existing file {}", new Object[] { gameprofilebanlist.c().getName()});
                 }
             }
 
@@ -103,7 +104,7 @@ public class NameReferencingFileConverter {
                         String[] astring = (String[]) hashmap.get(gameprofile.getName().toLowerCase(Locale.ROOT));
 
                         if (astring == null) {
-                            NameReferencingFileConverter.e.warn("Could not convert user banlist entry for " + gameprofile.getName());
+                            NameReferencingFileConverter.e.warn("Could not convert user banlist entry for {}", new Object[] { gameprofile.getName()});
                             throw new NameReferencingFileConverter.FileConversionException("Profile not in the conversionlist", null);
                         } else {
                             Date date = astring.length > 1 ? NameReferencingFileConverter.b(astring[1], (Date) null) : null;
@@ -116,7 +117,7 @@ public class NameReferencingFileConverter {
                     }
 
                     public void onProfileLookupFailed(GameProfile gameprofile, Exception exception) {
-                        NameReferencingFileConverter.e.warn("Could not lookup user banlist entry for " + gameprofile.getName(), exception);
+                        NameReferencingFileConverter.e.warn("Could not lookup user banlist entry for {}", new Object[] { gameprofile.getName(), exception});
                         if (!(exception instanceof ProfileNotFoundException)) {
                             throw new NameReferencingFileConverter.FileConversionException("Could not request user " + gameprofile.getName() + " from backend systems", exception, null);
                         }
@@ -148,7 +149,7 @@ public class NameReferencingFileConverter {
                     ipbanlist.load();
                 // CraftBukkit start - FileNotFoundException -> IOException, don't print stacetrace
                 } catch (IOException filenotfoundexception) {
-                    NameReferencingFileConverter.e.warn("Could not load existing file " + ipbanlist.c().getName());
+                    NameReferencingFileConverter.e.warn("Could not load existing file {}", new Object[] { ipbanlist.c().getName()});
                 }
             }
 
@@ -190,7 +191,7 @@ public class NameReferencingFileConverter {
                     oplist.load();
                 // CraftBukkit start - FileNotFoundException -> IOException, don't print stacetrace
                 } catch (IOException filenotfoundexception) {
-                    NameReferencingFileConverter.e.warn("Could not load existing file " + oplist.c().getName());
+                    NameReferencingFileConverter.e.warn("Could not load existing file {}", new Object[] { oplist.c().getName()});
                 }
             }
 
@@ -203,7 +204,7 @@ public class NameReferencingFileConverter {
                     }
 
                     public void onProfileLookupFailed(GameProfile gameprofile, Exception exception) {
-                        NameReferencingFileConverter.e.warn("Could not lookup oplist entry for " + gameprofile.getName(), exception);
+                        NameReferencingFileConverter.e.warn("Could not lookup oplist entry for {}", new Object[] { gameprofile.getName(), exception});
                         if (!(exception instanceof ProfileNotFoundException)) {
                             throw new NameReferencingFileConverter.FileConversionException("Could not request user " + gameprofile.getName() + " from backend systems", exception, null);
                         }
@@ -235,7 +236,7 @@ public class NameReferencingFileConverter {
                     whitelist.load();
                 // CraftBukkit start - FileNotFoundException -> IOException, don't print stacetrace
                 } catch (IOException filenotfoundexception) {
-                    NameReferencingFileConverter.e.warn("Could not load existing file " + whitelist.c().getName());
+                    NameReferencingFileConverter.e.warn("Could not load existing file {}", new Object[] { whitelist.c().getName()});
                 }
             }
 
@@ -248,7 +249,7 @@ public class NameReferencingFileConverter {
                     }
 
                     public void onProfileLookupFailed(GameProfile gameprofile, Exception exception) {
-                        NameReferencingFileConverter.e.warn("Could not lookup user whitelist entry for " + gameprofile.getName(), exception);
+                        NameReferencingFileConverter.e.warn("Could not lookup user whitelist entry for {}", new Object[] { gameprofile.getName(), exception});
                         if (!(exception instanceof ProfileNotFoundException)) {
                             throw new NameReferencingFileConverter.FileConversionException("Could not request user " + gameprofile.getName() + " from backend systems", exception, null);
                         }
@@ -286,7 +287,7 @@ public class NameReferencingFileConverter {
                     }
 
                     public void onProfileLookupFailed(GameProfile gameprofile, Exception exception) {
-                        NameReferencingFileConverter.e.warn("Could not lookup user whitelist entry for " + gameprofile.getName(), exception);
+                        NameReferencingFileConverter.e.warn("Could not lookup user whitelist entry for {}", new Object[] { gameprofile.getName(), exception});
                     }
                 };
 
@@ -339,7 +340,7 @@ public class NameReferencingFileConverter {
                     }
 
                     public void onProfileLookupFailed(GameProfile gameprofile, Exception exception) {
-                        NameReferencingFileConverter.e.warn("Could not lookup user uuid for " + gameprofile.getName(), exception);
+                        NameReferencingFileConverter.e.warn("Could not lookup user uuid for {}", new Object[] { gameprofile.getName(), exception});
                         if (exception instanceof ProfileNotFoundException) {
                             String s = this.a(gameprofile);
 
@@ -385,10 +386,14 @@ public class NameReferencingFileConverter {
 
                     private String a(GameProfile gameprofile) {
                         String s = null;
+                        // String[] astring = astring1; // CraftBukkit - decompile error
+                        int i = astring.length;
 
-                        for (int i = 0; i < astring.length; ++i) {
-                            if (astring[i] != null && astring[i].equalsIgnoreCase(gameprofile.getName())) {
-                                s = astring[i];
+                        for (int j = 0; j < i; ++j) {
+                            String s1 = astring[j];
+
+                            if (s1 != null && s1.equalsIgnoreCase(gameprofile.getName())) {
+                                s = s1;
                                 break;
                             }
                         }
@@ -460,19 +465,19 @@ public class NameReferencingFileConverter {
             NameReferencingFileConverter.e.warn("**** FAILED TO START THE SERVER AFTER ACCOUNT CONVERSION!");
             NameReferencingFileConverter.e.warn("** please remove the following files and restart the server:");
             if (flag) {
-                NameReferencingFileConverter.e.warn("* " + NameReferencingFileConverter.b.getName());
+                NameReferencingFileConverter.e.warn("* {}", new Object[] { NameReferencingFileConverter.b.getName()});
             }
 
             if (flag1) {
-                NameReferencingFileConverter.e.warn("* " + NameReferencingFileConverter.a.getName());
+                NameReferencingFileConverter.e.warn("* {}", new Object[] { NameReferencingFileConverter.a.getName()});
             }
 
             if (flag2) {
-                NameReferencingFileConverter.e.warn("* " + NameReferencingFileConverter.c.getName());
+                NameReferencingFileConverter.e.warn("* {}", new Object[] { NameReferencingFileConverter.c.getName()});
             }
 
             if (flag3) {
-                NameReferencingFileConverter.e.warn("* " + NameReferencingFileConverter.d.getName());
+                NameReferencingFileConverter.e.warn("* {}", new Object[] { NameReferencingFileConverter.d.getName()});
             }
 
             return false;

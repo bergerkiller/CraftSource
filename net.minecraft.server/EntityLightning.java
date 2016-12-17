@@ -55,15 +55,15 @@ public class EntityLightning extends EntityWeather {
     }
     // Spigot end
 
-    public SoundCategory bz() {
+    public SoundCategory bC() {
         return SoundCategory.WEATHER;
     }
 
-    public void m() {
-        super.m();
+    public void A_() {
+        super.A_();
         if (!isSilent && this.lifeTicks == 2) { // Spigot
             // CraftBukkit start - Use relative location for far away sounds
-            // this.world.a((EntityHuman) null, this.locX, this.locY, this.locZ, SoundEffects.dc, SoundCategory.d, 10000.0F, 0.8F + this.random.nextFloat() * 0.2F);
+            // this.world.a((EntityHuman) null, this.locX, this.locY, this.locZ, SoundEffects.dv, SoundCategory.WEATHER, 10000.0F, 0.8F + this.random.nextFloat() * 0.2F);
             float pitch = 0.8F + this.random.nextFloat() * 0.2F;
             int viewDistance = ((WorldServer) this.world).getServer().getViewDistance() * 16;
             for (EntityPlayer player : (List<EntityPlayer>) (List) this.world.players) {
@@ -74,13 +74,13 @@ public class EntityLightning extends EntityWeather {
                     double deltaLength = Math.sqrt(distanceSquared);
                     double relativeX = player.locX + (deltaX / deltaLength) * viewDistance;
                     double relativeZ = player.locZ + (deltaZ / deltaLength) * viewDistance;
-                    player.playerConnection.sendPacket(new PacketPlayOutNamedSoundEffect(SoundEffects.dh, SoundCategory.WEATHER, relativeX, this.locY, relativeZ, 10000.0F, pitch));
+                    player.playerConnection.sendPacket(new PacketPlayOutNamedSoundEffect(SoundEffects.dx, SoundCategory.WEATHER, relativeX, this.locY, relativeZ, 10000.0F, pitch));
                 } else {
-                    player.playerConnection.sendPacket(new PacketPlayOutNamedSoundEffect(SoundEffects.dh, SoundCategory.WEATHER, this.locX, this.locY, this.locZ, 10000.0F, pitch));
+                    player.playerConnection.sendPacket(new PacketPlayOutNamedSoundEffect(SoundEffects.dx, SoundCategory.WEATHER, this.locX, this.locY, this.locZ, 10000.0F, pitch));
                 }
             }
             // CraftBukkit end
-            this.world.a((EntityHuman) null, this.locX, this.locY, this.locZ, SoundEffects.dg, SoundCategory.WEATHER, 2.0F, 0.5F + this.random.nextFloat() * 0.2F);
+            this.world.a((EntityHuman) null, this.locX, this.locY, this.locZ, SoundEffects.dw, SoundCategory.WEATHER, 2.0F, 0.5F + this.random.nextFloat() * 0.2F);
         }
 
         --this.lifeTicks;
@@ -110,7 +110,7 @@ public class EntityLightning extends EntityWeather {
                 this.world.d(2);
             } else if (!this.d) {
                 double d0 = 3.0D;
-                List list = this.world.getEntities(this, new AxisAlignedBB(this.locX - d0, this.locY - d0, this.locZ - d0, this.locX + d0, this.locY + 6.0D + d0, this.locZ + d0));
+                List list = this.world.getEntities(this, new AxisAlignedBB(this.locX - 3.0D, this.locY - 3.0D, this.locZ - 3.0D, this.locX + 3.0D, this.locY + 6.0D + 3.0D, this.locZ + 3.0D));
 
                 for (int i = 0; i < list.size(); ++i) {
                     Entity entity = (Entity) list.get(i);

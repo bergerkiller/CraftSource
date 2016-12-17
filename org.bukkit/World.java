@@ -13,8 +13,10 @@ import org.bukkit.block.Block;
 import org.bukkit.entity.*;
 import org.bukkit.generator.BlockPopulator;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.material.MaterialData;
 import org.bukkit.metadata.Metadatable;
 import org.bukkit.plugin.messaging.PluginMessageRecipient;
+import org.bukkit.util.Consumer;
 import org.bukkit.util.Vector;
 
 /**
@@ -71,16 +73,19 @@ public interface World extends PluginMessageRecipient, Metadatable {
     public int getBlockTypeIdAt(Location location);
 
     /**
-     * Gets the highest non-air coordinate at the given coordinates
+     * Gets the y coordinate of the lowest block at this position such that the
+     * block and all blocks above it are transparent for lighting purposes.
      *
      * @param x X-coordinate of the blocks
      * @param z Z-coordinate of the blocks
-     * @return Y-coordinate of the highest non-air block
+     * @return Y-coordinate of the described block
      */
     public int getHighestBlockYAt(int x, int z);
 
     /**
-     * Gets the highest non-air coordinate at the given {@link Location}
+     * Gets the y coordinate of the lowest block at the given {@link Location}
+     * such that the block and all blocks above it are transparent for lighting
+     * purposes.
      *
      * @param location Location of the blocks
      * @return Y-coordinate of the highest non-air block
@@ -88,7 +93,8 @@ public interface World extends PluginMessageRecipient, Metadatable {
     public int getHighestBlockYAt(Location location);
 
     /**
-     * Gets the highest non-empty block at the given coordinates
+     * Gets the lowest block at the given coordinates such that the block and
+     * all blocks above it are transparent for lighting purposes.
      *
      * @param x X-coordinate of the block
      * @param z Z-coordinate of the block
@@ -97,7 +103,8 @@ public interface World extends PluginMessageRecipient, Metadatable {
     public Block getHighestBlockAt(int x, int z);
 
     /**
-     * Gets the highest non-empty block at the given coordinates
+     * Gets the lowest block at the given {@link Location} such that the block
+     * and all blocks above it are transparent for lighting purposes.
      *
      * @param location Coordinates to get the highest block
      * @return Highest non-empty block
@@ -242,7 +249,9 @@ public interface World extends PluginMessageRecipient, Metadatable {
      * @param safe Controls whether to unload the chunk when players are
      *     nearby
      * @return true if the chunk has unloaded successfully, otherwise false
+     * @deprecated it is never safe to remove a chunk in use
      */
+    @Deprecated
     public boolean unloadChunk(int x, int z, boolean save, boolean safe);
 
     /**
@@ -317,6 +326,20 @@ public interface World extends PluginMessageRecipient, Metadatable {
      * @return Arrow entity spawned as a result of this method
      */
     public Arrow spawnArrow(Location location, Vector direction, float speed, float spread);
+
+    /**
+     * Creates an arrow entity of the given class at the given {@link Location}
+     *
+     * @param <T> type of arrow to spawn
+     * @param location Location to spawn the arrow
+     * @param direction Direction to shoot the arrow in
+     * @param speed Speed of the arrow. A recommend speed is 0.6
+     * @param spread Spread of the arrow. A recommend spread is 12
+     * @param clazz the Entity class for the arrow
+     * {@link org.bukkit.entity.SpectralArrow},{@link org.bukkit.entity.Arrow},{@link org.bukkit.entity.TippedArrow}
+     * @return Arrow entity spawned as a result of this method
+     */
+    public <T extends Arrow> T spawnArrow(Location location, Vector direction, float speed, float spread, Class<T> clazz);
 
     /**
      * Creates a tree at the given {@link Location}
@@ -678,6 +701,40 @@ public interface World extends PluginMessageRecipient, Metadatable {
      *     {@link Entity} requested cannot be spawned
      */
     public <T extends Entity> T spawn(Location location, Class<T> clazz) throws IllegalArgumentException;
+
+    /**
+     * Spawn an entity of a specific class at the given {@link Location}, with
+     * the supplied function run before the entity is added to the world.
+     * <br>
+     * Note that when the function is run, the entity will not be actually in
+     * the world. Any operation involving such as teleporting the entity is undefined
+     * until after this function returns.
+     *
+     * @param location the {@link Location} to spawn the entity at
+     * @param clazz the class of the {@link Entity} to spawn
+     * @param function the function to be run before the entity is spawned.
+     * @param <T> the class of the {@link Entity} to spawn
+     * @return an instance of the spawned {@link Entity}
+     * @throws IllegalArgumentException if either parameter is null or the
+     *     {@link Entity} requested cannot be spawned
+     */
+    public <T extends Entity> T spawn(Location location, Class<T> clazz, Consumer<T> function) throws IllegalArgumentException;
+
+    /**
+     * Spawn a {@link FallingBlock} entity at the given {@link Location} of
+     * the specified {@link Material}. The material dictates what is falling.
+     * When the FallingBlock hits the ground, it will place that block.
+     * <p>
+     * The Material must be a block type, check with {@link Material#isBlock()
+     * material.isBlock()}. The Material may not be air.
+     *
+     * @param location The {@link Location} to spawn the FallingBlock
+     * @param data The block data
+     * @return The spawned {@link FallingBlock} instance
+     * @throws IllegalArgumentException if {@link Location} or {@link
+     *     MaterialData} are null or {@link Material} of the {@link MaterialData} is not a block
+     */
+    public FallingBlock spawnFallingBlock(Location location, MaterialData data) throws IllegalArgumentException;
 
     /**
      * Spawn a {@link FallingBlock} entity at the given {@link Location} of
@@ -1135,6 +1192,34 @@ public interface World extends PluginMessageRecipient, Metadatable {
     void playSound(Location location, String sound, float volume, float pitch);
 
     /**
+     * Play a Sound at the provided Location in the World.
+     * <p>
+     * This function will fail silently if Location or Sound are null.
+     *
+     * @param location The location to play the sound
+     * @param sound The sound to play
+     * @param category the category of the sound
+     * @param volume The volume of the sound
+     * @param pitch The pitch of the sound
+     */
+    void playSound(Location location, Sound sound, SoundCategory category, float volume, float pitch);
+
+    /**
+     * Play a Sound at the provided Location in the World.
+     * <p>
+     * This function will fail silently if Location or Sound are null. No sound
+     * will be heard by the players if their clients do not have the respective
+     * sound for the value passed.
+     *
+     * @param location the location to play the sound
+     * @param sound the internal sound name to play
+     * @param category the category of the sound
+     * @param volume the volume of the sound
+     * @param pitch the pitch of the sound
+     */
+    void playSound(Location location, String sound, SoundCategory category, float volume, float pitch);
+
+    /**
      * Get existing rules
      *
      * @return An array of rules
@@ -1172,6 +1257,84 @@ public interface World extends PluginMessageRecipient, Metadatable {
      * @return True if rule exists
      */
     public boolean isGameRule(String rule);
+
+    // Spigot start
+    public class Spigot
+    {
+
+        /**
+         * Plays an effect to all players within a default radius around a given
+         * location.
+         *
+         * @param location the {@link Location} around which players must be to
+         * see the effect
+         * @param effect the {@link Effect}
+         * @throws IllegalArgumentException if the location or effect is null.
+         * It also throws when the effect requires a material or a material data
+         * @deprecated Spigot specific API, use {@link Particle}.
+         */
+        @Deprecated
+        public void playEffect(Location location, Effect effect)
+        {
+            throw new UnsupportedOperationException( "Not supported yet." );
+        }
+
+        /**
+         * Plays an effect to all players within a default radius around a given
+         * location. The effect will use the provided material (and material
+         * data if required). The particle's position on the client will be the
+         * given location, adjusted on each axis by a normal distribution with
+         * mean 0 and standard deviation given in the offset parameters, each
+         * particle has independently calculated offsets. The effect will have
+         * the given speed and particle count if the effect is a particle. Some
+         * effect will create multiple particles.
+         *
+         * @param location the {@link Location} around which players must be to
+         * see the effect
+         * @param effect effect the {@link Effect}
+         * @param id the item/block/data id for the effect
+         * @param data the data value of the block/item for the effect
+         * @param offsetX the amount to be randomly offset by in the X axis
+         * @param offsetY the amount to be randomly offset by in the Y axis
+         * @param offsetZ the amount to be randomly offset by in the Z axis
+         * @param speed the speed of the particles
+         * @param particleCount the number of particles
+         * @param radius the radius around the location
+         * @deprecated Spigot specific API, use {@link Particle}.
+         */
+        @Deprecated
+        public void playEffect(Location location, Effect effect, int id, int data, float offsetX, float offsetY, float offsetZ, float speed, int particleCount, int radius)
+        {
+            throw new UnsupportedOperationException( "Not supported yet." );
+        }
+        
+        /**
+         * Strikes lightning at the given {@link Location} and possibly without sound
+         *
+         * @param loc The location to strike lightning
+         * @param isSilent Whether this strike makes no sound
+         * @return The lightning entity.
+         */        
+        public LightningStrike strikeLightning(Location loc, boolean isSilent)
+        {
+            throw new UnsupportedOperationException( "Not supported yet." );
+        }
+        
+        /**
+         * Strikes lightning at the given {@link Location} without doing damage and possibly without sound
+         *
+         * @param loc The location to strike lightning
+         * @param isSilent Whether this strike makes no sound
+         * @return The lightning entity.
+         */
+        public LightningStrike strikeLightningEffect(Location loc, boolean isSilent)
+        {
+            throw new UnsupportedOperationException( "Not supported yet." );
+        }
+    }
+
+    Spigot spigot();
+    // Spigot end
 
     /**
      * Gets the world border for this world.

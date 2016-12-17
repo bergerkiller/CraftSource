@@ -2,6 +2,7 @@ package net.minecraft.server;
 
 import com.google.common.collect.Lists;
 import java.util.ArrayList;
+import javax.annotation.Nullable;
 
 public class EntityPainting extends EntityHanging {
 
@@ -68,9 +69,9 @@ public class EntityPainting extends EntityHanging {
         return this.art.D;
     }
 
-    public void a(Entity entity) {
+    public void a(@Nullable Entity entity) {
         if (this.world.getGameRules().getBoolean("doEntityDrops")) {
-            this.a(SoundEffects.dN, 1.0F, 1.0F);
+            this.a(SoundEffects.en, 1.0F, 1.0F);
             if (entity instanceof EntityHuman) {
                 EntityHuman entityhuman = (EntityHuman) entity;
 
@@ -84,7 +85,7 @@ public class EntityPainting extends EntityHanging {
     }
 
     public void o() {
-        this.a(SoundEffects.dO, 1.0F, 1.0F);
+        this.a(SoundEffects.eo, 1.0F, 1.0F);
     }
 
     public void setPositionRotation(double d0, double d1, double d2, float f, float f1) {

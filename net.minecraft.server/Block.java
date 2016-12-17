@@ -1,10 +1,12 @@
 package net.minecraft.server;
 
 import com.google.common.collect.Sets;
+import com.google.common.collect.UnmodifiableIterator;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
+import javax.annotation.Nullable;
 
 public class Block {
 
@@ -12,6 +14,7 @@ public class Block {
     public static final RegistryBlocks<MinecraftKey, Block> REGISTRY = new RegistryBlocks(Block.a);
     public static final RegistryBlockID<IBlockData> REGISTRY_ID = new RegistryBlockID();
     public static final AxisAlignedBB j = new AxisAlignedBB(0.0D, 0.0D, 0.0D, 1.0D, 1.0D, 1.0D);
+    @Nullable
     public static final AxisAlignedBB k = null;
     private CreativeModeTab creativeTab;
     protected boolean l;
@@ -54,10 +57,11 @@ public class Block {
         return getById(j).fromLegacyData(k);
     }
 
-    public static Block asBlock(Item item) {
-        return item instanceof ItemBlock ? ((ItemBlock) item).d() : null;
+    public static Block asBlock(@Nullable Item item) {
+        return item instanceof ItemBlock ? ((ItemBlock) item).getBlock() : Blocks.AIR;
     }
 
+    @Nullable
     public static Block getByName(String s) {
         MinecraftKey minecraftkey = new MinecraftKey(s);
 
@@ -72,54 +76,70 @@ public class Block {
         }
     }
 
+    @Deprecated
     public boolean k(IBlockData iblockdata) {
         return iblockdata.getMaterial().k() && iblockdata.h();
     }
 
+    @Deprecated
     public boolean l(IBlockData iblockdata) {
         return this.l;
     }
 
+    @Deprecated
+    public boolean a(IBlockData iblockdata, Entity entity) {
+        return true;
+    }
+
+    @Deprecated
     public int m(IBlockData iblockdata) {
         return this.m;
     }
 
+    @Deprecated
     public int o(IBlockData iblockdata) {
         return this.o;
     }
 
+    @Deprecated
     public boolean p(IBlockData iblockdata) {
         return this.p;
     }
 
+    @Deprecated
     public Material q(IBlockData iblockdata) {
         return this.material;
     }
 
+    @Deprecated
     public MaterialMapColor r(IBlockData iblockdata) {
         return this.y;
     }
 
+    @Deprecated
     public IBlockData fromLegacyData(int i) {
         return this.getBlockData();
     }
 
     public int toLegacyData(IBlockData iblockdata) {
-        if (iblockdata != null && !iblockdata.r().isEmpty()) {
-            throw new IllegalArgumentException("Don\'t know how to convert " + iblockdata + " back into data...");
-        } else {
+        if (iblockdata.t().isEmpty()) {
             return 0;
+        } else {
+            throw new IllegalArgumentException("Don\'t know how to convert " + iblockdata + " back into data...");
         }
     }
 
+    @Deprecated
     public IBlockData updateState(IBlockData iblockdata, IBlockAccess iblockaccess, BlockPosition blockposition) {
         return iblockdata;
     }
 
+    @Deprecated
     public IBlockData a(IBlockData iblockdata, EnumBlockRotation enumblockrotation) {
         return iblockdata;
     }
 
+    @Deprecated
     public IBlockData a(IBlockData iblockdata, EnumBlockMirror enumblockmirror) {
         return iblockdata;
     }
@@ -132,8 +152,8 @@ public class Block {
         this.material = material;
         this.y = materialmapcolor;
         this.blockStateList = this.getStateList();
-        this.w(this.blockStateList.getBlockData());
-        this.l = this.getBlockData().p();
+        this.y(this.blockStateList.getBlockData());
+        this.l = this.getBlockData().q();
         this.m = this.l ? 255 : 0;
         this.n = !material.blocksLight();
     }
@@ -162,18 +182,22 @@ public class Block {
         return this;
     }
 
+    @Deprecated
     public boolean s(IBlockData iblockdata) {
         return iblockdata.getMaterial().isSolid() && iblockdata.h();
     }
 
+    @Deprecated
     public boolean isOccluding(IBlockData iblockdata) {
-        return iblockdata.getMaterial().k() && iblockdata.h() && !iblockdata.m();
+        return iblockdata.getMaterial().k() && iblockdata.h() && !iblockdata.n();
     }
 
-    public boolean j() {
+    @Deprecated
+    public boolean u(IBlockData iblockdata) {
         return this.material.isSolid() && this.getBlockData().h();
     }
 
+    @Deprecated
     public boolean c(IBlockData iblockdata) {
         return true;
     }
@@ -182,6 +206,7 @@ public class Block {
         return !this.material.isSolid();
     }
 
+    @Deprecated
     public EnumRenderType a(IBlockData iblockdata) {
         return EnumRenderType.MODEL;
     }
@@ -199,12 +224,13 @@ public class Block {
         return this;
     }
 
-    protected Block k() {
+    protected Block j() {
         this.c(-1.0F);
         return this;
     }
 
-    public float b(IBlockData iblockdata, World world, BlockPosition blockposition) {
+    @Deprecated
+    public float a(IBlockData iblockdata, World world, BlockPosition blockposition) {
         return this.strength;
     }
 
@@ -221,7 +247,8 @@ public class Block {
         return this.isTileEntity;
     }
 
-    public AxisAlignedBB a(IBlockData iblockdata, IBlockAccess iblockaccess, BlockPosition blockposition) {
+    @Deprecated
+    public AxisAlignedBB b(IBlockData iblockdata, IBlockAccess iblockaccess, BlockPosition blockposition) {
         return Block.j;
     }
 
@@ -229,34 +256,38 @@ public class Block {
         return iblockaccess.getType(blockposition).getMaterial().isBuildable();
     }
 
-    public void a(IBlockData iblockdata, World world, BlockPosition blockposition, AxisAlignedBB axisalignedbb, List<AxisAlignedBB> list, Entity entity) {
-        a(blockposition, axisalignedbb, list, iblockdata.d(world, blockposition));
+    @Deprecated
+    public void a(IBlockData iblockdata, World world, BlockPosition blockposition, AxisAlignedBB axisalignedbb, List<AxisAlignedBB> list, @Nullable Entity entity) {
+        a(blockposition, axisalignedbb, list, iblockdata.c(world, blockposition));
     }
 
-    protected static void a(BlockPosition blockposition, AxisAlignedBB axisalignedbb, List<AxisAlignedBB> list, AxisAlignedBB axisalignedbb1) {
+    protected static void a(BlockPosition blockposition, AxisAlignedBB axisalignedbb, List<AxisAlignedBB> list, @Nullable AxisAlignedBB axisalignedbb1) {
         if (axisalignedbb1 != Block.k) {
             AxisAlignedBB axisalignedbb2 = axisalignedbb1.a(blockposition);
 
-            if (axisalignedbb.b(axisalignedbb2)) {
+            if (axisalignedbb.c(axisalignedbb2)) {
                 list.add(axisalignedbb2);
             }
         }
 
     }
 
-    public AxisAlignedBB a(IBlockData iblockdata, World world, BlockPosition blockposition) {
-        return iblockdata.c(world, blockposition);
+    @Deprecated
+    @Nullable
+    public AxisAlignedBB a(IBlockData iblockdata, IBlockAccess iblockaccess, BlockPosition blockposition) {
+        return iblockdata.d(iblockaccess, blockposition);
     }
 
+    @Deprecated
     public boolean b(IBlockData iblockdata) {
         return true;
     }
 
     public boolean a(IBlockData iblockdata, boolean flag) {
-        return this.n();
+        return this.m();
     }
 
-    public boolean n() {
+    public boolean m() {
         return true;
     }
 
@@ -268,7 +299,8 @@ public class Block {
 
     public void postBreak(World world, BlockPosition blockposition, IBlockData iblockdata) {}
 
-    public void doPhysics(World world, BlockPosition blockposition, IBlockData iblockdata, Block block) {}
+    @Deprecated
+    public void a(IBlockData iblockdata, World world, BlockPosition blockposition, Block block, BlockPosition blockposition1) {}
 
     public int a(World world) {
         return 10;
@@ -290,6 +322,7 @@ public class Block {
         return Item.getItemOf(this);
     }
 
+    @Deprecated
     public float getDamage(IBlockData iblockdata, EntityHuman entityhuman, World world, BlockPosition blockposition) {
         float f = iblockdata.b(world, blockposition);
 
@@ -309,7 +342,7 @@ public class Block {
                 if (world.random.nextFloat() < f) {
                     Item item = this.getDropType(iblockdata, world.random, i);
 
-                    if (item != null) {
+                    if (item != Items.a) {
                         a(world, blockposition, new ItemStack(item, 1, this.getDropData(iblockdata)));
                     }
                 }
@@ -319,11 +352,11 @@ public class Block {
     }
 
     public static void a(World world, BlockPosition blockposition, ItemStack itemstack) {
-        if (!world.isClientSide && world.getGameRules().getBoolean("doTileDrops")) {
+        if (!world.isClientSide && !itemstack.isEmpty() && world.getGameRules().getBoolean("doTileDrops")) {
             float f = 0.5F;
-            double d0 = (double) (world.random.nextFloat() * f) + (double) (1.0F - f) * 0.5D;
-            double d1 = (double) (world.random.nextFloat() * f) + (double) (1.0F - f) * 0.5D;
-            double d2 = (double) (world.random.nextFloat() * f) + (double) (1.0F - f) * 0.5D;
+            double d0 = (double) (world.random.nextFloat() * 0.5F) + 0.25D;
+            double d1 = (double) (world.random.nextFloat() * 0.5F) + 0.25D;
+            double d2 = (double) (world.random.nextFloat() * 0.5F) + 0.25D;
             EntityItem entityitem = new EntityItem(world, (double) blockposition.getX() + d0, (double) blockposition.getY() + d1, (double) blockposition.getZ() + d2, itemstack);
 
             entityitem.q();
@@ -351,23 +384,22 @@ public class Block {
         return this.durability / 5.0F;
     }
 
+    @Deprecated
+    @Nullable
     public MovingObjectPosition a(IBlockData iblockdata, World world, BlockPosition blockposition, Vec3D vec3d, Vec3D vec3d1) {
-        return this.a(blockposition, vec3d, vec3d1, iblockdata.c(world, blockposition));
+        return this.a(blockposition, vec3d, vec3d1, iblockdata.d(world, blockposition));
     }
 
+    @Nullable
     protected MovingObjectPosition a(BlockPosition blockposition, Vec3D vec3d, Vec3D vec3d1, AxisAlignedBB axisalignedbb) {
         Vec3D vec3d2 = vec3d.a((double) blockposition.getX(), (double) blockposition.getY(), (double) blockposition.getZ());
         Vec3D vec3d3 = vec3d1.a((double) blockposition.getX(), (double) blockposition.getY(), (double) blockposition.getZ());
-        MovingObjectPosition movingobjectposition = axisalignedbb.a(vec3d2, vec3d3);
+        MovingObjectPosition movingobjectposition = axisalignedbb.b(vec3d2, vec3d3);
 
         return movingobjectposition == null ? null : new MovingObjectPosition(movingobjectposition.pos.add((double) blockposition.getX(), (double) blockposition.getY(), (double) blockposition.getZ()), movingobjectposition.direction, blockposition);
     }
 
     public void wasExploded(World world, BlockPosition blockposition, Explosion explosion) {}
-
-    public boolean canPlace(World world, BlockPosition blockposition, EnumDirection enumdirection, ItemStack itemstack) {
-        return this.canPlace(world, blockposition, enumdirection);
-    }
 
     public boolean canPlace(World world, BlockPosition blockposition, EnumDirection enumdirection) {
         return this.canPlace(world, blockposition);
@@ -377,7 +409,7 @@ public class Block {
         return world.getType(blockposition).getBlock().material.isReplaceable();
     }
 
-    public boolean interact(World world, BlockPosition blockposition, IBlockData iblockdata, EntityHuman entityhuman, EnumHand enumhand, ItemStack itemstack, EnumDirection enumdirection, float f, float f1, float f2) {
+    public boolean interact(World world, BlockPosition blockposition, IBlockData iblockdata, EntityHuman entityhuman, EnumHand enumhand, EnumDirection enumdirection, float f, float f1, float f2) {
         return false;
     }
 
@@ -393,29 +425,30 @@ public class Block {
         return vec3d;
     }
 
+    @Deprecated
     public int b(IBlockData iblockdata, IBlockAccess iblockaccess, BlockPosition blockposition, EnumDirection enumdirection) {
         return 0;
     }
 
+    @Deprecated
     public boolean isPowerSource(IBlockData iblockdata) {
         return false;
     }
 
     public void a(World world, BlockPosition blockposition, IBlockData iblockdata, Entity entity) {}
 
+    @Deprecated
     public int c(IBlockData iblockdata, IBlockAccess iblockaccess, BlockPosition blockposition, EnumDirection enumdirection) {
         return 0;
     }
 
-    public void a(World world, EntityHuman entityhuman, BlockPosition blockposition, IBlockData iblockdata, TileEntity tileentity, ItemStack itemstack) {
+    public void a(World world, EntityHuman entityhuman, BlockPosition blockposition, IBlockData iblockdata, @Nullable TileEntity tileentity, ItemStack itemstack) {
         entityhuman.b(StatisticList.a(this));
-        entityhuman.applyExhaustion(0.025F);
-        if (this.o() && EnchantmentManager.getEnchantmentLevel(Enchantments.SILK_TOUCH, itemstack) > 0) {
-            ItemStack itemstack1 = this.u(iblockdata);
+        entityhuman.applyExhaustion(0.005F);
+        if (this.n() && EnchantmentManager.getEnchantmentLevel(Enchantments.SILK_TOUCH, itemstack) > 0) {
+            ItemStack itemstack1 = this.w(iblockdata);
 
-            if (itemstack1 != null) {
-                a(world, blockposition, itemstack1);
-            }
+            a(world, blockposition, itemstack1);
         } else {
             int i = EnchantmentManager.getEnchantmentLevel(Enchantments.LOOT_BONUS_BLOCKS, itemstack);
 
@@ -424,24 +457,19 @@ public class Block {
 
     }
 
-    protected boolean o() {
+    protected boolean n() {
         return this.getBlockData().h() && !this.isTileEntity;
     }
 
-    protected ItemStack u(IBlockData iblockdata) {
+    protected ItemStack w(IBlockData iblockdata) {
         Item item = Item.getItemOf(this);
+        int i = 0;
 
-        if (item == null) {
-            return null;
-        } else {
-            int i = 0;
-
-            if (item.k()) {
-                i = this.toLegacyData(iblockdata);
-            }
-
-            return new ItemStack(item, 1, i);
+        if (item.l()) {
+            i = this.toLegacyData(iblockdata);
         }
+
+        return new ItemStack(item, 1, i);
     }
 
     public int getDropCount(int i, Random random) {
@@ -467,19 +495,21 @@ public class Block {
         return "tile." + this.name;
     }
 
-    public boolean a(World world, BlockPosition blockposition, IBlockData iblockdata, int i, int j) {
+    @Deprecated
+    public boolean a(IBlockData iblockdata, World world, BlockPosition blockposition, int i, int j) {
         return false;
     }
 
-    public boolean p() {
+    public boolean o() {
         return this.s;
     }
 
-    protected Block q() {
+    protected Block p() {
         this.s = false;
         return this;
     }
 
+    @Deprecated
     public EnumPistonReaction h(IBlockData iblockdata) {
         return this.material.getPushReaction();
     }
@@ -505,7 +535,7 @@ public class Block {
 
     public void h(World world, BlockPosition blockposition) {}
 
-    public boolean s() {
+    public boolean r() {
         return true;
     }
 
@@ -521,11 +551,13 @@ public class Block {
         return block != null && block1 != null ? (block == block1 ? true : block.b(block1)) : false;
     }
 
+    @Deprecated
     public boolean isComplexRedstone(IBlockData iblockdata) {
         return false;
     }
 
-    public int d(IBlockData iblockdata, World world, BlockPosition blockposition) {
+    @Deprecated
+    public int c(IBlockData iblockdata, World world, BlockPosition blockposition) {
         return 0;
     }
 
@@ -533,11 +565,11 @@ public class Block {
         return new BlockStateList(this, new IBlockState[0]);
     }
 
-    public BlockStateList t() {
+    public BlockStateList s() {
         return this.blockStateList;
     }
 
-    protected final void w(IBlockData iblockdata) {
+    protected final void y(IBlockData iblockdata) {
         this.blockData = iblockdata;
     }
 
@@ -545,7 +577,24 @@ public class Block {
         return this.blockData;
     }
 
-    public SoundEffectType w() {
+    public Block.EnumRandomOffset u() {
+        return Block.EnumRandomOffset.NONE;
+    }
+
+    @Deprecated
+    public Vec3D e(IBlockData iblockdata, IBlockAccess iblockaccess, BlockPosition blockposition) {
+        Block.EnumRandomOffset block_enumrandomoffset = this.u();
+
+        if (block_enumrandomoffset == Block.EnumRandomOffset.NONE) {
+            return Vec3D.a;
+        } else {
+            long i = MathHelper.c(blockposition.getX(), 0, blockposition.getZ());
+
+            return new Vec3D(((double) ((float) (i >> 16 & 15L) / 15.0F) - 0.5D) * 0.5D, block_enumrandomoffset == Block.EnumRandomOffset.XYZ ? ((double) ((float) (i >> 20 & 15L) / 15.0F) - 1.0D) * 0.2D : 0.0D, ((double) ((float) (i >> 24 & 15L) / 15.0F) - 0.5D) * 0.5D);
+        }
+    }
+
+    public SoundEffectType getStepSound() {
         return this.stepSound;
     }
 
@@ -553,7 +602,7 @@ public class Block {
         return "Block{" + Block.REGISTRY.b(this) + "}";
     }
 
-    public static void x() {
+    public static void w() {
         a(0, Block.a, (new BlockAir()).c("air"));
         a(1, "stone", (new BlockStone()).c(1.5F).b(10.0F).a(SoundEffectType.d).c("stone"));
         a(2, "grass", (new BlockGrass()).c(0.6F).a(SoundEffectType.c).c("grass"));
@@ -565,11 +614,11 @@ public class Block {
 
         a(5, "planks", block1);
         a(6, "sapling", (new BlockSapling()).c(0.0F).a(SoundEffectType.c).c("sapling"));
-        a(7, "bedrock", (new BlockNoDrop(Material.STONE)).k().b(6000000.0F).a(SoundEffectType.d).c("bedrock").q().a(CreativeModeTab.b));
-        a(8, "flowing_water", (new BlockFlowing(Material.WATER)).c(100.0F).d(3).c("water").q());
-        a(9, "water", (new BlockStationary(Material.WATER)).c(100.0F).d(3).c("water").q());
-        a(10, "flowing_lava", (new BlockFlowing(Material.LAVA)).c(100.0F).a(1.0F).c("lava").q());
-        a(11, "lava", (new BlockStationary(Material.LAVA)).c(100.0F).a(1.0F).c("lava").q());
+        a(7, "bedrock", (new BlockNoDrop(Material.STONE)).j().b(6000000.0F).a(SoundEffectType.d).c("bedrock").p().a(CreativeModeTab.b));
+        a(8, "flowing_water", (new BlockFlowing(Material.WATER)).c(100.0F).d(3).c("water").p());
+        a(9, "water", (new BlockStationary(Material.WATER)).c(100.0F).d(3).c("water").p());
+        a(10, "flowing_lava", (new BlockFlowing(Material.LAVA)).c(100.0F).a(1.0F).c("lava").p());
+        a(11, "lava", (new BlockStationary(Material.LAVA)).c(100.0F).a(1.0F).c("lava").p());
         a(12, "sand", (new BlockSand()).c(0.5F).a(SoundEffectType.h).c("sand"));
         a(13, "gravel", (new BlockGravel()).c(0.6F).a(SoundEffectType.b).c("gravel"));
         a(14, "gold_ore", (new BlockOre()).c(3.0F).b(5.0F).a(SoundEffectType.d).c("oreGold"));
@@ -586,7 +635,7 @@ public class Block {
 
         a(24, "sandstone", block2);
         a(25, "noteblock", (new BlockNote()).a(SoundEffectType.a).c(0.8F).c("musicBlock"));
-        a(26, "bed", (new BlockBed()).a(SoundEffectType.a).c(0.2F).c("bed").q());
+        a(26, "bed", (new BlockBed()).a(SoundEffectType.a).c(0.2F).c("bed").p());
         a(27, "golden_rail", (new BlockPoweredRail()).c(0.7F).a(SoundEffectType.e).c("goldenRail"));
         a(28, "detector_rail", (new BlockMinecartDetector()).c(0.7F).a(SoundEffectType.e).c("detectorRail"));
         a(29, "sticky_piston", (new BlockPiston(true)).c("pistonStickyBase"));
@@ -617,11 +666,11 @@ public class Block {
         a(48, "mossy_cobblestone", (new Block(Material.STONE)).c(2.0F).b(10.0F).a(SoundEffectType.d).c("stoneMoss").a(CreativeModeTab.b));
         a(49, "obsidian", (new BlockObsidian()).c(50.0F).b(2000.0F).a(SoundEffectType.d).c("obsidian"));
         a(50, "torch", (new BlockTorch()).c(0.0F).a(0.9375F).a(SoundEffectType.a).c("torch"));
-        a(51, "fire", (new BlockFire()).c(0.0F).a(1.0F).a(SoundEffectType.g).c("fire").q());
-        a(52, "mob_spawner", (new BlockMobSpawner()).c(5.0F).a(SoundEffectType.e).c("mobSpawner").q());
+        a(51, "fire", (new BlockFire()).c(0.0F).a(1.0F).a(SoundEffectType.g).c("fire").p());
+        a(52, "mob_spawner", (new BlockMobSpawner()).c(5.0F).a(SoundEffectType.e).c("mobSpawner").p());
         a(53, "oak_stairs", (new BlockStairs(block1.getBlockData().set(BlockWood.VARIANT, BlockWood.EnumLogVariant.OAK))).c("stairsWood"));
         a(54, "chest", (new BlockChest(BlockChest.Type.BASIC)).c(2.5F).a(SoundEffectType.a).c("chest"));
-        a(55, "redstone_wire", (new BlockRedstoneWire()).c(0.0F).a(SoundEffectType.d).c("redstoneDust").q());
+        a(55, "redstone_wire", (new BlockRedstoneWire()).c(0.0F).a(SoundEffectType.d).c("redstoneDust").p());
         a(56, "diamond_ore", (new BlockOre()).c(3.0F).b(5.0F).a(SoundEffectType.d).c("oreDiamond"));
         a(57, "diamond_block", (new Block(Material.ORE, MaterialMapColor.G)).c(5.0F).b(10.0F).a(SoundEffectType.e).c("blockDiamond").a(CreativeModeTab.b));
         a(58, "crafting_table", (new BlockWorkbench()).c(2.5F).a(SoundEffectType.a).c("workbench"));
@@ -631,15 +680,15 @@ public class Block {
         a(60, "farmland", block6);
         a(61, "furnace", (new BlockFurnace(false)).c(3.5F).a(SoundEffectType.d).c("furnace").a(CreativeModeTab.c));
         a(62, "lit_furnace", (new BlockFurnace(true)).c(3.5F).a(SoundEffectType.d).a(0.875F).c("furnace"));
-        a(63, "standing_sign", (new BlockFloorSign()).c(1.0F).a(SoundEffectType.a).c("sign").q());
-        a(64, "wooden_door", (new BlockDoor(Material.WOOD)).c(3.0F).a(SoundEffectType.a).c("doorOak").q());
+        a(63, "standing_sign", (new BlockFloorSign()).c(1.0F).a(SoundEffectType.a).c("sign").p());
+        a(64, "wooden_door", (new BlockDoor(Material.WOOD)).c(3.0F).a(SoundEffectType.a).c("doorOak").p());
         a(65, "ladder", (new BlockLadder()).c(0.4F).a(SoundEffectType.j).c("ladder"));
         a(66, "rail", (new BlockMinecartTrack()).c(0.7F).a(SoundEffectType.e).c("rail"));
         a(67, "stone_stairs", (new BlockStairs(block.getBlockData())).c("stairsStone"));
-        a(68, "wall_sign", (new BlockWallSign()).c(1.0F).a(SoundEffectType.a).c("sign").q());
+        a(68, "wall_sign", (new BlockWallSign()).c(1.0F).a(SoundEffectType.a).c("sign").p());
         a(69, "lever", (new BlockLever()).c(0.5F).a(SoundEffectType.a).c("lever"));
         a(70, "stone_pressure_plate", (new BlockPressurePlateBinary(Material.STONE, BlockPressurePlateBinary.EnumMobType.MOBS)).c(0.5F).a(SoundEffectType.d).c("pressurePlateStone"));
-        a(71, "iron_door", (new BlockDoor(Material.ORE)).c(5.0F).a(SoundEffectType.e).c("doorIron").q());
+        a(71, "iron_door", (new BlockDoor(Material.ORE)).c(5.0F).a(SoundEffectType.e).c("doorIron").p());
         a(72, "wooden_pressure_plate", (new BlockPressurePlateBinary(Material.WOOD, BlockPressurePlateBinary.EnumMobType.EVERYTHING)).c(0.5F).a(SoundEffectType.a).c("pressurePlateWood"));
         a(73, "redstone_ore", (new BlockRedstoneOre(false)).c(3.0F).b(5.0F).a(SoundEffectType.d).c("oreRedstone").a(CreativeModeTab.b));
         a(74, "lit_redstone_ore", (new BlockRedstoneOre(true)).a(0.625F).c(3.0F).b(5.0F).a(SoundEffectType.d).c("oreRedstone"));
@@ -651,7 +700,7 @@ public class Block {
         a(80, "snow", (new BlockSnowBlock()).c(0.2F).a(SoundEffectType.i).c("snow"));
         a(81, "cactus", (new BlockCactus()).c(0.4F).a(SoundEffectType.g).c("cactus"));
         a(82, "clay", (new BlockClay()).c(0.6F).a(SoundEffectType.b).c("clay"));
-        a(83, "reeds", (new BlockReed()).c(0.0F).a(SoundEffectType.c).c("reeds").q());
+        a(83, "reeds", (new BlockReed()).c(0.0F).a(SoundEffectType.c).c("reeds").p());
         a(84, "jukebox", (new BlockJukeBox()).c(2.0F).b(10.0F).a(SoundEffectType.d).c("jukebox"));
         a(85, "fence", (new BlockFence(Material.WOOD, BlockWood.EnumLogVariant.OAK.c())).c(2.0F).b(5.0F).a(SoundEffectType.a).c("fence"));
         Block block7 = (new BlockPumpkin()).c(1.0F).a(SoundEffectType.a).c("pumpkin");
@@ -662,11 +711,11 @@ public class Block {
         a(89, "glowstone", (new BlockLightStone(Material.SHATTERABLE)).c(0.3F).a(SoundEffectType.f).a(1.0F).c("lightgem"));
         a(90, "portal", (new BlockPortal()).c(-1.0F).a(SoundEffectType.f).a(0.75F).c("portal"));
         a(91, "lit_pumpkin", (new BlockPumpkin()).c(1.0F).a(SoundEffectType.a).a(1.0F).c("litpumpkin"));
-        a(92, "cake", (new BlockCake()).c(0.5F).a(SoundEffectType.g).c("cake").q());
-        a(93, "unpowered_repeater", (new BlockRepeater(false)).c(0.0F).a(SoundEffectType.a).c("diode").q());
-        a(94, "powered_repeater", (new BlockRepeater(true)).c(0.0F).a(SoundEffectType.a).c("diode").q());
+        a(92, "cake", (new BlockCake()).c(0.5F).a(SoundEffectType.g).c("cake").p());
+        a(93, "unpowered_repeater", (new BlockRepeater(false)).c(0.0F).a(SoundEffectType.a).c("diode").p());
+        a(94, "powered_repeater", (new BlockRepeater(true)).c(0.0F).a(SoundEffectType.a).c("diode").p());
         a(95, "stained_glass", (new BlockStainedGlass(Material.SHATTERABLE)).c(0.3F).a(SoundEffectType.f).c("stainedGlass"));
-        a(96, "trapdoor", (new BlockTrapdoor(Material.WOOD)).c(3.0F).a(SoundEffectType.a).c("trapdoor").q());
+        a(96, "trapdoor", (new BlockTrapdoor(Material.WOOD)).c(3.0F).a(SoundEffectType.a).c("trapdoor").p());
         a(97, "monster_egg", (new BlockMonsterEggs()).c(0.75F).c("monsterStoneEgg"));
         Block block8 = (new BlockSmoothBrick()).c(1.5F).b(10.0F).a(SoundEffectType.d).c("stonebricksmooth");
 
@@ -713,7 +762,7 @@ public class Block {
         a(134, "spruce_stairs", (new BlockStairs(block1.getBlockData().set(BlockWood.VARIANT, BlockWood.EnumLogVariant.SPRUCE))).c("stairsWoodSpruce"));
         a(135, "birch_stairs", (new BlockStairs(block1.getBlockData().set(BlockWood.VARIANT, BlockWood.EnumLogVariant.BIRCH))).c("stairsWoodBirch"));
         a(136, "jungle_stairs", (new BlockStairs(block1.getBlockData().set(BlockWood.VARIANT, BlockWood.EnumLogVariant.JUNGLE))).c("stairsWoodJungle"));
-        a(137, "command_block", (new BlockCommand(MaterialMapColor.B)).k().b(6000000.0F).c("commandBlock"));
+        a(137, "command_block", (new BlockCommand(MaterialMapColor.B)).j().b(6000000.0F).c("commandBlock"));
         a(138, "beacon", (new BlockBeacon()).c("beacon").a(1.0F));
         a(139, "cobblestone_wall", (new BlockCobbleWall(block)).c("cobbleWall"));
         a(140, "flower_pot", (new BlockFlowerPot()).c(0.0F).a(SoundEffectType.d).c("flowerPot"));
@@ -725,8 +774,8 @@ public class Block {
         a(146, "trapped_chest", (new BlockChest(BlockChest.Type.TRAP)).c(2.5F).a(SoundEffectType.a).c("chestTrap"));
         a(147, "light_weighted_pressure_plate", (new BlockPressurePlateWeighted(Material.ORE, 15, MaterialMapColor.F)).c(0.5F).a(SoundEffectType.a).c("weightedPlate_light"));
         a(148, "heavy_weighted_pressure_plate", (new BlockPressurePlateWeighted(Material.ORE, 150)).c(0.5F).a(SoundEffectType.a).c("weightedPlate_heavy"));
-        a(149, "unpowered_comparator", (new BlockRedstoneComparator(false)).c(0.0F).a(SoundEffectType.a).c("comparator").q());
-        a(150, "powered_comparator", (new BlockRedstoneComparator(true)).c(0.0F).a(0.625F).a(SoundEffectType.a).c("comparator").q());
+        a(149, "unpowered_comparator", (new BlockRedstoneComparator(false)).c(0.0F).a(SoundEffectType.a).c("comparator").p());
+        a(150, "powered_comparator", (new BlockRedstoneComparator(true)).c(0.0F).a(0.625F).a(SoundEffectType.a).c("comparator").p());
         a(151, "daylight_detector", new BlockDaylightDetector(false));
         a(152, "redstone_block", (new BlockPowered(Material.ORE, MaterialMapColor.f)).c(5.0F).b(10.0F).a(SoundEffectType.e).c("blockRedstone").a(CreativeModeTab.d));
         a(153, "quartz_ore", (new BlockOre(MaterialMapColor.K)).c(3.0F).b(5.0F).a(SoundEffectType.d).c("netherquartz"));
@@ -745,7 +794,7 @@ public class Block {
         a(164, "dark_oak_stairs", (new BlockStairs(block1.getBlockData().set(BlockWood.VARIANT, BlockWood.EnumLogVariant.DARK_OAK))).c("stairsWoodDarkOak"));
         a(165, "slime", (new BlockSlime()).c("slime").a(SoundEffectType.l));
         a(166, "barrier", (new BlockBarrier()).c("barrier"));
-        a(167, "iron_trapdoor", (new BlockTrapdoor(Material.ORE)).c(5.0F).a(SoundEffectType.e).c("ironTrapdoor").q());
+        a(167, "iron_trapdoor", (new BlockTrapdoor(Material.ORE)).c(5.0F).a(SoundEffectType.e).c("ironTrapdoor").p());
         a(168, "prismarine", (new BlockPrismarine()).c(1.5F).b(10.0F).a(SoundEffectType.d).c("prismarine"));
         a(169, "sea_lantern", (new BlockSeaLantern(Material.SHATTERABLE)).c(0.3F).a(SoundEffectType.f).a(1.0F).c("seaLantern"));
         a(170, "hay_block", (new BlockHay()).c(0.5F).a(SoundEffectType.c).c("hayBlock").a(CreativeModeTab.b));
@@ -754,8 +803,8 @@ public class Block {
         a(173, "coal_block", (new Block(Material.STONE, MaterialMapColor.E)).c(5.0F).b(10.0F).a(SoundEffectType.d).c("blockCoal").a(CreativeModeTab.b));
         a(174, "packed_ice", (new BlockPackedIce()).c(0.5F).a(SoundEffectType.f).c("icePacked"));
         a(175, "double_plant", new BlockTallPlant());
-        a(176, "standing_banner", (new BlockBanner.BlockStandingBanner()).c(1.0F).a(SoundEffectType.a).c("banner").q());
-        a(177, "wall_banner", (new BlockBanner.BlockWallBanner()).c(1.0F).a(SoundEffectType.a).c("banner").q());
+        a(176, "standing_banner", (new BlockBanner.BlockStandingBanner()).c(1.0F).a(SoundEffectType.a).c("banner").p());
+        a(177, "wall_banner", (new BlockBanner.BlockWallBanner()).c(1.0F).a(SoundEffectType.a).c("banner").p());
         a(178, "daylight_detector_inverted", new BlockDaylightDetector(true));
         Block block12 = (new BlockRedSandstone()).a(SoundEffectType.d).c(0.8F).c("redSandStone");
 
@@ -773,31 +822,53 @@ public class Block {
         a(190, "jungle_fence", (new BlockFence(Material.WOOD, BlockWood.EnumLogVariant.JUNGLE.c())).c(2.0F).b(5.0F).a(SoundEffectType.a).c("jungleFence"));
         a(191, "dark_oak_fence", (new BlockFence(Material.WOOD, BlockWood.EnumLogVariant.DARK_OAK.c())).c(2.0F).b(5.0F).a(SoundEffectType.a).c("darkOakFence"));
         a(192, "acacia_fence", (new BlockFence(Material.WOOD, BlockWood.EnumLogVariant.ACACIA.c())).c(2.0F).b(5.0F).a(SoundEffectType.a).c("acaciaFence"));
-        a(193, "spruce_door", (new BlockDoor(Material.WOOD)).c(3.0F).a(SoundEffectType.a).c("doorSpruce").q());
-        a(194, "birch_door", (new BlockDoor(Material.WOOD)).c(3.0F).a(SoundEffectType.a).c("doorBirch").q());
-        a(195, "jungle_door", (new BlockDoor(Material.WOOD)).c(3.0F).a(SoundEffectType.a).c("doorJungle").q());
-        a(196, "acacia_door", (new BlockDoor(Material.WOOD)).c(3.0F).a(SoundEffectType.a).c("doorAcacia").q());
-        a(197, "dark_oak_door", (new BlockDoor(Material.WOOD)).c(3.0F).a(SoundEffectType.a).c("doorDarkOak").q());
+        a(193, "spruce_door", (new BlockDoor(Material.WOOD)).c(3.0F).a(SoundEffectType.a).c("doorSpruce").p());
+        a(194, "birch_door", (new BlockDoor(Material.WOOD)).c(3.0F).a(SoundEffectType.a).c("doorBirch").p());
+        a(195, "jungle_door", (new BlockDoor(Material.WOOD)).c(3.0F).a(SoundEffectType.a).c("doorJungle").p());
+        a(196, "acacia_door", (new BlockDoor(Material.WOOD)).c(3.0F).a(SoundEffectType.a).c("doorAcacia").p());
+        a(197, "dark_oak_door", (new BlockDoor(Material.WOOD)).c(3.0F).a(SoundEffectType.a).c("doorDarkOak").p());
         a(198, "end_rod", (new BlockEndRod()).c(0.0F).a(0.9375F).a(SoundEffectType.a).c("endRod"));
         a(199, "chorus_plant", (new BlockChorusFruit()).c(0.4F).a(SoundEffectType.a).c("chorusPlant"));
         a(200, "chorus_flower", (new BlockChorusFlower()).c(0.4F).a(SoundEffectType.a).c("chorusFlower"));
-        Block block13 = (new Block(Material.STONE)).c(1.5F).b(10.0F).a(SoundEffectType.d).a(CreativeModeTab.b).c("purpurBlock");
+        Block block13 = (new Block(Material.STONE, MaterialMapColor.r)).c(1.5F).b(10.0F).a(SoundEffectType.d).a(CreativeModeTab.b).c("purpurBlock");
 
         a(201, "purpur_block", block13);
-        a(202, "purpur_pillar", (new BlockRotatable(Material.STONE)).c(1.5F).b(10.0F).a(SoundEffectType.d).a(CreativeModeTab.b).c("purpurPillar"));
+        a(202, "purpur_pillar", (new BlockRotatable(Material.STONE, MaterialMapColor.r)).c(1.5F).b(10.0F).a(SoundEffectType.d).a(CreativeModeTab.b).c("purpurPillar"));
         a(203, "purpur_stairs", (new BlockStairs(block13.getBlockData())).c("stairsPurpur"));
         a(204, "purpur_double_slab", (new BlockPurpurSlab.Default()).c(2.0F).b(10.0F).a(SoundEffectType.d).c("purpurSlab"));
         a(205, "purpur_slab", (new BlockPurpurSlab.Half()).c(2.0F).b(10.0F).a(SoundEffectType.d).c("purpurSlab"));
-        a(206, "end_bricks", (new Block(Material.STONE)).a(SoundEffectType.d).c(0.8F).a(CreativeModeTab.b).c("endBricks"));
+        a(206, "end_bricks", (new Block(Material.STONE, MaterialMapColor.d)).a(SoundEffectType.d).c(0.8F).a(CreativeModeTab.b).c("endBricks"));
         a(207, "beetroots", (new BlockBeetroot()).c("beetroots"));
-        Block block14 = (new BlockGrassPath()).c(0.65F).a(SoundEffectType.c).c("grassPath").q();
+        Block block14 = (new BlockGrassPath()).c(0.65F).a(SoundEffectType.c).c("grassPath").p();
 
         a(208, "grass_path", block14);
         a(209, "end_gateway", (new BlockEndGateway(Material.PORTAL)).c(-1.0F).b(6000000.0F));
-        a(210, "repeating_command_block", (new BlockCommand(MaterialMapColor.z)).k().b(6000000.0F).c("repeatingCommandBlock"));
-        a(211, "chain_command_block", (new BlockCommand(MaterialMapColor.C)).k().b(6000000.0F).c("chainCommandBlock"));
+        a(210, "repeating_command_block", (new BlockCommand(MaterialMapColor.z)).j().b(6000000.0F).c("repeatingCommandBlock"));
+        a(211, "chain_command_block", (new BlockCommand(MaterialMapColor.C)).j().b(6000000.0F).c("chainCommandBlock"));
         a(212, "frosted_ice", (new BlockIceFrost()).c(0.5F).d(3).a(SoundEffectType.f).c("frostedIce"));
-        a(255, "structure_block", (new BlockStructure()).k().b(6000000.0F).c("structureBlock").a(1.0F));
+        a(213, "magma", (new BlockMagma()).c(0.5F).a(SoundEffectType.d).c("magma"));
+        a(214, "nether_wart_block", (new Block(Material.GRASS, MaterialMapColor.D)).a(CreativeModeTab.b).c(1.0F).a(SoundEffectType.a).c("netherWartBlock"));
+        a(215, "red_nether_brick", (new BlockNetherbrick()).c(2.0F).b(10.0F).a(SoundEffectType.d).c("redNetherBrick").a(CreativeModeTab.b));
+        a(216, "bone_block", (new BlockBone()).c("boneBlock"));
+        a(217, "structure_void", (new BlockStructureVoid()).c("structureVoid"));
+        a(218, "observer", (new BlockObserver()).c(3.0F).c("observer"));
+        a(219, "white_shulker_box", (new BlockShulkerBox(EnumColor.WHITE)).c(2.0F).a(SoundEffectType.d).c("shulkerBoxWhite"));
+        a(220, "orange_shulker_box", (new BlockShulkerBox(EnumColor.ORANGE)).c(2.0F).a(SoundEffectType.d).c("shulkerBoxOrange"));
+        a(221, "magenta_shulker_box", (new BlockShulkerBox(EnumColor.MAGENTA)).c(2.0F).a(SoundEffectType.d).c("shulkerBoxMagenta"));
+        a(222, "light_blue_shulker_box", (new BlockShulkerBox(EnumColor.LIGHT_BLUE)).c(2.0F).a(SoundEffectType.d).c("shulkerBoxLightBlue"));
+        a(223, "yellow_shulker_box", (new BlockShulkerBox(EnumColor.YELLOW)).c(2.0F).a(SoundEffectType.d).c("shulkerBoxYellow"));
+        a(224, "lime_shulker_box", (new BlockShulkerBox(EnumColor.LIME)).c(2.0F).a(SoundEffectType.d).c("shulkerBoxLime"));
+        a(225, "pink_shulker_box", (new BlockShulkerBox(EnumColor.PINK)).c(2.0F).a(SoundEffectType.d).c("shulkerBoxPink"));
+        a(226, "gray_shulker_box", (new BlockShulkerBox(EnumColor.GRAY)).c(2.0F).a(SoundEffectType.d).c("shulkerBoxGray"));
+        a(227, "silver_shulker_box", (new BlockShulkerBox(EnumColor.SILVER)).c(2.0F).a(SoundEffectType.d).c("shulkerBoxSilver"));
+        a(228, "cyan_shulker_box", (new BlockShulkerBox(EnumColor.CYAN)).c(2.0F).a(SoundEffectType.d).c("shulkerBoxCyan"));
+        a(229, "purple_shulker_box", (new BlockShulkerBox(EnumColor.PURPLE)).c(2.0F).a(SoundEffectType.d).c("shulkerBoxPurple"));
+        a(230, "blue_shulker_box", (new BlockShulkerBox(EnumColor.BLUE)).c(2.0F).a(SoundEffectType.d).c("shulkerBoxBlue"));
+        a(231, "brown_shulker_box", (new BlockShulkerBox(EnumColor.BROWN)).c(2.0F).a(SoundEffectType.d).c("shulkerBoxBrown"));
+        a(232, "green_shulker_box", (new BlockShulkerBox(EnumColor.GREEN)).c(2.0F).a(SoundEffectType.d).c("shulkerBoxGreen"));
+        a(233, "red_shulker_box", (new BlockShulkerBox(EnumColor.RED)).c(2.0F).a(SoundEffectType.d).c("shulkerBoxRed"));
+        a(234, "black_shulker_box", (new BlockShulkerBox(EnumColor.BLACK)).c(2.0F).a(SoundEffectType.d).c("shulkerBoxBlack"));
+        a(255, "structure_block", (new BlockStructure()).j().b(6000000.0F).c("structureBlock"));
         Block.REGISTRY.a();
         Iterator iterator = Block.REGISTRY.iterator();
 
@@ -835,10 +906,10 @@ public class Block {
                     Block.REGISTRY_ID.a(block16.fromLegacyData(i), j);
                 }
             } else {
-                Iterator iterator2 = block16.t().a().iterator();
+                UnmodifiableIterator unmodifiableiterator = block16.s().a().iterator();
 
-                while (iterator2.hasNext()) {
-                    IBlockData iblockdata = (IBlockData) iterator2.next();
+                while (unmodifiableiterator.hasNext()) {
+                    IBlockData iblockdata = (IBlockData) unmodifiableiterator.next();
                     int k = Block.REGISTRY.a(block16) << 4 | block16.toLegacyData(iblockdata); // CraftBukkit - decompile error
 
                     Block.REGISTRY_ID.a(iblockdata, k);
@@ -873,4 +944,11 @@ public class Block {
         return value;
     }
     // Spigot end
+
+    public static enum EnumRandomOffset {
+
+        NONE, XZ, XYZ;
+
+        private EnumRandomOffset() {}
+    }
 }

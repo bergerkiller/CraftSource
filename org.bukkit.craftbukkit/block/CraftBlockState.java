@@ -3,6 +3,7 @@ package org.bukkit.craftbukkit.block;
 import net.minecraft.server.BlockPosition;
 import org.bukkit.Location;
 import org.bukkit.block.Block;
+import org.bukkit.block.BlockFace;
 import org.bukkit.Chunk;
 import org.bukkit.Material;
 import org.bukkit.World;
@@ -10,11 +11,14 @@ import org.bukkit.block.BlockState;
 import org.bukkit.craftbukkit.CraftChunk;
 import org.bukkit.craftbukkit.CraftWorld;
 import org.bukkit.craftbukkit.util.CraftMagicNumbers;
+import org.bukkit.material.Attachable;
 import org.bukkit.material.MaterialData;
 import org.bukkit.metadata.MetadataValue;
 import org.bukkit.plugin.Plugin;
 
 import java.util.List;
+import net.minecraft.server.EnumDirection;
+import net.minecraft.server.IBlockData;
 import net.minecraft.server.TileEntity;
 
 public class CraftBlockState implements BlockState {
@@ -26,7 +30,6 @@ public class CraftBlockState implements BlockState {
     protected int type;
     protected MaterialData data;
     protected int flag;
-    protected final byte light;
 
     public CraftBlockState(final Block block) {
         this.world = (CraftWorld) block.getWorld();
@@ -34,7 +37,6 @@ public class CraftBlockState implements BlockState {
         this.y = block.getY();
         this.z = block.getZ();
         this.type = block.getTypeId();
-        this.light = block.getLightLevel();
         this.chunk = (CraftChunk) block.getChunk();
         this.flag = 3;
 
@@ -49,7 +51,6 @@ public class CraftBlockState implements BlockState {
     public CraftBlockState(Material material) {
         world = null;
         type = material.getId();
-        light = 0;
         chunk = null;
         x = y = z = 0;
     }
@@ -133,7 +134,7 @@ public class CraftBlockState implements BlockState {
     }
 
     public byte getLightLevel() {
-        return light;
+        return getBlock().getLightLevel();
     }
 
     public Block getBlock() {
@@ -159,13 +160,20 @@ public class CraftBlockState implements BlockState {
             }
         }
 
+        BlockPosition pos = new BlockPosition(x, y, z);
+        IBlockData newBlock = CraftMagicNumbers.getBlock(getType()).fromLegacyData(getRawData());
         block.setTypeIdAndData(getTypeId(), getRawData(), applyPhysics);
         world.getHandle().notify(
-                new BlockPosition(x, y, z),
+                pos,
                 CraftMagicNumbers.getBlock(block).fromLegacyData(block.getData()),
-                CraftMagicNumbers.getBlock(getType()).fromLegacyData(getRawData()),
+                newBlock,
                 3
         );
+
+        // Update levers etc
+        if (applyPhysics && getData() instanceof Attachable) {
+            world.getHandle().applyPhysics(pos.shift(CraftBlock.blockFaceToNotch(((Attachable) getData()).getAttachedFace())), newBlock.getBlock(), false);
+        }
 
         return true;
     }

@@ -1,6 +1,7 @@
 package net.minecraft.server;
 
 import com.google.common.base.Predicate;
+import javax.annotation.Nullable;
 
 // CraftBukkit start
 import org.bukkit.craftbukkit.util.BlockStateListPopulator;
@@ -15,18 +16,18 @@ public class BlockPumpkin extends BlockFacingHorizontal {
     private ShapeDetector ironGolemPart;
     private ShapeDetector ironGolem;
     private static final Predicate<IBlockData> e = new Predicate() {
-        public boolean a(IBlockData iblockdata) {
+        public boolean a(@Nullable IBlockData iblockdata) {
             return iblockdata != null && (iblockdata.getBlock() == Blocks.PUMPKIN || iblockdata.getBlock() == Blocks.LIT_PUMPKIN);
         }
 
-        public boolean apply(Object object) {
+        public boolean apply(@Nullable Object object) {
             return this.a((IBlockData) object);
         }
     };
 
     protected BlockPumpkin() {
         super(Material.PUMPKIN, MaterialMapColor.q);
-        this.w(this.blockStateList.getBlockData().set(BlockPumpkin.FACING, EnumDirection.NORTH));
+        this.y(this.blockStateList.getBlockData().set(BlockPumpkin.FACING, EnumDirection.NORTH));
         this.a(true);
         this.a(CreativeModeTab.b);
     }
@@ -41,12 +42,12 @@ public class BlockPumpkin extends BlockFacingHorizontal {
     }
 
     private void c(World world, BlockPosition blockposition) {
-        ShapeDetector.ShapeDetectorCollection shapedetector_shapedetectorcollection;
+        ShapeDetector.ShapeDetectorCollection shapedetector_shapedetectorcollection = this.getDetectorSnowGolem().a(world, blockposition);
         int i;
         int j;
 
-        if ((shapedetector_shapedetectorcollection = this.getDetectorSnowGolem().a(world, blockposition)) != null) {
-            BlockStateListPopulator blockList = new BlockStateListPopulator(world.getWorld()); // CraftBukkit - Use BlockStateListPopulator
+        BlockStateListPopulator blockList = new BlockStateListPopulator(world.getWorld()); // CraftBukkit - Use BlockStateListPopulator
+        if (shapedetector_shapedetectorcollection != null) {
             for (i = 0; i < this.getDetectorSnowGolem().b(); ++i) {
                 ShapeDetectorBlock shapedetectorblock = shapedetector_shapedetectorcollection.a(0, i, 0);
 
@@ -72,40 +73,41 @@ public class BlockPumpkin extends BlockFacingHorizontal {
             for (j = 0; j < this.getDetectorSnowGolem().b(); ++j) {
                 ShapeDetectorBlock shapedetectorblock1 = shapedetector_shapedetectorcollection.a(0, j, 0);
 
-                world.update(shapedetectorblock1.getPosition(), Blocks.AIR);
+                world.update(shapedetectorblock1.getPosition(), Blocks.AIR, false);
             }
             } // CraftBukkit end
-        } else if ((shapedetector_shapedetectorcollection = this.getDetectorIronGolem().a(world, blockposition)) != null) {
-            BlockStateListPopulator blockList = new BlockStateListPopulator(world.getWorld()); // CraftBukkit - Use BlockStateListPopulator
-            for (i = 0; i < this.getDetectorIronGolem().c(); ++i) {
-                for (int k = 0; k < this.getDetectorIronGolem().b(); ++k) {
-                    // CraftBukkit start
-                    // world.setTypeAndData(shapedetectorcollection.a(i, k, 0).d(), Blocks.AIR.getBlockData(), 2);
-                    BlockPosition pos = shapedetector_shapedetectorcollection.a(i, k, 0).getPosition();
-                    blockList.setTypeId(pos.getX(), pos.getY(), pos.getZ(), 0);
-                    // CraftBukkit end
+        } else {
+            shapedetector_shapedetectorcollection = this.getDetectorIronGolem().a(world, blockposition);
+            if (shapedetector_shapedetectorcollection != null) {
+                for (i = 0; i < this.getDetectorIronGolem().c(); ++i) {
+                    for (int k = 0; k < this.getDetectorIronGolem().b(); ++k) {
+                        // CraftBukkit start
+                        // world.setTypeAndData(shapedetector_shapedetectorcollection.a(i, k, 0).getPosition(), Blocks.AIR.getBlockData(), 2);
+                        BlockPosition pos = shapedetector_shapedetectorcollection.a(i, k, 0).getPosition();
+                        blockList.setTypeId(pos.getX(), pos.getY(), pos.getZ(), 0);
+                        // CraftBukkit end
+                    }
                 }
-            }
 
-            BlockPosition blockposition2 = shapedetector_shapedetectorcollection.a(1, 2, 0).getPosition();
-            EntityIronGolem entityirongolem = new EntityIronGolem(world);
+                BlockPosition blockposition2 = shapedetector_shapedetectorcollection.a(1, 2, 0).getPosition();
+                EntityIronGolem entityirongolem = new EntityIronGolem(world);
 
-            entityirongolem.setPlayerCreated(true);
-            entityirongolem.setPositionRotation((double) blockposition2.getX() + 0.5D, (double) blockposition2.getY() + 0.05D, (double) blockposition2.getZ() + 0.5D, 0.0F, 0.0F);
-
+                entityirongolem.setPlayerCreated(true);
+                entityirongolem.setPositionRotation((double) blockposition2.getX() + 0.5D, (double) blockposition2.getY() + 0.05D, (double) blockposition2.getZ() + 0.5D, 0.0F, 0.0F);
             // CraftBukkit start
             if (world.addEntity(entityirongolem, SpawnReason.BUILD_IRONGOLEM)) {
                 blockList.updateList();
 
-            for (j = 0; j < 120; ++j) {
-                world.addParticle(EnumParticle.SNOWBALL, (double) blockposition2.getX() + world.random.nextDouble(), (double) blockposition2.getY() + world.random.nextDouble() * 3.9D, (double) blockposition2.getZ() + world.random.nextDouble(), 0.0D, 0.0D, 0.0D, new int[0]);
-            }
+                for (j = 0; j < 120; ++j) {
+                    world.addParticle(EnumParticle.SNOWBALL, (double) blockposition2.getX() + world.random.nextDouble(), (double) blockposition2.getY() + world.random.nextDouble() * 3.9D, (double) blockposition2.getZ() + world.random.nextDouble(), 0.0D, 0.0D, 0.0D, new int[0]);
+                }
 
-            for (j = 0; j < this.getDetectorIronGolem().c(); ++j) {
-                for (int l = 0; l < this.getDetectorIronGolem().b(); ++l) {
-                    ShapeDetectorBlock shapedetectorblock2 = shapedetector_shapedetectorcollection.a(j, l, 0);
+                for (j = 0; j < this.getDetectorIronGolem().c(); ++j) {
+                    for (int l = 0; l < this.getDetectorIronGolem().b(); ++l) {
+                        ShapeDetectorBlock shapedetectorblock2 = shapedetector_shapedetectorcollection.a(j, l, 0);
 
-                    world.update(shapedetectorblock2.getPosition(), Blocks.AIR);
+                        world.update(shapedetectorblock2.getPosition(), Blocks.AIR, false);
+                    }
                 }
             }
             } // CraftBukkit end
@@ -114,7 +116,7 @@ public class BlockPumpkin extends BlockFacingHorizontal {
     }
 
     public boolean canPlace(World world, BlockPosition blockposition) {
-        return world.getType(blockposition).getBlock().material.isReplaceable() && world.getType(blockposition.down()).q();
+        return world.getType(blockposition).getBlock().material.isReplaceable() && world.getType(blockposition.down()).r();
     }
 
     public IBlockData a(IBlockData iblockdata, EnumBlockRotation enumblockrotation) {
@@ -143,7 +145,7 @@ public class BlockPumpkin extends BlockFacingHorizontal {
 
     protected ShapeDetector getDetectorSnowGolemPart() {
         if (this.snowGolemPart == null) {
-            this.snowGolemPart = ShapeDetectorBuilder.a().a(new String[] { " ", "#", "#"}).a('#', ShapeDetectorBlock.a((Predicate) BlockStatePredicate.a(Blocks.SNOW))).b();
+            this.snowGolemPart = ShapeDetectorBuilder.a().a(new String[] { " ", "#", "#"}).a('#', ShapeDetectorBlock.a(BlockStatePredicate.a(Blocks.SNOW))).b();
         }
 
         return this.snowGolemPart;
@@ -151,7 +153,7 @@ public class BlockPumpkin extends BlockFacingHorizontal {
 
     protected ShapeDetector getDetectorSnowGolem() {
         if (this.snowGolem == null) {
-            this.snowGolem = ShapeDetectorBuilder.a().a(new String[] { "^", "#", "#"}).a('^', ShapeDetectorBlock.a(BlockPumpkin.e)).a('#', ShapeDetectorBlock.a((Predicate) BlockStatePredicate.a(Blocks.SNOW))).b();
+            this.snowGolem = ShapeDetectorBuilder.a().a(new String[] { "^", "#", "#"}).a('^', ShapeDetectorBlock.a(BlockPumpkin.e)).a('#', ShapeDetectorBlock.a(BlockStatePredicate.a(Blocks.SNOW))).b();
         }
 
         return this.snowGolem;
@@ -159,7 +161,7 @@ public class BlockPumpkin extends BlockFacingHorizontal {
 
     protected ShapeDetector getDetectorIronGolemPart() {
         if (this.ironGolemPart == null) {
-            this.ironGolemPart = ShapeDetectorBuilder.a().a(new String[] { "~ ~", "###", "~#~"}).a('#', ShapeDetectorBlock.a((Predicate) BlockStatePredicate.a(Blocks.IRON_BLOCK))).a('~', ShapeDetectorBlock.a((Predicate) BlockStatePredicate.a(Blocks.AIR))).b();
+            this.ironGolemPart = ShapeDetectorBuilder.a().a(new String[] { "~ ~", "###", "~#~"}).a('#', ShapeDetectorBlock.a(BlockStatePredicate.a(Blocks.IRON_BLOCK))).a('~', ShapeDetectorBlock.a(MaterialPredicate.a(Material.AIR))).b();
         }
 
         return this.ironGolemPart;
@@ -167,7 +169,7 @@ public class BlockPumpkin extends BlockFacingHorizontal {
 
     protected ShapeDetector getDetectorIronGolem() {
         if (this.ironGolem == null) {
-            this.ironGolem = ShapeDetectorBuilder.a().a(new String[] { "~^~", "###", "~#~"}).a('^', ShapeDetectorBlock.a(BlockPumpkin.e)).a('#', ShapeDetectorBlock.a((Predicate) BlockStatePredicate.a(Blocks.IRON_BLOCK))).a('~', ShapeDetectorBlock.a((Predicate) BlockStatePredicate.a(Blocks.AIR))).b();
+            this.ironGolem = ShapeDetectorBuilder.a().a(new String[] { "~^~", "###", "~#~"}).a('^', ShapeDetectorBlock.a(BlockPumpkin.e)).a('#', ShapeDetectorBlock.a(BlockStatePredicate.a(Blocks.IRON_BLOCK))).a('~', ShapeDetectorBlock.a(MaterialPredicate.a(Material.AIR))).b();
         }
 
         return this.ironGolem;

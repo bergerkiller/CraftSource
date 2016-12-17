@@ -2,6 +2,7 @@ package net.minecraft.server;
 
 import java.util.List;
 import java.util.UUID;
+import javax.annotation.Nullable;
 
 public abstract class EntityProjectile extends Entity implements IProjectile {
 
@@ -13,10 +14,10 @@ public abstract class EntityProjectile extends Entity implements IProjectile {
     public int shake;
     public EntityLiving shooter;
     public String shooterName;
-    private int at;
     private int au;
-    public Entity c;
     private int av;
+    public Entity c;
+    private int aw;
 
     public EntityProjectile(World world) {
         super(world);
@@ -70,24 +71,26 @@ public abstract class EntityProjectile extends Entity implements IProjectile {
         this.motZ = d2;
         float f3 = MathHelper.sqrt(d0 * d0 + d2 * d2);
 
-        this.lastYaw = this.yaw = (float) (MathHelper.b(d0, d2) * 57.2957763671875D);
-        this.lastPitch = this.pitch = (float) (MathHelper.b(d1, (double) f3) * 57.2957763671875D);
-        this.at = 0;
+        this.yaw = (float) (MathHelper.c(d0, d2) * 57.2957763671875D);
+        this.pitch = (float) (MathHelper.c(d1, (double) f3) * 57.2957763671875D);
+        this.lastYaw = this.yaw;
+        this.lastPitch = this.pitch;
+        this.au = 0;
     }
 
-    public void m() {
+    public void A_() {
         this.M = this.locX;
         this.N = this.locY;
         this.O = this.locZ;
-        super.m();
+        super.A_();
         if (this.shake > 0) {
             --this.shake;
         }
 
         if (this.inGround) {
             if (this.world.getType(new BlockPosition(this.blockX, this.blockY, this.blockZ)).getBlock() == this.inBlockId) {
-                ++this.at;
-                if (this.at == 1200) {
+                ++this.au;
+                if (this.au == 1200) {
                     this.die();
                 }
 
@@ -98,10 +101,10 @@ public abstract class EntityProjectile extends Entity implements IProjectile {
             this.motX *= (double) (this.random.nextFloat() * 0.2F);
             this.motY *= (double) (this.random.nextFloat() * 0.2F);
             this.motZ *= (double) (this.random.nextFloat() * 0.2F);
-            this.at = 0;
             this.au = 0;
+            this.av = 0;
         } else {
-            ++this.au;
+            ++this.av;
         }
 
         Vec3D vec3d = new Vec3D(this.locX, this.locY, this.locZ);
@@ -115,7 +118,7 @@ public abstract class EntityProjectile extends Entity implements IProjectile {
         }
 
         Entity entity = null;
-        List list = this.world.getEntities(this, this.getBoundingBox().a(this.motX, this.motY, this.motZ).g(1.0D));
+        List list = this.world.getEntities(this, this.getBoundingBox().b(this.motX, this.motY, this.motZ).g(1.0D));
         double d0 = 0.0D;
         boolean flag = false;
 
@@ -125,13 +128,13 @@ public abstract class EntityProjectile extends Entity implements IProjectile {
             if (entity1.isInteractable()) {
                 if (entity1 == this.c) {
                     flag = true;
-                } else if (this.ticksLived < 2 && this.c == null) {
+                } else if (this.shooter != null && this.ticksLived < 2 && this.c == null) {
                     this.c = entity1;
                     flag = true;
                 } else {
                     flag = false;
                     AxisAlignedBB axisalignedbb = entity1.getBoundingBox().g(0.30000001192092896D);
-                    MovingObjectPosition movingobjectposition1 = axisalignedbb.a(vec3d, vec3d1);
+                    MovingObjectPosition movingobjectposition1 = axisalignedbb.b(vec3d, vec3d1);
 
                     if (movingobjectposition1 != null) {
                         double d1 = vec3d.distanceSquared(movingobjectposition1.pos);
@@ -147,8 +150,8 @@ public abstract class EntityProjectile extends Entity implements IProjectile {
 
         if (this.c != null) {
             if (flag) {
-                this.av = 2;
-            } else if (this.av-- <= 0) {
+                this.aw = 2;
+            } else if (this.aw-- <= 0) {
                 this.c = null;
             }
         }
@@ -164,7 +167,7 @@ public abstract class EntityProjectile extends Entity implements IProjectile {
                 this.a(movingobjectposition);
                 // CraftBukkit start
                 if (this.dead) {
-                    org.bukkit.craftbukkit.event.CraftEventFactory.callProjectileHitEvent(this);
+                    org.bukkit.craftbukkit.event.CraftEventFactory.callProjectileHitEvent(this, movingobjectposition);
                 }
                 // CraftBukkit end
             }
@@ -175,9 +178,9 @@ public abstract class EntityProjectile extends Entity implements IProjectile {
         this.locZ += this.motZ;
         float f = MathHelper.sqrt(this.motX * this.motX + this.motZ * this.motZ);
 
-        this.yaw = (float) (MathHelper.b(this.motX, this.motZ) * 57.2957763671875D);
+        this.yaw = (float) (MathHelper.c(this.motX, this.motZ) * 57.2957763671875D);
 
-        for (this.pitch = (float) (MathHelper.b(this.motY, (double) f) * 57.2957763671875D); this.pitch - this.lastPitch < -180.0F; this.lastPitch -= 360.0F) {
+        for (this.pitch = (float) (MathHelper.c(this.motY, (double) f) * 57.2957763671875D); this.pitch - this.lastPitch < -180.0F; this.lastPitch -= 360.0F) {
             ;
         }
 
@@ -202,7 +205,7 @@ public abstract class EntityProjectile extends Entity implements IProjectile {
             for (int j = 0; j < 4; ++j) {
                 float f3 = 0.25F;
 
-                this.world.addParticle(EnumParticle.WATER_BUBBLE, this.locX - this.motX * (double) f3, this.locY - this.motY * (double) f3, this.locZ - this.motZ * (double) f3, this.motX, this.motY, this.motZ, new int[0]);
+                this.world.addParticle(EnumParticle.WATER_BUBBLE, this.locX - this.motX * 0.25D, this.locY - this.motY * 0.25D, this.locZ - this.motZ * 0.25D, this.motX, this.motY, this.motZ, new int[0]);
             }
 
             f1 = 0.8F;
@@ -211,7 +214,10 @@ public abstract class EntityProjectile extends Entity implements IProjectile {
         this.motX *= (double) f1;
         this.motY *= (double) f1;
         this.motZ *= (double) f1;
-        this.motY -= (double) f2;
+        if (!this.isNoGravity()) {
+            this.motY -= (double) f2;
+        }
+
         this.setPosition(this.locX, this.locY, this.locZ);
     }
 
@@ -220,6 +226,8 @@ public abstract class EntityProjectile extends Entity implements IProjectile {
     }
 
     protected abstract void a(MovingObjectPosition movingobjectposition);
+
+    public static void a(DataConverterManager dataconvertermanager, String s) {}
 
     public void b(NBTTagCompound nbttagcompound) {
         nbttagcompound.setInt("xTile", this.blockX);
@@ -258,6 +266,7 @@ public abstract class EntityProjectile extends Entity implements IProjectile {
         this.shooter = this.getShooter();
     }
 
+    @Nullable
     public EntityLiving getShooter() {
         if (this.shooter == null && this.shooterName != null && !this.shooterName.isEmpty()) {
             this.shooter = this.world.a(this.shooterName);

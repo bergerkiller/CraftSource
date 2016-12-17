@@ -23,7 +23,6 @@ import java.net.InetAddress;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
-import java.util.concurrent.Callable;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -74,7 +73,7 @@ public class ServerConnection {
             Class oclass;
             LazyInitVar lazyinitvar;
 
-            if (Epoll.isAvailable() && this.f.ae()) {
+            if (Epoll.isAvailable() && this.f.af()) {
                 oclass = EpollServerSocketChannel.class;
                 lazyinitvar = ServerConnection.b;
                 ServerConnection.e.info("Using epoll channel type");
@@ -144,7 +143,7 @@ public class ServerConnection {
                                 CrashReport crashreport = CrashReport.a(exception, "Ticking memory connection");
                                 CrashReportSystemDetails crashreportsystemdetails = crashreport.a("Ticking connection");
 
-                                crashreportsystemdetails.a("Connection", new Callable() {
+                                crashreportsystemdetails.a("Connection", new CrashReportCallable() {
                                     public String a() throws Exception {
                                         return networkmanager.toString();
                                     }
@@ -156,7 +155,7 @@ public class ServerConnection {
                                 throw new ReportedException(crashreport);
                             }
 
-                            ServerConnection.e.warn("Failed to handle packet for " + networkmanager.getSocketAddress(), exception);
+                            ServerConnection.e.warn("Failed to handle packet for {}", new Object[] { networkmanager.getSocketAddress(), exception});
                             final ChatComponentText chatcomponenttext = new ChatComponentText("Internal server error");
 
                             networkmanager.sendPacket(new PacketPlayOutKickDisconnect(chatcomponenttext), new GenericFutureListener() {

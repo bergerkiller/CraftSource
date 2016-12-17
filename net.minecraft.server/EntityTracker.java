@@ -5,7 +5,6 @@ import com.google.common.collect.Sets;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Set;
-import java.util.concurrent.Callable;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -13,8 +12,8 @@ public class EntityTracker {
 
     private static final Logger a = LogManager.getLogger();
     private final WorldServer world;
-    private Set<EntityTrackerEntry> c = Sets.newHashSet();
-    public IntHashMap<EntityTrackerEntry> trackedEntities = new IntHashMap();
+    private final Set<EntityTrackerEntry> c = Sets.newHashSet();
+    public final IntHashMap<EntityTrackerEntry> trackedEntities = new IntHashMap();
     private int e;
 
     public EntityTracker(WorldServer worldserver) {
@@ -46,9 +45,11 @@ public class EntityTracker {
         } else if (entity instanceof EntitySmallFireball) {
             this.addEntity(entity, 64, 10, false);
         } else if (entity instanceof EntityFireball) {
-            this.addEntity(entity, 64, 10, false);
+            this.addEntity(entity, 64, 10, true);
         } else if (entity instanceof EntitySnowball) {
             this.addEntity(entity, 64, 10, true);
+        } else if (entity instanceof EntityLlamaSpit) {
+            this.addEntity(entity, 64, 10, false);
         } else if (entity instanceof EntityEnderPearl) {
             this.addEntity(entity, 64, 10, true);
         } else if (entity instanceof EntityEnderSignal) {
@@ -93,6 +94,8 @@ public class EntityTracker {
             this.addEntity(entity, 160, Integer.MAX_VALUE, true);
         } else if (entity instanceof EntityEnderCrystal) {
             this.addEntity(entity, 256, Integer.MAX_VALUE, false);
+        } else if (entity instanceof EntityEvokerFangs) {
+            this.addEntity(entity, 160, 2, false);
         }
 
     }
@@ -120,7 +123,7 @@ public class EntityTracker {
 
             crashreportsystemdetails.a("Tracking range", (Object) (i + " blocks"));
             final int finalI = i; // CraftBukkit - fix decompile error
-            crashreportsystemdetails.a("Update interval", new Callable() {
+            crashreportsystemdetails.a("Update interval", new CrashReportCallable() {
                 public String a() throws Exception {
                     String s = "Once per " + finalI + " ticks"; // CraftBukkit
 
@@ -260,7 +263,7 @@ public class EntityTracker {
                     arraylist.add(entity);
                 }
 
-                if (!entity.bu().isEmpty()) {
+                if (!entity.bx().isEmpty()) {
                     arraylist1.add(entity);
                 }
             }

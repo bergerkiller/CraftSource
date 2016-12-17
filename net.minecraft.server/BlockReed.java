@@ -2,6 +2,7 @@ package net.minecraft.server;
 
 import java.util.Iterator;
 import java.util.Random;
+import javax.annotation.Nullable;
 
 public class BlockReed extends Block {
 
@@ -10,11 +11,11 @@ public class BlockReed extends Block {
 
     protected BlockReed() {
         super(Material.PLANT);
-        this.w(this.blockStateList.getBlockData().set(BlockReed.AGE, Integer.valueOf(0)));
+        this.y(this.blockStateList.getBlockData().set(BlockReed.AGE, Integer.valueOf(0)));
         this.a(true);
     }
 
-    public AxisAlignedBB a(IBlockData iblockdata, IBlockAccess iblockaccess, BlockPosition blockposition) {
+    public AxisAlignedBB b(IBlockData iblockdata, IBlockAccess iblockaccess, BlockPosition blockposition) {
         return BlockReed.b;
     }
 
@@ -30,7 +31,7 @@ public class BlockReed extends Block {
                 if (i < 3) {
                     int j = ((Integer) iblockdata.get(BlockReed.AGE)).intValue();
 
-                    if (j >= (byte) range(3, ((100 / world.spigotConfig.caneModifier) * 15) + 0.5F, 15)) { // Spigot
+                    if (j >= (byte) range(3, ((100.0F / world.spigotConfig.caneModifier) * 15) + 0.5F, 15)) { // Spigot
                         // CraftBukkit start
                         // world.setTypeUpdate(blockposition.up(), this.getBlockData()); // CraftBukkit
                         BlockPosition upPos = blockposition.up();
@@ -67,13 +68,13 @@ public class BlockReed extends Block {
                 EnumDirection enumdirection = (EnumDirection) iterator.next();
 
                 iblockdata = world.getType(blockposition1.shift(enumdirection));
-            } while (iblockdata.getMaterial() != Material.WATER && iblockdata.getBlock() != Blocks.de);
+            } while (iblockdata.getMaterial() != Material.WATER && iblockdata.getBlock() != Blocks.FROSTED_ICE);
 
             return true;
         }
     }
 
-    public void doPhysics(World world, BlockPosition blockposition, IBlockData iblockdata, Block block) {
+    public void a(IBlockData iblockdata, World world, BlockPosition blockposition, Block block, BlockPosition blockposition1) {
         this.e(world, blockposition, iblockdata);
     }
 
@@ -91,7 +92,8 @@ public class BlockReed extends Block {
         return this.canPlace(world, blockposition);
     }
 
-    public AxisAlignedBB a(IBlockData iblockdata, World world, BlockPosition blockposition) {
+    @Nullable
+    public AxisAlignedBB a(IBlockData iblockdata, IBlockAccess iblockaccess, BlockPosition blockposition) {
         return BlockReed.k;
     }
 

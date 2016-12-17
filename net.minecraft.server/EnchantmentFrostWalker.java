@@ -1,5 +1,8 @@
 package net.minecraft.server;
 
+import org.bukkit.craftbukkit.util.CraftMagicNumbers;
+import org.bukkit.event.block.EntityBlockFormEvent;
+
 import java.util.Iterator;
 
 public class EnchantmentFrostWalker extends Enchantment {
@@ -17,7 +20,7 @@ public class EnchantmentFrostWalker extends Enchantment {
         return this.a(i) + 15;
     }
 
-    public boolean e() {
+    public boolean isTreasure() {
         return true;
     }
 
@@ -34,16 +37,19 @@ public class EnchantmentFrostWalker extends Enchantment {
             while (iterator.hasNext()) {
                 BlockPosition.MutableBlockPosition blockposition_mutableblockposition1 = (BlockPosition.MutableBlockPosition) iterator.next();
 
-                if (blockposition_mutableblockposition1.f(entityliving.locX, entityliving.locY, entityliving.locZ) <= (double) (f * f)) {
+                if (blockposition_mutableblockposition1.g(entityliving.locX, entityliving.locY, entityliving.locZ) <= (double) (f * f)) {
                     blockposition_mutableblockposition.c(blockposition_mutableblockposition1.getX(), blockposition_mutableblockposition1.getY() + 1, blockposition_mutableblockposition1.getZ());
                     IBlockData iblockdata = world.getType(blockposition_mutableblockposition);
 
-                    if (iblockdata.getBlock() == Blocks.AIR) {
+                    if (iblockdata.getMaterial() == Material.AIR) {
                         IBlockData iblockdata1 = world.getType(blockposition_mutableblockposition1);
 
-                        if (iblockdata1.getMaterial() == Material.WATER && ((Integer) iblockdata1.get(BlockFluids.LEVEL)).intValue() == 0 && world.a(Blocks.de, blockposition_mutableblockposition1, false, EnumDirection.DOWN, (Entity) null, (ItemStack) null)) {
-                            world.setTypeUpdate(blockposition_mutableblockposition1, Blocks.de.getBlockData());
-                            world.a(blockposition_mutableblockposition1.h(), Blocks.de, MathHelper.nextInt(entityliving.getRandom(), 60, 120));
+                        if (iblockdata1.getMaterial() == Material.WATER && ((Integer) iblockdata1.get(BlockFluids.LEVEL)).intValue() == 0 && world.a(Blocks.FROSTED_ICE, blockposition_mutableblockposition1, false, EnumDirection.DOWN, (Entity) null)) {
+                            // CraftBukkit Start - Call EntityBlockFormEvent for Frost Walker
+                            if (org.bukkit.craftbukkit.event.CraftEventFactory.handleBlockFormEvent(world, blockposition_mutableblockposition1, Blocks.FROSTED_ICE, entityliving)) {
+                                world.a(blockposition_mutableblockposition1.h(), Blocks.FROSTED_ICE, MathHelper.nextInt(entityliving.getRandom(), 60, 120));
+                            }
+                            // CraftBukkit End
                         }
                     }
                 }

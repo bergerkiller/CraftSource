@@ -2,10 +2,11 @@ package net.minecraft.server;
 
 import java.util.Iterator;
 import java.util.List;
+import javax.annotation.Nullable;
 
 public class VillageSiege {
 
-    private World a;
+    private final World a;
     private boolean b;
     private int c = -1;
     private int d;
@@ -133,7 +134,6 @@ public class VillageSiege {
             try {
                 entityzombie = new EntityZombie(this.a);
                 entityzombie.prepare(this.a.D(new BlockPosition(entityzombie)), (GroupDataEntity) null);
-                entityzombie.clearVillagerType();
             } catch (Exception exception) {
                 exception.printStackTrace();
                 return false;
@@ -148,6 +148,7 @@ public class VillageSiege {
         }
     }
 
+    @Nullable
     private Vec3D a(BlockPosition blockposition) {
         for (int i = 0; i < 10; ++i) {
             BlockPosition blockposition1 = blockposition.a(this.a.random.nextInt(16) - 8, this.a.random.nextInt(6) - 3, this.a.random.nextInt(16) - 8);

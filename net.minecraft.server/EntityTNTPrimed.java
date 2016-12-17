@@ -1,10 +1,12 @@
 package net.minecraft.server;
 
+import javax.annotation.Nullable;
 import org.bukkit.event.entity.ExplosionPrimeEvent; // CraftBukkit
 
 public class EntityTNTPrimed extends Entity {
 
     private static final DataWatcherObject<Integer> FUSE_TICKS = DataWatcher.a(EntityTNTPrimed.class, DataWatcherRegistry.b);
+    @Nullable
     private EntityLiving source;
     private int c;
     public float yield = 4; // CraftBukkit - add field
@@ -44,13 +46,16 @@ public class EntityTNTPrimed extends Entity {
         return !this.dead;
     }
 
-    public void m() {
+    public void A_() {
         if (world.spigotConfig.currentPrimedTnt++ > world.spigotConfig.maxTntTicksPerTick) { return; } // Spigot
         this.lastX = this.locX;
         this.lastY = this.locY;
         this.lastZ = this.locZ;
-        this.motY -= 0.03999999910593033D;
-        this.move(this.motX, this.motY, this.motZ);
+        if (!this.isNoGravity()) {
+            this.motY -= 0.03999999910593033D;
+        }
+
+        this.move(EnumMoveType.SELF, this.motX, this.motY, this.motZ);
         this.motX *= 0.9800000190734863D;
         this.motY *= 0.9800000190734863D;
         this.motZ *= 0.9800000190734863D;
@@ -70,7 +75,7 @@ public class EntityTNTPrimed extends Entity {
             this.die();
             // CraftBukkit end
         } else {
-            this.aj();
+            this.ak();
             this.world.addParticle(EnumParticle.SMOKE_NORMAL, this.locX, this.locY + 0.5D, this.locZ, 0.0D, 0.0D, 0.0D, new int[0]);
         }
 
@@ -81,12 +86,11 @@ public class EntityTNTPrimed extends Entity {
         // float f = 4.0F;
 
         org.bukkit.craftbukkit.CraftServer server = this.world.getServer();
-
         ExplosionPrimeEvent event = new ExplosionPrimeEvent((org.bukkit.entity.Explosive) org.bukkit.craftbukkit.entity.CraftEntity.getEntity(server, this));
         server.getPluginManager().callEvent(event);
 
         if (!event.isCancelled()) {
-            this.world.createExplosion(this, this.locX, this.locY + (double) (this.length / 2.0F), this.locZ, event.getRadius(), event.getFire(), true);
+            this.world.createExplosion(this, this.locX, this.locY + (double) (this.length / 16.0F), this.locZ, event.getRadius(), event.getFire(), true);
         }
         // CraftBukkit end
     }
@@ -99,6 +103,7 @@ public class EntityTNTPrimed extends Entity {
         this.setFuseTicks(nbttagcompound.getShort("Fuse"));
     }
 
+    @Nullable
     public EntityLiving getSource() {
         return this.source;
     }

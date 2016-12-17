@@ -1,5 +1,6 @@
 package net.minecraft.server;
 
+import java.util.Iterator;
 // CraftBukkit start
 import java.util.List;
 import org.bukkit.Location;
@@ -11,7 +12,7 @@ import org.bukkit.event.inventory.InventoryType;
 
 public class InventoryCrafting implements IInventory {
 
-    private final ItemStack[] items;
+    private final NonNullList<ItemStack> items;
     private final int b;
     private final int c;
     private final Container d;
@@ -23,7 +24,7 @@ public class InventoryCrafting implements IInventory {
     private EntityHuman owner;
     private int maxStack = MAX_STACK;
 
-    public ItemStack[] getContents() {
+    public List<ItemStack> getContents() {
         return this.items;
     }
 
@@ -32,7 +33,7 @@ public class InventoryCrafting implements IInventory {
     }
 
     public InventoryType getInvType() {
-        return items.length == 4 ? InventoryType.CRAFTING : InventoryType.WORKBENCH;
+        return items.size() == 4 ? InventoryType.CRAFTING : InventoryType.WORKBENCH;
     }
 
     public void onClose(CraftHumanEntity who) {
@@ -64,24 +65,38 @@ public class InventoryCrafting implements IInventory {
     // CraftBukkit end
 
     public InventoryCrafting(Container container, int i, int j) {
-        int k = i * j;
-
-        this.items = new ItemStack[k];
+        this.items = NonNullList.a(i * j, ItemStack.a);
         this.d = container;
         this.b = i;
         this.c = j;
     }
 
     public int getSize() {
-        return this.items.length;
+        return this.items.size();
+    }
+
+    public boolean w_() {
+        Iterator iterator = this.items.iterator();
+
+        ItemStack itemstack;
+
+        do {
+            if (!iterator.hasNext()) {
+                return true;
+            }
+
+            itemstack = (ItemStack) iterator.next();
+        } while (itemstack.isEmpty());
+
+        return false;
     }
 
     public ItemStack getItem(int i) {
-        return i >= this.getSize() ? null : this.items[i];
+        return i >= this.getSize() ? ItemStack.a : (ItemStack) this.items.get(i);
     }
 
     public ItemStack c(int i, int j) {
-        return i >= 0 && i < this.b && j >= 0 && j <= this.c ? this.getItem(i + j * this.b) : null;
+        return i >= 0 && i < this.b && j >= 0 && j <= this.c ? this.getItem(i + j * this.b) : ItemStack.a;
     }
 
     public String getName() {
@@ -103,7 +118,7 @@ public class InventoryCrafting implements IInventory {
     public ItemStack splitStack(int i, int j) {
         ItemStack itemstack = ContainerUtil.a(this.items, i, j);
 
-        if (itemstack != null) {
+        if (!itemstack.isEmpty()) {
             this.d.a((IInventory) this);
         }
 
@@ -111,7 +126,7 @@ public class InventoryCrafting implements IInventory {
     }
 
     public void setItem(int i, ItemStack itemstack) {
-        this.items[i] = itemstack;
+        this.items.set(i, itemstack);
         this.d.a((IInventory) this);
     }
 
@@ -139,22 +154,19 @@ public class InventoryCrafting implements IInventory {
 
     public void setProperty(int i, int j) {}
 
-    public int g() {
+    public int h() {
         return 0;
     }
 
-    public void l() {
-        for (int i = 0; i < this.items.length; ++i) {
-            this.items[i] = null;
-        }
-
-    }
-
-    public int h() {
-        return this.c;
+    public void clear() {
+        this.items.clear();
     }
 
     public int i() {
+        return this.c;
+    }
+
+    public int j() {
         return this.b;
     }
 }

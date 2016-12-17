@@ -1,5 +1,6 @@
 package net.minecraft.server;
 
+import javax.annotation.Nullable;
 // CraftBukkit start
 import org.bukkit.craftbukkit.event.CraftEventFactory;
 import org.bukkit.craftbukkit.inventory.CraftItemStack;
@@ -9,7 +10,7 @@ import org.bukkit.event.player.PlayerBucketFillEvent;
 
 public class ItemBucket extends Item {
 
-    private Block a;
+    private final Block a;
 
     public ItemBucket(Block block) {
         this.maxStackSize = 1;
@@ -17,8 +18,9 @@ public class ItemBucket extends Item {
         this.a(CreativeModeTab.f);
     }
 
-    public InteractionResultWrapper<ItemStack> a(ItemStack itemstack, World world, EntityHuman entityhuman, EnumHand enumhand) {
+    public InteractionResultWrapper<ItemStack> a(World world, EntityHuman entityhuman, EnumHand enumhand) {
         boolean flag = this.a == Blocks.AIR;
+        ItemStack itemstack = entityhuman.b(enumhand);
         MovingObjectPosition movingobjectposition = this.a(world, entityhuman, flag);
 
         if (movingobjectposition == null) {
@@ -47,8 +49,8 @@ public class ItemBucket extends Item {
                         // CraftBukkit end
                         world.setTypeAndData(blockposition, Blocks.AIR.getBlockData(), 11);
                         entityhuman.b(StatisticList.b((Item) this));
-                        entityhuman.a(SoundEffects.N, 1.0F, 1.0F);
-                        return new InteractionResultWrapper(EnumInteractionResult.SUCCESS, this.a(itemstack, entityhuman, Items.WATER_BUCKET, event.getItemStack())); // CraftBUkkit
+                        entityhuman.a(SoundEffects.P, 1.0F, 1.0F);
+                        return new InteractionResultWrapper(EnumInteractionResult.SUCCESS, this.a(itemstack, entityhuman, Items.WATER_BUCKET, event.getItemStack())); // CraftBukkit
                     } else if (material == Material.LAVA && ((Integer) iblockdata.get(BlockFluids.LEVEL)).intValue() == 0) {
                         // CraftBukkit start
                         PlayerBucketFillEvent event = CraftEventFactory.callPlayerBucketFillEvent(entityhuman, blockposition.getX(), blockposition.getY(), blockposition.getZ(), null, itemstack, Items.LAVA_BUCKET);
@@ -57,7 +59,7 @@ public class ItemBucket extends Item {
                             return new InteractionResultWrapper(EnumInteractionResult.FAIL, itemstack);
                         }
                         // CraftBukkit end
-                        entityhuman.a(SoundEffects.O, 1.0F, 1.0F);
+                        entityhuman.a(SoundEffects.Q, 1.0F, 1.0F);
                         world.setTypeAndData(blockposition, Blocks.AIR.getBlockData(), 11);
                         entityhuman.b(StatisticList.b((Item) this));
                         return new InteractionResultWrapper(EnumInteractionResult.SUCCESS, this.a(itemstack, entityhuman, Items.LAVA_BUCKET, event.getItemStack())); // CraftBukkit
@@ -85,19 +87,24 @@ public class ItemBucket extends Item {
     private ItemStack a(ItemStack itemstack, EntityHuman entityhuman, Item item, org.bukkit.inventory.ItemStack result) {
         if (entityhuman.abilities.canInstantlyBuild) {
             return itemstack;
-        } else if (--itemstack.count <= 0) {
-            return CraftItemStack.asNMSCopy(result); // CraftBukkit
         } else {
-            if (!entityhuman.inventory.pickup(CraftItemStack.asNMSCopy(result))) {
-                entityhuman.drop(CraftItemStack.asNMSCopy(result), false);
-            }
+            itemstack.subtract(1);
+            if (itemstack.isEmpty()) {
+                // CraftBukkit start
+                return CraftItemStack.asNMSCopy(result);
+            } else {
+                if (!entityhuman.inventory.pickup(CraftItemStack.asNMSCopy(result))) {
+                    entityhuman.drop(CraftItemStack.asNMSCopy(result), false);
+                    // CraftBukkit end
+                }
 
-            return itemstack;
+                return itemstack;
+            }
         }
     }
 
     // CraftBukkit start
-    public boolean a(EntityHuman entityhuman, World world, BlockPosition blockposition) {
+    public boolean a(@Nullable EntityHuman entityhuman, World world, BlockPosition blockposition) {
         return a(entityhuman, world, blockposition, null, blockposition, null);
     }
 
@@ -128,7 +135,7 @@ public class ItemBucket extends Item {
                     int j = blockposition.getY();
                     int k = blockposition.getZ();
 
-                    world.a(entityhuman, blockposition, SoundEffects.bv, SoundCategory.BLOCKS, 0.5F, 2.6F + (world.random.nextFloat() - world.random.nextFloat()) * 0.8F);
+                    world.a(entityhuman, blockposition, SoundEffects.bH, SoundCategory.BLOCKS, 0.5F, 2.6F + (world.random.nextFloat() - world.random.nextFloat()) * 0.8F);
 
                     for (int l = 0; l < 8; ++l) {
                         world.addParticle(EnumParticle.SMOKE_LARGE, (double) i + Math.random(), (double) j + Math.random(), (double) k + Math.random(), 0.0D, 0.0D, 0.0D, new int[0]);
@@ -138,7 +145,7 @@ public class ItemBucket extends Item {
                         world.setAir(blockposition, true);
                     }
 
-                    SoundEffect soundeffect = this.a == Blocks.FLOWING_LAVA ? SoundEffects.M : SoundEffects.L;
+                    SoundEffect soundeffect = this.a == Blocks.FLOWING_LAVA ? SoundEffects.O : SoundEffects.N;
 
                     world.a(entityhuman, blockposition, soundeffect, SoundCategory.BLOCKS, 1.0F, 1.0F);
                     world.setTypeAndData(blockposition, this.a.getBlockData(), 11);

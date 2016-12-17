@@ -1,6 +1,7 @@
 package net.minecraft.server;
 
 import java.util.Random;
+import javax.annotation.Nullable;
 
 public class EntitySpider extends EntityMonster {
 
@@ -11,11 +12,15 @@ public class EntitySpider extends EntityMonster {
         this.setSize(1.4F, 0.9F);
     }
 
+    public static void c(DataConverterManager dataconvertermanager) {
+        EntityInsentient.a(dataconvertermanager, EntitySpider.class);
+    }
+
     protected void r() {
         this.goalSelector.a(1, new PathfinderGoalFloat(this));
         this.goalSelector.a(3, new PathfinderGoalLeapAtTarget(this, 0.4F));
         this.goalSelector.a(4, new EntitySpider.PathfinderGoalSpiderMeleeAttack(this));
-        this.goalSelector.a(5, new PathfinderGoalRandomStroll(this, 0.8D));
+        this.goalSelector.a(5, new PathfinderGoalRandomStrollLand(this, 0.8D));
         this.goalSelector.a(6, new PathfinderGoalLookAtPlayer(this, EntityHuman.class, 8.0F));
         this.goalSelector.a(6, new PathfinderGoalRandomLookaround(this));
         this.targetSelector.a(1, new PathfinderGoalHurtByTarget(this, false, new Class[0]));
@@ -36,8 +41,8 @@ public class EntitySpider extends EntityMonster {
         this.datawatcher.register(EntitySpider.a, Byte.valueOf((byte) 0));
     }
 
-    public void m() {
-        super.m();
+    public void A_() {
+        super.A_();
         if (!this.world.isClientSide) {
             this.a(this.positionChanged);
         }
@@ -51,30 +56,31 @@ public class EntitySpider extends EntityMonster {
     }
 
     protected SoundEffect G() {
-        return SoundEffects.fQ;
+        return SoundEffects.gy;
     }
 
-    protected SoundEffect bR() {
-        return SoundEffects.fS;
+    protected SoundEffect bW() {
+        return SoundEffects.gA;
     }
 
-    protected SoundEffect bS() {
-        return SoundEffects.fR;
+    protected SoundEffect bX() {
+        return SoundEffects.gz;
     }
 
     protected void a(BlockPosition blockposition, Block block) {
-        this.a(SoundEffects.fT, 0.15F, 1.0F);
+        this.a(SoundEffects.gB, 0.15F, 1.0F);
     }
 
+    @Nullable
     protected MinecraftKey J() {
-        return LootTables.q;
+        return LootTables.s;
     }
 
-    public boolean n_() {
+    public boolean m_() {
         return this.o();
     }
 
-    public void aQ() {}
+    public void aS() {}
 
     public EnumMonsterType getMonsterType() {
         return EnumMonsterType.ARTHROPOD;
@@ -100,7 +106,8 @@ public class EntitySpider extends EntityMonster {
         this.datawatcher.set(EntitySpider.a, Byte.valueOf(b0));
     }
 
-    public GroupDataEntity prepare(DifficultyDamageScaler difficultydamagescaler, GroupDataEntity groupdataentity) {
+    @Nullable
+    public GroupDataEntity prepare(DifficultyDamageScaler difficultydamagescaler, @Nullable GroupDataEntity groupdataentity) {
         Object object = super.prepare(difficultydamagescaler, groupdataentity);
 
         if (this.world.random.nextInt(100) == 0) {
@@ -114,7 +121,7 @@ public class EntitySpider extends EntityMonster {
 
         if (object == null) {
             object = new EntitySpider.GroupDataSpider();
-            if (this.world.getDifficulty() == EnumDifficulty.HARD && this.world.random.nextFloat() < 0.1F * difficultydamagescaler.c()) {
+            if (this.world.getDifficulty() == EnumDifficulty.HARD && this.world.random.nextFloat() < 0.1F * difficultydamagescaler.d()) {
                 ((EntitySpider.GroupDataSpider) object).a(this.world.random);
             }
         }

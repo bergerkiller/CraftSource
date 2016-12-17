@@ -5,8 +5,7 @@ import java.io.IOException;
 public class PacketPlayInBlockPlace implements Packet<PacketListenerPlayIn> {
 
     private EnumHand a;
-
-    public long timestamp; // CraftBukkit
+    public long timestamp; // Spigot
 
     public PacketPlayInBlockPlace() {}
 
@@ -15,7 +14,7 @@ public class PacketPlayInBlockPlace implements Packet<PacketListenerPlayIn> {
     }
 
     public void a(PacketDataSerializer packetdataserializer) throws IOException {
-        this.timestamp = System.currentTimeMillis(); // CraftBukkit
+        this.timestamp = System.currentTimeMillis(); // Spigot
         this.a = (EnumHand) packetdataserializer.a(EnumHand.class);
     }
 

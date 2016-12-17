@@ -11,7 +11,7 @@ public class ItemMinecart extends Item {
         private final DispenseBehaviorItem b = new DispenseBehaviorItem();
 
         public ItemStack b(ISourceBlock isourceblock, ItemStack itemstack) {
-            EnumDirection enumdirection = BlockDispenser.e(isourceblock.f());
+            EnumDirection enumdirection = (EnumDirection) isourceblock.e().get(BlockDispenser.FACING);
             World world = isourceblock.getWorld();
             double d0 = isourceblock.getX() + (double) enumdirection.getAdjacentX() * 1.125D;
             double d1 = Math.floor(isourceblock.getY()) + (double) enumdirection.getAdjacentY();
@@ -54,12 +54,12 @@ public class ItemMinecart extends Item {
             }
 
             if (event.isCancelled()) {
-                itemstack.count++;
+                itemstack.add(1);
                 return itemstack;
             }
 
             if (!event.getItem().equals(craftItem)) {
-                itemstack.count++;
+                itemstack.add(1);
                 // Chain to handler for new item
                 ItemStack eventStack = CraftItemStack.asNMSCopy(event.getItem());
                 IDispenseBehavior idispensebehavior = (IDispenseBehavior) BlockDispenser.REGISTRY.get(eventStack.getItem());
@@ -77,7 +77,7 @@ public class ItemMinecart extends Item {
             }
 
             world.addEntity(entityminecartabstract);
-            // itemstack.a(1); // CraftBukkit - handled during event processing
+            // itemstack.subtract(1); // CraftBukkit - handled during event processing
             // CraftBukkit end
             return itemstack;
         }
@@ -95,12 +95,14 @@ public class ItemMinecart extends Item {
         BlockDispenser.REGISTRY.a(this, ItemMinecart.a);
     }
 
-    public EnumInteractionResult a(ItemStack itemstack, EntityHuman entityhuman, World world, BlockPosition blockposition, EnumHand enumhand, EnumDirection enumdirection, float f, float f1, float f2) {
+    public EnumInteractionResult a(EntityHuman entityhuman, World world, BlockPosition blockposition, EnumHand enumhand, EnumDirection enumdirection, float f, float f1, float f2) {
         IBlockData iblockdata = world.getType(blockposition);
 
         if (!BlockMinecartTrackAbstract.i(iblockdata)) {
             return EnumInteractionResult.FAIL;
         } else {
+            ItemStack itemstack = entityhuman.b(enumhand);
+
             if (!world.isClientSide) {
                 BlockMinecartTrackAbstract.EnumTrackPosition blockminecarttrackabstract_enumtrackposition = iblockdata.getBlock() instanceof BlockMinecartTrackAbstract ? (BlockMinecartTrackAbstract.EnumTrackPosition) iblockdata.get(((BlockMinecartTrackAbstract) iblockdata.getBlock()).g()) : BlockMinecartTrackAbstract.EnumTrackPosition.NORTH_SOUTH;
                 double d0 = 0.0D;
@@ -108,14 +110,6 @@ public class ItemMinecart extends Item {
                 if (blockminecarttrackabstract_enumtrackposition.c()) {
                     d0 = 0.5D;
                 }
-
-                // CraftBukkit start - Minecarts
-                org.bukkit.event.player.PlayerInteractEvent event = org.bukkit.craftbukkit.event.CraftEventFactory.callPlayerInteractEvent(entityhuman, org.bukkit.event.block.Action.RIGHT_CLICK_BLOCK, blockposition, enumdirection, itemstack, enumhand);
-
-                if (event.isCancelled()) {
-                    return EnumInteractionResult.PASS;
-                }
-                // CraftBukkit end
 
                 EntityMinecartAbstract entityminecartabstract = EntityMinecartAbstract.a(world, (double) blockposition.getX() + 0.5D, (double) blockposition.getY() + 0.0625D + d0, (double) blockposition.getZ() + 0.5D, this.b);
 
@@ -126,7 +120,7 @@ public class ItemMinecart extends Item {
                 world.addEntity(entityminecartabstract);
             }
 
-            --itemstack.count;
+            itemstack.subtract(1);
             return EnumInteractionResult.SUCCESS;
         }
     }

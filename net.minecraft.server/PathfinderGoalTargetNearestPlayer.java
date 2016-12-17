@@ -3,13 +3,14 @@ package net.minecraft.server;
 import com.google.common.base.Predicate;
 import java.util.Collections;
 import java.util.List;
+import javax.annotation.Nullable;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 public class PathfinderGoalTargetNearestPlayer extends PathfinderGoal {
 
     private static final Logger a = LogManager.getLogger();
-    private EntityInsentient b;
+    private final EntityInsentient b;
     private final Predicate<Entity> c;
     private final PathfinderGoalNearestAttackableTarget.DistanceComparator d;
     private EntityLiving e;
@@ -21,7 +22,7 @@ public class PathfinderGoalTargetNearestPlayer extends PathfinderGoal {
         }
 
         this.c = new Predicate() {
-            public boolean a(Entity entity) {
+            public boolean a(@Nullable Entity entity) {
                 if (!(entity instanceof EntityHuman)) {
                     return false;
                 } else if (((EntityHuman) entity).abilities.isInvulnerable) {
@@ -34,7 +35,7 @@ public class PathfinderGoalTargetNearestPlayer extends PathfinderGoal {
                     }
 
                     if (entity.isInvisible()) {
-                        float f = ((EntityHuman) entity).cG();
+                        float f = ((EntityHuman) entity).cO();
 
                         if (f < 0.1F) {
                             f = 0.1F;
@@ -47,7 +48,7 @@ public class PathfinderGoalTargetNearestPlayer extends PathfinderGoal {
                 }
             }
 
-            public boolean apply(Object object) {
+            public boolean apply(@Nullable Object object) {
                 return this.a((Entity) object);
             }
         };
@@ -77,8 +78,8 @@ public class PathfinderGoalTargetNearestPlayer extends PathfinderGoal {
         } else if (entityliving instanceof EntityHuman && ((EntityHuman) entityliving).abilities.isInvulnerable) {
             return false;
         } else {
-            ScoreboardTeamBase scoreboardteambase = this.b.aO();
-            ScoreboardTeamBase scoreboardteambase1 = entityliving.aO();
+            ScoreboardTeamBase scoreboardteambase = this.b.aQ();
+            ScoreboardTeamBase scoreboardteambase1 = entityliving.aQ();
 
             if (scoreboardteambase != null && scoreboardteambase1 == scoreboardteambase) {
                 return false;

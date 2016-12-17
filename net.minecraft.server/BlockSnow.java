@@ -1,6 +1,7 @@
 package net.minecraft.server;
 
 import java.util.Random;
+import javax.annotation.Nullable;
 
 public class BlockSnow extends Block {
 
@@ -9,12 +10,12 @@ public class BlockSnow extends Block {
 
     protected BlockSnow() {
         super(Material.PACKED_ICE);
-        this.w(this.blockStateList.getBlockData().set(BlockSnow.LAYERS, Integer.valueOf(1)));
+        this.y(this.blockStateList.getBlockData().set(BlockSnow.LAYERS, Integer.valueOf(1)));
         this.a(true);
         this.a(CreativeModeTab.c);
     }
 
-    public AxisAlignedBB a(IBlockData iblockdata, IBlockAccess iblockaccess, BlockPosition blockposition) {
+    public AxisAlignedBB b(IBlockData iblockdata, IBlockAccess iblockaccess, BlockPosition blockposition) {
         return BlockSnow.b[((Integer) iblockdata.get(BlockSnow.LAYERS)).intValue()];
     }
 
@@ -23,15 +24,16 @@ public class BlockSnow extends Block {
     }
 
     public boolean k(IBlockData iblockdata) {
-        return ((Integer) iblockdata.get(BlockSnow.LAYERS)).intValue() == 7;
+        return ((Integer) iblockdata.get(BlockSnow.LAYERS)).intValue() == 8;
     }
 
-    public AxisAlignedBB a(IBlockData iblockdata, World world, BlockPosition blockposition) {
+    @Nullable
+    public AxisAlignedBB a(IBlockData iblockdata, IBlockAccess iblockaccess, BlockPosition blockposition) {
         int i = ((Integer) iblockdata.get(BlockSnow.LAYERS)).intValue() - 1;
         float f = 0.125F;
-        AxisAlignedBB axisalignedbb = iblockdata.c(world, blockposition);
+        AxisAlignedBB axisalignedbb = iblockdata.d(iblockaccess, blockposition);
 
-        return new AxisAlignedBB(axisalignedbb.a, axisalignedbb.b, axisalignedbb.c, axisalignedbb.d, (double) ((float) i * f), axisalignedbb.f);
+        return new AxisAlignedBB(axisalignedbb.a, axisalignedbb.b, axisalignedbb.c, axisalignedbb.d, (double) ((float) i * 0.125F), axisalignedbb.f);
     }
 
     public boolean b(IBlockData iblockdata) {
@@ -46,10 +48,10 @@ public class BlockSnow extends Block {
         IBlockData iblockdata = world.getType(blockposition.down());
         Block block = iblockdata.getBlock();
 
-        return block != Blocks.ICE && block != Blocks.PACKED_ICE ? (iblockdata.getMaterial() == Material.LEAVES ? true : (block == this && ((Integer) iblockdata.get(BlockSnow.LAYERS)).intValue() >= 7 ? true : iblockdata.p() && iblockdata.getMaterial().isSolid())) : false;
+        return block != Blocks.ICE && block != Blocks.PACKED_ICE ? (iblockdata.getMaterial() == Material.LEAVES ? true : (block == this && ((Integer) iblockdata.get(BlockSnow.LAYERS)).intValue() == 8 ? true : iblockdata.q() && iblockdata.getMaterial().isSolid())) : false;
     }
 
-    public void doPhysics(World world, BlockPosition blockposition, IBlockData iblockdata, Block block) {
+    public void a(IBlockData iblockdata, World world, BlockPosition blockposition, Block block, BlockPosition blockposition1) {
         this.e(world, blockposition, iblockdata);
     }
 
@@ -63,7 +65,7 @@ public class BlockSnow extends Block {
         }
     }
 
-    public void a(World world, EntityHuman entityhuman, BlockPosition blockposition, IBlockData iblockdata, TileEntity tileentity, ItemStack itemstack) {
+    public void a(World world, EntityHuman entityhuman, BlockPosition blockposition, IBlockData iblockdata, @Nullable TileEntity tileentity, ItemStack itemstack) {
         a(world, blockposition, new ItemStack(Items.SNOWBALL, ((Integer) iblockdata.get(BlockSnow.LAYERS)).intValue() + 1, 0));
         world.setAir(blockposition);
         entityhuman.b(StatisticList.a((Block) this));
@@ -78,7 +80,7 @@ public class BlockSnow extends Block {
     }
 
     public void b(World world, BlockPosition blockposition, IBlockData iblockdata, Random random) {
-        if (world.b(EnumSkyBlock.BLOCK, blockposition) > 11) {
+        if (world.getBrightness(EnumSkyBlock.BLOCK, blockposition) > 11) {
             // CraftBukkit start
             if (org.bukkit.craftbukkit.event.CraftEventFactory.callBlockFadeEvent(world.getWorld().getBlockAt(blockposition.getX(), blockposition.getY(), blockposition.getZ()), Blocks.AIR).isCancelled()) {
                 return;

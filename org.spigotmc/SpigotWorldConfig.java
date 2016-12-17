@@ -78,9 +78,11 @@ public class SpigotWorldConfig
     public int saplingModifier;
     public int wheatModifier;
     public int wartModifier;
+    public int vineModifier;
+    public int cocoaModifier;
     private int getAndValidateGrowth(String crop)
     {
-        int modifier = getInt( "growth." + crop.toLowerCase() + "-modifier", 100 );
+        int modifier = getInt( "growth." + crop.toLowerCase(java.util.Locale.ENGLISH) + "-modifier", 100 );
         if ( modifier == 0 )
         {
             log( "Cannot set " + crop + " growth to zero, defaulting to 100" );
@@ -100,6 +102,8 @@ public class SpigotWorldConfig
         saplingModifier = getAndValidateGrowth( "Sapling" );
         wheatModifier = getAndValidateGrowth( "Wheat" );
         wartModifier = getAndValidateGrowth( "NetherWart" );
+        vineModifier = getAndValidateGrowth( "Vine" );
+        cocoaModifier = getAndValidateGrowth( "Cocoa" );
     }
 
     public double itemMerge;
@@ -225,13 +229,6 @@ public class SpigotWorldConfig
         log( "Allow Zombie Pigmen to spawn from portal blocks: " + enableZombiePigmenPortalSpawns );
     }
 
-    public int maxCollisionsPerEntity;
-    private void maxEntityCollision()
-    {
-        maxCollisionsPerEntity = getInt( "max-entity-collisions", 8 );
-        log( "Max Entity Collisions: " + maxCollisionsPerEntity );
-    }
-
     public int dragonDeathSoundRadius;
     private void keepDragonDeathPerWorld()
     {
@@ -253,16 +250,30 @@ public class SpigotWorldConfig
         log( "Custom Map Seeds:  Village: " + villageSeed + " Feature: " + largeFeatureSeed );
     }
 
-    public float walkExhaustion;
-    public float sprintExhaustion;
+    public float jumpWalkExhaustion;
+    public float jumpSprintExhaustion;
     public float combatExhaustion;
     public float regenExhaustion;
+    public float swimMultiplier;
+    public float sprintMultiplier;
+    public float otherMultiplier;
     private void initHunger()
     {
-        walkExhaustion = (float) getDouble( "hunger.walk-exhaustion", 0.2 );
-        sprintExhaustion = (float) getDouble( "hunger.sprint-exhaustion", 0.8 );
-        combatExhaustion = (float) getDouble( "hunger.combat-exhaustion", 0.3 );
-        regenExhaustion = (float) getDouble( "hunger.regen-exhaustion", 3 );
+        if ( SpigotConfig.version < 10 )
+        {
+            set( "hunger.walk-exhaustion", null );
+            set( "hunger.sprint-exhaustion", null );
+            set( "hunger.combat-exhaustion", 0.1 );
+            set( "hunger.regen-exhaustion", 6.0 );
+        }
+
+        jumpWalkExhaustion = (float) getDouble( "hunger.jump-walk-exhaustion", 0.05 );
+        jumpSprintExhaustion = (float) getDouble( "hunger.jump-sprint-exhaustion", 0.2 );
+        combatExhaustion = (float) getDouble( "hunger.combat-exhaustion", 0.1 );
+        regenExhaustion = (float) getDouble( "hunger.regen-exhaustion", 6.0 );
+        swimMultiplier =  (float) getDouble( "hunger.swim-multiplier", 0.01 );
+        sprintMultiplier = (float) getDouble( "hunger.sprint-multiplier", 0.1 );
+        otherMultiplier = (float) getDouble( "hunger.other-multiplier", 0.0 );
     }
 
     public int currentPrimedTnt = 0;

@@ -1,14 +1,16 @@
 package net.minecraft.server;
 
 import com.google.common.base.Predicate;
+import javax.annotation.Nullable;
 
 public class EntityIronGolem extends EntityGolem {
 
     protected static final DataWatcherObject<Byte> a = DataWatcher.a(EntityIronGolem.class, DataWatcherRegistry.a);
     private int c;
+    @Nullable
     Village b;
-    private int bv;
     private int bw;
+    private int bx;
 
     public EntityIronGolem(World world) {
         super(world);
@@ -21,17 +23,17 @@ public class EntityIronGolem extends EntityGolem {
         this.goalSelector.a(3, new PathfinderGoalMoveThroughVillage(this, 0.6D, true));
         this.goalSelector.a(4, new PathfinderGoalMoveTowardsRestriction(this, 1.0D));
         this.goalSelector.a(5, new PathfinderGoalOfferFlower(this));
-        this.goalSelector.a(6, new PathfinderGoalRandomStroll(this, 0.6D));
+        this.goalSelector.a(6, new PathfinderGoalRandomStrollLand(this, 0.6D));
         this.goalSelector.a(7, new PathfinderGoalLookAtPlayer(this, EntityHuman.class, 6.0F));
         this.goalSelector.a(8, new PathfinderGoalRandomLookaround(this));
         this.targetSelector.a(1, new PathfinderGoalDefendVillage(this));
         this.targetSelector.a(2, new PathfinderGoalHurtByTarget(this, false, new Class[0]));
         this.targetSelector.a(3, new PathfinderGoalNearestAttackableTarget(this, EntityInsentient.class, 10, false, true, new Predicate() {
-            public boolean a(EntityInsentient entityinsentient) {
+            public boolean a(@Nullable EntityInsentient entityinsentient) {
                 return entityinsentient != null && IMonster.e.apply(entityinsentient) && !(entityinsentient instanceof EntityCreeper);
             }
 
-            public boolean apply(Object object) {
+            public boolean apply(@Nullable Object object) {
                 return this.a((EntityInsentient) object);
             }
         }));
@@ -47,7 +49,7 @@ public class EntityIronGolem extends EntityGolem {
             this.c = 70 + this.random.nextInt(50);
             this.b = this.world.ai().getClosestVillage(new BlockPosition(this), 32);
             if (this.b == null) {
-                this.cX();
+                this.de();
             } else {
                 BlockPosition blockposition = this.b.a();
 
@@ -79,12 +81,12 @@ public class EntityIronGolem extends EntityGolem {
 
     public void n() {
         super.n();
-        if (this.bv > 0) {
-            --this.bv;
-        }
-
         if (this.bw > 0) {
             --this.bw;
+        }
+
+        if (this.bx > 0) {
+            --this.bx;
         }
 
         if (this.motX * this.motX + this.motZ * this.motZ > 2.500000277905201E-7D && this.random.nextInt(5) == 0) {
@@ -104,6 +106,10 @@ public class EntityIronGolem extends EntityGolem {
         return this.isPlayerCreated() && EntityHuman.class.isAssignableFrom(oclass) ? false : (oclass == EntityCreeper.class ? false : super.d(oclass));
     }
 
+    public static void b(DataConverterManager dataconvertermanager) {
+        EntityInsentient.a(dataconvertermanager, EntityIronGolem.class);
+    }
+
     public void b(NBTTagCompound nbttagcompound) {
         super.b(nbttagcompound);
         nbttagcompound.setBoolean("PlayerCreated", this.isPlayerCreated());
@@ -115,7 +121,7 @@ public class EntityIronGolem extends EntityGolem {
     }
 
     public boolean B(Entity entity) {
-        this.bv = 10;
+        this.bw = 10;
         this.world.broadcastEntityEffect(this, (byte) 4);
         boolean flag = entity.damageEntity(DamageSource.mobAttack(this), (float) (7 + this.random.nextInt(15)));
 
@@ -124,7 +130,7 @@ public class EntityIronGolem extends EntityGolem {
             this.a((EntityLiving) this, entity);
         }
 
-        this.a(SoundEffects.cG, 1.0F, 1.0F);
+        this.a(SoundEffects.cW, 1.0F, 1.0F);
         return flag;
     }
 
@@ -133,28 +139,35 @@ public class EntityIronGolem extends EntityGolem {
     }
 
     public void a(boolean flag) {
-        this.bw = flag ? 400 : 0;
-        this.world.broadcastEntityEffect(this, (byte) 11);
+        if (flag) {
+            this.bx = 400;
+            this.world.broadcastEntityEffect(this, (byte) 11);
+        } else {
+            this.bx = 0;
+            this.world.broadcastEntityEffect(this, (byte) 34);
+        }
+
     }
 
-    protected SoundEffect bR() {
-        return SoundEffects.cI;
+    protected SoundEffect bW() {
+        return SoundEffects.cY;
     }
 
-    protected SoundEffect bS() {
-        return SoundEffects.cH;
+    protected SoundEffect bX() {
+        return SoundEffects.cX;
     }
 
     protected void a(BlockPosition blockposition, Block block) {
-        this.a(SoundEffects.cJ, 1.0F, 1.0F);
+        this.a(SoundEffects.cZ, 1.0F, 1.0F);
     }
 
+    @Nullable
     protected MinecraftKey J() {
-        return LootTables.y;
+        return LootTables.A;
     }
 
-    public int da() {
-        return this.bw;
+    public int di() {
+        return this.bx;
     }
 
     public boolean isPlayerCreated() {

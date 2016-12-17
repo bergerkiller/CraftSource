@@ -38,28 +38,28 @@ public class ShapelessRecipes implements IRecipe {
         return this.result;
     }
 
-    public ItemStack[] b(InventoryCrafting inventorycrafting) {
-        ItemStack[] aitemstack = new ItemStack[inventorycrafting.getSize()];
+    public NonNullList<ItemStack> b(InventoryCrafting inventorycrafting) {
+        NonNullList nonnulllist = NonNullList.a(inventorycrafting.getSize(), ItemStack.a);
 
-        for (int i = 0; i < aitemstack.length; ++i) {
+        for (int i = 0; i < nonnulllist.size(); ++i) {
             ItemStack itemstack = inventorycrafting.getItem(i);
 
-            if (itemstack != null && itemstack.getItem().r()) {
-                aitemstack[i] = new ItemStack(itemstack.getItem().q());
+            if (itemstack.getItem().s()) {
+                nonnulllist.set(i, new ItemStack(itemstack.getItem().r()));
             }
         }
 
-        return aitemstack;
+        return nonnulllist;
     }
 
     public boolean a(InventoryCrafting inventorycrafting, World world) {
         ArrayList arraylist = Lists.newArrayList(this.ingredients);
 
-        for (int i = 0; i < inventorycrafting.h(); ++i) {
-            for (int j = 0; j < inventorycrafting.i(); ++j) {
+        for (int i = 0; i < inventorycrafting.i(); ++i) {
+            for (int j = 0; j < inventorycrafting.j(); ++j) {
                 ItemStack itemstack = inventorycrafting.c(j, i);
 
-                if (itemstack != null) {
+                if (!itemstack.isEmpty()) {
                     boolean flag = false;
                     Iterator iterator = arraylist.iterator();
 

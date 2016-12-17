@@ -2,15 +2,15 @@ package net.minecraft.server;
 
 import java.util.Iterator;
 import java.util.List;
-
+import javax.annotation.Nullable;
 // CraftBukkit start
 import org.bukkit.craftbukkit.entity.CraftHumanEntity;
 import org.bukkit.entity.HumanEntity;
 // CraftBukkit end
 
-public class TileEntityChest extends TileEntityLootable implements ITickable, IInventory {
+public class TileEntityChest extends TileEntityLootable implements ITickable {
 
-    private ItemStack[] items = new ItemStack[27];
+    private NonNullList<ItemStack> items;
     public boolean a;
     public TileEntityChest f;
     public TileEntityChest g;
@@ -19,17 +19,14 @@ public class TileEntityChest extends TileEntityLootable implements ITickable, II
     public float j;
     public float k;
     public int l;
-    private int p;
-    private BlockChest.Type q;
-    private String r;
-
-    public TileEntityChest() {}
+    private int q;
+    private BlockChest.Type r;
 
     // CraftBukkit start - add fields and methods
     public List<HumanEntity> transaction = new java.util.ArrayList<HumanEntity>();
     private int maxStack = MAX_STACK;
 
-    public ItemStack[] getContents() {
+    public List<ItemStack> getContents() {
         return this.items;
     }
 
@@ -50,110 +47,71 @@ public class TileEntityChest extends TileEntityLootable implements ITickable, II
     }
     // CraftBukkit end
 
+    public TileEntityChest() {
+        this.items = NonNullList.a(27, ItemStack.a);
+    }
+
     public TileEntityChest(BlockChest.Type blockchest_type) {
-        this.q = blockchest_type;
+        this.items = NonNullList.a(27, ItemStack.a);
+        this.r = blockchest_type;
     }
 
     public int getSize() {
         return 27;
     }
 
-    public ItemStack getItem(int i) {
-        this.d((EntityHuman) null);
-        return this.items[i];
-    }
+    public boolean w_() {
+        Iterator iterator = this.items.iterator();
 
-    public ItemStack splitStack(int i, int j) {
-        this.d((EntityHuman) null);
-        ItemStack itemstack = ContainerUtil.a(this.items, i, j);
+        ItemStack itemstack;
 
-        if (itemstack != null) {
-            this.update();
-        }
+        do {
+            if (!iterator.hasNext()) {
+                return true;
+            }
 
-        return itemstack;
-    }
+            itemstack = (ItemStack) iterator.next();
+        } while (itemstack.isEmpty());
 
-    public ItemStack splitWithoutUpdate(int i) {
-        this.d((EntityHuman) null);
-        return ContainerUtil.a(this.items, i);
-    }
-
-    public void setItem(int i, ItemStack itemstack) {
-        this.d((EntityHuman) null);
-        this.items[i] = itemstack;
-        if (itemstack != null && itemstack.count > this.getMaxStackSize()) {
-            itemstack.count = this.getMaxStackSize();
-        }
-
-        this.update();
+        return false;
     }
 
     public String getName() {
-        return this.hasCustomName() ? this.r : "container.chest";
+        return this.hasCustomName() ? this.o : "container.chest";
     }
 
-    public boolean hasCustomName() {
-        return this.r != null && !this.r.isEmpty();
-    }
-
-    public void a(String s) {
-        this.r = s;
+    public static void a(DataConverterManager dataconvertermanager) {
+        dataconvertermanager.a(DataConverterTypes.BLOCK_ENTITY, (DataInspector) (new DataInspectorItemList(TileEntityChest.class, new String[] { "Items"})));
     }
 
     public void a(NBTTagCompound nbttagcompound) {
         super.a(nbttagcompound);
-        this.items = new ItemStack[this.getSize()];
-        if (nbttagcompound.hasKeyOfType("CustomName", 8)) {
-            this.r = nbttagcompound.getString("CustomName");
+        this.items = NonNullList.a(this.getSize(), ItemStack.a);
+        if (!this.c(nbttagcompound)) {
+            ContainerUtil.b(nbttagcompound, this.items);
         }
 
-        if (!this.c(nbttagcompound)) {
-            NBTTagList nbttaglist = nbttagcompound.getList("Items", 10);
-
-            for (int i = 0; i < nbttaglist.size(); ++i) {
-                NBTTagCompound nbttagcompound1 = nbttaglist.get(i);
-                int j = nbttagcompound1.getByte("Slot") & 255;
-
-                if (j >= 0 && j < this.items.length) {
-                    this.items[j] = ItemStack.createStack(nbttagcompound1);
-                }
-            }
+        if (nbttagcompound.hasKeyOfType("CustomName", 8)) {
+            this.o = nbttagcompound.getString("CustomName");
         }
 
     }
 
-    public void save(NBTTagCompound nbttagcompound) {
+    public NBTTagCompound save(NBTTagCompound nbttagcompound) {
         super.save(nbttagcompound);
         if (!this.d(nbttagcompound)) {
-            NBTTagList nbttaglist = new NBTTagList();
-
-            for (int i = 0; i < this.items.length; ++i) {
-                if (this.items[i] != null) {
-                    NBTTagCompound nbttagcompound1 = new NBTTagCompound();
-
-                    nbttagcompound1.setByte("Slot", (byte) i);
-                    this.items[i].save(nbttagcompound1);
-                    nbttaglist.add(nbttagcompound1);
-                }
-            }
-
-            nbttagcompound.set("Items", nbttaglist);
+            ContainerUtil.a(nbttagcompound, this.items);
         }
 
         if (this.hasCustomName()) {
-            nbttagcompound.setString("CustomName", this.r);
+            nbttagcompound.setString("CustomName", this.o);
         }
 
+        return nbttagcompound;
     }
 
     public int getMaxStackSize() {
         return maxStack; // CraftBukkit
-    }
-
-    public boolean a(EntityHuman entityhuman) {
-        if (this.world == null) return true; // CraftBukkit
-        return this.world.getTileEntity(this.position) != this ? false : entityhuman.e((double) this.position.getX() + 0.5D, (double) this.position.getY() + 0.5D, (double) this.position.getZ() + 0.5D) <= 64.0D;
     }
 
     public void invalidateBlockCache() {
@@ -162,29 +120,29 @@ public class TileEntityChest extends TileEntityLootable implements ITickable, II
     }
 
     private void a(TileEntityChest tileentitychest, EnumDirection enumdirection) {
-        if (tileentitychest.x()) {
+        if (tileentitychest.y()) {
             this.a = false;
         } else if (this.a) {
-            switch (TileEntityChest.SyntheticClass_1.a[enumdirection.ordinal()]) {
-            case 1:
+            switch (enumdirection) {
+            case NORTH:
                 if (this.f != tileentitychest) {
                     this.a = false;
                 }
                 break;
 
-            case 2:
+            case SOUTH:
                 if (this.i != tileentitychest) {
                     this.a = false;
                 }
                 break;
 
-            case 3:
+            case EAST:
                 if (this.g != tileentitychest) {
                     this.a = false;
                 }
                 break;
 
-            case 4:
+            case WEST:
                 if (this.h != tileentitychest) {
                     this.a = false;
                 }
@@ -193,7 +151,7 @@ public class TileEntityChest extends TileEntityLootable implements ITickable, II
 
     }
 
-    public void m() {
+    public void o() {
         if (!this.a) {
             this.a = true;
             this.h = this.a(EnumDirection.WEST);
@@ -203,6 +161,7 @@ public class TileEntityChest extends TileEntityLootable implements ITickable, II
         }
     }
 
+    @Nullable
     protected TileEntityChest a(EnumDirection enumdirection) {
         BlockPosition blockposition = this.position.shift(enumdirection);
 
@@ -226,23 +185,23 @@ public class TileEntityChest extends TileEntityLootable implements ITickable, II
         } else {
             Block block = this.world.getType(blockposition).getBlock();
 
-            return block instanceof BlockChest && ((BlockChest) block).g == this.o();
+            return block instanceof BlockChest && ((BlockChest) block).g == this.p();
         }
     }
 
-    public void c() {
-        this.m();
+    public void F_() {
+        this.o();
         int i = this.position.getX();
         int j = this.position.getY();
         int k = this.position.getZ();
 
-        ++this.p;
+        ++this.q;
         float f;
 
-        if (!this.world.isClientSide && this.l != 0 && (this.p + i + j + k) % 200 == 0) {
+        if (!this.world.isClientSide && this.l != 0 && (this.q + i + j + k) % 200 == 0) {
             this.l = 0;
             f = 5.0F;
-            List list = this.world.a(EntityHuman.class, new AxisAlignedBB((double) ((float) i - f), (double) ((float) j - f), (double) ((float) k - f), (double) ((float) (i + 1) + f), (double) ((float) (j + 1) + f), (double) ((float) (k + 1) + f)));
+            List list = this.world.a(EntityHuman.class, new AxisAlignedBB((double) ((float) i - 5.0F), (double) ((float) j - 5.0F), (double) ((float) k - 5.0F), (double) ((float) (i + 1) + 5.0F), (double) ((float) (j + 1) + 5.0F), (double) ((float) (k + 1) + 5.0F)));
             Iterator iterator = list.iterator();
 
             while (iterator.hasNext()) {
@@ -274,16 +233,16 @@ public class TileEntityChest extends TileEntityLootable implements ITickable, II
                 d1 += 0.5D;
             }
 
-            this.world.a((EntityHuman) null, d1, (double) j + 0.5D, d0, SoundEffects.X, SoundCategory.BLOCKS, 0.5F, this.world.random.nextFloat() * 0.1F + 0.9F);
+            this.world.a((EntityHuman) null, d1, (double) j + 0.5D, d0, SoundEffects.Z, SoundCategory.BLOCKS, 0.5F, this.world.random.nextFloat() * 0.1F + 0.9F);
         }
 
         if (this.l == 0 && this.j > 0.0F || this.l > 0 && this.j < 1.0F) {
             float f1 = this.j;
 
             if (this.l > 0) {
-                this.j += f;
+                this.j += 0.1F;
             } else {
-                this.j -= f;
+                this.j -= 0.1F;
             }
 
             if (this.j > 1.0F) {
@@ -292,7 +251,7 @@ public class TileEntityChest extends TileEntityLootable implements ITickable, II
 
             float f2 = 0.5F;
 
-            if (this.j < f2 && f1 >= f2 && this.f == null && this.h == null) {
+            if (this.j < 0.5F && f1 >= 0.5F && this.f == null && this.h == null) {
                 d0 = (double) i + 0.5D;
                 double d2 = (double) k + 0.5D;
 
@@ -304,7 +263,7 @@ public class TileEntityChest extends TileEntityLootable implements ITickable, II
                     d0 += 0.5D;
                 }
 
-                this.world.a((EntityHuman) null, d0, (double) j + 0.5D, d2, SoundEffects.V, SoundCategory.BLOCKS, 0.5F, this.world.random.nextFloat() * 0.1F + 0.9F);
+                this.world.a((EntityHuman) null, d0, (double) j + 0.5D, d2, SoundEffects.X, SoundCategory.BLOCKS, 0.5F, this.world.random.nextFloat() * 0.1F + 0.9F);
             }
 
             if (this.j < 0.0F) {
@@ -343,8 +302,10 @@ public class TileEntityChest extends TileEntityLootable implements ITickable, II
                 }
             }
             // CraftBukkit end
-            this.world.applyPhysics(this.position, this.getBlock());
-            this.world.applyPhysics(this.position.down(), this.getBlock());
+            this.world.applyPhysics(this.position, this.getBlock(), false);
+            if (this.p() == BlockChest.Type.TRAP) {
+                this.world.applyPhysics(this.position.down(), this.getBlock(), false);
+            }
         }
 
     }
@@ -353,44 +314,39 @@ public class TileEntityChest extends TileEntityLootable implements ITickable, II
         if (!entityhuman.isSpectator() && this.getBlock() instanceof BlockChest) {
             int oldPower = Math.max(0, Math.min(15, this.l)); // CraftBukkit - Get power before new viewer is added
             --this.l;
-            if (this.world == null) return; // CraftBukkit
             this.world.playBlockAction(this.position, this.getBlock(), 1, this.l);
+            this.world.applyPhysics(this.position, this.getBlock(), false);
 
             // CraftBukkit start - Call redstone event
-            if (this.getBlock() == Blocks.TRAPPED_CHEST) {
+            if (this.p() == BlockChest.Type.TRAP) {
                 int newPower = Math.max(0, Math.min(15, this.l));
 
                 if (oldPower != newPower) {
                     org.bukkit.craftbukkit.event.CraftEventFactory.callRedstoneChange(world, position.getX(), position.getY(), position.getZ(), oldPower, newPower);
                 }
+                this.world.applyPhysics(this.position.down(), this.getBlock(), false);
             }
             // CraftBukkit end
-            this.world.applyPhysics(this.position, this.getBlock());
-            this.world.applyPhysics(this.position.down(), this.getBlock());
         }
 
     }
 
-    public boolean b(int i, ItemStack itemstack) {
-        return true;
-    }
-
-    public void y() {
-        super.y();
+    public void z() {
+        super.z();
         this.invalidateBlockCache();
-        this.m();
+        this.o();
     }
 
-    public BlockChest.Type o() {
-        if (this.q == null) {
+    public BlockChest.Type p() {
+        if (this.r == null) {
             if (this.world == null || !(this.getBlock() instanceof BlockChest)) {
                 return BlockChest.Type.BASIC;
             }
 
-            this.q = ((BlockChest) this.getBlock()).g;
+            this.r = ((BlockChest) this.getBlock()).g;
         }
 
-        return this.q;
+        return this.r;
     }
 
     public String getContainerName() {
@@ -402,28 +358,8 @@ public class TileEntityChest extends TileEntityLootable implements ITickable, II
         return new ContainerChest(playerinventory, this, entityhuman);
     }
 
-    public int getProperty(int i) {
-        return 0;
-    }
-
-    public void setProperty(int i, int j) {}
-
-    public int g() {
-        return 0;
-    }
-
-    public void l() {
-        this.d((EntityHuman) null);
-
-        for (int i = 0; i < this.items.length; ++i) {
-            this.items[i] = null;
-        }
-
-    }
-
-    public void a(MinecraftKey minecraftkey, long i) {
-        this.m = minecraftkey;
-        this.n = i;
+    protected NonNullList<ItemStack> q() {
+        return this.items;
     }
 
     // CraftBukkit start
@@ -432,36 +368,4 @@ public class TileEntityChest extends TileEntityLootable implements ITickable, II
         return true;
     }
     // CraftBukkit end
-
-    static class SyntheticClass_1 {
-
-        static final int[] a = new int[EnumDirection.values().length];
-
-        static {
-            try {
-                TileEntityChest.SyntheticClass_1.a[EnumDirection.NORTH.ordinal()] = 1;
-            } catch (NoSuchFieldError nosuchfielderror) {
-                ;
-            }
-
-            try {
-                TileEntityChest.SyntheticClass_1.a[EnumDirection.SOUTH.ordinal()] = 2;
-            } catch (NoSuchFieldError nosuchfielderror1) {
-                ;
-            }
-
-            try {
-                TileEntityChest.SyntheticClass_1.a[EnumDirection.EAST.ordinal()] = 3;
-            } catch (NoSuchFieldError nosuchfielderror2) {
-                ;
-            }
-
-            try {
-                TileEntityChest.SyntheticClass_1.a[EnumDirection.WEST.ordinal()] = 4;
-            } catch (NoSuchFieldError nosuchfielderror3) {
-                ;
-            }
-
-        }
-    }
 }

@@ -17,13 +17,13 @@ public class BlockMushroom extends BlockPlant implements IBlockFragilePlantEleme
         this.a(true);
     }
 
-    public AxisAlignedBB a(IBlockData iblockdata, IBlockAccess iblockaccess, BlockPosition blockposition) {
+    public AxisAlignedBB b(IBlockData iblockdata, IBlockAccess iblockaccess, BlockPosition blockposition) {
         return BlockMushroom.a;
     }
 
     public void b(World world, BlockPosition blockposition, IBlockData iblockdata, Random random) {
         final int sourceX = blockposition.getX(), sourceY = blockposition.getY(), sourceZ = blockposition.getZ(); // CraftBukkit
-        if (random.nextInt(Math.max(1, (int) (100 / world.spigotConfig.mushroomModifier) * 25)) == 0) { // Spigot
+        if (random.nextInt(Math.max(1, (int) (100.0F / world.spigotConfig.mushroomModifier) * 25)) == 0) { // Spigot
             int i = 5;
             boolean flag = true;
             Iterator iterator = BlockPosition.b(blockposition.a(-4, -1, -4), blockposition.a(4, 1, 4)).iterator();

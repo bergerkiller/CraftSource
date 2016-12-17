@@ -6,15 +6,20 @@ import java.util.List;
 import java.util.Map;
 
 import net.minecraft.server.NBTTagCompound;
+import net.minecraft.server.NBTTagInt;
 import net.minecraft.server.NBTTagList;
 
 import org.apache.commons.lang.Validate;
+import org.bukkit.Color;
 import org.bukkit.Material;
 import org.bukkit.configuration.serialization.DelegateDeserialization;
 import org.bukkit.inventory.meta.PotionMeta;
+import org.bukkit.potion.PotionData;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
+import org.bukkit.potion.PotionType;
 import org.bukkit.craftbukkit.inventory.CraftMetaItem.SerializableMeta;
+import org.bukkit.craftbukkit.potion.CraftPotionUtil;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap.Builder;
@@ -26,9 +31,15 @@ class CraftMetaPotion extends CraftMetaItem implements PotionMeta {
     static final ItemMetaKey DURATION = new ItemMetaKey("Duration", "duration");
     static final ItemMetaKey SHOW_PARTICLES = new ItemMetaKey("ShowParticles", "has-particles");
     static final ItemMetaKey POTION_EFFECTS = new ItemMetaKey("CustomPotionEffects", "custom-effects");
+    static final ItemMetaKey POTION_COLOR = new ItemMetaKey("CustomPotionColor", "custom-color");
     static final ItemMetaKey ID = new ItemMetaKey("Id", "potion-id");
+    static final ItemMetaKey DEFAULT_POTION = new ItemMetaKey("Potion", "potion-type");
 
+    // Having an initial "state" in ItemMeta seems bit dirty but the UNCRAFTABLE potion type
+    // is treated as the empty form of the meta because it represents an empty potion with no effect
+    private PotionData type = new PotionData(PotionType.UNCRAFTABLE, false, false);
     private List<PotionEffect> customEffects;
+    private Color color;
 
     CraftMetaPotion(CraftMetaItem meta) {
         super(meta);
@@ -36,6 +47,8 @@ class CraftMetaPotion extends CraftMetaItem implements PotionMeta {
             return;
         }
         CraftMetaPotion potionMeta = (CraftMetaPotion) meta;
+        this.type = potionMeta.type;
+        this.color = potionMeta.color;
         if (potionMeta.hasCustomEffects()) {
             this.customEffects = new ArrayList<PotionEffect>(potionMeta.customEffects);
         }
@@ -43,7 +56,12 @@ class CraftMetaPotion extends CraftMetaItem implements PotionMeta {
 
     CraftMetaPotion(NBTTagCompound tag) {
         super(tag);
-
+        if (tag.hasKey(DEFAULT_POTION.NBT)) {
+            type = CraftPotionUtil.toBukkit(tag.getString(DEFAULT_POTION.NBT));
+        }
+        if (tag.hasKey(POTION_COLOR.NBT)) {
+            color = Color.fromRGB(tag.getInt(POTION_COLOR.NBT));
+        }
         if (tag.hasKey(POTION_EFFECTS.NBT)) {
             NBTTagList list = tag.getList(POTION_EFFECTS.NBT, 10);
             int length = list.size();
@@ -63,6 +81,12 @@ class CraftMetaPotion extends CraftMetaItem implements PotionMeta {
 
     CraftMetaPotion(Map<String, Object> map) {
         super(map);
+        type = CraftPotionUtil.toBukkit(SerializableMeta.getString(map, DEFAULT_POTION.BUKKIT, true));
+
+        Color color = SerializableMeta.getObject(Color.class, map, POTION_COLOR.BUKKIT, true);
+        if (color != null) {
+            setColor(color);
+        }
 
         Iterable<?> rawEffectList = SerializableMeta.getObject(Iterable.class, map, POTION_EFFECTS.BUKKIT, true);
         if (rawEffectList == null) {
@@ -80,6 +104,13 @@ class CraftMetaPotion extends CraftMetaItem implements PotionMeta {
     @Override
     void applyToItem(NBTTagCompound tag) {
         super.applyToItem(tag);
+
+        tag.setString(DEFAULT_POTION.NBT, CraftPotionUtil.fromBukkit(type));
+
+        if (hasColor()) {
+            tag.setInt(POTION_COLOR.NBT, color.asRGB());
+        }
+
         if (customEffects != null) {
             NBTTagList effectList = new NBTTagList();
             tag.set(POTION_EFFECTS.NBT, effectList);
@@ -102,7 +133,7 @@ class CraftMetaPotion extends CraftMetaItem implements PotionMeta {
     }
 
     boolean isPotionEmpty() {
-        return !(hasCustomEffects());
+        return (type.getType() == PotionType.UNCRAFTABLE) && !(hasCustomEffects() || hasColor());
     }
 
     @Override
@@ -121,10 +152,22 @@ class CraftMetaPotion extends CraftMetaItem implements PotionMeta {
     @Override
     public CraftMetaPotion clone() {
         CraftMetaPotion clone = (CraftMetaPotion) super.clone();
+        clone.type = type;
         if (this.customEffects != null) {
             clone.customEffects = new ArrayList<PotionEffect>(this.customEffects);
         }
         return clone;
+    }
+
+    @Override
+    public void setBasePotionData(PotionData data) {
+        Validate.notNull(data, "PotionData cannot be null");
+        this.type = data;
+    }
+
+    @Override
+    public PotionData getBasePotionData() {
+        return type;
     }
 
     public boolean hasCustomEffects() {
@@ -173,7 +216,7 @@ class CraftMetaPotion extends CraftMetaItem implements PotionMeta {
         Iterator<PotionEffect> iterator = customEffects.iterator();
         while (iterator.hasNext()) {
             PotionEffect effect = iterator.next();
-            if (effect.getType() == type) {
+            if (type.equals(effect.getType())) {
                 iterator.remove();
                 changed = true;
             }
@@ -222,9 +265,30 @@ class CraftMetaPotion extends CraftMetaItem implements PotionMeta {
     }
 
     @Override
+    public boolean hasColor() {
+        return color != null;
+    }
+
+    @Override
+    public Color getColor() {
+        return color;
+    }
+
+    @Override
+    public void setColor(Color color) {
+        this.color = color;
+    }
+
+    @Override
     int applyHash() {
         final int original;
         int hash = original = super.applyHash();
+        if (type.getType() != PotionType.UNCRAFTABLE) {
+            hash = 73 * hash + type.hashCode();
+        }
+        if (hasColor()) {
+            hash = 73 * hash + color.hashCode();
+        }
         if (hasCustomEffects()) {
             hash = 73 * hash + customEffects.hashCode();
         }
@@ -239,7 +303,9 @@ class CraftMetaPotion extends CraftMetaItem implements PotionMeta {
         if (meta instanceof CraftMetaPotion) {
             CraftMetaPotion that = (CraftMetaPotion) meta;
 
-            return (this.hasCustomEffects() ? that.hasCustomEffects() && this.customEffects.equals(that.customEffects) : !that.hasCustomEffects());
+            return type.equals(that.type)
+                    && (this.hasCustomEffects() ? that.hasCustomEffects() && this.customEffects.equals(that.customEffects) : !that.hasCustomEffects())
+                    && (this.hasColor() ? that.hasColor() && this.color.equals(that.color) : !that.hasColor());
         }
         return true;
     }
@@ -252,6 +318,13 @@ class CraftMetaPotion extends CraftMetaItem implements PotionMeta {
     @Override
     Builder<String, Object> serialize(Builder<String, Object> builder) {
         super.serialize(builder);
+        if (type.getType() != PotionType.UNCRAFTABLE) {
+            builder.put(DEFAULT_POTION.BUKKIT, CraftPotionUtil.fromBukkit(type));
+        }
+
+        if (hasColor()) {
+            builder.put(POTION_COLOR.BUKKIT, getColor());
+        }
 
         if (hasCustomEffects()) {
             builder.put(POTION_EFFECTS.BUKKIT, ImmutableList.copyOf(this.customEffects));

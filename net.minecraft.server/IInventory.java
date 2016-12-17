@@ -6,6 +6,8 @@ public interface IInventory extends INamableTileEntity {
 
     int getSize();
 
+    boolean w_();
+
     ItemStack getItem(int i);
 
     ItemStack splitStack(int i, int j);
@@ -30,12 +32,12 @@ public interface IInventory extends INamableTileEntity {
 
     void setProperty(int i, int j);
 
-    int g();
+    int h();
 
-    void l();
+    void clear();
 
     // CraftBukkit start
-    ItemStack[] getContents();
+    java.util.List<ItemStack> getContents();
 
     void onOpen(CraftHumanEntity who);
 

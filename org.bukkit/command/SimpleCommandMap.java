@@ -1,8 +1,7 @@
 package org.bukkit.command;
 
-import static org.bukkit.util.Java15Compat.Arrays_copyOfRange;
-
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -12,6 +11,7 @@ import java.util.Map;
 import java.util.regex.Pattern;
 
 import org.apache.commons.lang.Validate;
+import org.bukkit.Location;
 import org.bukkit.Server;
 import org.bukkit.command.defaults.*;
 import org.bukkit.entity.Player;
@@ -60,8 +60,8 @@ public class SimpleCommandMap implements CommandMap {
      * {@inheritDoc}
      */
     public boolean register(String label, String fallbackPrefix, Command command) {
-        label = label.toLowerCase().trim();
-        fallbackPrefix = fallbackPrefix.toLowerCase().trim();
+        label = label.toLowerCase(java.util.Locale.ENGLISH).trim();
+        fallbackPrefix = fallbackPrefix.toLowerCase(java.util.Locale.ENGLISH).trim();
         boolean registered = register(label, command, false, fallbackPrefix);
 
         Iterator<String> iterator = command.getAliases().iterator();
@@ -128,7 +128,7 @@ public class SimpleCommandMap implements CommandMap {
             return false;
         }
 
-        String sentCommandLabel = args[0].toLowerCase();
+        String sentCommandLabel = args[0].toLowerCase(java.util.Locale.ENGLISH);
         Command target = getCommand(sentCommandLabel);
 
         if (target == null) {
@@ -136,11 +136,15 @@ public class SimpleCommandMap implements CommandMap {
         }
 
         try {
+            target.timings.startTiming(); // Spigot
             // Note: we don't return the result of target.execute as thats success / failure, we return handled (true) or not handled (false)
-            target.execute(sender, sentCommandLabel, Arrays_copyOfRange(args, 1, args.length));
+            target.execute(sender, sentCommandLabel, Arrays.copyOfRange(args, 1, args.length));
+            target.timings.stopTiming(); // Spigot
         } catch (CommandException ex) {
+            target.timings.stopTiming(); // Spigot
             throw ex;
         } catch (Throwable ex) {
+            target.timings.stopTiming(); // Spigot
             throw new CommandException("Unhandled exception executing '" + commandLine + "' in " + target, ex);
         }
 
@@ -157,11 +161,15 @@ public class SimpleCommandMap implements CommandMap {
     }
 
     public Command getCommand(String name) {
-        Command target = knownCommands.get(name.toLowerCase());
+        Command target = knownCommands.get(name.toLowerCase(java.util.Locale.ENGLISH));
         return target;
     }
 
     public List<String> tabComplete(CommandSender sender, String cmdLine) {
+        return tabComplete(sender, cmdLine, null);
+    }
+
+    public List<String> tabComplete(CommandSender sender, String cmdLine, Location location) {
         Validate.notNull(sender, "Sender cannot be null");
         Validate.notNull(cmdLine, "Command line cannot null");
 
@@ -206,7 +214,7 @@ public class SimpleCommandMap implements CommandMap {
         String[] args = PATTERN_ON_SPACE.split(argLine, -1);
 
         try {
-            return target.tabComplete(sender, commandName, args);
+            return target.tabComplete(sender, commandName, args, location);
         } catch (CommandException ex) {
             throw ex;
         } catch (Throwable ex) {
@@ -222,7 +230,7 @@ public class SimpleCommandMap implements CommandMap {
         Map<String, String[]> values = server.getCommandAliases();
 
         for (String alias : values.keySet()) {
-            if (alias.contains(":") || alias.contains(" ")) {
+            if (alias.contains(" ")) {
                 server.getLogger().warning("Could not register alias " + alias + " because it contains illegal characters");
                 continue;
             }
@@ -252,9 +260,9 @@ public class SimpleCommandMap implements CommandMap {
 
             // We register these as commands so they have absolute priority.
             if (targets.size() > 0) {
-                knownCommands.put(alias.toLowerCase(), new FormattedCommandAlias(alias.toLowerCase(), targets.toArray(new String[targets.size()])));
+                knownCommands.put(alias.toLowerCase(java.util.Locale.ENGLISH), new FormattedCommandAlias(alias.toLowerCase(java.util.Locale.ENGLISH), targets.toArray(new String[targets.size()])));
             } else {
-                knownCommands.remove(alias.toLowerCase());
+                knownCommands.remove(alias.toLowerCase(java.util.Locale.ENGLISH));
             }
         }
     }

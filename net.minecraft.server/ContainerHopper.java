@@ -29,7 +29,7 @@ public class ContainerHopper extends Container {
         this.hopper = iinventory;
         this.player = playerinventory; // CraftBukkit - save player
         iinventory.startOpen(entityhuman);
-        byte b0 = 51;
+        boolean flag = true;
 
         int i;
 
@@ -39,12 +39,12 @@ public class ContainerHopper extends Container {
 
         for (i = 0; i < 3; ++i) {
             for (int j = 0; j < 9; ++j) {
-                this.a(new Slot(playerinventory, j + i * 9 + 9, 8 + j * 18, i * 18 + b0));
+                this.a(new Slot(playerinventory, j + i * 9 + 9, 8 + j * 18, i * 18 + 51));
             }
         }
 
         for (i = 0; i < 9; ++i) {
-            this.a(new Slot(playerinventory, i, 8 + i * 18, 58 + b0));
+            this.a(new Slot(playerinventory, i, 8 + i * 18, 109));
         }
 
     }
@@ -55,7 +55,7 @@ public class ContainerHopper extends Container {
     }
 
     public ItemStack b(EntityHuman entityhuman, int i) {
-        ItemStack itemstack = null;
+        ItemStack itemstack = ItemStack.a;
         Slot slot = (Slot) this.c.get(i);
 
         if (slot != null && slot.hasItem()) {
@@ -64,14 +64,14 @@ public class ContainerHopper extends Container {
             itemstack = itemstack1.cloneItemStack();
             if (i < this.hopper.getSize()) {
                 if (!this.a(itemstack1, this.hopper.getSize(), this.c.size(), true)) {
-                    return null;
+                    return ItemStack.a;
                 }
             } else if (!this.a(itemstack1, 0, this.hopper.getSize(), false)) {
-                return null;
+                return ItemStack.a;
             }
 
-            if (itemstack1.count == 0) {
-                slot.set((ItemStack) null);
+            if (itemstack1.isEmpty()) {
+                slot.set(ItemStack.a);
             } else {
                 slot.f();
             }

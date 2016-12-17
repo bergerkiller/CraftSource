@@ -29,6 +29,7 @@ import org.bukkit.BanList;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.GameMode;
+import org.bukkit.Location;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.Server;
 import org.bukkit.UnsafeValues;
@@ -58,6 +59,7 @@ import org.bukkit.craftbukkit.help.SimpleHelpMap;
 import org.bukkit.craftbukkit.inventory.CraftFurnaceRecipe;
 import org.bukkit.craftbukkit.inventory.CraftInventoryCustom;
 import org.bukkit.craftbukkit.inventory.CraftItemFactory;
+import org.bukkit.craftbukkit.inventory.CraftMerchantCustom;
 import org.bukkit.craftbukkit.inventory.CraftRecipe;
 import org.bukkit.craftbukkit.inventory.CraftShapedRecipe;
 import org.bukkit.craftbukkit.inventory.CraftShapelessRecipe;
@@ -84,6 +86,7 @@ import org.bukkit.generator.ChunkGenerator;
 import org.bukkit.help.HelpMap;
 import org.bukkit.inventory.FurnaceRecipe;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.Merchant;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.Recipe;
@@ -126,6 +129,7 @@ import io.netty.buffer.ByteBufOutputStream;
 import io.netty.buffer.Unpooled;
 import io.netty.handler.codec.base64.Base64;
 import jline.console.ConsoleReader;
+import org.bukkit.event.server.TabCompleteEvent;
 import net.md_5.bungee.api.chat.BaseComponent;
 
 public final class CraftServer implements Server {
@@ -318,7 +322,7 @@ public final class CraftServer implements Server {
 
         for (Plugin plugin : plugins) {
             if ((!plugin.isEnabled()) && (plugin.getDescription().getLoad() == type)) {
-                loadPlugin(plugin);
+                enablePlugin(plugin);
             }
         }
 
@@ -356,10 +360,8 @@ public final class CraftServer implements Server {
         }
     }
 
-    private void loadPlugin(Plugin plugin) {
+    private void enablePlugin(Plugin plugin) {
         try {
-            pluginManager.enablePlugin(plugin);
-
             List<Permission> perms = plugin.getDescription().getPermissions();
 
             for (Permission perm : perms) {
@@ -369,6 +371,8 @@ public final class CraftServer implements Server {
                     getLogger().log(Level.WARNING, "Plugin " + plugin.getDescription().getFullName() + " tried to register permission '" + perm.getName() + "' but it's already registered", ex);
                 }
             }
+
+            pluginManager.enablePlugin(plugin);
         } catch (Throwable ex) {
             Logger.getLogger(CraftServer.class.getName()).log(Level.SEVERE, ex.getMessage() + " loading " + plugin.getDescription().getFullName() + " (Is it up to date?)", ex);
         }
@@ -412,10 +416,10 @@ public final class CraftServer implements Server {
             return found;
         }
 
-        String lowerName = name.toLowerCase();
+        String lowerName = name.toLowerCase(java.util.Locale.ENGLISH);
         int delta = Integer.MAX_VALUE;
         for (Player player : getOnlinePlayers()) {
-            if (player.getName().toLowerCase().startsWith(lowerName)) {
+            if (player.getName().toLowerCase(java.util.Locale.ENGLISH).startsWith(lowerName)) {
                 int curDelta = Math.abs(player.getName().length() - lowerName.length());
                 if (curDelta < delta) {
                     found = player;
@@ -472,7 +476,7 @@ public final class CraftServer implements Server {
                 matchedPlayers.add(iterPlayer);
                 break;
             }
-            if (iterPlayerName.toLowerCase().contains(partialName.toLowerCase())) {
+            if (iterPlayerName.toLowerCase(java.util.Locale.ENGLISH).contains(partialName.toLowerCase(java.util.Locale.ENGLISH))) {
                 // Partial match
                 matchedPlayers.add(iterPlayer);
             }
@@ -883,18 +887,22 @@ public final class CraftServer implements Server {
 
         IDataManager sdm = new ServerNBTManager(getWorldContainer(), name, true, getHandle().getServer().getDataConverterManager());
         WorldData worlddata = sdm.getWorldData();
+        WorldSettings worldSettings = null;
         if (worlddata == null) {
-            WorldSettings worldSettings = new WorldSettings(creator.seed(), WorldSettings.EnumGamemode.getById(getDefaultGameMode().getValue()), generateStructures, hardcore, type);
+            worldSettings = new WorldSettings(creator.seed(), EnumGamemode.getById(getDefaultGameMode().getValue()), generateStructures, hardcore, type);
             worldSettings.setGeneratorSettings(creator.generatorSettings());
             worlddata = new WorldData(worldSettings, name);
         }
         worlddata.checkName(name); // CraftBukkit - Migration did not rewrite the level.dat; This forces 1.8 to take the last loaded world as respawn (in this case the end)
         WorldServer internal = (WorldServer) new WorldServer(console, sdm, worlddata, dimension, console.methodProfiler, creator.environment(), generator).b();
 
-        if (!(worlds.containsKey(name.toLowerCase()))) {
+        if (!(worlds.containsKey(name.toLowerCase(java.util.Locale.ENGLISH)))) {
             return null;
         }
 
+        if (worldSettings != null) {
+            internal.a(worldSettings);
+        }
         internal.scoreboard = getScoreboardManager().getMainScoreboard().getHandle();
 
         internal.tracker = new EntityTracker(internal);
@@ -902,10 +910,6 @@ public final class CraftServer implements Server {
         internal.worldData.setDifficulty(EnumDifficulty.EASY);
         internal.setSpawnFlags(true, true);
         console.worlds.add(internal);
-
-        if (generator != null) {
-            internal.getWorld().getPopulators().addAll(generator.getDefaultPopulators(internal.getWorld()));
-        }
 
         pluginManager.callEvent(new WorldInitEvent(internal.getWorld()));
         System.out.print("Preparing start region for level " + (console.worlds.size() - 1) + " (Seed: " + internal.getSeed() + ")");
@@ -979,7 +983,7 @@ public final class CraftServer implements Server {
             }
         }
 
-        worlds.remove(world.getName().toLowerCase());
+        worlds.remove(world.getName().toLowerCase(java.util.Locale.ENGLISH));
         console.worlds.remove(console.worlds.indexOf(handle));
 
         File parentFolder = world.getWorldFolder().getAbsoluteFile();
@@ -1017,7 +1021,7 @@ public final class CraftServer implements Server {
     public World getWorld(String name) {
         Validate.notNull(name, "Name cannot be null");
 
-        return worlds.get(name.toLowerCase());
+        return worlds.get(name.toLowerCase(java.util.Locale.ENGLISH));
     }
 
     @Override
@@ -1036,7 +1040,7 @@ public final class CraftServer implements Server {
             System.out.println("World " + world.getName() + " is a duplicate of another world and has been prevented from loading. Please delete the uid.dat file from " + world.getName() + "'s world directory if you want to be able to load the duplicate world.");
             return;
         }
-        worlds.put(world.getName().toLowerCase(), world);
+        worlds.put(world.getName().toLowerCase(java.util.Locale.ENGLISH), world);
     }
 
     @Override
@@ -1205,11 +1209,6 @@ public final class CraftServer implements Server {
     @Override
     public boolean isHardcore() {
         return console.isHardcore();
-    }
-
-    @Override
-    public boolean useExactLoginLocation() {
-        return configuration.getBoolean("settings.use-exact-login-location");
     }
 
     public ChunkGenerator getGenerator(String world) {
@@ -1430,7 +1429,7 @@ public final class CraftServer implements Server {
         Validate.notNull(mode, "Mode cannot be null");
 
         for (World world : getWorlds()) {
-            ((CraftWorld) world).getHandle().worldData.setGameType(WorldSettings.EnumGamemode.getById(mode.getValue()));
+            ((CraftWorld) world).getHandle().worldData.setGameType(EnumGamemode.getById(mode.getValue()));
         }
     }
 
@@ -1532,6 +1531,11 @@ public final class CraftServer implements Server {
     }
 
     @Override
+    public Merchant createMerchant(String title) {
+        return new CraftMerchantCustom(title == null ? InventoryType.MERCHANT.getDefaultTitle() : title);
+    }
+
+    @Override
     public HelpMap getHelpMap() {
         return helpMap;
     }
@@ -1575,20 +1579,26 @@ public final class CraftServer implements Server {
         return warningState;
     }
 
-    public List<String> tabComplete(net.minecraft.server.ICommandListener sender, String message) {
+    public List<String> tabComplete(net.minecraft.server.ICommandListener sender, String message, BlockPosition pos) {
         if (!(sender instanceof EntityPlayer)) {
             return ImmutableList.of();
         }
 
+        List<String> offers;
         Player player = ((EntityPlayer) sender).getBukkitEntity();
         if (message.startsWith("/")) {
-            return tabCompleteCommand(player, message);
+            offers = tabCompleteCommand(player, message, pos);
         } else {
-            return tabCompleteChat(player, message);
+            offers = tabCompleteChat(player, message);
         }
+
+        TabCompleteEvent tabEvent = new TabCompleteEvent(player, message, offers);
+        getPluginManager().callEvent(tabEvent);
+
+        return tabEvent.isCancelled() ? Collections.EMPTY_LIST : tabEvent.getCompletions();
     }
 
-    public List<String> tabCompleteCommand(Player player, String message) {
+    public List<String> tabCompleteCommand(Player player, String message, BlockPosition pos) {
         // Spigot Start
 		if ( (org.spigotmc.SpigotConfig.tabComplete < 0 || message.length() <= org.spigotmc.SpigotConfig.tabComplete) && !message.contains( " " ) )
         {
@@ -1598,7 +1608,11 @@ public final class CraftServer implements Server {
 
         List<String> completions = null;
         try {
-            completions = getCommandMap().tabComplete(player, message.substring(1));
+            if (pos == null) {
+                completions = getCommandMap().tabComplete(player, message.substring(1));
+            } else {
+                completions = getCommandMap().tabComplete(player, message.substring(1), new Location(player.getWorld(), pos.getX(), pos.getY(), pos.getZ()));
+            }
         } catch (CommandException ex) {
             player.sendMessage(ChatColor.RED + "An internal error occurred while attempting to tab-complete this command");
             getLogger().log(Level.SEVERE, "Exception when " + player.getName() + " attempted to tab complete " + message, ex);

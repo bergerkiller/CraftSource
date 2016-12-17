@@ -1,26 +1,29 @@
 package net.minecraft.server;
 
 import com.google.common.base.Predicate;
+import javax.annotation.Nullable;
 import org.apache.commons.lang3.Validate;
 
 // CraftBukkit start
 import org.bukkit.entity.Hanging;
+import org.bukkit.event.hanging.HangingBreakByEntityEvent;
 import org.bukkit.event.hanging.HangingBreakEvent;
 // CraftBukkit end
 
 public abstract class EntityHanging extends Entity {
 
     private static final Predicate<Entity> c = new Predicate() {
-        public boolean a(Entity entity) {
+        public boolean a(@Nullable Entity entity) {
             return entity instanceof EntityHanging;
         }
 
-        public boolean apply(Object object) {
+        public boolean apply(@Nullable Object object) {
             return this.a((Entity) object);
         }
     };
     private int d;
     public BlockPosition blockPosition;
+    @Nullable
     public EnumDirection direction;
 
     public EntityHanging(World world) {
@@ -39,52 +42,46 @@ public abstract class EntityHanging extends Entity {
         Validate.notNull(enumdirection);
         Validate.isTrue(enumdirection.k().c());
         this.direction = enumdirection;
-        this.lastYaw = this.yaw = (float) (this.direction.get2DRotationValue() * 90);
+        this.yaw = (float) (this.direction.get2DRotationValue() * 90);
+        this.lastYaw = this.yaw;
         this.updateBoundingBox();
     }
 
-    /* CraftBukkit start - bounding box calculation made static (for spawn usage)
-
-        l is from function l()
-        m is from function m()
-
-        Placing here as it's more likely to be noticed as something which needs to be updated
-        then something in a CraftBukkit file.
-     */
+    // CraftBukkit start - break out BB calc into own method
     public static AxisAlignedBB calculateBoundingBox(Entity entity, BlockPosition blockPosition, EnumDirection direction, int width, int height) {
-            double d0 = (double) blockPosition.getX() + 0.5D;
-            double d1 = (double) blockPosition.getY() + 0.5D;
-            double d2 = (double) blockPosition.getZ() + 0.5D;
-            double d3 = 0.46875D;
-            double d4 = a(width);
-            double d5 = a(height);
+        double d0 = (double) blockPosition.getX() + 0.5D;
+        double d1 = (double) blockPosition.getY() + 0.5D;
+        double d2 = (double) blockPosition.getZ() + 0.5D;
+        double d3 = 0.46875D;
+        double d4 = a(width);
+        double d5 = a(height);
 
-            d0 -= (double) direction.getAdjacentX() * 0.46875D;
-            d2 -= (double) direction.getAdjacentZ() * 0.46875D;
-            d1 += d5;
-            EnumDirection enumdirection = direction.f();
+        d0 -= (double) direction.getAdjacentX() * 0.46875D;
+        d2 -= (double) direction.getAdjacentZ() * 0.46875D;
+        d1 += d5;
+        EnumDirection enumdirection = direction.f();
 
-            d0 += d4 * (double) enumdirection.getAdjacentX();
-            d2 += d4 * (double) enumdirection.getAdjacentZ();
+        d0 += d4 * (double) enumdirection.getAdjacentX();
+        d2 += d4 * (double) enumdirection.getAdjacentZ();
         if (entity != null) {
             entity.locX = d0;
             entity.locY = d1;
             entity.locZ = d2;
         }
-            double d6 = (double) width;
-            double d7 = (double) height;
-            double d8 = (double) width;
+        double d6 = (double) width;
+        double d7 = (double) height;
+        double d8 = (double) width;
 
-            if (direction.k() == EnumDirection.EnumAxis.Z) {
-                d8 = 1.0D;
-            } else {
-                d6 = 1.0D;
-            }
+        if (direction.k() == EnumDirection.EnumAxis.Z) {
+            d8 = 1.0D;
+        } else {
+            d6 = 1.0D;
+        }
 
-            d6 /= 32.0D;
-            d7 /= 32.0D;
-            d8 /= 32.0D;
-            return new AxisAlignedBB(d0 - d6, d1 - d7, d2 - d8, d0 + d6, d1 + d7, d2 + d8);
+        d6 /= 32.0D;
+        d7 /= 32.0D;
+        d8 /= 32.0D;
+        return new AxisAlignedBB(d0 - d6, d1 - d7, d2 - d8, d0 + d6, d1 + d7, d2 + d8);
     }
 
     protected void updateBoundingBox() {
@@ -95,11 +92,11 @@ public abstract class EntityHanging extends Entity {
         }
     }
 
-    private static double a(int i) {
+    private static double a(int i) { // CraftBukkit - static
         return i % 32 == 0 ? 0.5D : 0.0D;
     }
 
-    public void m() {
+    public void A_() {
         this.lastX = this.locX;
         this.lastY = this.locY;
         this.lastZ = this.locZ;
@@ -139,13 +136,15 @@ public abstract class EntityHanging extends Entity {
             int j = Math.max(1, this.getHeight() / 16);
             BlockPosition blockposition = this.blockPosition.shift(this.direction.opposite());
             EnumDirection enumdirection = this.direction.f();
+            BlockPosition.MutableBlockPosition blockposition_mutableblockposition = new BlockPosition.MutableBlockPosition();
 
             for (int k = 0; k < i; ++k) {
                 for (int l = 0; l < j; ++l) {
-                    int i1 = i > 2 ? -1 : 0;
-                    int j1 = j > 2 ? -1 : 0;
-                    BlockPosition blockposition1 = blockposition.shift(enumdirection, k + i1).up(l + j1);
-                    IBlockData iblockdata = this.world.getType(blockposition1);
+                    int i1 = (i - 1) / -2;
+                    int j1 = (j - 1) / -2;
+
+                    blockposition_mutableblockposition.g(blockposition).c(enumdirection, k + i1).c(EnumDirection.UP, l + j1);
+                    IBlockData iblockdata = this.world.getType(blockposition_mutableblockposition);
 
                     if (!iblockdata.getMaterial().isBuildable() && !BlockDiodeAbstract.isDiode(iblockdata)) {
                         return false;
@@ -153,7 +152,7 @@ public abstract class EntityHanging extends Entity {
                 }
             }
 
-            return this.world.a((Entity) this, this.getBoundingBox(), EntityHanging.c).isEmpty();
+            return this.world.getEntities(this, this.getBoundingBox(), EntityHanging.c).isEmpty();
         }
     }
 
@@ -177,7 +176,7 @@ public abstract class EntityHanging extends Entity {
                 // CraftBukkit start - fire break events
                 HangingBreakEvent event = new HangingBreakEvent((Hanging) this.getBukkitEntity(), HangingBreakEvent.RemoveCause.DEFAULT);
                 if (damagesource.getEntity() != null) {
-                    event = new org.bukkit.event.hanging.HangingBreakByEntityEvent((Hanging) this.getBukkitEntity(), damagesource.getEntity() == null ? null : damagesource.getEntity().getBukkitEntity());
+                    event = new HangingBreakByEntityEvent((Hanging) this.getBukkitEntity(), damagesource.getEntity() == null ? null : damagesource.getEntity().getBukkitEntity(), damagesource.isExplosion() ? HangingBreakEvent.RemoveCause.EXPLOSION : HangingBreakEvent.RemoveCause.ENTITY);
                 } else if (damagesource.isExplosion()) {
                     event = new HangingBreakEvent((Hanging) this.getBukkitEntity(), HangingBreakEvent.RemoveCause.EXPLOSION);
                 }
@@ -190,7 +189,7 @@ public abstract class EntityHanging extends Entity {
                 // CraftBukkit end
 
                 this.die();
-                this.ao();
+                this.ap();
                 this.a(damagesource.getEntity());
             }
 
@@ -198,7 +197,7 @@ public abstract class EntityHanging extends Entity {
         }
     }
 
-    public void move(double d0, double d1, double d2) {
+    public void move(EnumMoveType enummovetype, double d0, double d1, double d2) {
         if (!this.world.isClientSide && !this.dead && d0 * d0 + d1 * d1 + d2 * d2 > 0.0D) {
             if (this.dead) return; // CraftBukkit
 
@@ -218,7 +217,7 @@ public abstract class EntityHanging extends Entity {
 
     }
 
-    public void g(double d0, double d1, double d2) {
+    public void f(double d0, double d1, double d2) {
         if (false && !this.world.isClientSide && !this.dead && d0 * d0 + d1 * d1 + d2 * d2 > 0.0D) { // CraftBukkit - not needed
             this.die();
             this.a((Entity) null);
@@ -244,7 +243,7 @@ public abstract class EntityHanging extends Entity {
 
     public abstract int getHeight();
 
-    public abstract void a(Entity entity);
+    public abstract void a(@Nullable Entity entity);
 
     public abstract void o();
 
@@ -256,7 +255,7 @@ public abstract class EntityHanging extends Entity {
         return entityitem;
     }
 
-    protected boolean ar() {
+    protected boolean as() {
         return false;
     }
 
@@ -272,21 +271,35 @@ public abstract class EntityHanging extends Entity {
 
     public float a(EnumBlockRotation enumblockrotation) {
         if (this.direction != null && this.direction.k() != EnumDirection.EnumAxis.Y) {
-            switch (EntityHanging.SyntheticClass_1.a[enumblockrotation.ordinal()]) {
-            case 1:
+            switch (enumblockrotation) {
+            case CLOCKWISE_180:
                 this.direction = this.direction.opposite();
                 break;
 
-            case 2:
+            case COUNTERCLOCKWISE_90:
                 this.direction = this.direction.f();
                 break;
 
-            case 3:
+            case CLOCKWISE_90:
                 this.direction = this.direction.e();
             }
         }
 
-        return super.a(enumblockrotation);
+        float f = MathHelper.g(this.yaw);
+
+        switch (enumblockrotation) {
+        case CLOCKWISE_180:
+            return f + 180.0F;
+
+        case COUNTERCLOCKWISE_90:
+            return f + 90.0F;
+
+        case CLOCKWISE_90:
+            return f + 270.0F;
+
+        default:
+            return f;
+        }
     }
 
     public float a(EnumBlockMirror enumblockmirror) {
@@ -294,30 +307,4 @@ public abstract class EntityHanging extends Entity {
     }
 
     public void onLightningStrike(EntityLightning entitylightning) {}
-
-    static class SyntheticClass_1 {
-
-        static final int[] a = new int[EnumBlockRotation.values().length];
-
-        static {
-            try {
-                EntityHanging.SyntheticClass_1.a[EnumBlockRotation.CLOCKWISE_180.ordinal()] = 1;
-            } catch (NoSuchFieldError nosuchfielderror) {
-                ;
-            }
-
-            try {
-                EntityHanging.SyntheticClass_1.a[EnumBlockRotation.COUNTERCLOCKWISE_90.ordinal()] = 2;
-            } catch (NoSuchFieldError nosuchfielderror1) {
-                ;
-            }
-
-            try {
-                EntityHanging.SyntheticClass_1.a[EnumBlockRotation.CLOCKWISE_90.ordinal()] = 3;
-            } catch (NoSuchFieldError nosuchfielderror2) {
-                ;
-            }
-
-        }
-    }
 }

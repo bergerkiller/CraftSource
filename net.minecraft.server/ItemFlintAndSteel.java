@@ -1,10 +1,5 @@
 package net.minecraft.server;
 
-// CraftBukkit start
-import org.bukkit.craftbukkit.block.CraftBlockState;
-import org.bukkit.craftbukkit.event.CraftEventFactory;
-// CraftBukkit end
-
 public class ItemFlintAndSteel extends Item {
 
     public ItemFlintAndSteel() {
@@ -13,32 +8,22 @@ public class ItemFlintAndSteel extends Item {
         this.a(CreativeModeTab.i);
     }
 
-    public EnumInteractionResult a(ItemStack itemstack, EntityHuman entityhuman, World world, BlockPosition blockposition, EnumHand enumhand, EnumDirection enumdirection, float f, float f1, float f2) {
-        BlockPosition clicked = blockposition; // CraftBukkit
+    public EnumInteractionResult a(EntityHuman entityhuman, World world, BlockPosition blockposition, EnumHand enumhand, EnumDirection enumdirection, float f, float f1, float f2) {
         blockposition = blockposition.shift(enumdirection);
+        ItemStack itemstack = entityhuman.b(enumhand);
+
         if (!entityhuman.a(blockposition, enumdirection, itemstack)) {
             return EnumInteractionResult.FAIL;
         } else {
             if (world.getType(blockposition).getMaterial() == Material.AIR) {
                 // CraftBukkit start - Store the clicked block
-                if (CraftEventFactory.callBlockIgniteEvent(world, blockposition.getX(), blockposition.getY(), blockposition.getZ(), org.bukkit.event.block.BlockIgniteEvent.IgniteCause.FLINT_AND_STEEL, entityhuman).isCancelled()) {
+                if (org.bukkit.craftbukkit.event.CraftEventFactory.callBlockIgniteEvent(world, blockposition.getX(), blockposition.getY(), blockposition.getZ(), org.bukkit.event.block.BlockIgniteEvent.IgniteCause.FLINT_AND_STEEL, entityhuman).isCancelled()) {
                     itemstack.damage(1, entityhuman);
                     return EnumInteractionResult.PASS;
                 }
-
-                CraftBlockState blockState = CraftBlockState.getBlockState(world, blockposition.getX(), blockposition.getY(), blockposition.getZ());
                 // CraftBukkit end
-                world.a(entityhuman, blockposition, SoundEffects.bw, SoundCategory.BLOCKS, 1.0F, ItemFlintAndSteel.i.nextFloat() * 0.4F + 0.8F);
+                world.a(entityhuman, blockposition, SoundEffects.bI, SoundCategory.BLOCKS, 1.0F, ItemFlintAndSteel.j.nextFloat() * 0.4F + 0.8F);
                 world.setTypeAndData(blockposition, Blocks.FIRE.getBlockData(), 11);
-
-                // CraftBukkit start
-                org.bukkit.event.block.BlockPlaceEvent placeEvent = CraftEventFactory.callBlockPlaceEvent(world, entityhuman, enumhand, blockState, clicked.getX(), clicked.getY(), clicked.getZ());
-
-                if (placeEvent.isCancelled() || !placeEvent.canBuild()) {
-                    placeEvent.getBlockPlaced().setTypeIdAndData(0, (byte) 0, false);
-                    return EnumInteractionResult.PASS;
-                }
-                // CraftBukkit end
             }
 
             itemstack.damage(1, entityhuman);

@@ -155,20 +155,20 @@ public class ActivationRange
                     switch ( entity.activationType )
                     {
                         case 1:
-                            if ( monsterBB.b( entity.getBoundingBox() ) )
+                            if ( monsterBB.c( entity.getBoundingBox() ) )
                             {
                                 entity.activatedTick = MinecraftServer.currentTick;
                             }
                             break;
                         case 2:
-                            if ( animalBB.b( entity.getBoundingBox() ) )
+                            if ( animalBB.c( entity.getBoundingBox() ) )
                             {
                                 entity.activatedTick = MinecraftServer.currentTick;
                             }
                             break;
                         case 3:
                         default:
-                            if ( miscBB.b( entity.getBoundingBox() ) )
+                            if ( miscBB.c( entity.getBoundingBox() ) )
                             {
                                 entity.activatedTick = MinecraftServer.currentTick;
                             }
@@ -214,7 +214,7 @@ public class ActivationRange
             {
                 return true;
             }
-            if ( entity instanceof EntityVillager && ( (EntityVillager) entity ).da() /* Getter for first boolean */ )
+            if ( entity instanceof EntityVillager && ( (EntityVillager) entity ).df()/* Getter for first boolean */ )
             {
                 return true;
             }
@@ -247,7 +247,7 @@ public class ActivationRange
     {
         SpigotTimings.checkIfActiveTimer.startTiming();
         // Never safe to skip fireworks or entities not yet added to chunk
-        // PAIL: inChunk
+        // PAIL: inChunk - boolean under datawatchers
         if ( !entity.aa || entity instanceof EntityFireworks ) {
             SpigotTimings.checkIfActiveTimer.stopTiming();
             return true;

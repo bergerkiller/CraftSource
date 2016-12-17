@@ -7,10 +7,13 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+import javax.annotation.Nullable;
 
 // CraftBukkit start
 import org.bukkit.craftbukkit.entity.CraftHumanEntity;
+import org.bukkit.craftbukkit.potion.CraftPotionUtil;
 import org.bukkit.entity.HumanEntity;
+import org.bukkit.potion.PotionEffect;
 // CraftBukkit end
 
 public class TileEntityBeacon extends TileEntityContainer implements ITickable, IWorldInventory {
@@ -19,17 +22,19 @@ public class TileEntityBeacon extends TileEntityContainer implements ITickable, 
     private static final Set<MobEffectList> f = Sets.newHashSet();
     private final List<TileEntityBeacon.BeaconColorTracker> g = Lists.newArrayList();
     private boolean j;
-    private int k = -1;
-    private MobEffectList l;
-    private MobEffectList m;
+    public int levels = -1;
+    @Nullable
+    public MobEffectList primaryEffect;
+    @Nullable
+    public MobEffectList secondaryEffect;
     private ItemStack inventorySlot;
     private String o;
     // CraftBukkit start - add fields and methods
     public List<HumanEntity> transaction = new java.util.ArrayList<HumanEntity>();
     private int maxStack = MAX_STACK;
 
-    public ItemStack[] getContents() {
-        return new ItemStack[] { this.inventorySlot };
+    public List<ItemStack> getContents() {
+        return Arrays.asList(this.inventorySlot);
     }
 
     public void onOpen(CraftHumanEntity who) {
@@ -47,18 +52,28 @@ public class TileEntityBeacon extends TileEntityContainer implements ITickable, 
     public void setMaxStackSize(int size) {
         maxStack = size;
     }
+
+    public PotionEffect getPrimaryEffect() {
+        return (this.primaryEffect != null) ? CraftPotionUtil.toBukkit(new MobEffect(this.primaryEffect, getLevel(), getAmplification(), true, true)) : null;
+    }
+
+    public PotionEffect getSecondaryEffect() {
+        return (hasSecondaryEffect()) ? CraftPotionUtil.toBukkit(new MobEffect(this.secondaryEffect, getLevel(), getAmplification(), true, true)) : null;
+    }
     // CraftBukkit end
 
-    public TileEntityBeacon() {}
+    public TileEntityBeacon() {
+        this.inventorySlot = ItemStack.a;
+    }
 
-    public void c() {
+    public void F_() {
         if (this.world.getTime() % 80L == 0L) {
-            this.m();
+            this.n();
         }
 
     }
 
-    public void m() {
+    public void n() {
         if (this.world != null) {
             this.F();
             this.E();
@@ -66,49 +81,87 @@ public class TileEntityBeacon extends TileEntityContainer implements ITickable, 
 
     }
 
-    private void E() {
-        if (this.j && this.k > 0 && !this.world.isClientSide && this.l != null) {
-            double d0 = (double) (this.k * 10 + 10);
+    // CraftBukkit start - split into components
+    private byte getAmplification() {
+        {
             byte b0 = 0;
 
-            if (this.k >= 4 && this.l == this.m) {
+            if (this.levels >= 4 && this.primaryEffect == this.secondaryEffect) {
                 b0 = 1;
             }
 
-            int i = (9 + this.k * 2) * 20;
+            return b0;
+        }
+    }
+
+    private int getLevel() {
+        {
+            int i = (9 + this.levels * 2) * 20;
+            return i;
+        }
+    }
+
+    public List getHumansInRange() {
+        {
+            double d0 = (double) (this.levels * 10 + 10);
+
             int j = this.position.getX();
             int k = this.position.getY();
             int l = this.position.getZ();
-            AxisAlignedBB axisalignedbb = (new AxisAlignedBB((double) j, (double) k, (double) l, (double) (j + 1), (double) (k + 1), (double) (l + 1))).g(d0).a(0.0D, (double) this.world.getHeight(), 0.0D);
+            AxisAlignedBB axisalignedbb = (new AxisAlignedBB((double) j, (double) k, (double) l, (double) (j + 1), (double) (k + 1), (double) (l + 1))).g(d0).b(0.0D, (double) this.world.getHeight(), 0.0D);
             List list = this.world.a(EntityHuman.class, axisalignedbb);
+
+            return list;
+        }
+    }
+
+    private void applyEffect(List list, MobEffectList effects, int i, int b0) {
+        {
             Iterator iterator = list.iterator();
 
             EntityHuman entityhuman;
 
             while (iterator.hasNext()) {
                 entityhuman = (EntityHuman) iterator.next();
-                entityhuman.addEffect(new MobEffect(this.l, i, b0, true, true));
+                entityhuman.addEffect(new MobEffect(effects, i, b0, true, true));
+            }
+        }
+    }
+
+    private boolean hasSecondaryEffect() {
+        {
+            if (this.levels >= 4 && this.primaryEffect != this.secondaryEffect && this.secondaryEffect != null) {
+                return true;
             }
 
-            if (this.k >= 4 && this.l != this.m && this.m != null) {
-                iterator = list.iterator();
+            return false;
+        }
+    }
 
-                while (iterator.hasNext()) {
-                    entityhuman = (EntityHuman) iterator.next();
-                    entityhuman.addEffect(new MobEffect(this.m, i, 0, true, true));
-                }
+    private void E() {
+        if (this.j && this.levels > 0 && !this.world.isClientSide && this.primaryEffect != null) {
+            byte b0 = getAmplification();
+
+            int i = getLevel();
+            List list = getHumansInRange();
+
+            applyEffect(list, this.primaryEffect, i, b0);
+
+            if (hasSecondaryEffect()) {
+                applyEffect(list, this.secondaryEffect, i, 0);
             }
         }
 
     }
+    // CraftBukkit end
 
     private void F() {
-        int i = this.k;
+        int i = this.levels;
         int j = this.position.getX();
         int k = this.position.getY();
         int l = this.position.getZ();
 
-        this.k = 0;
+        this.levels = 0;
         this.g.clear();
         this.j = true;
         TileEntityBeacon.BeaconColorTracker tileentitybeacon_beaconcolortracker = new TileEntityBeacon.BeaconColorTracker(EntitySheep.a(EnumColor.WHITE));
@@ -155,7 +208,7 @@ public class TileEntityBeacon extends TileEntityContainer implements ITickable, 
         }
 
         if (this.j) {
-            for (i1 = 1; i1 <= 4; this.k = i1++) {
+            for (i1 = 1; i1 <= 4; this.levels = i1++) {
                 int j1 = k - i1;
 
                 if (j1 < 0) {
@@ -180,12 +233,12 @@ public class TileEntityBeacon extends TileEntityContainer implements ITickable, 
                 }
             }
 
-            if (this.k == 0) {
+            if (this.levels == 0) {
                 this.j = false;
             }
         }
 
-        if (!this.world.isClientSide && this.k == 4 && i < this.k) {
+        if (!this.world.isClientSide && this.levels == 4 && i < this.levels) {
             Iterator iterator = this.world.a(EntityHuman.class, (new AxisAlignedBB((double) j, (double) k, (double) l, (double) j, (double) (k - 4), (double) l)).grow(10.0D, 5.0D, 10.0D)).iterator();
 
             while (iterator.hasNext()) {
@@ -197,13 +250,16 @@ public class TileEntityBeacon extends TileEntityContainer implements ITickable, 
 
     }
 
-    public Packet<?> getUpdatePacket() {
-        NBTTagCompound nbttagcompound = new NBTTagCompound();
-
-        this.save(nbttagcompound);
-        return new PacketPlayOutTileEntityData(this.position, 3, nbttagcompound);
+    @Nullable
+    public PacketPlayOutTileEntityData getUpdatePacket() {
+        return new PacketPlayOutTileEntityData(this.position, 3, this.d());
     }
 
+    public NBTTagCompound d() {
+        return this.save(new NBTTagCompound());
+    }
+
+    @Nullable
     private static MobEffectList f(int i) {
         MobEffectList mobeffectlist = MobEffectList.fromId(i);
 
@@ -212,39 +268,43 @@ public class TileEntityBeacon extends TileEntityContainer implements ITickable, 
 
     public void a(NBTTagCompound nbttagcompound) {
         super.a(nbttagcompound);
-        this.l = f(nbttagcompound.getInt("Primary"));
-        this.m = f(nbttagcompound.getInt("Secondary"));
-        this.k = nbttagcompound.getInt("Levels");
+        this.primaryEffect = f(nbttagcompound.getInt("Primary"));
+        this.secondaryEffect = f(nbttagcompound.getInt("Secondary"));
+        this.levels = nbttagcompound.getInt("Levels");
     }
 
-    public void save(NBTTagCompound nbttagcompound) {
+    public NBTTagCompound save(NBTTagCompound nbttagcompound) {
         super.save(nbttagcompound);
-        nbttagcompound.setInt("Primary", MobEffectList.getId(this.l));
-        nbttagcompound.setInt("Secondary", MobEffectList.getId(this.m));
-        nbttagcompound.setInt("Levels", this.k);
+        nbttagcompound.setInt("Primary", MobEffectList.getId(this.primaryEffect));
+        nbttagcompound.setInt("Secondary", MobEffectList.getId(this.secondaryEffect));
+        nbttagcompound.setInt("Levels", this.levels);
+        return nbttagcompound;
     }
 
     public int getSize() {
         return 1;
     }
 
+    public boolean w_() {
+        return this.inventorySlot.isEmpty();
+    }
+
     public ItemStack getItem(int i) {
-        return i == 0 ? this.inventorySlot : null;
+        return i == 0 ? this.inventorySlot : ItemStack.a;
     }
 
     public ItemStack splitStack(int i, int j) {
-        if (i == 0 && this.inventorySlot != null) {
-            if (j >= this.inventorySlot.count) {
+        if (i == 0 && !this.inventorySlot.isEmpty()) {
+            if (j >= this.inventorySlot.getCount()) {
                 ItemStack itemstack = this.inventorySlot;
 
-                this.inventorySlot = null;
+                this.inventorySlot = ItemStack.a;
                 return itemstack;
             } else {
-                this.inventorySlot.count -= j;
-                return new ItemStack(this.inventorySlot.getItem(), j, this.inventorySlot.getData());
+                return this.inventorySlot.cloneAndSubtract(j);
             }
         } else {
-            return null;
+            return ItemStack.a;
         }
     }
 
@@ -252,10 +312,10 @@ public class TileEntityBeacon extends TileEntityContainer implements ITickable, 
         if (i == 0) {
             ItemStack itemstack = this.inventorySlot;
 
-            this.inventorySlot = null;
+            this.inventorySlot = ItemStack.a;
             return itemstack;
         } else {
-            return null;
+            return ItemStack.a;
         }
     }
 
@@ -283,7 +343,7 @@ public class TileEntityBeacon extends TileEntityContainer implements ITickable, 
     }
 
     public boolean a(EntityHuman entityhuman) {
-        return this.world.getTileEntity(this.position) != this ? false : entityhuman.e((double) this.position.getX() + 0.5D, (double) this.position.getY() + 0.5D, (double) this.position.getZ() + 0.5D) <= 64.0D;
+        return this.world.getTileEntity(this.position) != this ? false : entityhuman.d((double) this.position.getX() + 0.5D, (double) this.position.getY() + 0.5D, (double) this.position.getZ() + 0.5D) <= 64.0D;
     }
 
     public void startOpen(EntityHuman entityhuman) {}
@@ -305,13 +365,13 @@ public class TileEntityBeacon extends TileEntityContainer implements ITickable, 
     public int getProperty(int i) {
         switch (i) {
         case 0:
-            return this.k;
+            return this.levels;
 
         case 1:
-            return MobEffectList.getId(this.l);
+            return MobEffectList.getId(this.primaryEffect);
 
         case 2:
-            return MobEffectList.getId(this.m);
+            return MobEffectList.getId(this.secondaryEffect);
 
         default:
             return 0;
@@ -321,30 +381,30 @@ public class TileEntityBeacon extends TileEntityContainer implements ITickable, 
     public void setProperty(int i, int j) {
         switch (i) {
         case 0:
-            this.k = j;
+            this.levels = j;
             break;
 
         case 1:
-            this.l = f(j);
+            this.primaryEffect = f(j);
             break;
 
         case 2:
-            this.m = f(j);
+            this.secondaryEffect = f(j);
         }
 
     }
 
-    public int g() {
+    public int h() {
         return 3;
     }
 
-    public void l() {
-        this.inventorySlot = null;
+    public void clear() {
+        this.inventorySlot = ItemStack.a;
     }
 
     public boolean c(int i, int j) {
         if (i == 1) {
-            this.m();
+            this.n();
             return true;
         } else {
             return super.c(i, j);

@@ -2,12 +2,10 @@ package net.minecraft.server;
 
 import java.util.Collection;
 
-class RecipeTippedArrow extends ShapedRecipes implements IRecipe { // CraftBukkit
-
-    private static final ItemStack[] a = new ItemStack[9];
+public class RecipeTippedArrow extends ShapedRecipes implements IRecipe { // CraftBukkit
 
     // CraftBukkit start
-    RecipeTippedArrow() {
+    public RecipeTippedArrow() {
         super(3, 3, new ItemStack[]{
             new ItemStack(Items.ARROW, 0), new ItemStack(Items.ARROW, 0), new ItemStack(Items.ARROW, 0),
             new ItemStack(Items.ARROW, 0), new ItemStack(Items.LINGERING_POTION, 0), new ItemStack(Items.ARROW, 0),
@@ -17,12 +15,12 @@ class RecipeTippedArrow extends ShapedRecipes implements IRecipe { // CraftBukki
     // CraftBukkit end
 
     public boolean a(InventoryCrafting inventorycrafting, World world) {
-        if (inventorycrafting.i() == 3 && inventorycrafting.h() == 3) {
-            for (int i = 0; i < inventorycrafting.i(); ++i) {
-                for (int j = 0; j < inventorycrafting.h(); ++j) {
+        if (inventorycrafting.j() == 3 && inventorycrafting.i() == 3) {
+            for (int i = 0; i < inventorycrafting.j(); ++i) {
+                for (int j = 0; j < inventorycrafting.i(); ++j) {
                     ItemStack itemstack = inventorycrafting.c(i, j);
 
-                    if (itemstack == null) {
+                    if (itemstack.isEmpty()) {
                         return false;
                     }
 
@@ -47,14 +45,14 @@ class RecipeTippedArrow extends ShapedRecipes implements IRecipe { // CraftBukki
     public ItemStack craftItem(InventoryCrafting inventorycrafting) {
         ItemStack itemstack = inventorycrafting.c(1, 1);
 
-        if (itemstack != null && itemstack.getItem() == Items.LINGERING_POTION) {
+        if (itemstack.getItem() != Items.LINGERING_POTION) {
+            return ItemStack.a;
+        } else {
             ItemStack itemstack1 = new ItemStack(Items.TIPPED_ARROW, 8);
 
-            PotionUtil.a(itemstack1, PotionUtil.c(itemstack));
+            PotionUtil.a(itemstack1, PotionUtil.d(itemstack));
             PotionUtil.a(itemstack1, (Collection) PotionUtil.b(itemstack));
             return itemstack1;
-        } else {
-            return null;
         }
     }
 
@@ -63,10 +61,10 @@ class RecipeTippedArrow extends ShapedRecipes implements IRecipe { // CraftBukki
     }
 
     public ItemStack b() {
-        return null;
+        return ItemStack.a;
     }
 
-    public ItemStack[] b(InventoryCrafting inventorycrafting) {
-        return RecipeTippedArrow.a;
+    public NonNullList<ItemStack> b(InventoryCrafting inventorycrafting) {
+        return NonNullList.a(inventorycrafting.getSize(), ItemStack.a);
     }
 }

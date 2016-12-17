@@ -1,8 +1,10 @@
 package net.minecraft.server;
 
+import com.google.common.collect.Sets;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
+import java.util.Set;
 
 // CraftBukkit start
 import org.bukkit.craftbukkit.util.LongHash;
@@ -54,31 +56,31 @@ public final class SpawnerCreature {
                     int l = MathHelper.floor(entityhuman.locX / 16.0D);
 
                     j = MathHelper.floor(entityhuman.locZ / 16.0D);
-                    byte b0 = 8;
+                    boolean flag3 = true;
                     // Spigot Start
-                    b0 = worldserver.spigotConfig.mobSpawnRange;
+                    byte b0 = worldserver.spigotConfig.mobSpawnRange;
                     b0 = ( b0 > worldserver.spigotConfig.viewDistance ) ? (byte) worldserver.spigotConfig.viewDistance : b0;
                     b0 = ( b0 > 8 ) ? 8 : b0;
-                    // Spigot End
 
                     for (int i1 = -b0; i1 <= b0; ++i1) {
                         for (k = -b0; k <= b0; ++k) {
-                            boolean flag3 = i1 == -b0 || i1 == b0 || k == -b0 || k == b0;
+                            boolean flag4 = i1 == -b0 || i1 == b0 || k == -b0 || k == b0;
+                            // Spigot End
                             // CraftBukkit start - use LongHash and LongHashSet
                             // ChunkCoordIntPair chunkcoordintpair = new ChunkCoordIntPair(i1 + l, k + j);
 
                             long chunkCoords = LongHash.toLong(i1 + l, k + j);
                             if (!this.b.contains(chunkCoords)) {
                                 ++i;
-                                if (!flag3 && worldserver.getWorldBorder().isInBounds(i1 + l, k + j)) { // CraftBukkit
-                                    PlayerChunk playerchunk = worldserver.getPlayerChunkMap().b(i1 + l, k + j); // CraftBukkit
+                                if (!flag4 && worldserver.getWorldBorder().isInBounds(i1 + l, k + j)) { // CraftBukkit
+                                    PlayerChunk playerchunk = worldserver.getPlayerChunkMap().getChunk(i1 + l, k + j); // CraftBukkit
 
                                     if (playerchunk != null && playerchunk.e()) {
                                         this.b.add(chunkCoords);
+                                        // CraftBukkit end
                                     }
                                 }
                             }
-                            // CraftBukkit end
                         }
                     }
                 }
@@ -136,7 +138,7 @@ public final class SpawnerCreature {
                             int k2 = blockposition1.getZ();
                             IBlockData iblockdata = worldserver.getType(blockposition1);
 
-                            if (!iblockdata.l()) {
+                            if (!iblockdata.m()) {
                                 int l2 = 0;
                                 int i3 = 0;
 
@@ -144,7 +146,7 @@ public final class SpawnerCreature {
                                     int j3 = i2;
                                     int k3 = j2;
                                     int l3 = k2;
-                                    byte b1 = 6;
+                                    boolean flag5 = true;
                                     BiomeBase.BiomeMeta biomebase_biomemeta = null;
                                     GroupDataEntity groupdataentity = null;
                                     int i4 = MathHelper.f(Math.random() * 4.0D);
@@ -153,9 +155,9 @@ public final class SpawnerCreature {
                                     while (true) {
                                         if (j4 < i4) {
                                             label113: {
-                                                j3 += worldserver.random.nextInt(b1) - worldserver.random.nextInt(b1);
+                                                j3 += worldserver.random.nextInt(6) - worldserver.random.nextInt(6);
                                                 k3 += worldserver.random.nextInt(1) - worldserver.random.nextInt(1);
-                                                l3 += worldserver.random.nextInt(b1) - worldserver.random.nextInt(b1);
+                                                l3 += worldserver.random.nextInt(6) - worldserver.random.nextInt(6);
                                                 blockposition_mutableblockposition.c(j3, k3, l3);
                                                 float f = (float) j3 + 0.5F;
                                                 float f1 = (float) l3 + 0.5F;
@@ -179,7 +181,7 @@ public final class SpawnerCreature {
                                                         }
 
                                                         entityinsentient.setPositionRotation((double) f, (double) k3, (double) f1, worldserver.random.nextFloat() * 360.0F, 0.0F);
-                                                        if (entityinsentient.cF() && entityinsentient.canSpawn()) {
+                                                        if (entityinsentient.cM() && entityinsentient.canSpawn()) {
                                                             groupdataentity = entityinsentient.prepare(worldserver.D(new BlockPosition(entityinsentient)), groupdataentity);
                                                             if (entityinsentient.canSpawn()) {
                                                                 ++l2;
@@ -219,7 +221,7 @@ public final class SpawnerCreature {
         }
     }
 
-    protected static BlockPosition getRandomPosition(World world, int i, int j) {
+    private static BlockPosition getRandomPosition(World world, int i, int j) {
         Chunk chunk = world.getChunkAt(i, j);
         int k = i * 16 + world.random.nextInt(16);
         int l = j * 16 + world.random.nextInt(16);
@@ -230,7 +232,7 @@ public final class SpawnerCreature {
     }
 
     public static boolean a(IBlockData iblockdata) {
-        return iblockdata.k() ? false : (iblockdata.m() ? false : (iblockdata.getMaterial().isLiquid() ? false : !BlockMinecartTrackAbstract.i(iblockdata)));
+        return iblockdata.l() ? false : (iblockdata.n() ? false : (iblockdata.getMaterial().isLiquid() ? false : !BlockMinecartTrackAbstract.i(iblockdata)));
     }
 
     public static boolean a(EntityInsentient.EnumEntityPositionType entityinsentient_enumentitypositiontype, World world, BlockPosition blockposition) {
@@ -240,11 +242,11 @@ public final class SpawnerCreature {
             IBlockData iblockdata = world.getType(blockposition);
 
             if (entityinsentient_enumentitypositiontype == EntityInsentient.EnumEntityPositionType.IN_WATER) {
-                return iblockdata.getMaterial().isLiquid() && world.getType(blockposition.down()).getMaterial().isLiquid() && !world.getType(blockposition.up()).l();
+                return iblockdata.getMaterial() == Material.WATER && world.getType(blockposition.down()).getMaterial() == Material.WATER && !world.getType(blockposition.up()).m();
             } else {
                 BlockPosition blockposition1 = blockposition.down();
 
-                if (!world.getType(blockposition1).q()) {
+                if (!world.getType(blockposition1).r()) {
                     return false;
                 } else {
                     Block block = world.getType(blockposition1).getBlock();

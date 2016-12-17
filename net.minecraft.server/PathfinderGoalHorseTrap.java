@@ -2,10 +2,10 @@ package net.minecraft.server;
 
 public class PathfinderGoalHorseTrap extends PathfinderGoal {
 
-    private final EntityHorse a;
+    private final EntityHorseSkeleton a;
 
-    public PathfinderGoalHorseTrap(EntityHorse entityhorse) {
-        this.a = entityhorse;
+    public PathfinderGoalHorseTrap(EntityHorseSkeleton entityhorseskeleton) {
+        this.a = entityhorseskeleton;
     }
 
     public boolean a() {
@@ -15,53 +15,52 @@ public class PathfinderGoalHorseTrap extends PathfinderGoal {
     public void e() {
         DifficultyDamageScaler difficultydamagescaler = this.a.world.D(new BlockPosition(this.a));
 
-        this.a.x(false);
-        this.a.setType(EnumHorseType.SKELETON);
-        this.a.setTame(true);
+        this.a.p(false);
+        this.a.setTamed(true);
         this.a.setAgeRaw(0);
         this.a.world.strikeLightning(new EntityLightning(this.a.world, this.a.locX, this.a.locY, this.a.locZ, true));
         EntitySkeleton entityskeleton = this.a(difficultydamagescaler, this.a);
 
-        entityskeleton.startRiding(this.a);
+        if (entityskeleton != null) entityskeleton.startRiding(this.a); // CraftBukkit
 
         for (int i = 0; i < 3; ++i) {
-            EntityHorse entityhorse = this.a(difficultydamagescaler);
-            EntitySkeleton entityskeleton1 = this.a(difficultydamagescaler, entityhorse);
+            EntityHorseAbstract entityhorseabstract = this.a(difficultydamagescaler);
+            if (entityhorseabstract == null) continue; // CraftBukkit
+            EntitySkeleton entityskeleton1 = this.a(difficultydamagescaler, entityhorseabstract);
 
-            entityskeleton1.startRiding(entityhorse);
-            entityhorse.g(this.a.getRandom().nextGaussian() * 0.5D, 0.0D, this.a.getRandom().nextGaussian() * 0.5D);
+            if (entityskeleton1 != null) entityskeleton1.startRiding(entityhorseabstract); // CraftBukkit
+            entityhorseabstract.f(this.a.getRandom().nextGaussian() * 0.5D, 0.0D, this.a.getRandom().nextGaussian() * 0.5D);
         }
 
     }
 
-    private EntityHorse a(DifficultyDamageScaler difficultydamagescaler) {
-        EntityHorse entityhorse = new EntityHorse(this.a.world);
+    private EntityHorseAbstract a(DifficultyDamageScaler difficultydamagescaler) {
+        EntityHorseSkeleton entityhorseskeleton = new EntityHorseSkeleton(this.a.world);
 
-        entityhorse.prepare(difficultydamagescaler, (GroupDataEntity) null);
-        entityhorse.setPosition(this.a.locX, this.a.locY, this.a.locZ);
-        entityhorse.noDamageTicks = 60;
-        entityhorse.cL();
-        entityhorse.setType(EnumHorseType.SKELETON);
-        entityhorse.setTame(true);
-        entityhorse.setAgeRaw(0);
-        entityhorse.world.addEntity(entityhorse);
-        return entityhorse;
+        entityhorseskeleton.prepare(difficultydamagescaler, (GroupDataEntity) null);
+        entityhorseskeleton.setPosition(this.a.locX, this.a.locY, this.a.locZ);
+        entityhorseskeleton.noDamageTicks = 60;
+        entityhorseskeleton.cS();
+        entityhorseskeleton.setTamed(true);
+        entityhorseskeleton.setAgeRaw(0);
+        if (!entityhorseskeleton.world.addEntity(entityhorseskeleton, org.bukkit.event.entity.CreatureSpawnEvent.SpawnReason.TRAP)) return null; // CraftBukkit
+        return entityhorseskeleton;
     }
 
-    private EntitySkeleton a(DifficultyDamageScaler difficultydamagescaler, EntityHorse entityhorse) {
-        EntitySkeleton entityskeleton = new EntitySkeleton(entityhorse.world);
+    private EntitySkeleton a(DifficultyDamageScaler difficultydamagescaler, EntityHorseAbstract entityhorseabstract) {
+        EntitySkeleton entityskeleton = new EntitySkeleton(entityhorseabstract.world);
 
         entityskeleton.prepare(difficultydamagescaler, (GroupDataEntity) null);
-        entityskeleton.setPosition(entityhorse.locX, entityhorse.locY, entityhorse.locZ);
+        entityskeleton.setPosition(entityhorseabstract.locX, entityhorseabstract.locY, entityhorseabstract.locZ);
         entityskeleton.noDamageTicks = 60;
-        entityskeleton.cL();
-        if (entityskeleton.getEquipment(EnumItemSlot.HEAD) == null) {
+        entityskeleton.cS();
+        if (entityskeleton.getEquipment(EnumItemSlot.HEAD).isEmpty()) {
             entityskeleton.setSlot(EnumItemSlot.HEAD, new ItemStack(Items.IRON_HELMET));
         }
 
-        EnchantmentManager.a(entityskeleton.getRandom(), entityskeleton.getItemInMainHand(), (int) (5.0F + difficultydamagescaler.c() * (float) entityskeleton.getRandom().nextInt(18)), false);
-        EnchantmentManager.a(entityskeleton.getRandom(), entityskeleton.getEquipment(EnumItemSlot.HEAD), (int) (5.0F + difficultydamagescaler.c() * (float) entityskeleton.getRandom().nextInt(18)), false);
-        entityskeleton.world.addEntity(entityskeleton);
+        entityskeleton.setSlot(EnumItemSlot.MAINHAND, EnchantmentManager.a(entityskeleton.getRandom(), entityskeleton.getItemInMainHand(), (int) (5.0F + difficultydamagescaler.d() * (float) entityskeleton.getRandom().nextInt(18)), false));
+        entityskeleton.setSlot(EnumItemSlot.HEAD, EnchantmentManager.a(entityskeleton.getRandom(), entityskeleton.getEquipment(EnumItemSlot.HEAD), (int) (5.0F + difficultydamagescaler.d() * (float) entityskeleton.getRandom().nextInt(18)), false));
+        if (!entityskeleton.world.addEntity(entityskeleton, org.bukkit.event.entity.CreatureSpawnEvent.SpawnReason.JOCKEY)) return null; // CraftBukkit
         return entityskeleton;
     }
 }

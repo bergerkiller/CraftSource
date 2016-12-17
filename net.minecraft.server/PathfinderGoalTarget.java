@@ -1,12 +1,13 @@
 package net.minecraft.server;
 
-import org.bukkit.event.entity.EntityTargetEvent;
+import javax.annotation.Nullable;
+import org.bukkit.event.entity.EntityTargetEvent; // CraftBukkit
 
 public abstract class PathfinderGoalTarget extends PathfinderGoal {
 
     protected final EntityCreature e;
     protected boolean f;
-    private boolean a;
+    private final boolean a;
     private int b;
     private int c;
     private int d;
@@ -36,13 +37,13 @@ public abstract class PathfinderGoalTarget extends PathfinderGoal {
         } else if (!entityliving.isAlive()) {
             return false;
         } else {
-            ScoreboardTeamBase scoreboardteambase = this.e.aO();
-            ScoreboardTeamBase scoreboardteambase1 = entityliving.aO();
+            ScoreboardTeamBase scoreboardteambase = this.e.aQ();
+            ScoreboardTeamBase scoreboardteambase1 = entityliving.aQ();
 
             if (scoreboardteambase != null && scoreboardteambase1 == scoreboardteambase) {
                 return false;
             } else {
-                double d0 = this.f();
+                double d0 = this.i();
 
                 if (this.e.h(entityliving) > d0 * d0) {
                     return false;
@@ -66,7 +67,7 @@ public abstract class PathfinderGoalTarget extends PathfinderGoal {
         }
     }
 
-    protected double f() {
+    protected double i() {
         AttributeInstance attributeinstance = this.e.getAttributeInstance(GenericAttributes.FOLLOW_RANGE);
 
         return attributeinstance == null ? 16.0D : attributeinstance.getValue();
@@ -83,7 +84,7 @@ public abstract class PathfinderGoalTarget extends PathfinderGoal {
         this.g = null;
     }
 
-    public static boolean a(EntityInsentient entityinsentient, EntityLiving entityliving, boolean flag, boolean flag1) {
+    public static boolean a(EntityInsentient entityinsentient, @Nullable EntityLiving entityliving, boolean flag, boolean flag1) {
         if (entityliving == null) {
             return false;
         } else if (entityliving == entityinsentient) {
@@ -111,7 +112,7 @@ public abstract class PathfinderGoalTarget extends PathfinderGoal {
         }
     }
 
-    protected boolean a(EntityLiving entityliving, boolean flag) {
+    protected boolean a(@Nullable EntityLiving entityliving, boolean flag) {
         if (!a(this.e, entityliving, flag, this.f)) {
             return false;
         } else if (!this.e.f(new BlockPosition(entityliving))) {
@@ -153,5 +154,10 @@ public abstract class PathfinderGoalTarget extends PathfinderGoal {
                 return (double) (i * i + j * j) <= 2.25D;
             }
         }
+    }
+
+    public PathfinderGoalTarget b(int i) {
+        this.h = i;
+        return this;
     }
 }

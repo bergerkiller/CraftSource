@@ -3,6 +3,7 @@ package net.minecraft.server;
 // CraftBukkit start
 import org.bukkit.Bukkit;
 import org.bukkit.craftbukkit.event.CraftEventFactory;
+import org.bukkit.event.entity.CreatureSpawnEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
 // CraftBukkit end
 
@@ -17,6 +18,10 @@ public class EntityEnderPearl extends EntityProjectile {
     public EntityEnderPearl(World world, EntityLiving entityliving) {
         super(world, entityliving);
         this.d = entityliving;
+    }
+
+    public static void b(DataConverterManager dataconvertermanager) {
+        EntityProjectile.a(dataconvertermanager, "ThrownEnderpearl");
     }
 
     protected void a(MovingObjectPosition movingobjectposition) {
@@ -72,7 +77,7 @@ public class EntityEnderPearl extends EntityProjectile {
 
                             entityendermite.a(true);
                             entityendermite.setPositionRotation(entityliving.locX, entityliving.locY, entityliving.locZ, entityliving.yaw, entityliving.pitch);
-                            this.world.addEntity(entityendermite);
+                            this.world.addEntity(entityendermite, CreatureSpawnEvent.SpawnReason.ENDER_PEARL);
                         }
 
                         if (entityliving.isPassenger()) {
@@ -97,13 +102,13 @@ public class EntityEnderPearl extends EntityProjectile {
 
     }
 
-    public void m() {
+    public void A_() {
         EntityLiving entityliving = this.getShooter();
 
         if (entityliving != null && entityliving instanceof EntityHuman && !entityliving.isAlive()) {
             this.die();
         } else {
-            super.m();
+            super.A_();
         }
 
     }

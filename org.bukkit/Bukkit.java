@@ -29,6 +29,7 @@ import org.bukkit.help.HelpMap;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.Merchant;
 import org.bukkit.inventory.Recipe;
 import org.bukkit.map.MapView;
 import org.bukkit.permissions.Permissible;
@@ -377,12 +378,9 @@ public final class Bukkit {
      * <p>
      * This method may not return objects for offline players.
      *
-     * @deprecated Use {@link #getPlayer(UUID)} as player names are no longer
-     *     guaranteed to be unique
      * @param name the name to look up
      * @return a player if one was found, null otherwise
      */
-    @Deprecated
     public static Player getPlayer(String name) {
         return server.getPlayer(name);
     }
@@ -390,12 +388,9 @@ public final class Bukkit {
     /**
      * Gets the player with the exact given name, case insensitive.
      *
-     * @deprecated Use {@link #getPlayer(UUID)} as player names are no longer
-     *     guaranteed to be unique
      * @param name Exact name of the player to retrieve
      * @return a player object if one was found, null otherwise
      */
-    @Deprecated
     public static Player getPlayerExact(String name) {
         return server.getPlayerExact(name);
     }
@@ -407,12 +402,9 @@ public final class Bukkit {
      * This list is not sorted in any particular order. If an exact match is
      * found, the returned list will only contain a single result.
      *
-     * @deprecated Use {@link #getPlayer(UUID)} as player names are no longer
-     *     guaranteed to be unique
      * @param name the (partial) name to match
      * @return list of all possible players
      */
-    @Deprecated
     public static List<Player> matchPlayer(String name) {
         return server.matchPlayer(name);
     }
@@ -546,6 +538,7 @@ public final class Bukkit {
      */
     public static void reload() {
         server.reload();
+        org.spigotmc.CustomTimingsHandler.reload(); // Spigot
     }
 
     /**
@@ -697,25 +690,6 @@ public final class Bukkit {
         return server.isHardcore();
     }
 
-    /**
-     * Gets whether to use vanilla (false) or exact behaviour (true).
-     *
-     * <ul>
-     * <li>Vanilla behaviour: check for collisions and move the player if
-     *     needed.
-     * <li>Exact behaviour: spawn players exactly where they should be.
-     * </ul>
-     *
-     * @return true if exact location locations are used for spawning, false
-     *     for vanilla collision detection or otherwise
-     *
-     * @deprecated non standard and unused feature.
-     */
-    @Deprecated
-    public static boolean useExactLoginLocation() {
-        return server.useExactLoginLocation();
-    }
- 
     /**
      * Shutdowns the server, stopping everything.
      */
@@ -951,6 +925,17 @@ public final class Bukkit {
     }
 
     /**
+     * Creates an empty merchant.
+     *
+     * @param title the title of the corresponding merchant inventory, displayed
+     * when the merchant inventory is viewed
+     * @return a new merchant
+     */
+    public static Merchant createMerchant(String title) {
+        return server.createMerchant(title);
+    }
+
+    /**
      * Gets user-specified limit for number of monsters that can spawn in a
      * chunk.
      *
@@ -1155,5 +1140,10 @@ public final class Bukkit {
     @Deprecated
     public static UnsafeValues getUnsafe() {
         return server.getUnsafe();
+    }
+
+    public static Server.Spigot spigot()
+    {
+        return server.spigot();
     }
 }

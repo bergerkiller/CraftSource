@@ -69,8 +69,8 @@ public class SpigotConfig
 
         commands = new HashMap<String, Command>();
 
-        version = getInt( "config-version", 8 );
-        set( "config-version", 8 );
+        version = getInt( "config-version", 10 );
+        set( "config-version", 10 );
         readConfig( SpigotConfig.class, null );
     }
 
@@ -321,13 +321,13 @@ public class SpigotConfig
         replaceCommands = new HashSet<String>( (List<String>) getList( "commands.replace-commands",
                 Arrays.asList( "setblock", "summon", "testforblock", "tellraw" ) ) );
     }
-    
+
     public static int userCacheCap;
     private static void userCacheCap()
     {
         userCacheCap = getInt( "settings.user-cache-size", 1000 );
     }
-    
+
     public static boolean saveUserCacheOnStopOnly;
     private static void saveUserCacheOnStopOnly()
     {
@@ -346,10 +346,10 @@ public class SpigotConfig
         movedWronglyThreshold = getDouble( "settings.moved-wrongly-threshold", 0.0625D );
     }
 
-    public static double movedTooQuicklyThreshold;
-    private static void movedTooQuicklyThreshold()
+    public static double movedTooQuicklyMultiplier;
+    private static void movedTooQuicklyMultiplier()
     {
-        movedTooQuicklyThreshold = getDouble( "settings.moved-too-quickly-threshold", 100.0D );
+        movedTooQuicklyMultiplier = getDouble( "settings.moved-too-quickly-multiplier", 10.0D );
     }
 
     public static double maxHealth = 2048;
@@ -386,5 +386,10 @@ public class SpigotConfig
         {
             Bukkit.getLogger().info( "Debug logging is disabled" );
         }
+    }
+
+    public static int itemDirtyTicks;
+    private static void itemDirtyTicks() {
+        itemDirtyTicks = getInt("settings.item-dirty-ticks", 20);
     }
 }

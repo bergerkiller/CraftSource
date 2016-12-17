@@ -12,26 +12,29 @@ public class ItemFishingRod extends Item {
         });
     }
 
-    public InteractionResultWrapper<ItemStack> a(ItemStack itemstack, World world, EntityHuman entityhuman, EnumHand enumhand) {
+    public InteractionResultWrapper<ItemStack> a(World world, EntityHuman entityhuman, EnumHand enumhand) {
+        ItemStack itemstack = entityhuman.b(enumhand);
+
         if (entityhuman.hookedFish != null) {
             int i = entityhuman.hookedFish.j();
 
             itemstack.damage(i, entityhuman);
             entityhuman.a(enumhand);
         } else {
-            // CraftBukkit start
-            EntityFishingHook hook = new EntityFishingHook(world, entityhuman);
-            PlayerFishEvent playerFishEvent = new PlayerFishEvent((org.bukkit.entity.Player) entityhuman.getBukkitEntity(), null, (org.bukkit.entity.Fish) hook.getBukkitEntity(), PlayerFishEvent.State.FISHING);
-            world.getServer().getPluginManager().callEvent(playerFishEvent);
-
-            if (playerFishEvent.isCancelled()) {
-                entityhuman.hookedFish = null;
-                return new InteractionResultWrapper(EnumInteractionResult.PASS, itemstack);
-            }
-            // CraftBukkit end
-            world.a((EntityHuman) null, entityhuman.locX, entityhuman.locY, entityhuman.locZ, SoundEffects.H, SoundCategory.NEUTRAL, 0.5F, 0.4F / (ItemFishingRod.i.nextFloat() * 0.4F + 0.8F));
             if (!world.isClientSide) {
-                world.addEntity(hook); // CraftBukkit - moved creation up
+                // CraftBukkit start
+                EntityFishingHook entityfishinghook = new EntityFishingHook(world, entityhuman);
+                PlayerFishEvent playerFishEvent = new PlayerFishEvent((org.bukkit.entity.Player) entityhuman.getBukkitEntity(), null, (org.bukkit.entity.Fish) entityfishinghook.getBukkitEntity(), PlayerFishEvent.State.FISHING);
+                world.getServer().getPluginManager().callEvent(playerFishEvent);
+
+                if (playerFishEvent.isCancelled()) {
+                    entityhuman.hookedFish = null;
+                    return new InteractionResultWrapper(EnumInteractionResult.PASS, itemstack);
+                }
+                world.a((EntityHuman) null, entityhuman.locX, entityhuman.locY, entityhuman.locZ, SoundEffects.I, SoundCategory.NEUTRAL, 0.5F, 0.4F / (ItemFishingRod.j.nextFloat() * 0.4F + 0.8F));
+                // CraftBukkit end
+
+                world.addEntity(entityfishinghook);
             }
 
             entityhuman.a(enumhand);
@@ -39,10 +42,6 @@ public class ItemFishingRod extends Item {
         }
 
         return new InteractionResultWrapper(EnumInteractionResult.SUCCESS, itemstack);
-    }
-
-    public boolean g_(ItemStack itemstack) {
-        return super.g_(itemstack);
     }
 
     public int c() {

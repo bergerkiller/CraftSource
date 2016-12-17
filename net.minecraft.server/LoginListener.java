@@ -8,12 +8,15 @@ import io.netty.channel.ChannelFutureListener;
 import io.netty.util.concurrent.Future;
 import io.netty.util.concurrent.GenericFutureListener;
 import java.math.BigInteger;
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
+import java.net.SocketAddress;
 import java.security.PrivateKey;
 import java.util.Arrays;
 import java.util.Random;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.logging.Level;
+import javax.annotation.Nullable;
 import javax.crypto.SecretKey;
 import org.apache.commons.lang3.Validate;
 import org.apache.logging.log4j.LogManager;
@@ -36,7 +39,7 @@ public class LoginListener implements PacketLoginInListener, ITickable {
     private LoginListener.EnumProtocolState g;
     private int h;
     private GameProfile i;
-    private String j;
+    private final String j;
     private SecretKey loginKey;
     private EntityPlayer l;
     public String hostname = ""; // CraftBukkit - add field
@@ -49,7 +52,7 @@ public class LoginListener implements PacketLoginInListener, ITickable {
         LoginListener.random.nextBytes(this.e);
     }
 
-    public void c() {
+    public void F_() {
         if (this.g == LoginListener.EnumProtocolState.READY_TO_ACCEPT) {
             this.b();
         } else if (this.g == LoginListener.EnumProtocolState.DELAY_ACCEPT) {
@@ -70,7 +73,7 @@ public class LoginListener implements PacketLoginInListener, ITickable {
 
     public void disconnect(String s) {
         try {
-            LoginListener.c.info("Disconnecting " + this.d() + ": " + s);
+            LoginListener.c.info("Disconnecting {}: {}", new Object[] { this.d(), s});
             ChatComponentText chatcomponenttext = new ChatComponentText(s);
 
             this.networkManager.sendPacket(new PacketLoginOutDisconnect(chatcomponenttext));
@@ -122,10 +125,10 @@ public class LoginListener implements PacketLoginInListener, ITickable {
             // CraftBukkit end
         } else {
             this.g = LoginListener.EnumProtocolState.ACCEPTED;
-            if (this.server.aF() >= 0 && !this.networkManager.isLocal()) {
-                this.networkManager.sendPacket(new PacketLoginOutSetCompression(this.server.aF()), new ChannelFutureListener() {
+            if (this.server.aG() >= 0 && !this.networkManager.isLocal()) {
+                this.networkManager.sendPacket(new PacketLoginOutSetCompression(this.server.aG()), new ChannelFutureListener() {
                     public void a(ChannelFuture channelfuture) throws Exception {
-                        LoginListener.this.networkManager.setCompressionLevel(LoginListener.this.server.aF());
+                        LoginListener.this.networkManager.setCompressionLevel(LoginListener.this.server.aG());
                     }
 
                     public void operationComplete(ChannelFuture future) throws Exception { // CraftBukkit - fix decompile error
@@ -148,11 +151,11 @@ public class LoginListener implements PacketLoginInListener, ITickable {
     }
 
     public void a(IChatBaseComponent ichatbasecomponent) {
-        LoginListener.c.info(this.d() + " lost connection: " + ichatbasecomponent.toPlainText());
+        LoginListener.c.info("{} lost connection: {}", new Object[] { this.d(), ichatbasecomponent.toPlainText()});
     }
 
     public String d() {
-        return this.i != null ? this.i.toString() + " (" + this.networkManager.getSocketAddress().toString() + ")" : String.valueOf(this.networkManager.getSocketAddress());
+        return this.i != null ? this.i + " (" + this.networkManager.getSocketAddress() + ")" : String.valueOf(this.networkManager.getSocketAddress());
     }
 
     public void a(PacketLoginInStart packetlogininstart) {
@@ -160,7 +163,7 @@ public class LoginListener implements PacketLoginInListener, ITickable {
         this.i = packetlogininstart.a();
         if (this.server.getOnlineMode() && !this.networkManager.isLocal()) {
             this.g = LoginListener.EnumProtocolState.KEY;
-            this.networkManager.sendPacket(new PacketLoginOutEncryptionBegin(this.j, this.server.O().getPublic(), this.e));
+            this.networkManager.sendPacket(new PacketLoginOutEncryptionBegin("", this.server.O().getPublic(), this.e));
         } else {
             // Spigot start
             new Thread("User Authenticator #" + LoginListener.b.incrementAndGet()) {
@@ -197,9 +200,9 @@ public class LoginListener implements PacketLoginInListener, ITickable {
                     GameProfile gameprofile = LoginListener.this.i;
 
                     try {
-                        String s = (new BigInteger(MinecraftEncryption.a(LoginListener.this.j, LoginListener.this.server.O().getPublic(), LoginListener.this.loginKey))).toString(16);
+                        String s = (new BigInteger(MinecraftEncryption.a("", LoginListener.this.server.O().getPublic(), LoginListener.this.loginKey))).toString(16);
 
-                        LoginListener.this.i = LoginListener.this.server.ay().hasJoinedServer(new GameProfile((UUID) null, gameprofile.getName()), s);
+                        LoginListener.this.i = LoginListener.this.server.az().hasJoinedServer(new GameProfile((UUID) null, gameprofile.getName()), s, this.a());
                         if (LoginListener.this.i != null) {
                             // CraftBukkit start - fire PlayerPreLoginEvent
                             if (!networkManager.isConnected()) {
@@ -213,7 +216,7 @@ public class LoginListener implements PacketLoginInListener, ITickable {
                             LoginListener.this.g = LoginListener.EnumProtocolState.READY_TO_ACCEPT;
                         } else {
                             LoginListener.this.disconnect("Failed to verify username!");
-                            LoginListener.c.error("Username \'" + gameprofile.getName() + "\' tried to join with an invalid session"); // CraftBukkit - fix null pointer
+                            LoginListener.c.error("Username \'{}\' tried to join with an invalid session", new Object[] { gameprofile.getName()});
                         }
                     } catch (AuthenticationUnavailableException authenticationunavailableexception) {
                         if (LoginListener.this.server.R()) {
@@ -230,6 +233,14 @@ public class LoginListener implements PacketLoginInListener, ITickable {
                         server.server.getLogger().log(java.util.logging.Level.WARNING, "Exception verifying " + gameprofile.getName(), exception);
                         // CraftBukkit end
                     }
+
+                }
+
+                @Nullable
+                private InetAddress a() {
+                    SocketAddress socketaddress = LoginListener.this.networkManager.getSocketAddress();
+
+                    return LoginListener.this.server.ac() && socketaddress instanceof InetSocketAddress ? ((InetSocketAddress) socketaddress).getAddress() : null;
                 }
             }).start();
         }
@@ -271,7 +282,7 @@ public class LoginListener implements PacketLoginInListener, ITickable {
                                 }
                             }
                             // CraftBukkit end
-                            LoginListener.c.info("UUID of player " + LoginListener.this.i.getName() + " is " + LoginListener.this.i.getId());
+                            LoginListener.c.info("UUID of player {} is {}", new Object[] { LoginListener.this.i.getName(), LoginListener.this.i.getId()});
                             LoginListener.this.g = LoginListener.EnumProtocolState.READY_TO_ACCEPT;
                 }
         }

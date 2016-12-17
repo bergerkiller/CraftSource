@@ -6,17 +6,17 @@ import org.apache.commons.lang.Validate;
 import org.bukkit.Material;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.inventory.ItemStack;
-
-import com.google.common.collect.ImmutableList;
+import org.bukkit.inventory.meta.PotionMeta;
 
 /**
- * Represents a minecraft potion
+ * Potion Adapter for pre-1.9 data values
+ * see @PotionMeta for 1.9+
  */
+@Deprecated
 public class Potion {
     private boolean extended = false;
     private boolean splash = false;
     private int level = 1;
-    private int name = -1;
     private PotionType type;
 
     /**
@@ -29,49 +29,8 @@ public class Potion {
      * @see #Potion(int)
      */
     public Potion(PotionType type) {
+        Validate.notNull(type, "Null PotionType");
         this.type = type;
-        if (type != null) {
-            this.name = type.getDamageValue();
-        }
-        if (type == null || type == PotionType.WATER) {
-            this.level = 0;
-        }
-    }
-
-    /**
-     * @param type the type of the potion
-     * @param tier the tier of the potion
-     * @deprecated In favour of {@link #Potion(PotionType, int)}
-     */    
-    @Deprecated
-    public Potion(PotionType type, Tier tier) {
-        this(type, tier == Tier.TWO ? 2 : 1);
-        Validate.notNull(type, "Type cannot be null");
-    }
-
-    /**
-     * @param type the type of the potion
-     * @param tier the tier of the potion
-     * @param splash whether the potion is a splash potion
-     * @deprecated In favour of {@link #Potion(PotionType, int, boolean)}
-     */
-    @Deprecated
-    public Potion(PotionType type, Tier tier, boolean splash) {
-        this(type, tier == Tier.TWO ? 2 : 1, splash);
-    }
-
-    /**
-     * @param type the type of the potion
-     * @param tier the tier of the potion
-     * @param splash whether the potion is a splash potion
-     * @param extended whether the potion has an extended duration
-     * @deprecated In favour of {@link #Potion(PotionType, int, boolean,
-     *     boolean)}
-     */
-    @Deprecated
-    public Potion(PotionType type, Tier tier, boolean splash, boolean extended) {
-        this(type, tier, splash);
-        this.extended = extended;
     }
 
     /**
@@ -83,7 +42,6 @@ public class Potion {
     public Potion(PotionType type, int level) {
         this(type);
         Validate.notNull(type, "Type cannot be null");
-        Validate.isTrue(type != PotionType.WATER, "Water bottles don't have a level!");
         Validate.isTrue(level > 0 && level < 3, "Level must be 1 or 2");
         this.level = level;
     }
@@ -120,17 +78,11 @@ public class Potion {
     }
 
     /**
-     * Create a potion with a specific name.
-     *
-     * @param name The name index (0-63)
+     * @deprecated
      */
+    @Deprecated
     public Potion(int name) {
-        this(PotionType.getByDamageValue(name & POTION_BIT));
-        this.name = name & NAME_BIT;
-        if ((name & POTION_BIT) == 0) {
-            // If it's 0 it would've become PotionType.WATER, but it should actually be mundane potion
-            this.type = null;
-        }
+        this(PotionType.WATER);
     }
 
     /**
@@ -161,8 +113,11 @@ public class Potion {
      */
     public void apply(ItemStack to) {
         Validate.notNull(to, "itemstack cannot be null");
-        Validate.isTrue(to.getType() == Material.POTION, "given itemstack is not a potion");
-        to.setDurability(toDamageValue());
+        Validate.isTrue(to.hasItemMeta(), "given itemstack is not a potion");
+        Validate.isTrue(to.getItemMeta() instanceof PotionMeta, "given itemstack is not a potion");
+        PotionMeta meta = (PotionMeta) to.getItemMeta();
+        meta.setBasePotionData(new PotionData(type, extended, level == 2));
+        to.setItemMeta(meta);
     }
 
     /**
@@ -198,8 +153,7 @@ public class Potion {
      * @return The effects that this potion applies
      */
     public Collection<PotionEffect> getEffects() {
-        if (type == null) return ImmutableList.<PotionEffect>of();
-        return getBrewer().getEffectsFromDamage(toDamageValue());
+        return getBrewer().getEffects(type, level == 2, extended);
     }
 
     /**
@@ -209,16 +163,6 @@ public class Potion {
      */
     public int getLevel() {
         return level;
-    }
-
-    /**
-     * Returns the {@link Tier} of this potion.
-     *
-     * @return The tier of this potion
-     */
-    @Deprecated
-    public Tier getTier() {
-        return level == 2 ? Tier.TWO : Tier.ONE;
     }
 
     /**
@@ -280,18 +224,6 @@ public class Potion {
     }
 
     /**
-     * Sets the {@link Tier} of this potion.
-     *
-     * @param tier The new tier of this potion
-     * @deprecated In favour of {@link #setLevel(int)}
-     */
-    @Deprecated
-    public void setTier(Tier tier) {
-        Validate.notNull(tier, "tier cannot be null");
-        this.level = (tier == Tier.TWO ? 2 : 1);
-    }
-
-    /**
      * Sets the {@link PotionType} of this potion.
      *
      * @param type The new type of this potion
@@ -307,8 +239,7 @@ public class Potion {
      */
     public void setLevel(int level) {
         Validate.notNull(this.type, "No-effect potions don't have a level.");
-        int max = type.getMaxLevel();
-        Validate.isTrue(level > 0 && level <= max, "Level must be " + (max == 1 ? "" : "between 1 and ") + max + " for this potion");
+        Validate.isTrue(level > 0 && level <= 2, "Level must be between 1 and 2 for this potion");
         this.level = level;
     }
 
@@ -317,28 +248,11 @@ public class Potion {
      * item stacks.
      *
      * @return The damage value of this potion
-     * @deprecated Magic value
+     * @deprecated Non-functional
      */
     @Deprecated
     public short toDamageValue() {
-        short damage;
-        if (type == PotionType.WATER) {
-            return 0;
-        } else if (type == null) {
-            // Without this, mundanePotion.toDamageValue() would return 0
-            damage = (short) (name == 0 ? 8192 : name);
-        } else {
-            damage = (short) (level - 1);
-            damage <<= TIER_SHIFT;
-            damage |= (short) type.getDamageValue();
-        }
-        if (splash) {
-            damage |= SPLASH_BIT;
-        }
-        if (extended) {
-            damage |= EXTENDED_BIT;
-        }
-        return damage;
+        return 0;
     }
 
     /**
@@ -349,31 +263,17 @@ public class Potion {
      * @return The created ItemStack
      */
     public ItemStack toItemStack(int amount) {
-        return new ItemStack(Material.POTION, amount, toDamageValue());
-    }
-
-    @Deprecated
-    public enum Tier {
-        ONE(0),
-        TWO(0x20);
-
-        private int damageBit;
-
-        Tier(int bit) {
-            damageBit = bit;
+        Material material;
+        if (isSplash()) {
+            material = Material.SPLASH_POTION;
+        } else {
+            material = Material.POTION;
         }
-
-        public int getDamageBit() {
-            return damageBit;
-        }
-
-        public static Tier getByDamageBit(int damageBit) {
-            for (Tier tier : Tier.values()) {
-                if (tier.damageBit == damageBit)
-                    return tier;
-            }
-            return null;
-        }
+        ItemStack itemStack = new ItemStack(material, amount);
+        PotionMeta meta = (PotionMeta) itemStack.getItemMeta();
+        meta.setBasePotionData(new PotionData(type, level == 2, extended));
+        itemStack.setItemMeta(meta);
+        return itemStack;
     }
 
     private static PotionBrewer brewer;
@@ -383,20 +283,63 @@ public class Potion {
     private static final int SPLASH_BIT = 0x4000;
     private static final int TIER_BIT = 0x20;
     private static final int TIER_SHIFT = 5;
-    private static final int NAME_BIT = 0x3F;
 
     /**
      *
      * @param damage the damage value
      * @return the produced potion
-     * @deprecated Magic value
      */
-    @Deprecated
     public static Potion fromDamage(int damage) {
-        PotionType type = PotionType.getByDamageValue(damage & POTION_BIT);
+        PotionType type;
+        switch (damage & POTION_BIT) {
+            case 0:
+                type = PotionType.WATER;
+                break;
+            case 1:
+                type = PotionType.REGEN;
+                break;
+            case 2:
+                type = PotionType.SPEED;
+                break;
+            case 3:
+                type = PotionType.FIRE_RESISTANCE;
+                break;
+            case 4:
+                type = PotionType.POISON;
+                break;
+            case 5:
+                type = PotionType.INSTANT_HEAL;
+                break;
+            case 6:
+                type = PotionType.NIGHT_VISION;
+                break;
+            case 8:
+                type = PotionType.WEAKNESS;
+                break;
+            case 9:
+                type = PotionType.STRENGTH;
+                break;
+            case 10:
+                type = PotionType.SLOWNESS;
+                break;
+            case 11:
+                type = PotionType.JUMP;
+                break;
+            case 12:
+                type = PotionType.INSTANT_DAMAGE;
+                break;
+            case 13:
+                type = PotionType.WATER_BREATHING;
+                break;
+            case 14:
+                type = PotionType.INVISIBILITY;
+                break;
+            default:
+                type = PotionType.WATER;
+        }
         Potion potion;
         if (type == null || type == PotionType.WATER) {
-            potion = new Potion(damage & NAME_BIT);
+            potion = new Potion(PotionType.WATER);
         } else {
             int level = (damage & TIER_BIT) >> TIER_SHIFT;
             level++;
@@ -405,7 +348,7 @@ public class Potion {
         if ((damage & SPLASH_BIT) > 0) {
             potion = potion.splash();
         }
-        if ((type == null || !type.isInstant()) && (damage & EXTENDED_BIT) > 0) {
+        if ((damage & EXTENDED_BIT) > 0) {
             potion = potion.extend();
         }
         return potion;
@@ -442,10 +385,10 @@ public class Potion {
     /**
      *
      * @return the name id
-     * @deprecated Magic value
+     * @deprecated Non-functional
      */
     @Deprecated
     public int getNameId() {
-        return name;
+        return 0;
     }
 }

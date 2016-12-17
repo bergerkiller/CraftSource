@@ -1,31 +1,32 @@
 package net.minecraft.server;
 
+import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
+import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
+import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
+import it.unimi.dsi.fastutil.objects.ObjectIterator;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
-
+import java.util.Set;
+import javax.annotation.Nullable;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 // CraftBukkit start
-
-import org.bukkit.Server;
 import org.bukkit.craftbukkit.chunkio.ChunkIOExecutor;
-import org.bukkit.craftbukkit.util.LongHash;
-import org.bukkit.craftbukkit.util.LongHashSet;
-import org.bukkit.craftbukkit.util.LongObjectHashMap;
 import org.bukkit.event.world.ChunkUnloadEvent;
 // CraftBukkit end
 
 public class ChunkProviderServer implements IChunkProvider {
 
     private static final Logger a = LogManager.getLogger();
-    public final LongHashSet unloadQueue = new LongHashSet(); // CraftBukkit - LongHashSet
-    public final ChunkGenerator chunkGenerator; // CraftBukkit - public
+    public final Set<Long> unloadQueue = Sets.newHashSet();
+    public final ChunkGenerator chunkGenerator;
     private final IChunkLoader chunkLoader;
-    public LongObjectHashMap<Chunk> chunks = new LongObjectHashMap<Chunk>(); // CraftBukkit
-    // private final LongHashMap<Chunk> chunks = new LongHashMap();
-    // private final List<Chunk> chunkList = Lists.newArrayList();
+    public final Long2ObjectMap<Chunk> chunks = new Long2ObjectOpenHashMap(8192);
     public final WorldServer world;
 
     public ChunkProviderServer(WorldServer worldserver, IChunkLoader ichunkloader, ChunkGenerator chunkgenerator) {
@@ -34,59 +35,42 @@ public class ChunkProviderServer implements IChunkProvider {
         this.chunkGenerator = chunkgenerator;
     }
 
-    public boolean isChunkLoaded(int i, int j) {
-        return this.chunks.containsKey(LongHash.toLong(i, j)); // CraftBukkit
-    }
-
-    // CraftBukkit start - Change return type to Collection and return the values of our chunk map
-    public java.util.Collection a() {
-        // return this.chunkList;
+    public Collection<Chunk> a() {
         return this.chunks.values();
-        // CraftBukkit end
     }
 
-    public void queueUnload(int i, int j) {
-        if (this.world.worldProvider.c(i, j)) {
-            // CraftBukkit start
-            this.unloadQueue.add(i, j);
-
-            Chunk c = chunks.get(LongHash.toLong(i, j));
-            if (c != null) {
-                c.mustSave = true;
-            }
-            // CraftBukkit end
+    public void unload(Chunk chunk) {
+        if (this.world.worldProvider.c(chunk.locX, chunk.locZ)) {
+            this.unloadQueue.add(Long.valueOf(ChunkCoordIntPair.a(chunk.locX, chunk.locZ)));
+            chunk.d = true;
         }
 
     }
 
     public void b() {
-        Iterator iterator = this.chunks.values().iterator(); // CraftBukkit
+        ObjectIterator objectiterator = this.chunks.values().iterator();
 
-        while (iterator.hasNext()) {
-            Chunk chunk = (Chunk) iterator.next();
+        while (objectiterator.hasNext()) {
+            Chunk chunk = (Chunk) objectiterator.next();
 
-            this.queueUnload(chunk.locX, chunk.locZ);
+            this.unload(chunk);
         }
 
     }
 
-    // CraftBukkit start - Add async variant, provide compatibility
-    public Chunk getOrCreateChunkFast(int x, int z) {
-        Chunk chunk = chunks.get(LongHash.toLong(x, z));
-        return (chunk == null) ? getChunkAt(x, z) : chunk;
-    }
-
-    public Chunk getChunkIfLoaded(int x, int z) {
-        return chunks.get(LongHash.toLong(x, z));
-    }
-
+    @Nullable
     public Chunk getLoadedChunkAt(int i, int j) {
-        Chunk chunk = chunks.get(LongHash.toLong(i, j)); // CraftBukkit
+        long k = ChunkCoordIntPair.a(i, j);
+        Chunk chunk = (Chunk) this.chunks.get(k);
 
-        this.unloadQueue.remove(i, j); // CraftBukkit
+        if (chunk != null) {
+            chunk.d = false;
+        }
+
         return chunk;
     }
 
+    @Nullable
     public Chunk getOrLoadChunkAt(int i, int j) {
         Chunk chunk = this.getLoadedChunkAt(i, j);
 
@@ -100,27 +84,44 @@ public class ChunkProviderServer implements IChunkProvider {
             if (loader != null && loader.chunkExists(world, i, j)) {
                 chunk = ChunkIOExecutor.syncChunkLoad(world, loader, this, i, j);
             }
-            /* chunk = this.loadChunk(i, j);
-            if (chunk != null) {
-                this.chunks.put(ChunkCoordIntPair.a(i, j), chunk);
-                this.chunkList.add(chunk);
-                chunk.addEntities();
-                chunk.loadNearby(this, this.chunkGenerator);
-            }
-            */
-            // CraftBukkit end
         }
 
         return chunk;
     }
+
+    @Nullable
+    public Chunk originalGetOrLoadChunkAt(int i, int j) {
+        // CraftBukkit end
+        Chunk chunk = this.getLoadedChunkAt(i, j);
+
+        if (chunk == null) {
+            chunk = this.loadChunk(i, j);
+            if (chunk != null) {
+                this.chunks.put(ChunkCoordIntPair.a(i, j), chunk);
+                chunk.addEntities();
+                chunk.loadNearby(this, this.chunkGenerator, false); // CraftBukkit
+            }
+        }
+
+        return chunk;
+    }
+
+    // CraftBukkit start
+    public Chunk getChunkIfLoaded(int x, int z) {
+        return chunks.get(ChunkCoordIntPair.a(x, z));
+    }
+    // CraftBukkit end
 
     public Chunk getChunkAt(int i, int j) {
         return getChunkAt(i, j, null);
     }
 
     public Chunk getChunkAt(int i, int j, Runnable runnable) {
-        unloadQueue.remove(i, j);
-        Chunk chunk = chunks.get(LongHash.toLong(i, j));
+        return getChunkAt(i, j, runnable, true);
+    }
+
+    public Chunk getChunkAt(int i, int j, Runnable runnable, boolean generate) {
+        Chunk chunk = getChunkIfLoaded(i, j);
         ChunkRegionLoader loader = null;
 
         if (this.chunkLoader instanceof ChunkRegionLoader) {
@@ -135,7 +136,7 @@ public class ChunkProviderServer implements IChunkProvider {
             } else {
                 chunk = ChunkIOExecutor.syncChunkLoad(world, loader, this, i, j);
             }
-        } else if (chunk == null) {
+        } else if (chunk == null && generate) {
             chunk = originalGetChunkAt(i, j);
         }
 
@@ -148,67 +149,35 @@ public class ChunkProviderServer implements IChunkProvider {
     }
 
     public Chunk originalGetChunkAt(int i, int j) {
-        this.unloadQueue.remove(i, j);
-        Chunk chunk = this.chunks.get(LongHash.toLong(i, j));
-        boolean newChunk = false;
+        Chunk chunk = this.originalGetOrLoadChunkAt(i, j);
         // CraftBukkit end
 
         if (chunk == null) {
             world.timings.syncChunkLoadTimer.startTiming(); // Spigot
             long k = ChunkCoordIntPair.a(i, j);
 
-            chunk = this.loadChunk(i, j);
-            if (chunk == null) {
-                try {
-                    chunk = this.chunkGenerator.getOrCreateChunk(i, j);
-                } catch (Throwable throwable) {
-                    CrashReport crashreport = CrashReport.a(throwable, "Exception generating new chunk");
-                    CrashReportSystemDetails crashreportsystemdetails = crashreport.a("Chunk to be generated");
+            try {
+                chunk = this.chunkGenerator.getOrCreateChunk(i, j);
+            } catch (Throwable throwable) {
+                CrashReport crashreport = CrashReport.a(throwable, "Exception generating new chunk");
+                CrashReportSystemDetails crashreportsystemdetails = crashreport.a("Chunk to be generated");
 
-                    crashreportsystemdetails.a("Location", (Object) String.format("%d,%d", new Object[] { Integer.valueOf(i), Integer.valueOf(j)}));
-                    crashreportsystemdetails.a("Position hash", (Object) Long.valueOf(k));
-                    crashreportsystemdetails.a("Generator", (Object) this.chunkGenerator);
-                    throw new ReportedException(crashreport);
-                }
-                newChunk = true; // CraftBukkit
+                crashreportsystemdetails.a("Location", (Object) String.format("%d,%d", new Object[] { Integer.valueOf(i), Integer.valueOf(j)}));
+                crashreportsystemdetails.a("Position hash", (Object) Long.valueOf(k));
+                crashreportsystemdetails.a("Generator", (Object) this.chunkGenerator);
+                throw new ReportedException(crashreport);
             }
 
-            this.chunks.put(LongHash.toLong(i, j), chunk); // CraftBukkit
+            this.chunks.put(k, chunk);
             chunk.addEntities();
-
-            // CraftBukkit start
-            Server server = world.getServer();
-            if (server != null) {
-                /*
-                 * If it's a new world, the first few chunks are generated inside
-                 * the World constructor. We can't reliably alter that, so we have
-                 * no way of creating a CraftWorld/CraftServer at that point.
-                 */
-                server.getPluginManager().callEvent(new org.bukkit.event.world.ChunkLoadEvent(chunk.bukkitChunk, newChunk));
-            }
-
-            // Update neighbor counts
-            for (int x = -2; x < 3; x++) {
-                for (int z = -2; z < 3; z++) {
-                    if (x == 0 && z == 0) {
-                        continue;
-                    }
-
-                    Chunk neighbor = this.getChunkIfLoaded(chunk.locX + x, chunk.locZ + z);
-                    if (neighbor != null) {
-                        neighbor.setNeighborLoaded(-x, -z);
-                        chunk.setNeighborLoaded(x, z);
-                    }
-                }
-            }
-            // CraftBukkit end
-            chunk.loadNearby(this, this.chunkGenerator);
+            chunk.loadNearby(this, this.chunkGenerator, true); // CraftBukkit
             world.timings.syncChunkLoadTimer.stopTiming(); // Spigot
         }
 
         return chunk;
     }
 
+    @Nullable
     public Chunk loadChunk(int i, int j) {
         try {
             Chunk chunk = this.chunkLoader.a(this.world, i, j);
@@ -278,43 +247,24 @@ public class ChunkProviderServer implements IChunkProvider {
 
     public boolean unloadChunks() {
         if (!this.world.savingDisabled) {
-            // CraftBukkit start
-            Server server = this.world.getServer();
-            for (int i = 0; i < 100 && !this.unloadQueue.isEmpty(); ++i) {
-                long chunkcoordinates = this.unloadQueue.popFirst();
-                Chunk chunk = this.chunks.get(chunkcoordinates);
-                if (chunk == null) continue;
+            if (!this.unloadQueue.isEmpty()) {
+                Iterator iterator = this.unloadQueue.iterator();
 
-                ChunkUnloadEvent event = new ChunkUnloadEvent(chunk.bukkitChunk);
-                server.getPluginManager().callEvent(event);
-                if (!event.isCancelled()) {
+                for (int i = 0; i < 100 && iterator.hasNext(); iterator.remove()) {
+                    Long olong = (Long) iterator.next();
+                    Chunk chunk = (Chunk) this.chunks.get(olong);
 
-                    if (chunk != null) {
-                        chunk.removeEntities();
-                        this.saveChunk(chunk);
-                        this.saveChunkNOP(chunk);
-                        this.chunks.remove(chunkcoordinates); // CraftBukkit
-                    }
-
-                    // this.unloadQueue.remove(olong);
-
-                    // Update neighbor counts
-                    for (int x = -2; x < 3; x++) {
-                        for (int z = -2; z < 3; z++) {
-                            if (x == 0 && z == 0) {
-                                continue;
-                            }
-
-                            Chunk neighbor = this.getChunkIfLoaded(chunk.locX + x, chunk.locZ + z);
-                            if (neighbor != null) {
-                                neighbor.setNeighborUnloaded(-x, -z);
-                                chunk.setNeighborUnloaded(x, z);
-                            }
+                    if (chunk != null && chunk.d) {
+                        // CraftBukkit start - move unload logic to own method
+                        if (!unloadChunk(chunk, true)) {
+                            continue;
                         }
+                        // CraftBukkit end
+
+                        ++i;
                     }
                 }
             }
-            // CraftBukkit end
 
             this.chunkLoader.a();
         }
@@ -322,12 +272,45 @@ public class ChunkProviderServer implements IChunkProvider {
         return false;
     }
 
+    // CraftBukkit start
+    public boolean unloadChunk(Chunk chunk, boolean save) {
+        ChunkUnloadEvent event = new ChunkUnloadEvent(chunk.bukkitChunk, save);
+        this.world.getServer().getPluginManager().callEvent(event);
+        if (event.isCancelled()) {
+            return false;
+        }
+        save = event.isSaveChunk();
+
+        // Update neighbor counts
+        for (int x = -2; x < 3; x++) {
+            for (int z = -2; z < 3; z++) {
+                if (x == 0 && z == 0) {
+                    continue;
+                }
+
+                Chunk neighbor = this.getChunkIfLoaded(chunk.locX + x, chunk.locZ + z);
+                if (neighbor != null) {
+                    neighbor.setNeighborUnloaded(-x, -z);
+                    chunk.setNeighborUnloaded(x, z);
+                }
+            }
+        }
+        // Moved from unloadChunks above
+        chunk.removeEntities();
+        if (save) {
+            this.saveChunk(chunk);
+            this.saveChunkNOP(chunk);
+        }
+        this.chunks.remove(chunk.chunkKey);
+        return true;
+    }
+    // CraftBukkit end
+
     public boolean e() {
         return !this.world.savingDisabled;
     }
 
     public String getName() {
-        // CraftBukkit - this.chunks.count() -> .size()
         return "ServerChunkCache: " + this.chunks.size() + " Drop: " + this.unloadQueue.size();
     }
 
@@ -335,16 +318,20 @@ public class ChunkProviderServer implements IChunkProvider {
         return this.chunkGenerator.getMobsFor(enumcreaturetype, blockposition);
     }
 
-    public BlockPosition a(World world, String s, BlockPosition blockposition) {
-        return this.chunkGenerator.findNearestMapFeature(world, s, blockposition);
+    @Nullable
+    public BlockPosition a(World world, String s, BlockPosition blockposition, boolean flag) {
+        return this.chunkGenerator.findNearestMapFeature(world, s, blockposition, flag);
     }
 
     public int g() {
-        // CraftBukkit - this.chunks.count() -> this.chunks.size()
         return this.chunks.size();
     }
 
+    public boolean isLoaded(int i, int j) {
+        return this.chunks.containsKey(ChunkCoordIntPair.a(i, j));
+    }
+
     public boolean e(int i, int j) {
-        return this.chunks.containsKey(LongHash.toLong(i, j)); // CraftBukkit
+        return this.chunks.containsKey(ChunkCoordIntPair.a(i, j)) || this.chunkLoader.a(i, j);
     }
 }

@@ -13,16 +13,16 @@ public class PacketHandshakingInSetProtocol implements Packet<PacketHandshakingI
 
     public void a(PacketDataSerializer packetdataserializer) throws IOException {
         this.a = packetdataserializer.g();
-        this.hostname = packetdataserializer.c(Short.MAX_VALUE); // Spigot
+        this.hostname = packetdataserializer.e(Short.MAX_VALUE); // Spigot
         this.port = packetdataserializer.readUnsignedShort();
         this.d = EnumProtocol.a(packetdataserializer.g());
     }
 
     public void b(PacketDataSerializer packetdataserializer) throws IOException {
-        packetdataserializer.b(this.a);
+        packetdataserializer.d(this.a);
         packetdataserializer.a(this.hostname);
         packetdataserializer.writeShort(this.port);
-        packetdataserializer.b(this.d.a());
+        packetdataserializer.d(this.d.a());
     }
 
     public void a(PacketHandshakingInListener packethandshakinginlistener) {

@@ -5,6 +5,7 @@ import java.util.Map;
 import net.minecraft.server.GameProfileSerializer;
 import net.minecraft.server.NBTBase;
 import net.minecraft.server.NBTTagCompound;
+import net.minecraft.server.TileEntitySkull;
 
 import org.bukkit.Material;
 import org.bukkit.configuration.serialization.DelegateDeserialization;
@@ -132,7 +133,10 @@ class CraftMetaSkull extends CraftMetaItem implements SkullMeta {
         if (name == null) {
             profile = null;
         } else {
-            profile = new GameProfile(null, name);
+            // Spigot start
+            profile = TileEntitySkull.skinCache.getIfPresent(name.toLowerCase(java.util.Locale.ROOT));
+            if (profile == null) profile = new GameProfile(null, name);
+            // Spigot end
         }
 
         return true;

@@ -17,6 +17,7 @@ public class CommandDispatcher extends CommandHandler implements ICommandDispatc
         this.a((ICommand) (new CommandWeather()));
         this.a((ICommand) (new CommandXp()));
         this.a((ICommand) (new CommandTp()));
+        this.a((ICommand) (new CommandTeleport()));
         this.a((ICommand) (new CommandGive()));
         this.a((ICommand) (new CommandReplaceItem()));
         this.a((ICommand) (new CommandStats()));
@@ -51,6 +52,8 @@ public class CommandDispatcher extends CommandHandler implements ICommandDispatc
         this.a((ICommand) (new CommandWorldBorder()));
         this.a((ICommand) (new CommandTitle()));
         this.a((ICommand) (new CommandEntityData()));
+        this.a((ICommand) (new CommandStopSound()));
+        this.a((ICommand) (new CommandLocate()));
         if (minecraftserver.aa()) {
             this.a((ICommand) (new CommandOp()));
             this.a((ICommand) (new CommandDeop()));

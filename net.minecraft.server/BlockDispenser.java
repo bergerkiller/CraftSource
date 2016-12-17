@@ -12,7 +12,7 @@ public class BlockDispenser extends BlockTileEntity {
 
     protected BlockDispenser() {
         super(Material.STONE);
-        this.w(this.blockStateList.getBlockData().set(BlockDispenser.FACING, EnumDirection.NORTH).set(BlockDispenser.TRIGGERED, Boolean.valueOf(false)));
+        this.y(this.blockStateList.getBlockData().set(BlockDispenser.FACING, EnumDirection.NORTH).set(BlockDispenser.TRIGGERED, Boolean.valueOf(false)));
         this.a(CreativeModeTab.d);
     }
 
@@ -50,7 +50,7 @@ public class BlockDispenser extends BlockTileEntity {
         }
     }
 
-    public boolean interact(World world, BlockPosition blockposition, IBlockData iblockdata, EntityHuman entityhuman, EnumHand enumhand, ItemStack itemstack, EnumDirection enumdirection, float f, float f1, float f2) {
+    public boolean interact(World world, BlockPosition blockposition, IBlockData iblockdata, EntityHuman entityhuman, EnumHand enumhand, EnumDirection enumdirection, float f, float f1, float f2) {
         if (world.isClientSide) {
             return true;
         } else {
@@ -74,7 +74,7 @@ public class BlockDispenser extends BlockTileEntity {
         TileEntityDispenser tileentitydispenser = (TileEntityDispenser) sourceblock.getTileEntity();
 
         if (tileentitydispenser != null) {
-            int i = tileentitydispenser.m();
+            int i = tileentitydispenser.o();
 
             if (i < 0) {
                 world.triggerEffect(1001, blockposition, 0);
@@ -83,10 +83,8 @@ public class BlockDispenser extends BlockTileEntity {
                 IDispenseBehavior idispensebehavior = this.a(itemstack);
 
                 if (idispensebehavior != IDispenseBehavior.NONE) {
-                    ItemStack itemstack1 = idispensebehavior.a(sourceblock, itemstack);
                     eventFired = false; // CraftBukkit - reset event status
-
-                    tileentitydispenser.setItem(i, itemstack1.count <= 0 ? null : itemstack1);
+                    tileentitydispenser.setItem(i, idispensebehavior.a(sourceblock, itemstack));
                 }
 
             }
@@ -94,10 +92,10 @@ public class BlockDispenser extends BlockTileEntity {
     }
 
     protected IDispenseBehavior a(ItemStack itemstack) {
-        return (IDispenseBehavior) BlockDispenser.REGISTRY.get(itemstack == null ? null : itemstack.getItem());
+        return (IDispenseBehavior) BlockDispenser.REGISTRY.get(itemstack.getItem());
     }
 
-    public void doPhysics(World world, BlockPosition blockposition, IBlockData iblockdata, Block block) {
+    public void a(IBlockData iblockdata, World world, BlockPosition blockposition, Block block, BlockPosition blockposition1) {
         boolean flag = world.isBlockIndirectlyPowered(blockposition) || world.isBlockIndirectlyPowered(blockposition.up());
         boolean flag1 = ((Boolean) iblockdata.get(BlockDispenser.TRIGGERED)).booleanValue();
 
@@ -122,11 +120,11 @@ public class BlockDispenser extends BlockTileEntity {
     }
 
     public IBlockData getPlacedState(World world, BlockPosition blockposition, EnumDirection enumdirection, float f, float f1, float f2, int i, EntityLiving entityliving) {
-        return this.getBlockData().set(BlockDispenser.FACING, BlockPiston.a(blockposition, entityliving)).set(BlockDispenser.TRIGGERED, Boolean.valueOf(false));
+        return this.getBlockData().set(BlockDispenser.FACING, EnumDirection.a(blockposition, entityliving)).set(BlockDispenser.TRIGGERED, Boolean.valueOf(false));
     }
 
     public void postPlace(World world, BlockPosition blockposition, IBlockData iblockdata, EntityLiving entityliving, ItemStack itemstack) {
-        world.setTypeAndData(blockposition, iblockdata.set(BlockDispenser.FACING, BlockPiston.a(blockposition, entityliving)), 2);
+        world.setTypeAndData(blockposition, iblockdata.set(BlockDispenser.FACING, EnumDirection.a(blockposition, entityliving)), 2);
         if (itemstack.hasName()) {
             TileEntity tileentity = world.getTileEntity(blockposition);
 
@@ -149,7 +147,7 @@ public class BlockDispenser extends BlockTileEntity {
     }
 
     public static IPosition a(ISourceBlock isourceblock) {
-        EnumDirection enumdirection = e(isourceblock.f());
+        EnumDirection enumdirection = (EnumDirection) isourceblock.e().get(BlockDispenser.FACING);
         double d0 = isourceblock.getX() + 0.7D * (double) enumdirection.getAdjacentX();
         double d1 = isourceblock.getY() + 0.7D * (double) enumdirection.getAdjacentY();
         double d2 = isourceblock.getZ() + 0.7D * (double) enumdirection.getAdjacentZ();
@@ -157,15 +155,11 @@ public class BlockDispenser extends BlockTileEntity {
         return new Position(d0, d1, d2);
     }
 
-    public static EnumDirection e(int i) {
-        return EnumDirection.fromType1(i & 7);
-    }
-
     public boolean isComplexRedstone(IBlockData iblockdata) {
         return true;
     }
 
-    public int d(IBlockData iblockdata, World world, BlockPosition blockposition) {
+    public int c(IBlockData iblockdata, World world, BlockPosition blockposition) {
         return Container.a(world.getTileEntity(blockposition));
     }
 
@@ -174,7 +168,7 @@ public class BlockDispenser extends BlockTileEntity {
     }
 
     public IBlockData fromLegacyData(int i) {
-        return this.getBlockData().set(BlockDispenser.FACING, e(i)).set(BlockDispenser.TRIGGERED, Boolean.valueOf((i & 8) > 0));
+        return this.getBlockData().set(BlockDispenser.FACING, EnumDirection.fromType1(i & 7)).set(BlockDispenser.TRIGGERED, Boolean.valueOf((i & 8) > 0));
     }
 
     public int toLegacyData(IBlockData iblockdata) {

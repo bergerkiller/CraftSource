@@ -41,6 +41,7 @@ public class CraftingManager {
         this.recipes.add(new RecipeTippedArrow());
         (new RecipesBanner()).a(this);
         (new RecipiesShield()).a(this);
+        (new RecipeShulkerBox()).a(this);
         this.registerShapedRecipe(new ItemStack(Items.PAPER, 3), new Object[] { "###", Character.valueOf('#'), Items.REEDS});
         this.registerShapelessRecipe(new ItemStack(Items.BOOK, 1), new Object[] { Items.PAPER, Items.PAPER, Items.PAPER, Items.LEATHER});
         this.registerShapelessRecipe(new ItemStack(Items.WRITABLE_BOOK, 1), new Object[] { Items.BOOK, new ItemStack(Items.DYE, 1, EnumColor.BLACK.getInvColorIndex()), Items.FEATHER});
@@ -122,12 +123,12 @@ public class CraftingManager {
         this.registerShapedRecipe(new ItemStack(Items.FURNACE_MINECART, 1), new Object[] { "A", "B", Character.valueOf('A'), Blocks.FURNACE, Character.valueOf('B'), Items.MINECART});
         this.registerShapedRecipe(new ItemStack(Items.TNT_MINECART, 1), new Object[] { "A", "B", Character.valueOf('A'), Blocks.TNT, Character.valueOf('B'), Items.MINECART});
         this.registerShapedRecipe(new ItemStack(Items.HOPPER_MINECART, 1), new Object[] { "A", "B", Character.valueOf('A'), Blocks.HOPPER, Character.valueOf('B'), Items.MINECART});
-        this.registerShapedRecipe(new ItemStack(Items.aG, 1), new Object[] { "# #", "###", Character.valueOf('#'), new ItemStack(Blocks.PLANKS, 1, BlockWood.EnumLogVariant.OAK.a())});
-        this.registerShapedRecipe(new ItemStack(Items.aH, 1), new Object[] { "# #", "###", Character.valueOf('#'), new ItemStack(Blocks.PLANKS, 1, BlockWood.EnumLogVariant.SPRUCE.a())});
-        this.registerShapedRecipe(new ItemStack(Items.aI, 1), new Object[] { "# #", "###", Character.valueOf('#'), new ItemStack(Blocks.PLANKS, 1, BlockWood.EnumLogVariant.BIRCH.a())});
-        this.registerShapedRecipe(new ItemStack(Items.aJ, 1), new Object[] { "# #", "###", Character.valueOf('#'), new ItemStack(Blocks.PLANKS, 1, BlockWood.EnumLogVariant.JUNGLE.a())});
-        this.registerShapedRecipe(new ItemStack(Items.aK, 1), new Object[] { "# #", "###", Character.valueOf('#'), new ItemStack(Blocks.PLANKS, 1, BlockWood.EnumLogVariant.ACACIA.a())});
-        this.registerShapedRecipe(new ItemStack(Items.aL, 1), new Object[] { "# #", "###", Character.valueOf('#'), new ItemStack(Blocks.PLANKS, 1, BlockWood.EnumLogVariant.DARK_OAK.a())});
+        this.registerShapedRecipe(new ItemStack(Items.aH, 1), new Object[] { "# #", "###", Character.valueOf('#'), new ItemStack(Blocks.PLANKS, 1, BlockWood.EnumLogVariant.OAK.a())});
+        this.registerShapedRecipe(new ItemStack(Items.aI, 1), new Object[] { "# #", "###", Character.valueOf('#'), new ItemStack(Blocks.PLANKS, 1, BlockWood.EnumLogVariant.SPRUCE.a())});
+        this.registerShapedRecipe(new ItemStack(Items.aJ, 1), new Object[] { "# #", "###", Character.valueOf('#'), new ItemStack(Blocks.PLANKS, 1, BlockWood.EnumLogVariant.BIRCH.a())});
+        this.registerShapedRecipe(new ItemStack(Items.aK, 1), new Object[] { "# #", "###", Character.valueOf('#'), new ItemStack(Blocks.PLANKS, 1, BlockWood.EnumLogVariant.JUNGLE.a())});
+        this.registerShapedRecipe(new ItemStack(Items.aL, 1), new Object[] { "# #", "###", Character.valueOf('#'), new ItemStack(Blocks.PLANKS, 1, BlockWood.EnumLogVariant.ACACIA.a())});
+        this.registerShapedRecipe(new ItemStack(Items.aM, 1), new Object[] { "# #", "###", Character.valueOf('#'), new ItemStack(Blocks.PLANKS, 1, BlockWood.EnumLogVariant.DARK_OAK.a())});
         this.registerShapedRecipe(new ItemStack(Items.BUCKET, 1), new Object[] { "# #", " # ", Character.valueOf('#'), Items.IRON_INGOT});
         this.registerShapedRecipe(new ItemStack(Items.FLOWER_POT, 1), new Object[] { "# #", " # ", Character.valueOf('#'), Items.BRICK});
         this.registerShapelessRecipe(new ItemStack(Items.FLINT_AND_STEEL, 1), new Object[] { new ItemStack(Items.IRON_INGOT, 1), new ItemStack(Items.FLINT, 1)});
@@ -168,6 +169,7 @@ public class CraftingManager {
         this.registerShapedRecipe(new ItemStack(Blocks.LIGHT_WEIGHTED_PRESSURE_PLATE, 1), new Object[] { "##", Character.valueOf('#'), Items.GOLD_INGOT});
         this.registerShapedRecipe(new ItemStack(Blocks.DISPENSER, 1), new Object[] { "###", "#X#", "#R#", Character.valueOf('#'), Blocks.COBBLESTONE, Character.valueOf('X'), Items.BOW, Character.valueOf('R'), Items.REDSTONE});
         this.registerShapedRecipe(new ItemStack(Blocks.DROPPER, 1), new Object[] { "###", "# #", "#R#", Character.valueOf('#'), Blocks.COBBLESTONE, Character.valueOf('R'), Items.REDSTONE});
+        this.registerShapedRecipe(new ItemStack(Blocks.dk, 1), new Object[] { "###", "RRQ", "###", Character.valueOf('#'), Blocks.COBBLESTONE, Character.valueOf('R'), Items.REDSTONE, Character.valueOf('Q'), Items.QUARTZ});
         this.registerShapedRecipe(new ItemStack(Blocks.PISTON, 1), new Object[] { "TTT", "#X#", "#R#", Character.valueOf('#'), Blocks.COBBLESTONE, Character.valueOf('X'), Items.IRON_INGOT, Character.valueOf('R'), Items.REDSTONE, Character.valueOf('T'), Blocks.PLANKS});
         this.registerShapedRecipe(new ItemStack(Blocks.STICKY_PISTON, 1), new Object[] { "S", "P", Character.valueOf('S'), Items.SLIME, Character.valueOf('P'), Blocks.PISTON});
         this.registerShapedRecipe(new ItemStack(Items.BED, 1), new Object[] { "###", "XXX", Character.valueOf('#'), Blocks.WOOL, Character.valueOf('X'), Blocks.PLANKS});
@@ -178,10 +180,11 @@ public class CraftingManager {
         this.registerShapelessRecipe(new ItemStack(Items.FIRE_CHARGE, 3), new Object[] { Items.GUNPOWDER, Items.BLAZE_POWDER, Items.COAL});
         this.registerShapelessRecipe(new ItemStack(Items.FIRE_CHARGE, 3), new Object[] { Items.GUNPOWDER, Items.BLAZE_POWDER, new ItemStack(Items.COAL, 1, 1)});
         this.registerShapedRecipe(new ItemStack(Blocks.DAYLIGHT_DETECTOR), new Object[] { "GGG", "QQQ", "WWW", Character.valueOf('G'), Blocks.GLASS, Character.valueOf('Q'), Items.QUARTZ, Character.valueOf('W'), Blocks.WOODEN_SLAB});
-        this.registerShapedRecipe(new ItemStack(Items.cP), new Object[] { "GGG", "GEG", "GTG", Character.valueOf('G'), Blocks.GLASS, Character.valueOf('E'), Items.ENDER_EYE, Character.valueOf('T'), Items.GHAST_TEAR});
+        this.registerShapedRecipe(new ItemStack(Items.cQ), new Object[] { "GGG", "GEG", "GTG", Character.valueOf('G'), Blocks.GLASS, Character.valueOf('E'), Items.ENDER_EYE, Character.valueOf('T'), Items.GHAST_TEAR});
         this.registerShapedRecipe(new ItemStack(Blocks.HOPPER), new Object[] { "I I", "ICI", " I ", Character.valueOf('I'), Items.IRON_INGOT, Character.valueOf('C'), Blocks.CHEST});
         this.registerShapedRecipe(new ItemStack(Items.ARMOR_STAND, 1), new Object[] { "///", " / ", "/_/", Character.valueOf('/'), Items.STICK, Character.valueOf('_'), new ItemStack(Blocks.STONE_SLAB, 1, BlockDoubleStepAbstract.EnumStoneSlabVariant.STONE.a())});
         this.registerShapedRecipe(new ItemStack(Blocks.END_ROD, 4), new Object[] { "/", "#", Character.valueOf('/'), Items.BLAZE_ROD, Character.valueOf('#'), Items.CHORUS_FRUIT_POPPED});
+        this.registerShapedRecipe(new ItemStack(Blocks.di, 1), new Object[] { "XXX", "XXX", "XXX", Character.valueOf('X'), new ItemStack(Items.DYE, 1, EnumColor.WHITE.getInvColorIndex())});
         sort();
     }
 
@@ -203,12 +206,16 @@ public class CraftingManager {
         int i = 0;
         int j = 0;
         int k = 0;
+        int l;
 
         if (aobject[i] instanceof String[]) {
             String[] astring = (String[]) ((String[]) aobject[i++]);
+            String[] astring1 = astring;
 
-            for (int l = 0; l < astring.length; ++l) {
-                String s1 = astring[l];
+            l = astring.length;
+
+            for (int i1 = 0; i1 < l; ++i1) {
+                String s1 = astring1[i1];
 
                 ++k;
                 j = s1.length();
@@ -228,7 +235,7 @@ public class CraftingManager {
 
         for (hashmap = Maps.newHashMap(); i < aobject.length; i += 2) {
             Character character = (Character) aobject[i];
-            ItemStack itemstack1 = null;
+            ItemStack itemstack1 = ItemStack.a;
 
             if (aobject[i + 1] instanceof Item) {
                 itemstack1 = new ItemStack((Item) aobject[i + 1]);
@@ -243,13 +250,13 @@ public class CraftingManager {
 
         ItemStack[] aitemstack = new ItemStack[j * k];
 
-        for (int i1 = 0; i1 < j * k; ++i1) {
-            char c0 = s.charAt(i1);
+        for (l = 0; l < j * k; ++l) {
+            char c0 = s.charAt(l);
 
             if (hashmap.containsKey(Character.valueOf(c0))) {
-                aitemstack[i1] = ((ItemStack) hashmap.get(Character.valueOf(c0))).cloneItemStack();
+                aitemstack[l] = ((ItemStack) hashmap.get(Character.valueOf(c0))).cloneItemStack();
             } else {
-                aitemstack[i1] = null;
+                aitemstack[l] = ItemStack.a;
             }
         }
 
@@ -295,7 +302,7 @@ public class CraftingManager {
         do {
             if (!iterator.hasNext()) {
                 inventorycrafting.currentRecipe = null; // CraftBukkit - Clear recipe when no recipe is found
-                return null;
+                return ItemStack.a;
             }
 
             irecipe = (IRecipe) iterator.next();
@@ -308,7 +315,7 @@ public class CraftingManager {
         // CraftBukkit end
     }
 
-    public ItemStack[] b(InventoryCrafting inventorycrafting, World world) {
+    public NonNullList<ItemStack> b(InventoryCrafting inventorycrafting, World world) {
         Iterator iterator = this.recipes.iterator();
 
         while (iterator.hasNext()) {
@@ -319,13 +326,13 @@ public class CraftingManager {
             }
         }
 
-        ItemStack[] aitemstack = new ItemStack[inventorycrafting.getSize()];
+        NonNullList nonnulllist = NonNullList.a(inventorycrafting.getSize(), ItemStack.a);
 
-        for (int i = 0; i < aitemstack.length; ++i) {
-            aitemstack[i] = inventorycrafting.getItem(i);
+        for (int i = 0; i < nonnulllist.size(); ++i) {
+            nonnulllist.set(i, inventorycrafting.getItem(i));
         }
 
-        return aitemstack;
+        return nonnulllist;
     }
 
     public List<IRecipe> getRecipes() {

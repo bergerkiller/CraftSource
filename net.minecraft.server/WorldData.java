@@ -4,7 +4,7 @@ import com.google.common.collect.Maps;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.concurrent.Callable;
+import javax.annotation.Nullable;
 // CraftBukkit start
 import org.bukkit.Bukkit;
 import org.bukkit.event.weather.ThunderChangeEvent;
@@ -36,7 +36,7 @@ public class WorldData {
     private int u;
     private boolean v;
     private int w;
-    private WorldSettings.EnumGamemode x;
+    private EnumGamemode x;
     private boolean y;
     private boolean z;
     private boolean A;
@@ -59,11 +59,7 @@ public class WorldData {
     protected WorldData() {
         this.f = WorldType.NORMAL;
         this.g = "";
-        this.E = 0.0D;
-        this.F = 0.0D;
         this.G = 6.0E7D;
-        this.H = 0L;
-        this.I = 0.0D;
         this.J = 5.0D;
         this.K = 0.2D;
         this.L = 5;
@@ -72,14 +68,22 @@ public class WorldData {
         this.O = new GameRules();
     }
 
+    public static void a(DataConverterManager dataconvertermanager) {
+        dataconvertermanager.a(DataConverterTypes.LEVEL, new DataInspector() {
+            public NBTTagCompound a(DataConverter dataconverter, NBTTagCompound nbttagcompound, int i) {
+                if (nbttagcompound.hasKeyOfType("Player", 10)) {
+                    nbttagcompound.set("Player", dataconverter.a(DataConverterTypes.PLAYER, nbttagcompound.getCompound("Player"), i));
+                }
+
+                return nbttagcompound;
+            }
+        });
+    }
+
     public WorldData(NBTTagCompound nbttagcompound) {
         this.f = WorldType.NORMAL;
         this.g = "";
-        this.E = 0.0D;
-        this.F = 0.0D;
         this.G = 6.0E7D;
-        this.H = 0L;
-        this.I = 0.0D;
         this.J = 5.0D;
         this.K = 0.2D;
         this.L = 5;
@@ -117,7 +121,7 @@ public class WorldData {
             }
         }
 
-        this.x = WorldSettings.EnumGamemode.getById(nbttagcompound.getInt("GameType"));
+        this.x = EnumGamemode.getById(nbttagcompound.getInt("GameType"));
         if (nbttagcompound.hasKeyOfType("MapFeatures", 99)) {
             this.y = nbttagcompound.getBoolean("MapFeatures");
         } else {
@@ -153,7 +157,7 @@ public class WorldData {
         if (nbttagcompound.hasKeyOfType("allowCommands", 99)) {
             this.A = nbttagcompound.getBoolean("allowCommands");
         } else {
-            this.A = this.x == WorldSettings.EnumGamemode.CREATIVE;
+            this.A = this.x == EnumGamemode.CREATIVE;
         }
 
         if (nbttagcompound.hasKeyOfType("Player", 10)) {
@@ -225,11 +229,7 @@ public class WorldData {
     public WorldData(WorldSettings worldsettings, String s) {
         this.f = WorldType.NORMAL;
         this.g = "";
-        this.E = 0.0D;
-        this.F = 0.0D;
         this.G = 6.0E7D;
-        this.H = 0L;
-        this.I = 0.0D;
         this.J = 5.0D;
         this.K = 0.2D;
         this.L = 5;
@@ -255,11 +255,7 @@ public class WorldData {
     public WorldData(WorldData worlddata) {
         this.f = WorldType.NORMAL;
         this.g = "";
-        this.E = 0.0D;
-        this.F = 0.0D;
         this.G = 6.0E7D;
-        this.H = 0L;
-        this.I = 0.0D;
         this.J = 5.0D;
         this.K = 0.2D;
         this.L = 5;
@@ -303,7 +299,7 @@ public class WorldData {
         this.L = worlddata.L;
     }
 
-    public NBTTagCompound a(NBTTagCompound nbttagcompound) {
+    public NBTTagCompound a(@Nullable NBTTagCompound nbttagcompound) {
         if (nbttagcompound == null) {
             nbttagcompound = this.o;
         }
@@ -317,11 +313,11 @@ public class WorldData {
     private void a(NBTTagCompound nbttagcompound, NBTTagCompound nbttagcompound1) {
         NBTTagCompound nbttagcompound2 = new NBTTagCompound();
 
-        nbttagcompound2.setString("Name", "1.9");
-        nbttagcompound2.setInt("Id", 169);
+        nbttagcompound2.setString("Name", "1.11");
+        nbttagcompound2.setInt("Id", 819);
         nbttagcompound2.setBoolean("Snapshot", false);
         nbttagcompound.set("Version", nbttagcompound2);
-        nbttagcompound.setInt("DataVersion", 169);
+        nbttagcompound.setInt("DataVersion", 819);
         nbttagcompound.setLong("RandomSeed", this.e);
         nbttagcompound.setString("generatorName", this.f.name());
         nbttagcompound.setInt("generatorVersion", this.f.getVersion());
@@ -334,7 +330,7 @@ public class WorldData {
         nbttagcompound.setLong("Time", this.k);
         nbttagcompound.setLong("DayTime", this.l);
         nbttagcompound.setLong("SizeOnDisk", this.n);
-        nbttagcompound.setLong("LastPlayed", MinecraftServer.av());
+        nbttagcompound.setLong("LastPlayed", MinecraftServer.aw());
         nbttagcompound.setString("LevelName", this.levelName);
         nbttagcompound.setInt("version", this.r);
         nbttagcompound.setInt("clearWeatherTime", this.s);
@@ -498,7 +494,7 @@ public class WorldData {
         this.u = i;
     }
 
-    public WorldSettings.EnumGamemode getGameType() {
+    public EnumGamemode getGameType() {
         return this.x;
     }
 
@@ -510,8 +506,8 @@ public class WorldData {
         this.y = flag;
     }
 
-    public void setGameType(WorldSettings.EnumGamemode worldsettings_enumgamemode) {
-        this.x = worldsettings_enumgamemode;
+    public void setGameType(EnumGamemode enumgamemode) {
+        this.x = enumgamemode;
     }
 
     public boolean isHardcore() {
@@ -649,7 +645,7 @@ public class WorldData {
     }
 
     public void a(CrashReportSystemDetails crashreportsystemdetails) {
-        crashreportsystemdetails.a("Level seed", new Callable() {
+        crashreportsystemdetails.a("Level seed", new CrashReportCallable() {
             public String a() throws Exception {
                 return String.valueOf(WorldData.this.getSeed());
             }
@@ -658,7 +654,7 @@ public class WorldData {
                 return this.a();
             }
         });
-        crashreportsystemdetails.a("Level generator", new Callable() {
+        crashreportsystemdetails.a("Level generator", new CrashReportCallable() {
             public String a() throws Exception {
                 return String.format("ID %02d - %s, ver %d. Features enabled: %b", new Object[] { Integer.valueOf(WorldData.this.f.g()), WorldData.this.f.name(), Integer.valueOf(WorldData.this.f.getVersion()), Boolean.valueOf(WorldData.this.y)});
             }
@@ -667,7 +663,7 @@ public class WorldData {
                 return this.a();
             }
         });
-        crashreportsystemdetails.a("Level generator options", new Callable() {
+        crashreportsystemdetails.a("Level generator options", new CrashReportCallable() {
             public String a() throws Exception {
                 return WorldData.this.g;
             }
@@ -676,7 +672,7 @@ public class WorldData {
                 return this.a();
             }
         });
-        crashreportsystemdetails.a("Level spawn location", new Callable() {
+        crashreportsystemdetails.a("Level spawn location", new CrashReportCallable() {
             public String a() throws Exception {
                 return CrashReportSystemDetails.a(WorldData.this.h, WorldData.this.i, WorldData.this.j);
             }
@@ -685,7 +681,7 @@ public class WorldData {
                 return this.a();
             }
         });
-        crashreportsystemdetails.a("Level time", new Callable() {
+        crashreportsystemdetails.a("Level time", new CrashReportCallable() {
             public String a() throws Exception {
                 return String.format("%d game time, %d day time", new Object[] { Long.valueOf(WorldData.this.k), Long.valueOf(WorldData.this.l)});
             }
@@ -694,7 +690,7 @@ public class WorldData {
                 return this.a();
             }
         });
-        crashreportsystemdetails.a("Level dimension", new Callable() {
+        crashreportsystemdetails.a("Level dimension", new CrashReportCallable() {
             public String a() throws Exception {
                 return String.valueOf(WorldData.this.p);
             }
@@ -703,7 +699,7 @@ public class WorldData {
                 return this.a();
             }
         });
-        crashreportsystemdetails.a("Level storage version", new Callable() {
+        crashreportsystemdetails.a("Level storage version", new CrashReportCallable() {
             public String a() throws Exception {
                 String s = "Unknown?";
 
@@ -727,7 +723,7 @@ public class WorldData {
                 return this.a();
             }
         });
-        crashreportsystemdetails.a("Level weather", new Callable() {
+        crashreportsystemdetails.a("Level weather", new CrashReportCallable() {
             public String a() throws Exception {
                 return String.format("Rain time: %d (now: %b), thunder time: %d (now: %b)", new Object[] { Integer.valueOf(WorldData.this.u), Boolean.valueOf(WorldData.this.t), Integer.valueOf(WorldData.this.w), Boolean.valueOf(WorldData.this.v)});
             }
@@ -736,7 +732,7 @@ public class WorldData {
                 return this.a();
             }
         });
-        crashreportsystemdetails.a("Level game mode", new Callable() {
+        crashreportsystemdetails.a("Level game mode", new CrashReportCallable() {
             public String a() throws Exception {
                 return String.format("Game mode: %s (ID %d). Hardcore: %b. Cheats: %b", new Object[] { WorldData.this.x.b(), Integer.valueOf(WorldData.this.x.getId()), Boolean.valueOf(WorldData.this.z), Boolean.valueOf(WorldData.this.A)});
             }

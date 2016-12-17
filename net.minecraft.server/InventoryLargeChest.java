@@ -1,6 +1,7 @@
 package net.minecraft.server;
 
 // CraftBukkit start
+import java.util.ArrayList;
 import java.util.List;
 import org.bukkit.Location;
 
@@ -10,17 +11,17 @@ import org.bukkit.entity.HumanEntity;
 
 public class InventoryLargeChest implements ITileInventory {
 
-    private String a;
-    public ITileInventory left;
-    public ITileInventory right;
+    private final String a;
+    public final ITileInventory left;
+    public final ITileInventory right;
 
     // CraftBukkit start - add fields and methods
     public List<HumanEntity> transaction = new java.util.ArrayList<HumanEntity>();
 
-    public ItemStack[] getContents() {
-        ItemStack[] result = new ItemStack[this.getSize()];
-        for (int i = 0; i < result.length; i++) {
-            result[i] = this.getItem(i);
+    public List<ItemStack> getContents() {
+        List<ItemStack> result = new ArrayList<ItemStack>(this.getSize());
+        for (int i = 0; i < this.getSize(); i++) {
+            result.add(this.getItem(i));
         }
         return result;
     }
@@ -68,16 +69,20 @@ public class InventoryLargeChest implements ITileInventory {
 
         this.left = itileinventory;
         this.right = itileinventory1;
-        if (itileinventory.x_()) {
-            itileinventory1.a(itileinventory.y_());
-        } else if (itileinventory1.x_()) {
-            itileinventory.a(itileinventory1.y_());
+        if (itileinventory.isLocked()) {
+            itileinventory1.a(itileinventory.getLock());
+        } else if (itileinventory1.isLocked()) {
+            itileinventory.a(itileinventory1.getLock());
         }
 
     }
 
     public int getSize() {
         return this.left.getSize() + this.right.getSize();
+    }
+
+    public boolean w_() {
+        return this.left.w_() && this.right.w_();
     }
 
     public boolean a(IInventory iinventory) {
@@ -150,12 +155,12 @@ public class InventoryLargeChest implements ITileInventory {
 
     public void setProperty(int i, int j) {}
 
-    public int g() {
+    public int h() {
         return 0;
     }
 
-    public boolean x_() {
-        return this.left.x_() || this.right.x_();
+    public boolean isLocked() {
+        return this.left.isLocked() || this.right.isLocked();
     }
 
     public void a(ChestLock chestlock) {
@@ -163,8 +168,8 @@ public class InventoryLargeChest implements ITileInventory {
         this.right.a(chestlock);
     }
 
-    public ChestLock y_() {
-        return this.left.y_();
+    public ChestLock getLock() {
+        return this.left.getLock();
     }
 
     public String getContainerName() {
@@ -175,8 +180,8 @@ public class InventoryLargeChest implements ITileInventory {
         return new ContainerChest(playerinventory, this, entityhuman);
     }
 
-    public void l() {
-        this.left.l();
-        this.right.l();
+    public void clear() {
+        this.left.clear();
+        this.right.clear();
     }
 }

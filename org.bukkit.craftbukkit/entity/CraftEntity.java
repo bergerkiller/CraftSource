@@ -25,18 +25,7 @@ import org.bukkit.plugin.Plugin;
 import org.bukkit.util.Vector;
 
 public abstract class CraftEntity implements org.bukkit.entity.Entity {
-    private static final PermissibleBase perm = new PermissibleBase(new ServerOperator() {
-
-        @Override
-        public boolean isOp() {
-            return false;
-        }
-
-        @Override
-        public void setOp(boolean value) {
-
-        }
-    });
+    private static PermissibleBase perm;
 
     protected final CraftServer server;
     protected Entity entity;
@@ -76,21 +65,36 @@ public abstract class CraftEntity implements org.bukkit.entity.Entity {
                         else if (entity instanceof EntityOcelot) { return new CraftOcelot(server, (EntityOcelot) entity); }
                     }
                     else if (entity instanceof EntitySheep) { return new CraftSheep(server, (EntitySheep) entity); }
-                    else if (entity instanceof EntityHorse) { return new CraftHorse(server, (EntityHorse) entity); }
+                    else if (entity instanceof EntityHorseAbstract) {
+                        if (entity instanceof EntityHorseChestedAbstract){
+                            if (entity instanceof EntityHorseDonkey) { return new CraftDonkey(server, (EntityHorseDonkey) entity); }
+                            else if (entity instanceof EntityHorseMule) { return new CraftMule(server, (EntityHorseMule) entity); }
+                            else if (entity instanceof EntityLlama) { return new CraftLlama(server, (EntityLlama) entity); }
+                        } else if (entity instanceof EntityHorse) { return new CraftHorse(server, (EntityHorse) entity); }
+                        else if (entity instanceof EntityHorseSkeleton) { return new CraftSkeletonHorse(server, (EntityHorseSkeleton) entity); }
+                        else if (entity instanceof EntityHorseZombie) { return new CraftZombieHorse(server, (EntityHorseZombie) entity); }
+                    }
                     else if (entity instanceof EntityRabbit) { return new CraftRabbit(server, (EntityRabbit) entity); }
+                    else if (entity instanceof EntityPolarBear) { return new CraftPolarBear(server, (EntityPolarBear) entity); }
                     else  { return new CraftAnimals(server, (EntityAnimal) entity); }
                 }
                 // Monsters
                 else if (entity instanceof EntityMonster) {
                     if (entity instanceof EntityZombie) {
                         if (entity instanceof EntityPigZombie) { return new CraftPigZombie(server, (EntityPigZombie) entity); }
+                        else if (entity instanceof EntityZombieHusk) { return new CraftHusk(server, (EntityZombieHusk) entity); }
+                        else if (entity instanceof EntityZombieVillager) { return new CraftVillagerZombie(server, (EntityZombieVillager) entity); }
                         else { return new CraftZombie(server, (EntityZombie) entity); }
                     }
                     else if (entity instanceof EntityCreeper) { return new CraftCreeper(server, (EntityCreeper) entity); }
                     else if (entity instanceof EntityEnderman) { return new CraftEnderman(server, (EntityEnderman) entity); }
                     else if (entity instanceof EntitySilverfish) { return new CraftSilverfish(server, (EntitySilverfish) entity); }
                     else if (entity instanceof EntityGiantZombie) { return new CraftGiant(server, (EntityGiantZombie) entity); }
-                    else if (entity instanceof EntitySkeleton) { return new CraftSkeleton(server, (EntitySkeleton) entity); }
+                    else if (entity instanceof EntitySkeletonAbstract) {
+                        if (entity instanceof EntitySkeletonStray) { return new CraftStray(server, (EntitySkeletonStray) entity); }
+                        else if (entity instanceof EntitySkeletonWither) { return new CraftWitherSkeleton(server, (EntitySkeletonWither) entity); }
+                        else { return new CraftSkeleton(server, (EntitySkeletonAbstract) entity); }
+                    }
                     else if (entity instanceof EntityBlaze) { return new CraftBlaze(server, (EntityBlaze) entity); }
                     else if (entity instanceof EntityWitch) { return new CraftWitch(server, (EntityWitch) entity); }
                     else if (entity instanceof EntityWither) { return new CraftWither(server, (EntityWither) entity); }
@@ -99,7 +103,13 @@ public abstract class CraftEntity implements org.bukkit.entity.Entity {
                         else { return new CraftSpider(server, (EntitySpider) entity); }
                     }
                     else if (entity instanceof EntityEndermite) { return new CraftEndermite(server, (EntityEndermite) entity); }
-                    else if (entity instanceof EntityGuardian) { return new CraftGuardian(server, (EntityGuardian) entity); }
+                    else if (entity instanceof EntityGuardian) {
+                        if (entity instanceof EntityGuardianElder) { return new CraftElderGuardian(server, (EntityGuardianElder) entity); }
+                        else { return new CraftGuardian(server, (EntityGuardian) entity); }
+                    }
+                    else if (entity instanceof EntityEvoker) { return new CraftEvoker(server, (EntityEvoker) entity); }
+                    else if (entity instanceof EntityVex) { return new CraftVex(server, (EntityVex) entity); }
+                    else if (entity instanceof EntityVindicator) { return new CraftVindicator(server, (EntityVindicator) entity); }
 
                     else  { return new CraftMonster(server, (EntityMonster) entity); }
                 }
@@ -138,16 +148,24 @@ public abstract class CraftEntity implements org.bukkit.entity.Entity {
             else { return new CraftComplexPart(server, (EntityComplexPart) entity); }
         }
         else if (entity instanceof EntityExperienceOrb) { return new CraftExperienceOrb(server, (EntityExperienceOrb) entity); }
+        else if (entity instanceof EntityTippedArrow) {
+        	if (((EntityTippedArrow) entity).isTipped()) { return new CraftTippedArrow(server, (EntityTippedArrow) entity); }
+        	else { return new CraftArrow(server, (EntityArrow) entity); }
+        }
+        else if (entity instanceof EntitySpectralArrow) { return new CraftSpectralArrow(server, (EntitySpectralArrow) entity); }
         else if (entity instanceof EntityArrow) { return new CraftArrow(server, (EntityArrow) entity); }
         else if (entity instanceof EntityBoat) { return new CraftBoat(server, (EntityBoat) entity); }
         else if (entity instanceof EntityProjectile) {
             if (entity instanceof EntityEgg) { return new CraftEgg(server, (EntityEgg) entity); }
             else if (entity instanceof EntitySnowball) { return new CraftSnowball(server, (EntitySnowball) entity); }
-            else if (entity instanceof EntityPotion) { return new CraftThrownPotion(server, (EntityPotion) entity); }
+            else if (entity instanceof EntityPotion) {
+                if (!((EntityPotion) entity).isLingering()) { return new CraftSplashPotion(server, (EntityPotion) entity); }
+            	else { return new CraftLingeringPotion(server, (EntityPotion) entity); }
+            }
             else if (entity instanceof EntityEnderPearl) { return new CraftEnderPearl(server, (EntityEnderPearl) entity); }
             else if (entity instanceof EntityThrownExpBottle) { return new CraftThrownExpBottle(server, (EntityThrownExpBottle) entity); }
         }
-        else if (entity instanceof EntityFallingBlock) { return new CraftFallingSand(server, (EntityFallingBlock) entity); }
+        else if (entity instanceof EntityFallingBlock) { return new CraftFallingBlock(server, (EntityFallingBlock) entity); }
         else if (entity instanceof EntityFireball) {
             if (entity instanceof EntitySmallFireball) { return new CraftSmallFireball(server, (EntitySmallFireball) entity); }
             else if (entity instanceof EntityLargeFireball) { return new CraftLargeFireball(server, (EntityLargeFireball) entity); }
@@ -181,6 +199,8 @@ public abstract class CraftEntity implements org.bukkit.entity.Entity {
         else if (entity instanceof EntityFireworks) { return new CraftFirework(server, (EntityFireworks) entity); }
         else if (entity instanceof EntityShulkerBullet) { return new CraftShulkerBullet(server, (EntityShulkerBullet) entity); }
         else if (entity instanceof EntityAreaEffectCloud) { return new CraftAreaEffectCloud(server, (EntityAreaEffectCloud) entity); }
+        else if (entity instanceof EntityEvokerFangs) { return new CraftEvokerFangs(server, (EntityEvokerFangs) entity); }
+        else if (entity instanceof EntityLlamaSpit) { return new CraftLlamaSpit(server, (EntityLlamaSpit) entity); }
 
         throw new AssertionError("Unknown entity " + (entity == null ? null : entity.getClass()));
     }
@@ -215,7 +235,7 @@ public abstract class CraftEntity implements org.bukkit.entity.Entity {
 
     public boolean isOnGround() {
         if (entity instanceof EntityArrow) {
-            return ((EntityArrow) entity).isInGround();
+            return ((EntityArrow) entity).inGround;
         }
         return entity.onGround;
     }
@@ -244,8 +264,12 @@ public abstract class CraftEntity implements org.bukkit.entity.Entity {
 
         // entity.world = ((CraftWorld) location.getWorld()).getHandle();
         // Spigot end
-        entity.setLocation(location.getX(), location.getY(), location.getZ(), location.getYaw(), location.getPitch());
         // entity.setLocation() throws no event, and so cannot be cancelled
+        entity.setLocation(location.getX(), location.getY(), location.getZ(), location.getYaw(), location.getPitch());
+        // SPIGOT-619: Force sync head rotation also
+        entity.h(location.getYaw()); // PAIL: setHeadRotation
+        entity.world.entityJoinedWorld(entity, false); // Spigot - register to new chunk
+
         return true;
     }
 
@@ -258,7 +282,7 @@ public abstract class CraftEntity implements org.bukkit.entity.Entity {
     }
 
     public List<org.bukkit.entity.Entity> getNearbyEntities(double x, double y, double z) {
-        List<Entity> notchEntityList = entity.world.a(entity, entity.getBoundingBox().grow(x, y, z), null);
+        List<Entity> notchEntityList = entity.world.getEntities(entity, entity.getBoundingBox().grow(x, y, z), null);
         List<org.bukkit.entity.Entity> bukkitEntityList = new java.util.ArrayList<org.bukkit.entity.Entity>(notchEntityList.size());
 
         for (Entity e : notchEntityList) {
@@ -276,7 +300,7 @@ public abstract class CraftEntity implements org.bukkit.entity.Entity {
     }
 
     public int getMaxFireTicks() {
-        return entity.maxFireTicks;
+        return entity.getMaxFireTicks();
     }
 
     public void setFireTicks(int ticks) {
@@ -284,7 +308,7 @@ public abstract class CraftEntity implements org.bukkit.entity.Entity {
     }
 
     public void remove() {
-        entity.dead = true;
+        entity.die();
     }
 
     public boolean isDead() {
@@ -486,67 +510,67 @@ public abstract class CraftEntity implements org.bukkit.entity.Entity {
 
     @Override
     public boolean isPermissionSet(String name) {
-        return perm.isPermissionSet(name);
+        return getPermissibleBase().isPermissionSet(name);
     }
 
     @Override
     public boolean isPermissionSet(Permission perm) {
-        return CraftEntity.perm.isPermissionSet(perm);
+        return CraftEntity.getPermissibleBase().isPermissionSet(perm);
     }
 
     @Override
     public boolean hasPermission(String name) {
-        return perm.hasPermission(name);
+        return getPermissibleBase().hasPermission(name);
     }
 
     @Override
     public boolean hasPermission(Permission perm) {
-        return this.perm.hasPermission(perm);
+        return getPermissibleBase().hasPermission(perm);
     }
 
     @Override
     public PermissionAttachment addAttachment(Plugin plugin, String name, boolean value) {
-        return perm.addAttachment(plugin, name, value);
+        return getPermissibleBase().addAttachment(plugin, name, value);
     }
 
     @Override
     public PermissionAttachment addAttachment(Plugin plugin) {
-        return perm.addAttachment(plugin);
+        return getPermissibleBase().addAttachment(plugin);
     }
 
     @Override
     public PermissionAttachment addAttachment(Plugin plugin, String name, boolean value, int ticks) {
-        return perm.addAttachment(plugin, name, value, ticks);
+        return getPermissibleBase().addAttachment(plugin, name, value, ticks);
     }
 
     @Override
     public PermissionAttachment addAttachment(Plugin plugin, int ticks) {
-        return perm.addAttachment(plugin, ticks);
+        return getPermissibleBase().addAttachment(plugin, ticks);
     }
 
     @Override
     public void removeAttachment(PermissionAttachment attachment) {
-        perm.removeAttachment(attachment);
+        getPermissibleBase().removeAttachment(attachment);
     }
 
     @Override
     public void recalculatePermissions() {
-        perm.recalculatePermissions();
+        getPermissibleBase().recalculatePermissions();
     }
 
     @Override
     public Set<PermissionAttachmentInfo> getEffectivePermissions() {
-        return perm.getEffectivePermissions();
+        return getPermissibleBase().getEffectivePermissions();
     }
 
     @Override
     public boolean isOp() {
-        return perm.isOp();
+        return getPermissibleBase().isOp();
     }
 
     @Override
     public void setOp(boolean value) {
-        perm.setOp(value);
+        getPermissibleBase().setOp(value);
     }
 
     @Override
@@ -561,6 +585,79 @@ public abstract class CraftEntity implements org.bukkit.entity.Entity {
     @Override
     public boolean isGlowing() {
         return getHandle().glowing;
+    }
+
+    @Override
+    public void setInvulnerable(boolean flag) {
+        getHandle().setInvulnerable(flag);
+    }
+
+    @Override
+    public boolean isInvulnerable() {
+        return getHandle().isInvulnerable(DamageSource.GENERIC);
+    }
+
+    @Override
+    public boolean isSilent() {
+        return getHandle().isSilent();
+    }
+
+    @Override
+    public void setSilent(boolean flag) {
+        getHandle().setSilent(flag);
+    }
+
+    @Override
+    public boolean hasGravity() {
+        return !getHandle().isNoGravity();
+    }
+
+    @Override
+    public void setGravity(boolean gravity) {
+        getHandle().setNoGravity(!gravity);
+    }
+
+    @Override
+    public int getPortalCooldown() {
+        return getHandle().portalCooldown;
+    }
+
+    @Override
+    public void setPortalCooldown(int cooldown) {
+        getHandle().portalCooldown = cooldown;
+    }
+
+    @Override
+    public Set<String> getScoreboardTags() {
+        return getHandle().P(); // PAIL: getScoreboardTags
+    }
+
+    @Override
+    public boolean addScoreboardTag(String tag) {
+        return getHandle().a(tag); // PAIL: addScoreboardTag
+    }
+
+    @Override
+    public boolean removeScoreboardTag(String tag) {
+        return getHandle().b(tag); // PAIL: removeScoreboardTag
+    }
+
+    private static PermissibleBase getPermissibleBase() {
+        if (perm == null) {
+            perm = new PermissibleBase(new ServerOperator() {
+
+                @Override
+                public boolean isOp() {
+                    return false;
+                }
+
+                @Override
+                public void setOp(boolean value) {
+
+                }
+            });
+        }
+        return perm;
     }
 
     // Spigot start

@@ -23,11 +23,6 @@ public class BlockFlowing extends BlockFluids {
     }
 
     public void b(World world, BlockPosition blockposition, IBlockData iblockdata, Random random) {
-        // CraftBukkit start
-        org.bukkit.World bworld = world.getWorld();
-        org.bukkit.Server server = world.getServer();
-        org.bukkit.block.Block source = bworld == null ? null : bworld.getBlockAt(blockposition.getX(), blockposition.getY(), blockposition.getZ());
-        // CraftBukkit end
         int i = ((Integer) iblockdata.get(BlockFlowing.LEVEL)).intValue();
         byte b0 = 1;
 
@@ -55,8 +50,8 @@ public class BlockFlowing extends BlockFluids {
                 i1 = -1;
             }
 
-            if (this.c((IBlockAccess) world, blockposition.up()) >= 0) {
-                k = this.c((IBlockAccess) world, blockposition.up());
+            k = this.i(world.getType(blockposition.up()));
+            if (k >= 0) {
                 if (k >= 8) {
                     i1 = k;
                 } else {
@@ -88,25 +83,32 @@ public class BlockFlowing extends BlockFluids {
                     iblockdata = iblockdata.set(BlockFlowing.LEVEL, Integer.valueOf(i1));
                     world.setTypeAndData(blockposition, iblockdata, 2);
                     world.a(blockposition, (Block) this, j);
-                    world.applyPhysics(blockposition, this);
+                    world.applyPhysics(blockposition, this, false);
                 }
             }
         } else {
             this.f(world, blockposition, iblockdata);
         }
 
+        org.bukkit.block.Block source = world.getWorld().getBlockAt(blockposition.getX(), blockposition.getY(), blockposition.getZ()); // CraftBukkit
         IBlockData iblockdata2 = world.getType(blockposition.down());
 
         if (this.h(world, blockposition.down(), iblockdata2)) {
-            // CraftBukkit start - Send "down" to the server
+            // CraftBukkit start
             BlockFromToEvent event = new BlockFromToEvent(source, BlockFace.DOWN);
-            if (server != null) {
-                server.getPluginManager().callEvent(event);
+            world.getServer().getPluginManager().callEvent(event);
+
+            if (event.isCancelled()) {
+                return;
             }
-            if (!event.isCancelled()) {
+            // CraftBukkit end
+
             if (this.material == Material.LAVA && world.getType(blockposition.down()).getMaterial() == Material.WATER) {
-                world.setTypeUpdate(blockposition.down(), Blocks.STONE.getBlockData());
-                this.fizz(world, blockposition.down());
+                // CraftBukkit start
+                if (org.bukkit.craftbukkit.event.CraftEventFactory.handleBlockFormEvent(world, blockposition.down(), Blocks.STONE, null)) {
+                    this.fizz(world, blockposition.down());
+                }
+                // CraftBukkit end
                 return;
             }
 
@@ -115,8 +117,6 @@ public class BlockFlowing extends BlockFluids {
             } else {
                 this.flow(world, blockposition.down(), iblockdata2, i + 8);
             }
-            }
-            // CraftBukkit end
         } else if (i >= 0 && (i == 0 || this.g(world, blockposition.down(), iblockdata2))) {
             Set set = this.c(world, blockposition);
 
@@ -136,9 +136,7 @@ public class BlockFlowing extends BlockFluids {
 
                 // CraftBukkit start
                 BlockFromToEvent event = new BlockFromToEvent(source, org.bukkit.craftbukkit.block.CraftBlock.notchToBlockFace(enumdirection1));
-                if (server != null) {
-                    server.getPluginManager().callEvent(event);
-                }
+                world.getServer().getPluginManager().callEvent(event);
 
                 if (!event.isCancelled()) {
                     this.flow(world, blockposition.shift(enumdirection1), world.getType(blockposition.shift(enumdirection1)), k);
@@ -151,7 +149,7 @@ public class BlockFlowing extends BlockFluids {
 
     private void flow(World world, BlockPosition blockposition, IBlockData iblockdata, int i) {
         if (world.isLoaded(blockposition) && this.h(world, blockposition, iblockdata)) { // CraftBukkit - add isLoaded check
-            if (iblockdata.getBlock() != Blocks.AIR) {
+            if (iblockdata.getMaterial() != Material.AIR) {
                 if (this.material == Material.LAVA) {
                     this.fizz(world, blockposition);
                 } else {
@@ -234,11 +232,11 @@ public class BlockFlowing extends BlockFluids {
     private boolean g(World world, BlockPosition blockposition, IBlockData iblockdata) {
         Block block = world.getType(blockposition).getBlock();
 
-        return !(block instanceof BlockDoor) && block != Blocks.STANDING_SIGN && block != Blocks.LADDER && block != Blocks.REEDS ? (block.material == Material.PORTAL ? true : block.material.isSolid()) : true;
+        return !(block instanceof BlockDoor) && block != Blocks.STANDING_SIGN && block != Blocks.LADDER && block != Blocks.REEDS ? (block.material != Material.PORTAL && block.material != Material.J ? block.material.isSolid() : true) : true;
     }
 
     protected int a(World world, BlockPosition blockposition, int i) {
-        int j = this.c((IBlockAccess) world, blockposition);
+        int j = this.i(world.getType(blockposition));
 
         if (j < 0) {
             return i;

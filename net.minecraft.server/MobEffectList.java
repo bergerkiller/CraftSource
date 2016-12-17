@@ -5,6 +5,7 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.UUID;
 import java.util.Map.Entry;
+import javax.annotation.Nullable;
 
 // CraftBukkit start
 import org.bukkit.craftbukkit.event.CraftEventFactory;
@@ -22,6 +23,7 @@ public class MobEffectList {
     public double durationModifier;
     private boolean h;
 
+    @Nullable
     public static MobEffectList fromId(int i) {
         return (MobEffectList) MobEffectList.REGISTRY.getId(i);
     }
@@ -30,6 +32,7 @@ public class MobEffectList {
         return MobEffectList.REGISTRY.a(mobeffectlist); // CraftBukkit - decompile error
     }
 
+    @Nullable
     public static MobEffectList getByName(String s) {
         return (MobEffectList) MobEffectList.REGISTRY.get(new MinecraftKey(s));
     }
@@ -62,7 +65,7 @@ public class MobEffectList {
         } else if (this == MobEffects.WITHER) {
             entityliving.damageEntity(DamageSource.WITHER, 1.0F);
         } else if (this == MobEffects.HUNGER && entityliving instanceof EntityHuman) {
-            ((EntityHuman) entityliving).applyExhaustion(0.025F * (float) (i + 1));
+            ((EntityHuman) entityliving).applyExhaustion(0.005F * (float) (i + 1));
         } else if (this == MobEffects.SATURATION && entityliving instanceof EntityHuman) {
             if (!entityliving.world.isClientSide) {
                 // CraftBukkit start
@@ -78,8 +81,8 @@ public class MobEffectList {
                 ((EntityPlayer) entityhuman).playerConnection.sendPacket(new PacketPlayOutUpdateHealth(((EntityPlayer) entityhuman).getBukkitEntity().getScaledHealth(), entityhuman.getFoodData().foodLevel, entityhuman.getFoodData().saturationLevel));
                 // CraftBukkit end
             }
-        } else if ((this != MobEffects.HEAL || entityliving.bP()) && (this != MobEffects.HARM || !entityliving.bP())) {
-            if (this == MobEffects.HARM && !entityliving.bP() || this == MobEffects.HEAL && entityliving.bP()) {
+        } else if ((this != MobEffects.HEAL || entityliving.bT()) && (this != MobEffects.HARM || !entityliving.bT())) {
+            if (this == MobEffects.HARM && !entityliving.bT() || this == MobEffects.HEAL && entityliving.bT()) {
                 entityliving.damageEntity(DamageSource.MAGIC, (float) (6 << i));
             }
         } else {
@@ -88,11 +91,11 @@ public class MobEffectList {
 
     }
 
-    public void applyInstantEffect(Entity entity, Entity entity1, EntityLiving entityliving, int i, double d0) {
+    public void applyInstantEffect(@Nullable Entity entity, @Nullable Entity entity1, EntityLiving entityliving, int i, double d0) {
         int j;
 
-        if ((this != MobEffects.HEAL || entityliving.bP()) && (this != MobEffects.HARM || !entityliving.bP())) {
-            if (this == MobEffects.HARM && !entityliving.bP() || this == MobEffects.HEAL && entityliving.bP()) {
+        if ((this != MobEffects.HEAL || entityliving.bT()) && (this != MobEffects.HARM || !entityliving.bT())) {
+            if (this == MobEffects.HARM && !entityliving.bT() || this == MobEffects.HEAL && entityliving.bT()) {
                 j = (int) (d0 * (double) (6 << i) + 0.5D);
                 if (entity == null) {
                     entityliving.damageEntity(DamageSource.MAGIC, (float) j);
@@ -219,11 +222,11 @@ public class MobEffectList {
         MobEffectList.REGISTRY.a(23, new MinecraftKey("saturation"), (new InstantMobEffect(false, 16262179)).c("effect.saturation").j());
         MobEffectList.REGISTRY.a(24, new MinecraftKey("glowing"), (new MobEffectList(false, 9740385)).c("effect.glowing").b(4, 2));
         MobEffectList.REGISTRY.a(25, new MinecraftKey("levitation"), (new MobEffectList(true, 13565951)).c("effect.levitation").b(3, 2));
-        MobEffectList.REGISTRY.a(26, new MinecraftKey("luck"), (new MobEffectList(false, 3381504)).c("effect.luck").b(5, 2).j().a(GenericAttributes.h, "03C3C89D-7037-4B42-869F-B146BCB64D2E", 1.0D, 0));
-        MobEffectList.REGISTRY.a(27, new MinecraftKey("unluck"), (new MobEffectList(true, 12624973)).c("effect.unluck").b(6, 2).a(GenericAttributes.h, "CC5AF142-2BD2-4215-B636-2605AED11727", -1.0D, 0));
+        MobEffectList.REGISTRY.a(26, new MinecraftKey("luck"), (new MobEffectList(false, 3381504)).c("effect.luck").b(5, 2).j().a(GenericAttributes.i, "03C3C89D-7037-4B42-869F-B146BCB64D2E", 1.0D, 0));
+        MobEffectList.REGISTRY.a(27, new MinecraftKey("unluck"), (new MobEffectList(true, 12624973)).c("effect.unluck").b(6, 2).a(GenericAttributes.i, "CC5AF142-2BD2-4215-B636-2605AED11727", -1.0D, 0));
         // CraftBukkit start
-        for (MobEffectList effect : REGISTRY) {
-            org.bukkit.potion.PotionEffectType.registerPotionEffectType(new org.bukkit.craftbukkit.potion.CraftPotionEffectType(effect));
+        for (Object effect : REGISTRY) {
+            org.bukkit.potion.PotionEffectType.registerPotionEffectType(new org.bukkit.craftbukkit.potion.CraftPotionEffectType((MobEffectList) effect));
         }
         // CraftBukkit end
     }

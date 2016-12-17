@@ -41,7 +41,7 @@ public class CraftMapRenderer extends MapRenderer {
             if (other != null && !player.canSee(other)) {
                 continue;
             }
-      
+
             MapIcon decoration = (MapIcon) worldMap.decorations.get(key);
             cursors.addCursor(decoration.getX(), decoration.getY(), (byte) (decoration.getRotation() & 15), decoration.getType());
         }

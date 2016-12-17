@@ -4,14 +4,9 @@ import org.bukkit.craftbukkit.event.CraftEventFactory; // CraftBukkit
 
 public abstract class EntityFireball extends Entity {
 
-    private int e = -1;
-    private int f = -1;
-    private int g = -1;
-    private Block h;
-    private boolean as;
     public EntityLiving shooter;
-    private int at;
-    private int au;
+    private int e;
+    private int f;
     public double dirX;
     public double dirY;
     public double dirZ;
@@ -44,7 +39,9 @@ public abstract class EntityFireball extends Entity {
         this.setSize(1.0F, 1.0F);
         this.setPositionRotation(entityliving.locX, entityliving.locY, entityliving.locZ, entityliving.yaw, entityliving.pitch);
         this.setPosition(this.locX, this.locY, this.locZ);
-        this.motX = this.motY = this.motZ = 0.0D;
+        this.motX = 0.0D;
+        this.motY = 0.0D;
+        this.motZ = 0.0D;
         // CraftBukkit start - Added setDirection method
         this.setDirection(d0, d1, d2);
     }
@@ -61,43 +58,24 @@ public abstract class EntityFireball extends Entity {
         this.dirZ = d2 / d3 * 0.1D;
     }
 
-    public void m() {
+    public void A_() {
         if (!this.world.isClientSide && (this.shooter != null && this.shooter.dead || !this.world.isLoaded(new BlockPosition(this)))) {
             this.die();
         } else {
-            super.m();
+            super.A_();
             if (this.k()) {
                 this.setOnFire(1);
             }
 
-            if (this.as) {
-                if (this.world.getType(new BlockPosition(this.e, this.f, this.g)).getBlock() == this.h) {
-                    ++this.at;
-                    if (this.at == 600) {
-                        this.die();
-                    }
-
-                    return;
-                }
-
-                this.as = false;
-                this.motX *= (double) (this.random.nextFloat() * 0.2F);
-                this.motY *= (double) (this.random.nextFloat() * 0.2F);
-                this.motZ *= (double) (this.random.nextFloat() * 0.2F);
-                this.at = 0;
-                this.au = 0;
-            } else {
-                ++this.au;
-            }
-
-            MovingObjectPosition movingobjectposition = ProjectileHelper.a(this, true, this.au >= 25, this.shooter);
+            ++this.f;
+            MovingObjectPosition movingobjectposition = ProjectileHelper.a(this, true, this.f >= 25, this.shooter);
 
             if (movingobjectposition != null) {
                 this.a(movingobjectposition);
 
                 // CraftBukkit start - Fire ProjectileHitEvent
                 if (this.dead) {
-                    CraftEventFactory.callProjectileHitEvent(this);
+                    CraftEventFactory.callProjectileHitEvent(this, movingobjectposition);
                 }
                 // CraftBukkit end
             }
@@ -112,7 +90,7 @@ public abstract class EntityFireball extends Entity {
                 for (int i = 0; i < 4; ++i) {
                     float f1 = 0.25F;
 
-                    this.world.addParticle(EnumParticle.WATER_BUBBLE, this.locX - this.motX * (double) f1, this.locY - this.motY * (double) f1, this.locZ - this.motZ * (double) f1, this.motX, this.motY, this.motZ, new int[0]);
+                    this.world.addParticle(EnumParticle.WATER_BUBBLE, this.locX - this.motX * 0.25D, this.locY - this.motY * 0.25D, this.locZ - this.motZ * 0.25D, this.motX, this.motY, this.motZ, new int[0]);
                 }
 
                 f = 0.8F;
@@ -143,30 +121,15 @@ public abstract class EntityFireball extends Entity {
 
     protected abstract void a(MovingObjectPosition movingobjectposition);
 
-    public void b(NBTTagCompound nbttagcompound) {
-        nbttagcompound.setInt("xTile", this.e);
-        nbttagcompound.setInt("yTile", this.f);
-        nbttagcompound.setInt("zTile", this.g);
-        MinecraftKey minecraftkey = (MinecraftKey) Block.REGISTRY.b(this.h);
+    public static void a(DataConverterManager dataconvertermanager, String s) {}
 
-        nbttagcompound.setString("inTile", minecraftkey == null ? "" : minecraftkey.toString());
-        nbttagcompound.setByte("inGround", (byte) (this.as ? 1 : 0));
+    public void b(NBTTagCompound nbttagcompound) {
         nbttagcompound.set("direction", this.a(new double[] { this.motX, this.motY, this.motZ}));
         nbttagcompound.set("power", this.a(new double[] { this.dirX, this.dirY, this.dirZ}));
-        nbttagcompound.setInt("life", this.at);
+        nbttagcompound.setInt("life", this.e);
     }
 
     public void a(NBTTagCompound nbttagcompound) {
-        this.e = nbttagcompound.getInt("xTile");
-        this.f = nbttagcompound.getInt("yTile");
-        this.g = nbttagcompound.getInt("zTile");
-        if (nbttagcompound.hasKeyOfType("inTile", 8)) {
-            this.h = Block.getByName(nbttagcompound.getString("inTile"));
-        } else {
-            this.h = Block.getById(nbttagcompound.getByte("inTile") & 255);
-        }
-
-        this.as = nbttagcompound.getByte("inGround") == 1;
         NBTTagList nbttaglist;
 
         if (nbttagcompound.hasKeyOfType("power", 9)) {
@@ -178,7 +141,7 @@ public abstract class EntityFireball extends Entity {
             }
         }
 
-        this.at = nbttagcompound.getInt("life");
+        this.e = nbttagcompound.getInt("life");
         if (nbttagcompound.hasKeyOfType("direction", 9) && nbttagcompound.getList("direction", 6).size() == 3) {
             nbttaglist = nbttagcompound.getList("direction", 6);
             this.motX = nbttaglist.e(0);
@@ -202,7 +165,7 @@ public abstract class EntityFireball extends Entity {
         if (this.isInvulnerable(damagesource)) {
             return false;
         } else {
-            this.ao();
+            this.ap();
             if (damagesource.getEntity() != null) {
                 // CraftBukkit start
                 if (CraftEventFactory.handleNonLivingEntityDamageEvent(this, damagesource, f)) {

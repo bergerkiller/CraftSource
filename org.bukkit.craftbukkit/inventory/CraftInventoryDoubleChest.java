@@ -8,6 +8,7 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 
 import net.minecraft.server.InventoryLargeChest;
+import org.bukkit.Location;
 
 public class CraftInventoryDoubleChest extends CraftInventory implements DoubleChestInventory {
     private final CraftInventory left;
@@ -43,8 +44,8 @@ public class CraftInventoryDoubleChest extends CraftInventory implements DoubleC
 
     @Override
     public void setContents(ItemStack[] items) {
-        if (getInventory().getContents().length < items.length) {
-            throw new IllegalArgumentException("Invalid inventory size; expected " + getInventory().getContents().length + " or less");
+        if (getInventory().getContents().size() < items.length) {
+            throw new IllegalArgumentException("Invalid inventory size; expected " + getInventory().getContents().size() + " or less");
         }
         ItemStack[] leftItems = new ItemStack[left.getSize()], rightItems = new ItemStack[right.getSize()];
         System.arraycopy(items, 0, leftItems, 0, Math.min(left.getSize(),items.length));
@@ -58,5 +59,10 @@ public class CraftInventoryDoubleChest extends CraftInventory implements DoubleC
     @Override
     public DoubleChest getHolder() {
         return new DoubleChest(this);
+    }
+
+    @Override
+    public Location getLocation() {
+        return getLeftSide().getLocation().add(getRightSide().getLocation()).multiply(0.5);
     }
 }

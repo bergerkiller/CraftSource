@@ -1,9 +1,12 @@
 package org.bukkit.craftbukkit.block;
 
+import com.google.common.base.Preconditions;
 import com.mojang.authlib.GameProfile;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.TileEntitySkull;
+import org.bukkit.Bukkit;
 import org.bukkit.Material;
+import org.bukkit.OfflinePlayer;
 
 import org.bukkit.SkullType;
 import org.bukkit.block.Block;
@@ -25,7 +28,7 @@ public class CraftSkull extends CraftBlockState implements Skull {
         skull = (TileEntitySkull) world.getTileEntityAt(getX(), getY(), getZ());
         profile = skull.getGameProfile();
         skullType = getSkullType(skull.getSkullType());
-        rotation = (byte) skull.getRotation();
+        rotation = (byte) skull.rotation;
     }
 
     public CraftSkull(final Material material, final TileEntitySkull te) {
@@ -33,7 +36,7 @@ public class CraftSkull extends CraftBlockState implements Skull {
         skull = te;
         profile = skull.getGameProfile();
         skullType = getSkullType(skull.getSkullType());
-        rotation = (byte) skull.getRotation();
+        rotation = (byte) skull.rotation;
     }
 
     static SkullType getSkullType(int id) {
@@ -174,6 +177,32 @@ public class CraftSkull extends CraftBlockState implements Skull {
 
         this.profile = profile;
         return true;
+    }
+
+    @Override
+    public OfflinePlayer getOwningPlayer() {
+        if (profile != null) {
+            if (profile.getId() != null) {
+                return Bukkit.getOfflinePlayer(profile.getId());
+            }
+
+            if (profile.getName() != null) {
+                return Bukkit.getOfflinePlayer(profile.getName());
+            }
+        }
+
+        return null;
+    }
+
+    @Override
+    public void setOwningPlayer(OfflinePlayer player) {
+        Preconditions.checkNotNull(player, "player");
+
+        if (skullType != SkullType.PLAYER) {
+            skullType = SkullType.PLAYER;
+        }
+
+        this.profile = new GameProfile(player.getUniqueId(), player.getName());
     }
 
     public BlockFace getRotation() {

@@ -162,7 +162,7 @@ public abstract class PotionEffectType {
      * @return a resulting potion effect
      */
     public PotionEffect createEffect(int duration, int amplifier) {
-        return Potion.getBrewer().createEffect(this, duration, amplifier);
+        return new PotionEffect(this, isInstant() ? 1 : (int) (duration * getDurationModifier()), amplifier);
     }
 
     /**
@@ -249,7 +249,7 @@ public abstract class PotionEffectType {
      */
     public static PotionEffectType getByName(String name) {
         Validate.notNull(name, "name cannot be null");
-        return byName.get(name.toLowerCase());
+        return byName.get(name.toLowerCase(java.util.Locale.ENGLISH));
     }
 
     /**
@@ -260,7 +260,7 @@ public abstract class PotionEffectType {
      * @param type PotionType to register
      */
     public static void registerPotionEffectType(PotionEffectType type) {
-        if (byId[type.id] != null || byName.containsKey(type.getName().toLowerCase())) {
+        if (byId[type.id] != null || byName.containsKey(type.getName().toLowerCase(java.util.Locale.ENGLISH))) {
             throw new IllegalArgumentException("Cannot set already-set type");
         } else if (!acceptingNew) {
             throw new IllegalStateException(
@@ -268,7 +268,7 @@ public abstract class PotionEffectType {
         }
 
         byId[type.id] = type;
-        byName.put(type.getName().toLowerCase(), type);
+        byName.put(type.getName().toLowerCase(java.util.Locale.ENGLISH), type);
     }
 
     /**

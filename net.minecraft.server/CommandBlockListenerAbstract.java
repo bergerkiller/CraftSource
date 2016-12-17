@@ -2,7 +2,7 @@ package net.minecraft.server;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.concurrent.Callable;
+import javax.annotation.Nullable;
 
 // CraftBukkit start
 import java.util.ArrayList;
@@ -16,7 +16,7 @@ public abstract class CommandBlockListenerAbstract implements ICommandListener {
     private static final SimpleDateFormat a = new SimpleDateFormat("HH:mm:ss");
     private int b;
     private boolean c = true;
-    private IChatBaseComponent d = null;
+    private IChatBaseComponent d;
     private String e = "";
     private String f = "@";
     private final CommandObjectiveExecutor g = new CommandObjectiveExecutor();
@@ -36,7 +36,7 @@ public abstract class CommandBlockListenerAbstract implements ICommandListener {
         return (IChatBaseComponent) (this.d == null ? new ChatComponentText("") : this.d);
     }
 
-    public void a(NBTTagCompound nbttagcompound) {
+    public NBTTagCompound a(NBTTagCompound nbttagcompound) {
         nbttagcompound.setString("Command", this.e);
         nbttagcompound.setInt("SuccessCount", this.b);
         nbttagcompound.setString("CustomName", this.f);
@@ -46,6 +46,7 @@ public abstract class CommandBlockListenerAbstract implements ICommandListener {
         }
 
         this.g.b(nbttagcompound);
+        return nbttagcompound;
     }
 
     public void b(NBTTagCompound nbttagcompound) {
@@ -92,7 +93,7 @@ public abstract class CommandBlockListenerAbstract implements ICommandListener {
             this.d = new ChatComponentText("#itzlipofutzli");
             this.b = 1;
         } else {
-            MinecraftServer minecraftserver = this.h();
+            MinecraftServer minecraftserver = this.B_();
 
             if (minecraftserver != null && minecraftserver.M() && minecraftserver.getEnableCommandBlock()) {
                 ICommandHandler icommandhandler = minecraftserver.getCommandHandler();
@@ -100,13 +101,13 @@ public abstract class CommandBlockListenerAbstract implements ICommandListener {
                 try {
                     this.d = null;
                     // CraftBukkit start - Handle command block commands using Bukkit dispatcher
-                    this.b = executeCommand(this, sender, this.e);
+                    this.b = executeSafely(this, sender, this.e);
                     // CraftBukkit end
                 } catch (Throwable throwable) {
                     CrashReport crashreport = CrashReport.a(throwable, "Executing command block");
                     CrashReportSystemDetails crashreportsystemdetails = crashreport.a("Command to be executed");
 
-                    crashreportsystemdetails.a("Command", new Callable() {
+                    crashreportsystemdetails.a("Command", new CrashReportCallable() {
                         public String a() throws Exception {
                             return CommandBlockListenerAbstract.this.getCommand();
                         }
@@ -115,7 +116,7 @@ public abstract class CommandBlockListenerAbstract implements ICommandListener {
                             return this.a();
                         }
                     });
-                    crashreportsystemdetails.a("Name", new Callable() {
+                    crashreportsystemdetails.a("Name", new CrashReportCallable() {
                         public String a() throws Exception {
                             return CommandBlockListenerAbstract.this.getName();
                         }
@@ -133,8 +134,21 @@ public abstract class CommandBlockListenerAbstract implements ICommandListener {
         }
     }
 
+    public static int executeSafely(ICommandListener sender, org.bukkit.command.CommandSender bSender, String command) {
+        try {
+            return executeCommand(sender, bSender, command);
+        } catch (CommandException commandexception) {
+            // Taken from CommandHandler
+            ChatMessage chatmessage = new ChatMessage(commandexception.getMessage(), commandexception.getArgs());
+            chatmessage.getChatModifier().setColor(EnumChatFormat.RED);
+            sender.sendMessage(chatmessage);
+        }
+
+        return 0;
+    }
+
     // CraftBukkit start
-    public static int executeCommand(ICommandListener sender, org.bukkit.command.CommandSender bSender, String command) {
+    public static int executeCommand(ICommandListener sender, org.bukkit.command.CommandSender bSender, String command) throws CommandException {
         org.bukkit.command.SimpleCommandMap commandMap = sender.getWorld().getServer().getCommandMap();
         Joiner joiner = Joiner.on(" ");
         if (command.startsWith("/")) {
@@ -233,7 +247,7 @@ public abstract class CommandBlockListenerAbstract implements ICommandListener {
         return completed;
     }
 
-    private static ArrayList<String[]> buildCommands(ICommandListener sender, String[] args, int pos) {
+    private static ArrayList<String[]> buildCommands(ICommandListener sender, String[] args, int pos) throws CommandException {
         ArrayList<String[]> commands = new ArrayList<String[]>();
         java.util.List<EntityPlayer> players = (java.util.List<EntityPlayer>)PlayerSelector.getPlayers(sender, args[pos], EntityPlayer.class);
 
@@ -273,18 +287,18 @@ public abstract class CommandBlockListenerAbstract implements ICommandListener {
     }
 
     public boolean getSendCommandFeedback() {
-        MinecraftServer minecraftserver = this.h();
+        MinecraftServer minecraftserver = this.B_();
 
         return minecraftserver == null || !minecraftserver.M() || minecraftserver.worldServer[0].getGameRules().getBoolean("commandBlockOutput");
     }
 
     public void a(CommandObjectiveExecutor.EnumCommandResult commandobjectiveexecutor_enumcommandresult, int i) {
-        this.g.a(this.h(), this, commandobjectiveexecutor_enumcommandresult, i);
+        this.g.a(this.B_(), this, commandobjectiveexecutor_enumcommandresult, i);
     }
 
     public abstract void i();
 
-    public void b(IChatBaseComponent ichatbasecomponent) {
+    public void b(@Nullable IChatBaseComponent ichatbasecomponent) {
         this.d = ichatbasecomponent;
     }
 
@@ -297,7 +311,7 @@ public abstract class CommandBlockListenerAbstract implements ICommandListener {
     }
 
     public boolean a(EntityHuman entityhuman) {
-        if (!entityhuman.abilities.canInstantlyBuild) {
+        if (!entityhuman.dk()) {
             return false;
         } else {
             if (entityhuman.getWorld().isClientSide) {

@@ -1,5 +1,6 @@
 package net.minecraft.server;
 
+import javax.annotation.Nullable;
 import org.bukkit.event.player.PlayerShearEntityEvent; // CraftBukkit
 
 public class EntityMushroomCow extends EntityCow {
@@ -7,19 +8,26 @@ public class EntityMushroomCow extends EntityCow {
     public EntityMushroomCow(World world) {
         super(world);
         this.setSize(0.9F, 1.4F);
-        this.by = Blocks.MYCELIUM;
+        this.bz = Blocks.MYCELIUM;
     }
 
-    public boolean a(EntityHuman entityhuman, EnumHand enumhand, ItemStack itemstack) {
-        if (itemstack != null && itemstack.getItem() == Items.BOWL && this.getAge() >= 0 && !entityhuman.abilities.canInstantlyBuild) {
-            if (--itemstack.count == 0) {
+    public static void c(DataConverterManager dataconvertermanager) {
+        EntityInsentient.a(dataconvertermanager, EntityMushroomCow.class);
+    }
+
+    public boolean a(EntityHuman entityhuman, EnumHand enumhand) {
+        ItemStack itemstack = entityhuman.b(enumhand);
+
+        if (itemstack.getItem() == Items.BOWL && this.getAge() >= 0 && !entityhuman.abilities.canInstantlyBuild) {
+            itemstack.subtract(1);
+            if (itemstack.isEmpty()) {
                 entityhuman.a(enumhand, new ItemStack(Items.MUSHROOM_STEW));
             } else if (!entityhuman.inventory.pickup(new ItemStack(Items.MUSHROOM_STEW))) {
                 entityhuman.drop(new ItemStack(Items.MUSHROOM_STEW), false);
             }
 
             return true;
-        } else if (itemstack != null && itemstack.getItem() == Items.SHEARS && this.getAge() >= 0) {
+        } else if (itemstack.getItem() == Items.SHEARS && this.getAge() >= 0) {
             // CraftBukkit start
             PlayerShearEntityEvent event = new PlayerShearEntityEvent((org.bukkit.entity.Player) entityhuman.getBukkitEntity(), this.getBukkitEntity());
             this.world.getServer().getPluginManager().callEvent(event);
@@ -35,7 +43,7 @@ public class EntityMushroomCow extends EntityCow {
 
                 entitycow.setPositionRotation(this.locX, this.locY, this.locZ, this.yaw, this.pitch);
                 entitycow.setHealth(this.getHealth());
-                entitycow.aM = this.aM;
+                entitycow.aN = this.aN;
                 if (this.hasCustomName()) {
                     entitycow.setCustomName(this.getCustomName());
                 }
@@ -47,12 +55,12 @@ public class EntityMushroomCow extends EntityCow {
                 }
 
                 itemstack.damage(1, entityhuman);
-                this.a(SoundEffects.dw, 1.0F, 1.0F);
+                this.a(SoundEffects.dV, 1.0F, 1.0F);
             }
 
             return true;
         } else {
-            return super.a(entityhuman, enumhand, itemstack);
+            return super.a(entityhuman, enumhand);
         }
     }
 
@@ -60,8 +68,9 @@ public class EntityMushroomCow extends EntityCow {
         return new EntityMushroomCow(this.world);
     }
 
+    @Nullable
     protected MinecraftKey J() {
-        return LootTables.H;
+        return LootTables.M;
     }
 
     public EntityCow b(EntityAgeable entityageable) {

@@ -33,7 +33,7 @@ public class FoodMetaData {
             this.eat(event.getFoodLevel() - oldFoodLevel, itemfood.getSaturationModifier(itemstack));
         }
 
-        ((EntityPlayer) entityhuman).playerConnection.sendPacket(new PacketPlayOutUpdateHealth(((EntityPlayer) entityhuman).getBukkitEntity().getScaledHealth(), entityhuman.getFoodData().foodLevel, entityhuman.getFoodData().saturationLevel));
+        ((EntityPlayer) entityhuman).getBukkitEntity().sendHealthUpdate();
         // CraftBukkit end
     }
 
@@ -60,20 +60,19 @@ public class FoodMetaData {
 
         boolean flag = entityhuman.world.getGameRules().getBoolean("naturalRegeneration");
 
-        if (flag && this.saturationLevel > 0.0F && entityhuman.cT() && this.foodLevel >= 20) {
+        if (flag && this.saturationLevel > 0.0F && entityhuman.db() && this.foodLevel >= 20) {
             ++this.foodTickTimer;
             if (this.foodTickTimer >= 10) {
-                float f = Math.min(this.saturationLevel, 4.0F);
+                float f = Math.min(this.saturationLevel, 6.0F);
 
-                entityhuman.heal(f / 4.0F);
+                entityhuman.heal(f / 6.0F, org.bukkit.event.entity.EntityRegainHealthEvent.RegainReason.SATIATED); // CraftBukkit - added RegainReason
                 this.a(f);
                 this.foodTickTimer = 0;
             }
-        } else if (flag && this.foodLevel >= 18 && entityhuman.cT()) {
+        } else if (flag && this.foodLevel >= 18 && entityhuman.db()) {
             ++this.foodTickTimer;
             if (this.foodTickTimer >= 80) {
-                // CraftBukkit - added RegainReason
-                entityhuman.heal(1.0F, org.bukkit.event.entity.EntityRegainHealthEvent.RegainReason.SATIATED);
+                entityhuman.heal(1.0F, org.bukkit.event.entity.EntityRegainHealthEvent.RegainReason.SATIATED); // CraftBukkit - added RegainReason
                 this.a(entityhuman.world.spigotConfig.regenExhaustion); // Spigot - Change to use configurable value
                 this.foodTickTimer = 0;
             }

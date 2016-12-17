@@ -9,9 +9,9 @@ public class RecipesFurnace {
 
     private static final RecipesFurnace a = new RecipesFurnace();
     public Map<ItemStack, ItemStack> recipes = Maps.newHashMap();
-    private Map<ItemStack, Float> c = Maps.newHashMap(); // PAIL: rename
-    public Map customRecipes = Maps.newHashMap(); // CraftBukkit - add field
-    public Map customExperience = Maps.newHashMap(); // CraftBukkit - add field
+    private final Map<ItemStack, Float> experience = Maps.newHashMap();
+    public Map<ItemStack,ItemStack> customRecipes = Maps.newHashMap(); // CraftBukkit - add field
+    public Map<ItemStack,Float> customExperience = Maps.newHashMap(); // CraftBukkit - add field
 
     public static RecipesFurnace getInstance() {
         return RecipesFurnace.a;
@@ -72,13 +72,13 @@ public class RecipesFurnace {
 
     public void a(ItemStack itemstack, ItemStack itemstack1, float f) {
         this.recipes.put(itemstack, itemstack1);
-        this.c.put(itemstack1, Float.valueOf(f));
+        this.experience.put(itemstack1, Float.valueOf(f));
     }
 
     public ItemStack getResult(ItemStack itemstack) {
         // CraftBukkit start - initialize to customRecipes
         boolean vanilla = false;
-        Iterator iterator = this.customRecipes.entrySet().iterator();
+        Iterator<Entry<ItemStack, ItemStack>> iterator = this.customRecipes.entrySet().iterator();
         // CraftBukkit end
 
         Entry entry;
@@ -90,7 +90,7 @@ public class RecipesFurnace {
                     iterator = this.recipes.entrySet().iterator();
                     vanilla = true;
                 } else {
-                    return null;
+                    return ItemStack.a;
                 }
                 // CraftBukkit end
             }
@@ -112,7 +112,7 @@ public class RecipesFurnace {
     public float b(ItemStack itemstack) {
         // CraftBukkit start - initialize to customRecipes
         boolean vanilla = false;
-        Iterator iterator = this.customRecipes.entrySet().iterator();
+        Iterator<Entry<ItemStack, Float>> iterator = this.customExperience.entrySet().iterator();
         // CraftBukkit end
 
         Entry entry;
@@ -120,8 +120,8 @@ public class RecipesFurnace {
         do {
             if (!iterator.hasNext()) {
                 // CraftBukkit start - fall back to vanilla recipes
-                if (!vanilla && !this.c.isEmpty()) {
-                    iterator = this.c.entrySet().iterator();
+                if (!vanilla && !this.experience.isEmpty()) {
+                    iterator = this.experience.entrySet().iterator();
                     vanilla = true;
                 } else {
                     return 0.0F;

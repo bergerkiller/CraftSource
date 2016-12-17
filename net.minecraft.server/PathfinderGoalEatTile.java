@@ -11,8 +11,8 @@ import org.bukkit.Material;
 public class PathfinderGoalEatTile extends PathfinderGoal {
 
     private static final Predicate<IBlockData> b = BlockStatePredicate.a((Block) Blocks.TALLGRASS).a(BlockLongGrass.TYPE, Predicates.equalTo(BlockLongGrass.EnumTallGrassType.GRASS));
-    private EntityInsentient c;
-    private World d;
+    private final EntityInsentient c;
+    private final World d;
     int a;
 
     public PathfinderGoalEatTile(EntityInsentient entityinsentient) {
@@ -60,7 +60,7 @@ public class PathfinderGoalEatTile extends PathfinderGoal {
                     this.d.setAir(blockposition, false);
                 }
 
-                this.c.B();
+                this.c.A();
             } else {
                 BlockPosition blockposition1 = blockposition.down();
 
@@ -71,7 +71,7 @@ public class PathfinderGoalEatTile extends PathfinderGoal {
                         this.d.setTypeAndData(blockposition1, Blocks.DIRT.getBlockData(), 2);
                     }
 
-                    this.c.B();
+                    this.c.A();
                 }
             }
 

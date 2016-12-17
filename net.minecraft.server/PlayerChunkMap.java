@@ -5,12 +5,15 @@ import com.google.common.collect.AbstractIterator;
 import com.google.common.collect.ComparisonChain;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
+import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+import javax.annotation.Nullable;
 
 // CraftBukkit start
 import java.util.LinkedList;
@@ -19,26 +22,26 @@ import java.util.LinkedList;
 public class PlayerChunkMap {
 
     private static final Predicate<EntityPlayer> a = new Predicate() {
-        public boolean a(EntityPlayer entityplayer) {
+        public boolean a(@Nullable EntityPlayer entityplayer) {
             return entityplayer != null && !entityplayer.isSpectator();
         }
 
-        public boolean apply(Object object) {
+        public boolean apply(@Nullable Object object) {
             return this.a((EntityPlayer) object);
         }
     };
     private static final Predicate<EntityPlayer> b = new Predicate() {
-        public boolean a(EntityPlayer entityplayer) {
+        public boolean a(@Nullable EntityPlayer entityplayer) {
             return entityplayer != null && (!entityplayer.isSpectator() || entityplayer.x().getGameRules().getBoolean("spectatorsGenerateChunks"));
         }
 
-        public boolean apply(Object object) {
+        public boolean apply(@Nullable Object object) {
             return this.a((EntityPlayer) object);
         }
     };
     private final WorldServer world;
     private final List<EntityPlayer> managedPlayers = Lists.newArrayList();
-    private final LongHashMap<PlayerChunk> e = new LongHashMap();
+    private final Long2ObjectMap<PlayerChunk> e = new Long2ObjectOpenHashMap(4096);
     private final Set<PlayerChunk> f = Sets.newHashSet();
     private final List<PlayerChunk> g = Lists.newLinkedList();
     private final List<PlayerChunk> h = Lists.newLinkedList();
@@ -171,7 +174,11 @@ public class PlayerChunkMap {
                             break;
                         }
                     }
+                // CraftBukkit start - SPIGOT-2891: remove once chunk has been provided
+                } else {
+                    iterator1.remove();
                 }
+                // CraftBukkit end
             }
         }
 
@@ -205,16 +212,17 @@ public class PlayerChunkMap {
     public boolean a(int i, int j) {
         long k = d(i, j);
 
-        return this.e.getEntry(k) != null;
+        return this.e.get(k) != null;
     }
 
-    public PlayerChunk b(int i, int j) {
-        return (PlayerChunk) this.e.getEntry(d(i, j));
+    @Nullable
+    public PlayerChunk getChunk(int i, int j) {
+        return (PlayerChunk) this.e.get(d(i, j));
     }
 
     private PlayerChunk c(int i, int j) {
         long k = d(i, j);
-        PlayerChunk playerchunk = (PlayerChunk) this.e.getEntry(k);
+        PlayerChunk playerchunk = (PlayerChunk) this.e.get(k);
 
         if (playerchunk == null) {
             playerchunk = new PlayerChunk(this, i, j);
@@ -234,7 +242,7 @@ public class PlayerChunkMap {
 
     // CraftBukkit start - add method
     public final boolean isChunkInUse(int x, int z) {
-        PlayerChunk pi = b(x, z);
+        PlayerChunk pi = getChunk(x, z);
         if (pi != null) {
             return (pi.c.size() > 0);
         }
@@ -245,7 +253,7 @@ public class PlayerChunkMap {
     public void flagDirty(BlockPosition blockposition) {
         int i = blockposition.getX() >> 4;
         int j = blockposition.getZ() >> 4;
-        PlayerChunk playerchunk = this.b(i, j);
+        PlayerChunk playerchunk = this.getChunk(i, j);
 
         if (playerchunk != null) {
             playerchunk.a(blockposition.getX() & 15, blockposition.getY(), blockposition.getZ() & 15);
@@ -286,7 +294,7 @@ public class PlayerChunkMap {
 
         for (int k = i - this.j; k <= i + this.j; ++k) {
             for (int l = j - this.j; l <= j + this.j; ++l) {
-                PlayerChunk playerchunk = this.b(k, l);
+                PlayerChunk playerchunk = this.getChunk(k, l);
 
                 if (playerchunk != null) {
                     playerchunk.b(entityplayer);
@@ -330,7 +338,7 @@ public class PlayerChunkMap {
                         }
 
                         if (!this.a(l1 - j1, i2 - k1, i, j, i1)) {
-                            PlayerChunk playerchunk = this.b(l1 - j1, i2 - k1);
+                            PlayerChunk playerchunk = this.getChunk(l1 - j1, i2 - k1);
 
                             if (playerchunk != null) {
                                 playerchunk.b(entityplayer);
@@ -354,7 +362,7 @@ public class PlayerChunkMap {
     }
 
     public boolean a(EntityPlayer entityplayer, int i, int j) {
-        PlayerChunk playerchunk = this.b(i, j);
+        PlayerChunk playerchunk = this.getChunk(i, j);
 
         return playerchunk != null && playerchunk.d(entityplayer) && playerchunk.e();
     }
@@ -426,7 +434,12 @@ public class PlayerChunkMap {
         this.f.remove(playerchunk);
         this.g.remove(playerchunk);
         this.h.remove(playerchunk);
-        this.getWorld().getChunkProviderServer().queueUnload(chunkcoordintpair.x, chunkcoordintpair.z);
+        Chunk chunk = playerchunk.f();
+
+        if (chunk != null) {
+            this.getWorld().getChunkProviderServer().unload(chunk);
+        }
+
     }
 
     // CraftBukkit start - Sorter to load nearby chunks first

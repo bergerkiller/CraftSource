@@ -4,6 +4,7 @@ import java.util.EnumMap;
 import java.util.Map;
 
 import org.apache.commons.lang.Validate;
+import org.bukkit.Material;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Cancellable;
@@ -26,11 +27,6 @@ public class EntityDamageEvent extends EntityEvent implements Cancellable {
     private final Map<DamageModifier, Double> originals;
     private boolean cancelled;
     private final DamageCause cause;
-
-    @Deprecated
-    public EntityDamageEvent(final Entity damagee, final DamageCause cause, final int damage) {
-        this(damagee, cause, (double) damage);
-    }
 
     @Deprecated
     public EntityDamageEvent(final Entity damagee, final DamageCause cause, final double damage) {
@@ -424,6 +420,19 @@ public class EntityDamageEvent extends EntityEvent implements Cancellable {
          * <p>
          * Damage: variable
          */
-        FLY_INTO_WALL
+        FLY_INTO_WALL,
+        /**
+         * Damage caused when an entity steps on {@link Material#MAGMA}.
+         * <p>
+         * Damage: 1
+         */
+        HOT_FLOOR,
+        /**
+         * Damage caused when an entity is colliding with too many entities due
+         * to the maxEntityCramming game rule.
+         * <p>
+         * Damage: 6
+         */
+        CRAMMING
     }
 }

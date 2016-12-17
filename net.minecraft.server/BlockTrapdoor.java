@@ -1,5 +1,6 @@
 package net.minecraft.server;
 
+import javax.annotation.Nullable;
 import org.bukkit.event.block.BlockRedstoneEvent; // CraftBukkit
 
 public class BlockTrapdoor extends Block {
@@ -16,32 +17,29 @@ public class BlockTrapdoor extends Block {
 
     protected BlockTrapdoor(Material material) {
         super(material);
-        this.w(this.blockStateList.getBlockData().set(BlockTrapdoor.FACING, EnumDirection.NORTH).set(BlockTrapdoor.OPEN, Boolean.valueOf(false)).set(BlockTrapdoor.HALF, BlockTrapdoor.EnumTrapdoorHalf.BOTTOM));
-        float f = 0.5F;
-        float f1 = 1.0F;
-
+        this.y(this.blockStateList.getBlockData().set(BlockTrapdoor.FACING, EnumDirection.NORTH).set(BlockTrapdoor.OPEN, Boolean.valueOf(false)).set(BlockTrapdoor.HALF, BlockTrapdoor.EnumTrapdoorHalf.BOTTOM));
         this.a(CreativeModeTab.d);
     }
 
-    public AxisAlignedBB a(IBlockData iblockdata, IBlockAccess iblockaccess, BlockPosition blockposition) {
+    public AxisAlignedBB b(IBlockData iblockdata, IBlockAccess iblockaccess, BlockPosition blockposition) {
         AxisAlignedBB axisalignedbb;
 
         if (((Boolean) iblockdata.get(BlockTrapdoor.OPEN)).booleanValue()) {
-            switch (BlockTrapdoor.SyntheticClass_1.a[((EnumDirection) iblockdata.get(BlockTrapdoor.FACING)).ordinal()]) {
-            case 1:
+            switch ((EnumDirection) iblockdata.get(BlockTrapdoor.FACING)) {
+            case NORTH:
             default:
                 axisalignedbb = BlockTrapdoor.g;
                 break;
 
-            case 2:
+            case SOUTH:
                 axisalignedbb = BlockTrapdoor.f;
                 break;
 
-            case 3:
+            case WEST:
                 axisalignedbb = BlockTrapdoor.e;
                 break;
 
-            case 4:
+            case EAST:
                 axisalignedbb = BlockTrapdoor.d;
             }
         } else if (iblockdata.get(BlockTrapdoor.HALF) == BlockTrapdoor.EnumTrapdoorHalf.TOP) {
@@ -65,9 +63,9 @@ public class BlockTrapdoor extends Block {
         return !((Boolean) iblockaccess.getType(blockposition).get(BlockTrapdoor.OPEN)).booleanValue();
     }
 
-    public boolean interact(World world, BlockPosition blockposition, IBlockData iblockdata, EntityHuman entityhuman, EnumHand enumhand, ItemStack itemstack, EnumDirection enumdirection, float f, float f1, float f2) {
+    public boolean interact(World world, BlockPosition blockposition, IBlockData iblockdata, EntityHuman entityhuman, EnumHand enumhand, EnumDirection enumdirection, float f, float f1, float f2) {
         if (this.material == Material.ORE) {
-            return true;
+            return false;
         } else {
             iblockdata = iblockdata.a((IBlockState) BlockTrapdoor.OPEN);
             world.setTypeAndData(blockposition, iblockdata, 2);
@@ -76,7 +74,7 @@ public class BlockTrapdoor extends Block {
         }
     }
 
-    protected void a(EntityHuman entityhuman, World world, BlockPosition blockposition, boolean flag) {
+    protected void a(@Nullable EntityHuman entityhuman, World world, BlockPosition blockposition, boolean flag) {
         int i;
 
         if (flag) {
@@ -89,11 +87,11 @@ public class BlockTrapdoor extends Block {
 
     }
 
-    public void doPhysics(World world, BlockPosition blockposition, IBlockData iblockdata, Block block) {
+    public void a(IBlockData iblockdata, World world, BlockPosition blockposition, Block block, BlockPosition blockposition1) {
         if (!world.isClientSide) {
             boolean flag = world.isBlockIndirectlyPowered(blockposition);
 
-            if (flag || block.getBlockData().m()) {
+            if (flag || block.getBlockData().n()) {
                 // CraftBukkit start
                 org.bukkit.World bworld = world.getWorld();
                 org.bukkit.block.Block bblock = bworld.getBlockAt(blockposition.getX(), blockposition.getY(), blockposition.getZ());
@@ -129,6 +127,10 @@ public class BlockTrapdoor extends Block {
             iblockdata = iblockdata.set(BlockTrapdoor.HALF, enumdirection == EnumDirection.UP ? BlockTrapdoor.EnumTrapdoorHalf.BOTTOM : BlockTrapdoor.EnumTrapdoorHalf.TOP);
         }
 
+        if (world.isBlockIndirectlyPowered(blockposition)) {
+            iblockdata = iblockdata.set(BlockTrapdoor.OPEN, Boolean.valueOf(true));
+        }
+
         return iblockdata;
     }
 
@@ -154,17 +156,17 @@ public class BlockTrapdoor extends Block {
     }
 
     protected static int a(EnumDirection enumdirection) {
-        switch (BlockTrapdoor.SyntheticClass_1.a[enumdirection.ordinal()]) {
-        case 1:
+        switch (enumdirection) {
+        case NORTH:
             return 0;
 
-        case 2:
+        case SOUTH:
             return 1;
 
-        case 3:
+        case WEST:
             return 2;
 
-        case 4:
+        case EAST:
         default:
             return 3;
         }
@@ -199,38 +201,6 @@ public class BlockTrapdoor extends Block {
 
     protected BlockStateList getStateList() {
         return new BlockStateList(this, new IBlockState[] { BlockTrapdoor.FACING, BlockTrapdoor.OPEN, BlockTrapdoor.HALF});
-    }
-
-    static class SyntheticClass_1 {
-
-        static final int[] a = new int[EnumDirection.values().length];
-
-        static {
-            try {
-                BlockTrapdoor.SyntheticClass_1.a[EnumDirection.NORTH.ordinal()] = 1;
-            } catch (NoSuchFieldError nosuchfielderror) {
-                ;
-            }
-
-            try {
-                BlockTrapdoor.SyntheticClass_1.a[EnumDirection.SOUTH.ordinal()] = 2;
-            } catch (NoSuchFieldError nosuchfielderror1) {
-                ;
-            }
-
-            try {
-                BlockTrapdoor.SyntheticClass_1.a[EnumDirection.WEST.ordinal()] = 3;
-            } catch (NoSuchFieldError nosuchfielderror2) {
-                ;
-            }
-
-            try {
-                BlockTrapdoor.SyntheticClass_1.a[EnumDirection.EAST.ordinal()] = 4;
-            } catch (NoSuchFieldError nosuchfielderror3) {
-                ;
-            }
-
-        }
     }
 
     public static enum EnumTrapdoorHalf implements INamable {

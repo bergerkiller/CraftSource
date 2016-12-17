@@ -19,6 +19,7 @@ import java.nio.channels.GatheringByteChannel;
 import java.nio.channels.ScatteringByteChannel;
 import java.nio.charset.Charset;
 import java.util.UUID;
+import javax.annotation.Nullable;
 
 import org.bukkit.craftbukkit.inventory.CraftItemStack; // CraftBukkit
 
@@ -41,43 +42,71 @@ public class PacketDataSerializer extends ByteBuf {
     }
 
     public PacketDataSerializer a(byte[] abyte) {
-        this.b(abyte.length);
+        this.d(abyte.length);
         this.writeBytes(abyte);
         return this;
     }
 
     public byte[] a() {
-        byte[] abyte = new byte[this.g()];
+        return this.b(this.readableBytes());
+    }
 
-        this.readBytes(abyte);
-        return abyte;
+    public byte[] b(int i) {
+        int j = this.g();
+
+        if (j > i) {
+            throw new DecoderException("ByteArray with size " + j + " is bigger than allowed " + i);
+        } else {
+            byte[] abyte = new byte[j];
+
+            this.readBytes(abyte);
+            return abyte;
+        }
     }
 
     public PacketDataSerializer a(int[] aint) {
-        this.b(aint.length);
+        this.d(aint.length);
+        int[] aint1 = aint;
+        int i = aint.length;
 
-        for (int i = 0; i < aint.length; ++i) {
-            this.b(aint[i]);
+        for (int j = 0; j < i; ++j) {
+            int k = aint1[j];
+
+            this.d(k);
         }
 
         return this;
     }
 
     public int[] b() {
-        int[] aint = new int[this.g()];
+        return this.c(this.readableBytes());
+    }
 
-        for (int i = 0; i < aint.length; ++i) {
-            aint[i] = this.g();
+    public int[] c(int i) {
+        int j = this.g();
+
+        if (j > i) {
+            throw new DecoderException("VarIntArray with size " + j + " is bigger than allowed " + i);
+        } else {
+            int[] aint = new int[j];
+
+            for (int k = 0; k < aint.length; ++k) {
+                aint[k] = this.g();
+            }
+
+            return aint;
         }
-
-        return aint;
     }
 
     public PacketDataSerializer a(long[] along) {
-        this.b(along.length);
+        this.d(along.length);
+        long[] along1 = along;
+        int i = along.length;
 
-        for (int i = 0; i < along.length; ++i) {
-            this.writeLong(along[i]);
+        for (int j = 0; j < i; ++j) {
+            long k = along1[j];
+
+            this.writeLong(k);
         }
 
         return this;
@@ -93,7 +122,7 @@ public class PacketDataSerializer extends ByteBuf {
     }
 
     public IChatBaseComponent f() {
-        return IChatBaseComponent.ChatSerializer.a(this.c(32767));
+        return IChatBaseComponent.ChatSerializer.a(this.e(32767));
     }
 
     public PacketDataSerializer a(IChatBaseComponent ichatbasecomponent) {
@@ -105,7 +134,7 @@ public class PacketDataSerializer extends ByteBuf {
     }
 
     public PacketDataSerializer a(Enum<?> oenum) {
-        return this.b(oenum.ordinal());
+        return this.d(oenum.ordinal());
     }
 
     public int g() {
@@ -152,7 +181,7 @@ public class PacketDataSerializer extends ByteBuf {
         return new UUID(this.readLong(), this.readLong());
     }
 
-    public PacketDataSerializer b(int i) {
+    public PacketDataSerializer d(int i) {
         while ((i & -128) != 0) {
             this.writeByte(i & 127 | 128);
             i >>>= 7;
@@ -172,7 +201,7 @@ public class PacketDataSerializer extends ByteBuf {
         return this;
     }
 
-    public PacketDataSerializer a(NBTTagCompound nbttagcompound) {
+    public PacketDataSerializer a(@Nullable NBTTagCompound nbttagcompound) {
         if (nbttagcompound == null) {
             this.writeByte(0);
         } else {
@@ -186,6 +215,7 @@ public class PacketDataSerializer extends ByteBuf {
         return this;
     }
 
+    @Nullable
     public NBTTagCompound j() {
         int i = this.readerIndex();
         byte b0 = this.readByte();
@@ -204,15 +234,15 @@ public class PacketDataSerializer extends ByteBuf {
     }
 
     public PacketDataSerializer a(ItemStack itemstack) {
-        if (itemstack == null || itemstack.getItem() == null) { // CraftBukkit - NPE fix itemstack.getItem()
+        if (itemstack.isEmpty() || itemstack.getItem() == null) { // CraftBukkit - NPE fix itemstack.getItem()
             this.writeShort(-1);
         } else {
             this.writeShort(Item.getId(itemstack.getItem()));
-            this.writeByte(itemstack.count);
+            this.writeByte(itemstack.getCount());
             this.writeShort(itemstack.getData());
             NBTTagCompound nbttagcompound = null;
 
-            if (itemstack.getItem().usesDurability() || itemstack.getItem().p()) {
+            if (itemstack.getItem().usesDurability() || itemstack.getItem().q()) {
                 // Spigot start - filter
                 itemstack = itemstack.cloneItemStack();
                 CraftItemStack.setItemMeta(itemstack, CraftItemStack.getItemMeta(itemstack));
@@ -227,26 +257,26 @@ public class PacketDataSerializer extends ByteBuf {
     }
 
     public ItemStack k() {
-        ItemStack itemstack = null;
         short short0 = this.readShort();
 
-        if (short0 >= 0) {
+        if (short0 < 0) {
+            return ItemStack.a;
+        } else {
             byte b0 = this.readByte();
             short short1 = this.readShort();
+            ItemStack itemstack = new ItemStack(Item.getById(short0), b0, short1);
 
-            itemstack = new ItemStack(Item.getById(short0), b0, short1);
             itemstack.setTag(this.j());
             // CraftBukkit start
             if (itemstack.getTag() != null) {
                 CraftItemStack.setItemMeta(itemstack, CraftItemStack.getItemMeta(itemstack));
             }
             // CraftBukkit end
+            return itemstack;
         }
-
-        return itemstack;
     }
 
-    public String c(int i) {
+    public String e(int i) {
         int j = this.g();
 
         if (j > i * 4) {
@@ -268,9 +298,9 @@ public class PacketDataSerializer extends ByteBuf {
         byte[] abyte = s.getBytes(Charsets.UTF_8);
 
         if (abyte.length > 32767) {
-            throw new EncoderException("String too big (was " + s.length() + " bytes encoded, max " + 32767 + ")");
+            throw new EncoderException("String too big (was " + abyte.length + " bytes encoded, max " + 32767 + ")");
         } else {
-            this.b(abyte.length);
+            this.d(abyte.length);
             this.writeBytes(abyte);
             return this;
         }

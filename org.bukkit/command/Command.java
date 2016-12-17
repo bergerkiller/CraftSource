@@ -8,6 +8,7 @@ import java.util.Set;
 import org.apache.commons.lang.Validate;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.bukkit.Location;
 import org.bukkit.Server;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.minecart.CommandMinecart;
@@ -31,6 +32,7 @@ public abstract class Command {
     protected String usageMessage;
     private String permission;
     private String permissionMessage;
+    public org.spigotmc.CustomTimingsHandler timings; // Spigot
 
     protected Command(String name) {
         this(name, "", "/" + name, new ArrayList<String>());
@@ -44,6 +46,7 @@ public abstract class Command {
         this.usageMessage = usageMessage;
         this.aliases = aliases;
         this.activeAliases = new ArrayList<String>(aliases);
+        this.timings = new org.spigotmc.CustomTimingsHandler("** Command: " + name); // Spigot
     }
 
     /**
@@ -60,15 +63,15 @@ public abstract class Command {
      * Executed on tab completion for this command, returning a list of
      * options the player can tab through.
      *
-     * @deprecated This method is not supported and returns null
      * @param sender Source object which is executing this command
+     * @param alias the alias being used
      * @param args All arguments passed to the command, split via ' '
      * @return a list of tab-completions for the specified arguments. This
      *     will never be null. List may be immutable.
+     * @throws IllegalArgumentException if sender, alias, or args is null
      */
-    @Deprecated
-    public List<String> tabComplete(CommandSender sender, String[] args) {
-        return null;
+    public List<String> tabComplete(CommandSender sender, String alias, String[] args) throws IllegalArgumentException {
+        return tabComplete0(sender, alias, args, null);
     }
 
     /**
@@ -78,11 +81,16 @@ public abstract class Command {
      * @param sender Source object which is executing this command
      * @param alias the alias being used
      * @param args All arguments passed to the command, split via ' '
+     * @param location The position looked at by the sender, or null if none
      * @return a list of tab-completions for the specified arguments. This
      *     will never be null. List may be immutable.
      * @throws IllegalArgumentException if sender, alias, or args is null
      */
-    public List<String> tabComplete(CommandSender sender, String alias, String[] args) throws IllegalArgumentException {
+    public List<String> tabComplete(CommandSender sender, String alias, String[] args, Location location) throws IllegalArgumentException {
+        return tabComplete(sender, alias, args);
+    }
+
+    private List<String> tabComplete0(CommandSender sender, String alias, String[] args, Location location) throws IllegalArgumentException {
         Validate.notNull(sender, "Sender cannot be null");
         Validate.notNull(args, "Arguments cannot be null");
         Validate.notNull(alias, "Alias cannot be null");
@@ -227,6 +235,7 @@ public abstract class Command {
     public boolean setLabel(String name) {
         this.nextLabel = name;
         if (!isRegistered()) {
+            this.timings = new org.spigotmc.CustomTimingsHandler("** Command: " + name); // Spigot
             this.label = name;
             return true;
         }

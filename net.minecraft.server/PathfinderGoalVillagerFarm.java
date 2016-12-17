@@ -19,8 +19,8 @@ public class PathfinderGoalVillagerFarm extends PathfinderGoalGotoTarget {
             }
 
             this.f = -1;
-            this.d = this.c.di();
-            this.e = this.c.dh();
+            this.d = this.c.dq();
+            this.e = this.c.dp();
         }
 
         return super.a();
@@ -28,14 +28,6 @@ public class PathfinderGoalVillagerFarm extends PathfinderGoalGotoTarget {
 
     public boolean b() {
         return this.f >= 0 && super.b();
-    }
-
-    public void c() {
-        super.c();
-    }
-
-    public void d() {
-        super.d();
     }
 
     public void e() {
@@ -47,35 +39,48 @@ public class PathfinderGoalVillagerFarm extends PathfinderGoalGotoTarget {
             IBlockData iblockdata = world.getType(blockposition);
             Block block = iblockdata.getBlock();
 
-            if (this.f == 0 && block instanceof BlockCrops && ((BlockCrops) block).y(iblockdata)) {
-                world.setAir(blockposition, true);
-            } else if (this.f == 1 && block == Blocks.AIR) {
-                InventorySubcontainer inventorysubcontainer = this.c.de();
+            if (this.f == 0 && block instanceof BlockCrops && ((BlockCrops) block).A(iblockdata)) {
+                // CraftBukkit start
+                if (!org.bukkit.craftbukkit.event.CraftEventFactory.callEntityChangeBlockEvent(this.c, blockposition, Blocks.AIR, 0).isCancelled()) {
+                    world.setAir(blockposition, true);
+                }
+                // CraftBukkit end
+            } else if (this.f == 1 && iblockdata.getMaterial() == Material.AIR) {
+                InventorySubcontainer inventorysubcontainer = this.c.dm();
 
                 for (int i = 0; i < inventorysubcontainer.getSize(); ++i) {
                     ItemStack itemstack = inventorysubcontainer.getItem(i);
                     boolean flag = false;
 
-                    if (itemstack != null) {
+                    if (!itemstack.isEmpty()) {
+                        // CraftBukkit start
+                        Block planted = null;
                         if (itemstack.getItem() == Items.WHEAT_SEEDS) {
-                            world.setTypeAndData(blockposition, Blocks.WHEAT.getBlockData(), 3);
+                            planted = Blocks.WHEAT;
                             flag = true;
                         } else if (itemstack.getItem() == Items.POTATO) {
-                            world.setTypeAndData(blockposition, Blocks.POTATOES.getBlockData(), 3);
+                            planted = Blocks.POTATOES;
                             flag = true;
                         } else if (itemstack.getItem() == Items.CARROT) {
-                            world.setTypeAndData(blockposition, Blocks.CARROTS.getBlockData(), 3);
+                            planted = Blocks.CARROTS;
                             flag = true;
                         } else if (itemstack.getItem() == Items.BEETROOT_SEEDS) {
-                            world.setTypeAndData(blockposition, Blocks.BEETROOT.getBlockData(), 3);
+                            planted = Blocks.BEETROOT;
                             flag = true;
                         }
+
+                        if (planted != null && !org.bukkit.craftbukkit.event.CraftEventFactory.callEntityChangeBlockEvent(this.c, blockposition, planted, 0).isCancelled()) {
+                            world.setTypeAndData(blockposition, planted.getBlockData(), 3);
+                        } else {
+                            flag = false;
+                        }
+                        // CraftBukkit end
                     }
 
                     if (flag) {
-                        --itemstack.count;
-                        if (itemstack.count <= 0) {
-                            inventorysubcontainer.setItem(i, (ItemStack) null);
+                        itemstack.subtract(1);
+                        if (itemstack.isEmpty()) {
+                            inventorysubcontainer.setItem(i, ItemStack.a);
                         }
                         break;
                     }
@@ -96,12 +101,12 @@ public class PathfinderGoalVillagerFarm extends PathfinderGoalGotoTarget {
             IBlockData iblockdata = world.getType(blockposition);
 
             block = iblockdata.getBlock();
-            if (block instanceof BlockCrops && ((BlockCrops) block).y(iblockdata) && this.e && (this.f == 0 || this.f < 0)) {
+            if (block instanceof BlockCrops && ((BlockCrops) block).A(iblockdata) && this.e && (this.f == 0 || this.f < 0)) {
                 this.f = 0;
                 return true;
             }
 
-            if (block == Blocks.AIR && this.d && (this.f == 1 || this.f < 0)) {
+            if (iblockdata.getMaterial() == Material.AIR && this.d && (this.f == 1 || this.f < 0)) {
                 this.f = 1;
                 return true;
             }

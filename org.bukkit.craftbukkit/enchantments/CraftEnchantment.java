@@ -47,9 +47,21 @@ public class CraftEnchantment extends Enchantment {
             return EnchantmentTarget.BOW;
         case FISHING_ROD:
             return EnchantmentTarget.FISHING_ROD;
+        case BREAKABLE:
+            return EnchantmentTarget.BREAKABLE;
         default:
             return null;
         }
+    }
+
+    @Override
+    public boolean isTreasure() {
+        return target.isTreasure();
+    }
+
+    @Override
+    public boolean isCursed() {
+        return target.d(); // PAIL isCursed
     }
 
     @Override
@@ -80,6 +92,8 @@ public class CraftEnchantment extends Enchantment {
             return "DEPTH_STRIDER";
         case 9:
             return "FROST_WALKER";
+        case 10:
+            return "BINDING_CURSE";
         case 16:
             return "DAMAGE_ALL";
         case 17:
@@ -114,6 +128,8 @@ public class CraftEnchantment extends Enchantment {
             return "LURE";
         case 70:
             return "MENDING";
+        case 71:
+            return "VANISHING_CURSE";
         default:
             return "UNKNOWN_ENCHANT_" + getId();
         }

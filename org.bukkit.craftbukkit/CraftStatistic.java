@@ -119,6 +119,12 @@ public class CraftStatistic {
             if (stat == Statistic.BREAK_ITEM) {
                 return StatisticList.c(CraftMagicNumbers.getItem(material)); // PAIL: getBreakItemStatistic
             }
+            if (stat == Statistic.PICKUP) {
+                return StatisticList.d(CraftMagicNumbers.getItem(material)); // PAIL: getPickupStatistic
+            }
+            if (stat == Statistic.DROP) {
+                return StatisticList.e(CraftMagicNumbers.getItem(material)); // PAIL: getDropItemStatistic
+            }
         } catch (ArrayIndexOutOfBoundsException e) {
             return null;
         }
@@ -126,14 +132,14 @@ public class CraftStatistic {
     }
 
     public static net.minecraft.server.Statistic getEntityStatistic(org.bukkit.Statistic stat, EntityType entity) {
-        MonsterEggInfo monsteregginfo = (MonsterEggInfo) EntityTypes.eggInfo.get(entity.getName());
+        MonsterEggInfo monsteregginfo = (MonsterEggInfo) EntityTypes.eggInfo.get(new MinecraftKey(entity.getName()));
 
         if (monsteregginfo != null) {
             if (stat == org.bukkit.Statistic.KILL_ENTITY) {
                 return monsteregginfo.killEntityStatistic;
             }
             if (stat == org.bukkit.Statistic.ENTITY_KILLED_BY) {
-                return monsteregginfo.e; // PAIL: rename
+                return monsteregginfo.killedByEntityStatistic;
             }
         }
         return null;

@@ -1,8 +1,11 @@
 package net.minecraft.server;
 
+import java.util.Iterator;
 import java.util.Random;
+import javax.annotation.Nullable;
 // CraftBukkit start
 import java.util.List;
+import org.bukkit.Location;
 import org.bukkit.craftbukkit.entity.CraftHumanEntity;
 import org.bukkit.entity.HumanEntity;
 import org.bukkit.inventory.InventoryHolder;
@@ -10,8 +13,8 @@ import org.bukkit.inventory.InventoryHolder;
 
 public abstract class EntityMinecartContainer extends EntityMinecartAbstract implements ITileInventory, ILootable {
 
-    private ItemStack[] items = new ItemStack[27]; // CraftBukkit - 36 -> 27
-    private boolean b = true;
+    private NonNullList<ItemStack> items;
+    private boolean b;
     private MinecraftKey c;
     private long d;
 
@@ -19,7 +22,7 @@ public abstract class EntityMinecartContainer extends EntityMinecartAbstract imp
     public List<HumanEntity> transaction = new java.util.ArrayList<HumanEntity>();
     private int maxStack = MAX_STACK;
 
-    public ItemStack[] getContents() {
+    public List<ItemStack> getContents() {
         return this.items;
     }
 
@@ -44,14 +47,23 @@ public abstract class EntityMinecartContainer extends EntityMinecartAbstract imp
     public void setMaxStackSize(int size) {
         maxStack = size;
     }
+
+    @Override
+    public Location getLocation() {
+        return getBukkitEntity().getLocation();
+    }
     // CraftBukkit end
 
     public EntityMinecartContainer(World world) {
         super(world);
+        this.items = NonNullList.a(36, ItemStack.a);
+        this.b = true;
     }
 
     public EntityMinecartContainer(World world, double d0, double d1, double d2) {
         super(world, d0, d1, d2);
+        this.items = NonNullList.a(36, ItemStack.a);
+        this.b = true;
     }
 
     public void a(DamageSource damagesource) {
@@ -62,9 +74,25 @@ public abstract class EntityMinecartContainer extends EntityMinecartAbstract imp
 
     }
 
+    public boolean w_() {
+        Iterator iterator = this.items.iterator();
+
+        ItemStack itemstack;
+
+        do {
+            if (!iterator.hasNext()) {
+                return true;
+            }
+
+            itemstack = (ItemStack) iterator.next();
+        } while (itemstack.isEmpty());
+
+        return false;
+    }
+
     public ItemStack getItem(int i) {
         this.f((EntityHuman) null);
-        return this.items[i];
+        return (ItemStack) this.items.get(i);
     }
 
     public ItemStack splitStack(int i, int j) {
@@ -74,21 +102,21 @@ public abstract class EntityMinecartContainer extends EntityMinecartAbstract imp
 
     public ItemStack splitWithoutUpdate(int i) {
         this.f((EntityHuman) null);
-        if (this.items[i] != null) {
-            ItemStack itemstack = this.items[i];
+        ItemStack itemstack = (ItemStack) this.items.get(i);
 
-            this.items[i] = null;
-            return itemstack;
+        if (itemstack.isEmpty()) {
+            return ItemStack.a;
         } else {
-            return null;
+            this.items.set(i, ItemStack.a);
+            return itemstack;
         }
     }
 
     public void setItem(int i, ItemStack itemstack) {
         this.f((EntityHuman) null);
-        this.items[i] = itemstack;
-        if (itemstack != null && itemstack.count > this.getMaxStackSize()) {
-            itemstack.count = this.getMaxStackSize();
+        this.items.set(i, itemstack);
+        if (!itemstack.isEmpty() && itemstack.getCount() > this.getMaxStackSize()) {
+            itemstack.setCount(this.getMaxStackSize());
         }
 
     }
@@ -107,14 +135,11 @@ public abstract class EntityMinecartContainer extends EntityMinecartAbstract imp
         return true;
     }
 
-    public String getName() {
-        return this.hasCustomName() ? this.getCustomName() : "container.minecart";
-    }
-
     public int getMaxStackSize() {
         return maxStack; // CraftBukkit
     }
 
+    @Nullable
     public Entity c(int i) {
         this.b = false;
         return super.c(i);
@@ -132,6 +157,11 @@ public abstract class EntityMinecartContainer extends EntityMinecartAbstract imp
         this.b = flag;
     }
 
+    public static void b(DataConverterManager dataconvertermanager, Class<?> oclass) {
+        EntityMinecartAbstract.a(dataconvertermanager, oclass);
+        dataconvertermanager.a(DataConverterTypes.ENTITY, (DataInspector) (new DataInspectorItemList(oclass, new String[] { "Items"})));
+    }
+
     protected void b(NBTTagCompound nbttagcompound) {
         super.b(nbttagcompound);
         if (this.c != null) {
@@ -140,45 +170,24 @@ public abstract class EntityMinecartContainer extends EntityMinecartAbstract imp
                 nbttagcompound.setLong("LootTableSeed", this.d);
             }
         } else {
-            NBTTagList nbttaglist = new NBTTagList();
-
-            for (int i = 0; i < this.items.length; ++i) {
-                if (this.items[i] != null) {
-                    NBTTagCompound nbttagcompound1 = new NBTTagCompound();
-
-                    nbttagcompound1.setByte("Slot", (byte) i);
-                    this.items[i].save(nbttagcompound1);
-                    nbttaglist.add(nbttagcompound1);
-                }
-            }
-
-            nbttagcompound.set("Items", nbttaglist);
+            ContainerUtil.a(nbttagcompound, this.items);
         }
 
     }
 
     protected void a(NBTTagCompound nbttagcompound) {
         super.a(nbttagcompound);
-        this.items = new ItemStack[this.getSize()];
+        this.items = NonNullList.a(this.getSize(), ItemStack.a);
         if (nbttagcompound.hasKeyOfType("LootTable", 8)) {
             this.c = new MinecraftKey(nbttagcompound.getString("LootTable"));
             this.d = nbttagcompound.getLong("LootTableSeed");
         } else {
-            NBTTagList nbttaglist = nbttagcompound.getList("Items", 10);
-
-            for (int i = 0; i < nbttaglist.size(); ++i) {
-                NBTTagCompound nbttagcompound1 = nbttaglist.get(i);
-                int j = nbttagcompound1.getByte("Slot") & 255;
-
-                if (j >= 0 && j < this.items.length) {
-                    this.items[j] = ItemStack.createStack(nbttagcompound1);
-                }
-            }
+            ContainerUtil.b(nbttagcompound, this.items);
         }
 
     }
 
-    public boolean a(EntityHuman entityhuman, ItemStack itemstack, EnumHand enumhand) {
+    public boolean b(EntityHuman entityhuman, EnumHand enumhand) {
         if (!this.world.isClientSide) {
             entityhuman.openContainer(this);
         }
@@ -206,21 +215,21 @@ public abstract class EntityMinecartContainer extends EntityMinecartAbstract imp
 
     public void setProperty(int i, int j) {}
 
-    public int g() {
+    public int h() {
         return 0;
     }
 
-    public boolean x_() {
+    public boolean isLocked() {
         return false;
     }
 
     public void a(ChestLock chestlock) {}
 
-    public ChestLock y_() {
+    public ChestLock getLock() {
         return ChestLock.a;
     }
 
-    public void f(EntityHuman entityhuman) {
+    public void f(@Nullable EntityHuman entityhuman) {
         if (this.c != null) {
             LootTable loottable = this.world.ak().a(this.c);
 
@@ -236,7 +245,7 @@ public abstract class EntityMinecartContainer extends EntityMinecartAbstract imp
             LootTableInfo.a loottableinfo_a = new LootTableInfo.a((WorldServer) this.world);
 
             if (entityhuman != null) {
-                loottableinfo_a.a(entityhuman.db());
+                loottableinfo_a.a(entityhuman.dj());
             }
 
             loottable.a(this, random, loottableinfo_a.a());
@@ -244,13 +253,9 @@ public abstract class EntityMinecartContainer extends EntityMinecartAbstract imp
 
     }
 
-    public void l() {
+    public void clear() {
         this.f((EntityHuman) null);
-
-        for (int i = 0; i < this.items.length; ++i) {
-            this.items[i] = null;
-        }
-
+        this.items.clear();
     }
 
     public void a(MinecraftKey minecraftkey, long i) {

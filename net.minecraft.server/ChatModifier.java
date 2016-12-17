@@ -9,6 +9,7 @@ import com.google.gson.JsonPrimitive;
 import com.google.gson.JsonSerializationContext;
 import com.google.gson.JsonSerializer;
 import java.lang.reflect.Type;
+import javax.annotation.Nullable;
 
 public class ChatModifier {
 
@@ -23,6 +24,7 @@ public class ChatModifier {
     private ChatHoverable i;
     private String j;
     private static final ChatModifier k = new ChatModifier() {
+        @Nullable
         public EnumChatFormat getColor() {
             return null;
         }
@@ -47,14 +49,17 @@ public class ChatModifier {
             return false;
         }
 
+        @Nullable
         public ChatClickable h() {
             return null;
         }
 
+        @Nullable
         public ChatHoverable i() {
             return null;
         }
 
+        @Nullable
         public String j() {
             return null;
         }
@@ -110,6 +115,7 @@ public class ChatModifier {
 
     public ChatModifier() {}
 
+    @Nullable
     public EnumChatFormat getColor() {
         return this.b == null ? this.o().getColor() : this.b;
     }
@@ -135,17 +141,20 @@ public class ChatModifier {
     }
 
     public boolean g() {
-        return this.c == null && this.d == null && this.f == null && this.e == null && this.g == null && this.b == null && this.h == null && this.i == null;
+        return this.c == null && this.d == null && this.f == null && this.e == null && this.g == null && this.b == null && this.h == null && this.i == null && this.j == null;
     }
 
+    @Nullable
     public ChatClickable h() {
         return this.h == null ? this.o().h() : this.h;
     }
 
+    @Nullable
     public ChatHoverable i() {
         return this.i == null ? this.o().i() : this.i;
     }
 
+    @Nullable
     public String j() {
         return this.j == null ? this.o().j() : this.j;
     }
@@ -304,6 +313,7 @@ public class ChatModifier {
 
         public ChatModifierSerializer() {}
 
+        @Nullable
         public ChatModifier a(JsonElement jsonelement, Type type, JsonDeserializationContext jsondeserializationcontext) throws JsonParseException {
             if (jsonelement.isJsonObject()) {
                 ChatModifier chatmodifier = new ChatModifier();
@@ -377,6 +387,7 @@ public class ChatModifier {
             }
         }
 
+        @Nullable
         public JsonElement a(ChatModifier chatmodifier, Type type, JsonSerializationContext jsonserializationcontext) {
             if (chatmodifier.g()) {
                 return null;
@@ -431,10 +442,12 @@ public class ChatModifier {
             }
         }
 
+        @Nullable
         public JsonElement serialize(ChatModifier object, Type type, JsonSerializationContext jsonserializationcontext) { // CraftBukkit - fix decompile error
             return this.a((ChatModifier) object, type, jsonserializationcontext);
         }
 
+        @Nullable
         public ChatModifier deserialize(JsonElement jsonelement, Type type, JsonDeserializationContext jsondeserializationcontext) throws JsonParseException { // CraftBukkit - fix decompile error
             return this.a(jsonelement, type, jsondeserializationcontext);
         }

@@ -91,7 +91,7 @@ public class RestartCommand extends Command
                     {
                         try
                         {
-                            String os = System.getProperty( "os.name" ).toLowerCase();
+                            String os = System.getProperty( "os.name" ).toLowerCase(java.util.Locale.ENGLISH);
                             if ( os.contains( "win" ) )
                             {
                                 Runtime.getRuntime().exec( "cmd /c start " + script.getPath() );
@@ -114,6 +114,14 @@ public class RestartCommand extends Command
             } else
             {
                 System.out.println( "Startup script '" + SpigotConfig.restartScript + "' does not exist! Stopping server." );
+
+                // Actually shutdown
+                try
+                {
+                    MinecraftServer.getServer().stop();
+                } catch ( Throwable t )
+                {
+                }
             }
             System.exit( 0 );
         } catch ( Exception ex )

@@ -1,12 +1,14 @@
 package net.minecraft.server;
 
+// Spigot start
 import java.util.UUID;
 import org.apache.commons.codec.Charsets;
-import com.google.common.base.Optional;
+// Spigot end
+import javax.annotation.Nullable;
 
 public class EntityItemFrame extends EntityHanging {
 
-    private static final DataWatcherObject<Optional<ItemStack>> c = DataWatcher.a(EntityItemFrame.class, DataWatcherRegistry.f);
+    private static final DataWatcherObject<ItemStack> c = DataWatcher.a(EntityItemFrame.class, DataWatcherRegistry.f);
     private static final DataWatcherObject<Integer> d = DataWatcher.a(EntityItemFrame.class, DataWatcherRegistry.b);
     private float e = 1.0F;
 
@@ -20,7 +22,7 @@ public class EntityItemFrame extends EntityHanging {
     }
 
     protected void i() {
-        this.getDataWatcher().register(EntityItemFrame.c, Optional.absent());
+        this.getDataWatcher().register(EntityItemFrame.c, ItemStack.a);
         this.getDataWatcher().register(EntityItemFrame.d, Integer.valueOf(0));
     }
 
@@ -31,7 +33,7 @@ public class EntityItemFrame extends EntityHanging {
     public boolean damageEntity(DamageSource damagesource, float f) {
         if (this.isInvulnerable(damagesource)) {
             return false;
-        } else if (!damagesource.isExplosion() && this.getItem() != null) {
+        } else if (!damagesource.isExplosion() && !this.getItem().isEmpty()) {
             if (!this.world.isClientSide) {
                 // CraftBukkit start - fire EntityDamageEvent
                 if (org.bukkit.craftbukkit.event.CraftEventFactory.handleNonLivingEntityDamageEvent(this, damagesource, f, false) || this.dead) {
@@ -39,8 +41,8 @@ public class EntityItemFrame extends EntityHanging {
                 }
                 // CraftBukkit end
                 this.b(damagesource.getEntity(), false);
-                this.a(SoundEffects.cR, 1.0F, 1.0F);
-                this.setItem((ItemStack) null);
+                this.a(SoundEffects.dh, 1.0F, 1.0F);
+                this.setItem(ItemStack.a);
             }
 
             return true;
@@ -57,16 +59,16 @@ public class EntityItemFrame extends EntityHanging {
         return 12;
     }
 
-    public void a(Entity entity) {
-        this.a(SoundEffects.cP, 1.0F, 1.0F);
+    public void a(@Nullable Entity entity) {
+        this.a(SoundEffects.df, 1.0F, 1.0F);
         this.b(entity, true);
     }
 
     public void o() {
-        this.a(SoundEffects.cQ, 1.0F, 1.0F);
+        this.a(SoundEffects.dg, 1.0F, 1.0F);
     }
 
-    public void b(Entity entity, boolean flag) {
+    public void b(@Nullable Entity entity, boolean flag) {
         if (this.world.getGameRules().getBoolean("doEntityDrops")) {
             ItemStack itemstack = this.getItem();
 
@@ -83,7 +85,7 @@ public class EntityItemFrame extends EntityHanging {
                 this.a(new ItemStack(Items.ITEM_FRAME), 0.0F);
             }
 
-            if (itemstack != null && this.random.nextFloat() < this.e) {
+            if (!itemstack.isEmpty() && this.random.nextFloat() < this.e) {
                 itemstack = itemstack.cloneItemStack();
                 this.b(itemstack);
                 this.a(itemstack, 0.0F);
@@ -93,7 +95,7 @@ public class EntityItemFrame extends EntityHanging {
     }
 
     private void b(ItemStack itemstack) {
-        if (itemstack != null) {
+        if (!itemstack.isEmpty()) {
             if (itemstack.getItem() == Items.FILLED_MAP) {
                 WorldMap worldmap = ((ItemWorldMap) itemstack.getItem()).getSavedMap(itemstack, this.world);
 
@@ -105,7 +107,7 @@ public class EntityItemFrame extends EntityHanging {
     }
 
     public ItemStack getItem() {
-        return (ItemStack) ((Optional) this.getDataWatcher().get(EntityItemFrame.c)).orNull();
+        return (ItemStack) this.getDataWatcher().get(EntityItemFrame.c);
     }
 
     public void setItem(ItemStack itemstack) {
@@ -113,16 +115,16 @@ public class EntityItemFrame extends EntityHanging {
     }
 
     private void setItem(ItemStack itemstack, boolean flag) {
-        if (itemstack != null) {
+        if (!itemstack.isEmpty()) {
             itemstack = itemstack.cloneItemStack();
-            itemstack.count = 1;
+            itemstack.setCount(1);
             itemstack.a(this);
         }
 
-        this.getDataWatcher().set(EntityItemFrame.c, Optional.fromNullable(itemstack));
+        this.getDataWatcher().set(EntityItemFrame.c, itemstack);
         this.getDataWatcher().markDirty(EntityItemFrame.c);
-        if (itemstack != null) {
-            this.a(SoundEffects.cO, 1.0F, 1.0F);
+        if (!itemstack.isEmpty()) {
+            this.a(SoundEffects.de, 1.0F, 1.0F);
         }
 
         if (flag && this.blockPosition != null) {
@@ -135,7 +137,7 @@ public class EntityItemFrame extends EntityHanging {
         if (datawatcherobject.equals(EntityItemFrame.c)) {
             ItemStack itemstack = this.getItem();
 
-            if (itemstack != null && itemstack.z() != this) {
+            if (!itemstack.isEmpty() && itemstack.A() != this) {
                 itemstack.a(this);
             }
         }
@@ -158,8 +160,12 @@ public class EntityItemFrame extends EntityHanging {
 
     }
 
+    public static void b(DataConverterManager dataconvertermanager) {
+        dataconvertermanager.a(DataConverterTypes.ENTITY, (DataInspector) (new DataInspectorItem(EntityItemFrame.class, new String[] { "Item"})));
+    }
+
     public void b(NBTTagCompound nbttagcompound) {
-        if (this.getItem() != null) {
+        if (!this.getItem().isEmpty()) {
             nbttagcompound.set("Item", this.getItem().save(new NBTTagCompound()));
             nbttagcompound.setByte("ItemRotation", (byte) this.getRotation());
             nbttagcompound.setFloat("ItemDropChance", this.e);
@@ -172,7 +178,7 @@ public class EntityItemFrame extends EntityHanging {
         NBTTagCompound nbttagcompound1 = nbttagcompound.getCompound("Item");
 
         if (nbttagcompound1 != null && !nbttagcompound1.isEmpty()) {
-            this.setItem(ItemStack.createStack(nbttagcompound1), false);
+            this.setItem(new ItemStack(nbttagcompound1), false);
             this.setRotation(nbttagcompound.getByte("ItemRotation"), false);
             if (nbttagcompound.hasKeyOfType("ItemDropChance", 99)) {
                 this.e = nbttagcompound.getFloat("ItemDropChance");
@@ -182,23 +188,27 @@ public class EntityItemFrame extends EntityHanging {
         super.a(nbttagcompound);
     }
 
-    public boolean a(EntityHuman entityhuman, ItemStack itemstack, EnumHand enumhand) {
-        if (this.getItem() == null) {
-            if (itemstack != null && !this.world.isClientSide) {
-                this.setItem(itemstack);
-                if (!entityhuman.abilities.canInstantlyBuild) {
-                    --itemstack.count;
+    public boolean b(EntityHuman entityhuman, EnumHand enumhand) {
+        ItemStack itemstack = entityhuman.b(enumhand);
+
+        if (!this.world.isClientSide) {
+            if (this.getItem().isEmpty()) {
+                if (!itemstack.isEmpty()) {
+                    this.setItem(itemstack);
+                    if (!entityhuman.abilities.canInstantlyBuild) {
+                        itemstack.subtract(1);
+                    }
                 }
+            } else {
+                this.a(SoundEffects.di, 1.0F, 1.0F);
+                this.setRotation(this.getRotation() + 1);
             }
-        } else if (!this.world.isClientSide) {
-            this.a(SoundEffects.cS, 1.0F, 1.0F);
-            this.setRotation(this.getRotation() + 1);
         }
 
         return true;
     }
 
     public int t() {
-        return this.getItem() == null ? 0 : this.getRotation() % 8 + 1;
+        return this.getItem().isEmpty() ? 0 : this.getRotation() % 8 + 1;
     }
 }
